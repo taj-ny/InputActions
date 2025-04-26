@@ -141,7 +141,7 @@ void MouseTriggerHandler::handleMotionEvent(const QPointF &delta)
         return;
     }
 
-    if (m_motionTimeoutTimer.isActive()) {
+    if (!hasActiveTriggers(TriggerType::All & ~TriggerType::Press)) {
         cancelTriggers(TriggerType::All);
         m_motionTimeoutTimer.stop();
 
@@ -150,9 +150,6 @@ void MouseTriggerHandler::handleMotionEvent(const QPointF &delta)
             qCDebug(LIBINPUTACTIONS_HANDLER_MOUSE, "No motion gestures");
             pressBlockedMouseButtons();
         }
-    } else if (!hasActiveTriggers(TriggerType::StrokeSwipe) && *InputState::instance()->keyboardModifiers()) {
-        qCDebug(LIBINPUTACTIONS_HANDLER_MOUSE, "Keyboard modifiers present, attempting to start mouse motion gestures");
-        activateTriggers(TriggerType::StrokeSwipe);
     }
 
     const auto hadActiveGestures = hasActiveTriggers(TriggerType::StrokeSwipe);

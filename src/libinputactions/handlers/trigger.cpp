@@ -79,19 +79,13 @@ bool TriggerHandler::activateTriggers(const TriggerTypes &types, const TriggerAc
         handler();
     }
 
-    auto hasKeyboardModifiers = false;
     for (auto &trigger : triggers(types, event)) {
         triggerActivating(trigger);
-        hasKeyboardModifiers = hasKeyboardModifiers || (trigger->keyboardModifiers() && *trigger->keyboardModifiers() != Qt::KeyboardModifier::NoModifier);
         m_activeTriggers.push_back(trigger);
         qCDebug(LIBINPUTACTIONS_HANDLER_TRIGGER).noquote() << QString("Trigger activated (name: %1)").arg(trigger->name());
     }
-    if (hasKeyboardModifiers) {
-        InputEmitter::instance()->keyboardClearModifiers();
-    }
-
     const auto triggerCount = m_activeTriggers.size();
-    qCDebug(LIBINPUTACTIONS_HANDLER_TRIGGER).noquote().nospace() << "Triggers activated (count: " << triggerCount << ", hasModifiers: " << hasKeyboardModifiers << ")";
+    qCDebug(LIBINPUTACTIONS_HANDLER_TRIGGER).noquote().nospace() << "Triggers activated (count: " << triggerCount << ")";
     return triggerCount != 0;
 }
 

@@ -26,6 +26,17 @@
 
 #include <linux/input-event-codes.h>
 
+static std::map<uint32_t, Qt::KeyboardModifier> s_modifiers = {
+    {KEY_LEFTALT, Qt::KeyboardModifier::AltModifier},
+    {KEY_LEFTCTRL, Qt::KeyboardModifier::ControlModifier},
+    {KEY_LEFTMETA, Qt::KeyboardModifier::MetaModifier},
+    {KEY_LEFTSHIFT, Qt::KeyboardModifier::ShiftModifier},
+    {KEY_RIGHTALT, Qt::KeyboardModifier::AltModifier},
+    {KEY_RIGHTCTRL, Qt::KeyboardModifier::ControlModifier},
+    {KEY_RIGHTMETA, Qt::KeyboardModifier::MetaModifier},
+    {KEY_RIGHTSHIFT, Qt::KeyboardModifier::ShiftModifier},
+};
+
 KWinInputEmitter::KWinInputEmitter()
     : m_device(std::make_unique<InputDevice>())
 {
@@ -58,17 +69,12 @@ void KWinInputEmitter::keyboardClearModifiers()
         KWin::workspace()->disableGlobalShortcutsForClient(true);
     }
 
-    // These events will belong to a different device, which wouldn't work with normal keys, but it works with modifiers.
-    // The user should be able to start the gesture again while still having the modifiers pressed, so the previous
-    // ones must be kept track of.
-    keyboardKey(KEY_LEFTALT, false);
-    keyboardKey(KEY_LEFTCTRL, false);
-    keyboardKey(KEY_LEFTMETA, false);
-    keyboardKey(KEY_LEFTSHIFT, false);
-    keyboardKey(KEY_RIGHTALT, false);
-    keyboardKey(KEY_RIGHTCTRL, false);
-    keyboardKey(KEY_RIGHTMETA, false);
-    keyboardKey(KEY_RIGHTSHIFT, false);
+    const auto modifiers = m_keyboard->modifiers();
+    for (const auto &[key, modifier] : s_modifiers) {
+        if (modifiers & modifier) {
+            keyboardKey(key, false);
+        }
+    }
 
     if (!globalShortcutsDisabled) {
         KWin::workspace()->disableGlobalShortcutsForClient(false);

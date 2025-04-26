@@ -155,13 +155,17 @@ public:
      */
     void setThreshold(const Range<qreal> &threshold);
 
-    const std::optional<Qt::KeyboardModifiers> &keyboardModifiers() const;
     /**
      * Ignored unless set.
      *
      * @param modifiers Keyboard modifiers that must be pressed before and during the trigger.
      */
     void setKeyboardModifiers(const Qt::KeyboardModifiers &modifiers);
+    /**
+     * @param value Whether keyboard modifiers should be cleared when this trigger starts. By default true if the
+     * trigger has an input action, otherwise false.
+     */
+    void setClearModifiers(const bool &value);
 
     const std::optional<Qt::MouseButtons> &mouseButtons() const;
     /**
@@ -195,6 +199,7 @@ private:
     TriggerType m_type{0};
     std::vector<std::unique_ptr<TriggerAction>> m_actions;
     bool m_started = false;
+    std::optional<bool> m_clearModifiers;
 
     std::optional<std::shared_ptr<const Condition>> m_condition;
     std::optional<Range<uint8_t>> m_fingers;

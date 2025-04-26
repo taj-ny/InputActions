@@ -18,6 +18,9 @@
 
 #include "trigger.h"
 
+#include <libinputactions/actions/input.h>
+#include <libinputactions/input/emitter.h>
+
 Q_LOGGING_CATEGORY(LIBINPUTACTIONS_TRIGGER, "libinputactions.trigger", QtWarningMsg)
 
 namespace libinputactions
@@ -25,6 +28,12 @@ namespace libinputactions
 
 void Trigger::addAction(std::unique_ptr<TriggerAction> action)
 {
+    if (dynamic_cast<InputTriggerAction *>(action.get())) {
+        if (!m_clearModifiers) {
+            m_clearModifiers = true;
+        }
+    }
+
     m_actions.push_back(std::move(action));
 }
 
@@ -68,6 +77,12 @@ void Trigger::update(const TriggerUpdateEvent *event)
     if (!m_started) {
         qCDebug(LIBINPUTACTIONS_TRIGGER).noquote() << QString("Trigger started (name: %1)").arg(m_name);
         m_started = true;
+
+        if (m_clearModifiers && *m_clearModifiers) {
+            qCDebug(LIBINPUTACTIONS_TRIGGER).noquote() << QString("Clearing keyboard modifiers").arg(m_name);
+            InputEmitter::instance()->keyboardClearModifiers();
+        }
+
         for (const auto &action : m_actions) {
             action->triggerStarted();
         }
@@ -173,14 +188,14 @@ void Trigger::setThreshold(const Range<qreal> &threshold)
     m_threshold = threshold;
 }
 
-const std::optional<Qt::KeyboardModifiers> &Trigger::keyboardModifiers() const
-{
-    return m_keyboardModifiers;
-}
-
 void Trigger::setKeyboardModifiers(const Qt::KeyboardModifiers &modifiers)
 {
     m_keyboardModifiers = modifiers;
+}
+
+void Trigger::setClearModifiers(const bool &value)
+{
+    m_clearModifiers = value;
 }
 
 const std::optional<Qt::MouseButtons> &Trigger::mouseButtons() const
