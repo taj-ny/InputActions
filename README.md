@@ -1,20 +1,29 @@
-# KWin Gestures
-Custom touchpad gestures for Plasma 6.
+# Input Actions
+Input handler built on top of libinput and KWin, currently in a very early stage of development.
 
-X11 is currently not supported.
-
-https://github.com/user-attachments/assets/2c16790a-869b-44f3-a760-590137293759
-
-[peterfajdiga/kwin4_effect_geometry_change](https://github.com/peterfajdiga/kwin4_effect_geometry_change) was used for tile animations.
+Supported environments: Plasma 6 Wayland
 
 # Features
-- Gestures: hold, pinch, swipe
-- Actions: run command, input (keyboard keys, mouse buttons, relative and absolute mouse movement, full control over when keys/buttons are pressed/released), invoke global shortcut
-- Override/block built-in Plasma gestures
-- Application-specific gestures
-- Trigger actions before fingers are lifted for a more responsive feel
-- Repeating actions with support for changing the direction mid-gesture
-- Fast and slow gestures
+- Mouse gestures: press, stroke, swipe, wheel
+  - **Requires Plasma 6.3**
+  - Activated by pressing mouse button(s), keyboard modifier(s) or both
+  - Mouse buttons can still be used for normal clicks and motion (a small delay for button presses is introduced, can be changed)
+  - Supports horizontal scrolling wheels
+- Touchpad gestures: pinch, press, rotate, stroke, swipe
+  - Supports 2-finger motion gestures by treating scroll events as swipe events
+- Many different ways of performing gestures, can be combined
+  - Begin/end position(s) (mouse only for now): Rectangle(s) where the gesture must begin and/or end
+  - Pressed keyboard modifiers
+  - Pressed mouse buttons
+  - Speed: fast, slow
+  - Threshold (min and/or max): Time for press gestures, distance for all others
+- Stroke gestures: draw any shape
+- Actions: run command, simulate input (low-latency, no external tools or input group required), invoke Plasma global shortcut
+  - Executed at a specific point of the gesture's lifecycle (begin, update, end, cancel), allowing for complex gestures like 3-finger window drag or alt+tab without them being hard-coded
+  - Update actions can repeat at a specified interval
+- Bi-directional motion gestures: change direction during a gesture and start executing different update actions - useful for gestures like volume control
+- Conditions: Window class, state
+- Blocks input events when necessary
 
 # Installation
 <details>
@@ -27,8 +36,8 @@ https://github.com/user-attachments/assets/2c16790a-869b-44f3-a760-590137293759
     inputs = {
       nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
 
-      kwin-gestures = {
-        url = "github:taj-ny/kwin-gestures";
+      inputactions = {
+        url = "github:taj-ny/InputActions";
         inputs.nixpkgs.follows = "nixpkgs";
       };
     };
@@ -40,7 +49,7 @@ https://github.com/user-attachments/assets/2c16790a-869b-44f3-a760-590137293759
 
   {
     environment.systemPackages = [
-      inputs.kwin-gestures.packages.${pkgs.system}.default
+      inputs.inputactions.packages.${pkgs.system}.inputactions-kwin
     ];
   }
   ```
@@ -93,8 +102,8 @@ https://github.com/user-attachments/assets/2c16790a-869b-44f3-a760-590137293759
 
 ### Building
 ```sh
-git clone https://github.com/taj-ny/kwin-gestures
-cd kwin-gestures
+git clone https://github.com/taj-ny/InputActions
+cd InputActions
 mkdir build
 cd build
 cmake ../ -DCMAKE_INSTALL_PREFIX=/usr
@@ -110,14 +119,10 @@ Remove the *build* directory when rebuilding the effect.
 
 1. Install the plugin.
 2. Open the Desktop Effects page in System Settings.
-3. Enable the *Gestures* effect in the *Tools* category.
+3. Enable the *Input Actions* effect in the *Tools* category.
 
-See [docs/configuration.md](docs/configuration.md) for instructions on how to configure this plugin.
-
-# Gesture recognition issues
-Before reporting any issues related to gesture recognition, run ``libinput debug-events`` as root and ensure the gesture is recognized properly. If it's not, there's nothing I can do.
-
-Depending on the touchpad, 3 or 4-finger pinch gestures may sometimes be incorrectly interpreted as swipe gestures due to the touchpad only being able to track 2 fingers. As a workaround, move only 2 fingers in opposite directions. See https://wayland.freedesktop.org/libinput/doc/1.25.0/gestures.html#gestures-on-two-finger-touchpads for more information.
+[Documentation](docs/index.md)
 
 # Credits
-- [KWin](https://invent.kde.org/plasma/kwin) - Gesture recognition code (parts of it), sending keystrokes
+- [Strokognition](https://invent.kde.org/jpetso/strokognition), [wstroke](https://github.com/dkondor/wstroke), [easystroke](https://github.com/thjaeger/easystroke) - Stroke gestures
+- [KWin](https://invent.kde.org/plasma/kwin) - Gesture handling code (heavily extended and modified)

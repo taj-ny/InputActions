@@ -2,17 +2,14 @@
     "KPlugin": {
         "Authors": [
             {
-                "Name": "KWin development team"
-            },
-            {
                 "Name": "taj_ny"
             }
         ],
         "Category": "Tools",
-        "Description": "Custom touchpad gestures",
+        "Description": "Customizable input handler",
         "EnabledByDefault": false,
         "License": "GPL",
-        "Name": "Gestures"
+        "Name": "Input Actions"
     },
-    "X-KDE-ConfigModule": "kwin_gestures_kcm"
+    "X-KDE-ConfigModule": "inputactions_kwin_kcm"
 }

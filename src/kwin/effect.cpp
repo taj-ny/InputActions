@@ -1,22 +1,51 @@
+/*
+    Input Actions - Input handler that executes user-defined actions
+    Copyright (C) 2024-2025 Marcin Woźniak
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+*/
+
 #include "effect.h"
-#include "libgestures/yaml_convert.h"
+#include "input/emitter.h"
+#include "input/keyboard.h"
+#include "input/pointer.h"
+#include "kwinwindow.h"
+
+#include <libinputactions/yaml_convert.h>
+
+#include "effect/effecthandler.h"
 
 #include <QDir>
 #include <QLoggingCategory>
 
-Q_LOGGING_CATEGORY(KWIN_GESTURES, "kwin_gestures", QtWarningMsg)
+Q_LOGGING_CATEGORY(INPUTACTIONS_KWIN, "inputactions", QtWarningMsg)
 
 const QString configFile = QStandardPaths::writableLocation(QStandardPaths::ConfigLocation) + "/kwingestures.yml";
 
 Effect::Effect()
 {
-    libgestures::Input::setImplementation(new KWinInput);
-    libgestures::WindowInfoProvider::setImplementation(new KWinWindowInfoProvider);
+    m_backend = new KWinInputBackend;
+    libinputactions::InputBackend::setInstance(std::unique_ptr<KWinInputBackend>(m_backend));
+    libinputactions::InputEmitter::setInstance(std::make_unique<KWinInputEmitter>());
+    libinputactions::Keyboard::setInstance(std::make_unique<KWinKeyboard>());
+    libinputactions::Pointer::setInstance(std::make_unique<KWinPointer>());
+    libinputactions::WindowProvider::setInstance(std::make_unique<KWinWindowProvider>());
 
 #ifdef KWIN_6_2_OR_GREATER
-    KWin::input()->installInputEventFilter(m_inputEventFilter.get());
+    KWin::input()->installInputEventFilter(m_backend);
 #else
-    KWin::input()->prependInputEventFilter(m_inputEventFilter.get());
+    KWin::input()->prependInputEventFilter(m_backend);
 #endif
 
     reconfigure(ReconfigureAll);
@@ -33,7 +62,7 @@ Effect::Effect()
 Effect::~Effect()
 {
     if (KWin::input()) {
-        KWin::input()->uninstallInputEventFilter(m_inputEventFilter.get());
+        KWin::input()->uninstallInputEventFilter(m_backend);
     }
 }
 
@@ -60,15 +89,16 @@ void Effect::slotConfigDirectoryChanged()
 
 void Effect::reconfigure(ReconfigureFlags flags)
 {
-    Q_UNUSED(flags)
-
     try {
         const auto config = YAML::LoadFile(configFile.toStdString());
         m_autoReload = config["autoreload"].as<bool>(true);
-        auto gestureRecognizer = config["touchpad"].as<std::shared_ptr<libgestures::GestureRecognizer>>();
-        m_inputEventFilter->setTouchpadGestureRecognizer(gestureRecognizer);
+
+        m_backend->clearEventHandlers();
+        for (auto &eventHandler : config.as<std::vector<std::unique_ptr<InputEventHandler>>>()) {
+            m_backend->addEventHandler(std::move(eventHandler));
+        }
     } catch (const YAML::Exception &e) {
-        qCritical(KWIN_GESTURES).noquote() << QStringLiteral("Failed to load configuration: ") + QString::fromStdString(e.msg)
+        qCritical(INPUTACTIONS_KWIN).noquote() << QStringLiteral("Failed to load configuration: ") + QString::fromStdString(e.msg)
                 + " (line " + QString::number(e.mark.line) + ", column " + QString::number(e.mark.column) + ")";
     }
 }

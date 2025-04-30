@@ -13,10 +13,17 @@
       inherit system;
     };
   in rec {
-    packages.default = pkgs.kdePackages.callPackage ./package.nix { };
+    packages = rec {
+      default = pkgs.kdePackages.callPackage ./package.nix { };
+      inputactions-kwin = default;
+      debug = pkgs.kdePackages.callPackage ./package.nix {
+        debug = true;
+      };
+    };
 
     devShells.default = pkgs.mkShell {
-      inputsFrom = [ packages.default ];
+      inputsFrom = [ packages.debug ];
+      packages = [ pkgs.gtest ];
     };
   });
 }
