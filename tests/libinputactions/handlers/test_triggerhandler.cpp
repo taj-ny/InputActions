@@ -1,5 +1,7 @@
 #include "test_triggerhandler.h"
 
+#include <linux/input-event-codes.h>
+
 using namespace ::testing;
 
 namespace libinputactions
@@ -88,8 +90,8 @@ void TestTriggerHandler::keyboardKey_data()
     QTest::addColumn<bool>("state");
     QTest::addColumn<bool>("endsTriggers");
 
-    QTest::newRow("press") << static_cast<int>(Qt::Key::Key_Control) << true << false;
-    QTest::newRow("release") << static_cast<int>(Qt::Key::Key_Control) << false << true;
+    QTest::newRow("press") << KEY_LEFTCTRL << true << false;
+    QTest::newRow("release") << KEY_LEFTCTRL << false << true;
 }
 
 void TestTriggerHandler::keyboardKey()
@@ -101,7 +103,8 @@ void TestTriggerHandler::keyboardKey()
     EXPECT_CALL(*m_handler, endTriggers(static_cast<TriggerTypes>(TriggerType::All), _))
         .Times(Exactly(endsTriggers ? 1 : 0));
 
-    m_handler->handleKeyEvent(static_cast<Qt::Key>(key), state);
+    const KeyboardKeyEvent event(key, state);
+    m_handler->handleEvent(&event);
 
     QVERIFY(Mock::VerifyAndClearExpectations(m_handler.get()));
 }
