@@ -18,6 +18,7 @@
 
 #include "emitter.h"
 #include "utils.h"
+#include "cursor.h"
 
 #include "core/output.h"
 #include "keyboard_input.h"
@@ -26,16 +27,7 @@
 
 #include <linux/input-event-codes.h>
 
-static std::map<uint32_t, Qt::KeyboardModifier> s_modifiers = {
-    {KEY_LEFTALT, Qt::KeyboardModifier::AltModifier},
-    {KEY_LEFTCTRL, Qt::KeyboardModifier::ControlModifier},
-    {KEY_LEFTMETA, Qt::KeyboardModifier::MetaModifier},
-    {KEY_LEFTSHIFT, Qt::KeyboardModifier::ShiftModifier},
-    {KEY_RIGHTALT, Qt::KeyboardModifier::AltModifier},
-    {KEY_RIGHTCTRL, Qt::KeyboardModifier::ControlModifier},
-    {KEY_RIGHTMETA, Qt::KeyboardModifier::MetaModifier},
-    {KEY_RIGHTSHIFT, Qt::KeyboardModifier::ShiftModifier},
-};
+#include <libinputactions/input/backend.h>
 
 KWinInputEmitter::KWinInputEmitter()
     : m_device(std::make_unique<InputDevice>())
@@ -55,59 +47,30 @@ KWinInputEmitter::~KWinInputEmitter()
 
 void KWinInputEmitter::keyboardKey(const uint32_t &key, const bool &state)
 {
-    m_isEmittingInput = true;
+    libinputactions::InputBackend::instance()->setIgnoreEvents(true);
     m_keyboard->processKey(key, state ? KeyboardKeyStatePressed : KeyboardKeyStateReleased, timestamp(), m_device.get());
-    m_isEmittingInput = false;
-}
-
-void KWinInputEmitter::keyboardClearModifiers()
-{
-    // Prevent modifier-only global shortcuts from being triggered. Clients will still see the event and may perform
-    // actions.
-    const auto globalShortcutsDisabled = KWin::workspace()->globalShortcutsDisabled();
-    if (!globalShortcutsDisabled) {
-        KWin::workspace()->disableGlobalShortcutsForClient(true);
-    }
-
-    const auto modifiers = m_keyboard->modifiers();
-    for (const auto &[key, modifier] : s_modifiers) {
-        if (modifiers & modifier) {
-            keyboardKey(key, false);
-        }
-    }
-
-    if (!globalShortcutsDisabled) {
-        KWin::workspace()->disableGlobalShortcutsForClient(false);
-    }
+    libinputactions::InputBackend::instance()->setIgnoreEvents(false);
 }
 
 void KWinInputEmitter::mouseButton(const uint32_t &button, const bool &state)
 {
-    m_isEmittingInput = true;
+    libinputactions::InputBackend::instance()->setIgnoreEvents(true);
     m_pointer->processButton(button, state ? PointerButtonStatePressed : PointerButtonStateReleased, timestamp(), m_device.get());
     m_pointer->processFrame(m_device.get());
-    m_isEmittingInput = false;
-}
-
-void KWinInputEmitter::mouseMoveAbsolute(const QPointF &pos)
-{
-    m_isEmittingInput = true;
-    m_pointer->processMotionAbsolute(pos, timestamp(), m_device.get());
-    m_pointer->processFrame(m_device.get());
-    m_isEmittingInput = false;
+    libinputactions::InputBackend::instance()->setIgnoreEvents(false);
 }
 
 void KWinInputEmitter::mouseMoveRelative(const QPointF &pos)
 {
-    m_isEmittingInput = true;
+    libinputactions::InputBackend::instance()->setIgnoreEvents(true);
     m_pointer->processMotion(pos, pos, timestamp(), m_device.get());
     m_pointer->processFrame(m_device.get());
-    m_isEmittingInput = false;
+    libinputactions::InputBackend::instance()->setIgnoreEvents(false);
 }
 
-bool KWinInputEmitter::isEmittingInput() const
+InputDevice *KWinInputEmitter::device() const
 {
-    return m_isEmittingInput;
+    return m_device.get();
 }
 
 QString InputDevice::name() const

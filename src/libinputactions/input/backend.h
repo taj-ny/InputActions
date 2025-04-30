@@ -18,12 +18,14 @@
 
 #pragma once
 
-#include <libinputactions/handlers/mouse.h>
-#include <libinputactions/handlers/touchpad.h>
-#include <libinputactions/triggers/stroke.h>
+#include "handler.h"
+
+#include <QTimer>
 
 namespace libinputactions
 {
+
+class Stroke;
 
 /**
  * Collects input events and forwards them to handlers.
@@ -35,8 +37,10 @@ class InputBackend : public QObject
 public:
     void recordStroke();
 
-    void setMouseTriggerHandler(std::unique_ptr<MouseTriggerHandler> handler);
-    void setTouchpadTriggerHandler(std::unique_ptr<TouchpadTriggerHandler> handler);
+    void addEventHandler(std::unique_ptr<InputEventHandler> handler);
+    void clearEventHandlers();
+
+    void setIgnoreEvents(const bool &value);
 
     static InputBackend *instance();
     static void setInstance(std::unique_ptr<InputBackend> instance);
@@ -47,10 +51,15 @@ signals:
 protected:
     InputBackend();
 
+    /**
+     * @return Whether the event should be blocked.
+     */
+    bool handleEvent(const InputEvent *event);
+
     void finishStrokeRecording();
 
-    std::unique_ptr<MouseTriggerHandler> m_mouseTriggerHandler = std::make_unique<MouseTriggerHandler>();
-    std::unique_ptr<TouchpadTriggerHandler> m_touchpadTriggerHandler = std::make_unique<TouchpadTriggerHandler>();
+    std::vector<std::unique_ptr<InputEventHandler>> m_handlers;
+    bool m_ignoreEvents{};
 
     bool m_isRecordingStroke = false;
     std::vector<QPointF> m_strokePoints;

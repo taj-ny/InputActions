@@ -18,7 +18,8 @@
 
 #include "effect.h"
 #include "input/emitter.h"
-#include "input/state.h"
+#include "input/keyboard.h"
+#include "input/pointer.h"
 #include "kwinwindow.h"
 
 #include <libinputactions/yaml_convert.h>
@@ -37,7 +38,8 @@ Effect::Effect()
     m_backend = new KWinInputBackend;
     libinputactions::InputBackend::setInstance(std::unique_ptr<KWinInputBackend>(m_backend));
     libinputactions::InputEmitter::setInstance(std::make_unique<KWinInputEmitter>());
-    libinputactions::InputState::setInstance(std::make_unique<KWinInputState>());
+    libinputactions::Keyboard::setInstance(std::make_unique<KWinKeyboard>());
+    libinputactions::Pointer::setInstance(std::make_unique<KWinPointer>());
     libinputactions::WindowProvider::setInstance(std::make_unique<KWinWindowProvider>());
 
 #ifdef KWIN_6_2_OR_GREATER
@@ -91,13 +93,9 @@ void Effect::reconfigure(ReconfigureFlags flags)
         const auto config = YAML::LoadFile(configFile.toStdString());
         m_autoReload = config["autoreload"].as<bool>(true);
 
-        m_backend->setMouseTriggerHandler(std::make_unique<libinputactions::MouseTriggerHandler>());
-        m_backend->setTouchpadTriggerHandler(std::make_unique<libinputactions::TouchpadTriggerHandler>());
-        if (config["mouse"].IsDefined()) {
-            m_backend->setMouseTriggerHandler(config["mouse"].as<std::unique_ptr<libinputactions::MouseTriggerHandler>>());
-        }
-        if (config["touchpad"].IsDefined()) {
-            m_backend->setTouchpadTriggerHandler(config["touchpad"].as<std::unique_ptr<libinputactions::TouchpadTriggerHandler>>());
+        m_backend->clearEventHandlers();
+        for (auto &eventHandler : config.as<std::vector<std::unique_ptr<InputEventHandler>>>()) {
+            m_backend->addEventHandler(std::move(eventHandler));
         }
     } catch (const YAML::Exception &e) {
         qCritical(INPUTACTIONS_KWIN).noquote() << QStringLiteral("Failed to load configuration: ") + QString::fromStdString(e.msg)

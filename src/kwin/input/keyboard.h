@@ -18,42 +18,12 @@
 
 #pragma once
 
-#include <QString>
+#include <libinputactions/input/keyboard.h>
 
-namespace libinputactions
-{
-
-class Window
+class KWinKeyboard : public libinputactions::Keyboard
 {
 public:
-    virtual ~Window() = default;
+    KWinKeyboard() = default;
 
-    virtual QString title() const = 0;
-    virtual QString resourceClass() const = 0;
-    virtual QString resourceName() const = 0;
-    virtual bool maximized() const = 0;
-    virtual bool fullscreen() const = 0;
-
-protected:
-    Window() = default;
+    void clearModifiers() override;
 };
-
-class WindowProvider
-{
-public:
-    WindowProvider() = default;
-    virtual ~WindowProvider() = default;
-
-    /**
-     * @return The currently active window, or nullptr if no window is active.
-     */
-    virtual std::shared_ptr<Window> active() const;
-
-    static WindowProvider *instance();
-    static void setInstance(std::unique_ptr<WindowProvider> instance);
-
-private:
-    static std::unique_ptr<WindowProvider> s_instance;
-};
-
-}

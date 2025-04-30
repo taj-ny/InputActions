@@ -18,8 +18,9 @@
 
 #pragma once
 
-#include <libinputactions/handlers/mouse.h>
-#include <libinputactions/handlers/touchpad.h>
+#include <memory>
+
+#include <QPointF>
 
 namespace libinputactions
 {
@@ -30,21 +31,17 @@ public:
     virtual ~InputEmitter() = default;
 
     /**
-     * @param key input-event-codes.h
+     * @param key <linux/input-event-codes.h>
      * @param state True - press, false - release
      */
     virtual void keyboardKey(const uint32_t &key, const bool &state) { };
-    virtual void keyboardClearModifiers() { };
 
     /**
-     * @param button input-event-codes.h
+     * @param button <linux/input-event-codes.h>
      * @param state True - press, false - release
      */
     virtual void mouseButton(const uint32_t &button, const bool &state) { };
-    virtual void mouseMoveAbsolute(const QPointF &pos) { };
     virtual void mouseMoveRelative(const QPointF &pos) { };
-
-    virtual bool isEmittingInput() const;
 
     static InputEmitter *instance();
     static void setInstance(std::unique_ptr<InputEmitter> instance);

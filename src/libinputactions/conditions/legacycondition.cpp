@@ -24,11 +24,12 @@ namespace libinputactions
 bool LegacyCondition::satisfied() const
 {
     const auto window = WindowProvider::instance()->active();
-    if (!window)
+    if (!window) {
         return false;
+    }
 
-    return isWindowClassRegexSubConditionSatisfied(window.value().get())
-        && isWindowStateSubConditionSatisfied(window.value().get());
+    return isWindowClassRegexSubConditionSatisfied(window.get())
+        && isWindowStateSubConditionSatisfied(window.get());
 }
 
 bool LegacyCondition::isWindowClassRegexSubConditionSatisfied(const Window *window) const

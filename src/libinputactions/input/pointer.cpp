@@ -16,26 +16,35 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#pragma once
+#include "pointer.h"
 
-#include "emitter.h"
-
-#include <libinputactions/input/state.h>
-
-class KWinInputState : public QObject, public libinputactions::InputState
+namespace libinputactions
 {
-    Q_OBJECT
 
-public:
-    KWinInputState();
+std::optional<QPointF> Pointer::globalPosition() const
+{
+    return std::nullopt;
+}
 
-    std::optional<Qt::KeyboardModifiers> keyboardModifiers() const override;
-    std::optional<QPointF> mousePosition() const override;
+std::optional<QPointF> Pointer::screenPosition() const
+{
+    return std::nullopt;
+}
 
-private slots:
-    void slotKeyStateChanged(quint32 keyCode, KeyboardKeyState state);
+void Pointer::setPosition(const QPointF &position)
+{
+}
 
-private:
-    Qt::KeyboardModifiers m_modifiers{};
-    bool m_isSendingInput{};
-};
+Pointer *Pointer::instance()
+{
+    return s_instance.get();
+}
+
+void Pointer::setInstance(std::unique_ptr<Pointer> instance)
+{
+    s_instance = std::move(instance);
+}
+
+std::unique_ptr<Pointer> Pointer::s_instance = std::unique_ptr<Pointer>(new Pointer);
+
+}

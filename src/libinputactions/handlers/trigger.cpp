@@ -19,7 +19,7 @@
 #include "trigger.h"
 
 #include <libinputactions/input/emitter.h>
-#include <libinputactions/input/state.h>
+#include <libinputactions/input/keyboard.h>
 
 Q_LOGGING_CATEGORY(LIBINPUTACTIONS_HANDLER_TRIGGER, "libinputactions.handler.trigger", QtWarningMsg)
 
@@ -42,13 +42,25 @@ void TriggerHandler::addTrigger(std::unique_ptr<Trigger> trigger)
     m_triggers.push_back(std::move(trigger));
 }
 
-void TriggerHandler::handleKeyEvent(const Qt::Key &key, const bool &state)
+void TriggerHandler::handleEvent(const KeyboardKeyEvent *event)
 {
     // Lazy way of detecting modifier release during mouse gestures
-    if (state) {
+    if (event->state()) {
         return;
     }
     endTriggers(TriggerType::All);
+}
+
+bool TriggerHandler::handleEvent(const InputEvent *event)
+{
+    switch (event->type()) {
+        case InputEventType::KeyboardKey:
+            handleEvent(static_cast<const KeyboardKeyEvent *>(event));
+            break;
+        default:
+            return false;
+    }
+    return false;
 }
 
 void TriggerHandler::registerTriggerActivateHandler(const TriggerType &type, const std::function<void()> &func)
@@ -285,7 +297,7 @@ void TriggerHandler::pressUpdate(const qreal &delta)
 std::unique_ptr<TriggerActivationEvent> TriggerHandler::createActivationEvent() const
 {
     auto event = std::make_unique<TriggerActivationEvent>();
-    event->keyboardModifiers = InputState::instance()->keyboardModifiers();
+    event->keyboardModifiers = Keyboard::instance()->modifiers();
     return event;
 }
 

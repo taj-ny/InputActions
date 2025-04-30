@@ -18,6 +18,7 @@
 
 #pragma once
 
+#include <libinputactions/input/events.h>
 #include <libinputactions/triggers/trigger.h>
 
 #include <QTimer>
@@ -26,6 +27,9 @@ Q_DECLARE_LOGGING_CATEGORY(LIBINPUTACTIONS_HANDLER_TRIGGER)
 
 namespace libinputactions
 {
+
+struct InputEvent;
+struct KeyboardKeyEvent;
 
 /**
  * Press timer interval and delta.
@@ -42,7 +46,8 @@ class TriggerHandler : public QObject
 public:
     void addTrigger(std::unique_ptr<Trigger> trigger);
 
-    void handleKeyEvent(const Qt::Key &key, const bool &state);
+    virtual bool handleEvent(const InputEvent *event);
+    void handleEvent(const KeyboardKeyEvent *event);
 
 protected:
     TriggerHandler();

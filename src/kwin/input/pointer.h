@@ -18,39 +18,14 @@
 
 #pragma once
 
-#include <memory>
+#include <libinputactions/input/pointer.h>
 
-#include <QPointF>
-
-namespace libinputactions
-{
-
-/**
- * Provides read-only access to input state.
- */
-class InputState
+class KWinPointer : public libinputactions::Pointer
 {
 public:
-    virtual ~InputState() = default;
+    KWinPointer() = default;
 
-    /**
-     * @return Currently pressed keyboard modifiers or std::nullopt if not available.
-     */
-    virtual std::optional<Qt::KeyboardModifiers> keyboardModifiers() const;
-
-    /**
-     * @return Mouse position on the current screen ranging from (0,0) to (1,1) or std::nullopt if not available.
-     */
-    virtual std::optional<QPointF> mousePosition() const;
-
-    static InputState *instance();
-    static void setInstance(std::unique_ptr<InputState> instance);
-
-protected:
-    InputState() = default;
-
-private:
-    static std::unique_ptr<InputState> s_instance;
+    std::optional<QPointF> globalPosition() const override;
+    std::optional<QPointF> screenPosition() const override;
+    void setPosition(const QPointF &position) override;
 };
-
-}

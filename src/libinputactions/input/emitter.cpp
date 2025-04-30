@@ -21,11 +21,6 @@
 namespace libinputactions
 {
 
-bool InputEmitter::isEmittingInput() const
-{
-    return false;
-}
-
 InputEmitter *InputEmitter::instance()
 {
     return s_instance.get();

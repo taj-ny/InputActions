@@ -26,6 +26,7 @@
 #include <libinputactions/conditions/legacycondition.h>
 #include <libinputactions/handlers/mouse.h>
 #include <libinputactions/handlers/touchpad.h>
+#include <libinputactions/input/handler.h>
 #include <libinputactions/triggers/directionalmotion.h>
 #include <libinputactions/triggers/press.h>
 #include <libinputactions/triggers/stroke.h>
@@ -570,10 +571,25 @@ static const std::unordered_map<QString, uint32_t> s_mouse = {
     {"EXTRA13", 0x11f},
 };
 
+// Most of the code below is garbage
+
 using namespace libinputactions;
 
 namespace YAML
 {
+
+static const Node asSequence(const Node &node)
+{
+    Node result;
+    if (node.IsSequence()) {
+        for (const auto &child : node) {
+            result.push_back(child);
+        }
+    } else {
+        result.push_back(node);
+    }
+    return result;
+}
 
 template<typename T>
 struct convert<Range<T>>
@@ -644,6 +660,60 @@ struct convert<std::shared_ptr<Condition>>
         }
 
 
+        return true;
+    }
+};
+
+template<typename T>
+struct convert<std::set<T>>
+{
+    static bool decode(const Node &node, std::set<T> &set)
+    {
+        for (const auto &child : node) {
+            set.insert(child.as<T>());
+        }
+        return true;
+    }
+};
+
+template<>
+struct convert<std::unique_ptr<InputEventHandler>>
+{
+    static bool decode(const Node &node, std::unique_ptr<InputEventHandler> &handler)
+    {
+        handler = std::make_unique<InputEventHandler>();
+        if (const auto &blacklistNode = node["blacklist"]) {
+            handler->setDeviceNameBlacklist(blacklistNode.as<std::set<QString>>());
+        } else if (const auto &whitelistNode = node["whitelist"]) {
+            handler->setDeviceNameWhitelist(whitelistNode.as<std::set<QString>>());
+        }
+        return true;
+    }
+};
+
+template<>
+struct convert<std::vector<std::unique_ptr<InputEventHandler>>>
+{
+    template <typename T>
+    static std::unique_ptr<InputEventHandler> decodeHandler(const Node &node)
+    {
+        auto result = node.as<std::unique_ptr<InputEventHandler>>();
+        result->setTriggerHandler(node.as<std::unique_ptr<T>>());
+        return result;
+    }
+
+    static bool decode(const Node &node, std::vector<std::unique_ptr<InputEventHandler>> &handlers)
+    {
+        if (const auto &mouseNode = node["mouse"]) {
+            for (const auto &mouseHandler : asSequence(mouseNode)) {
+                handlers.push_back(decodeHandler<MouseTriggerHandler>(mouseHandler));
+            }
+        }
+        if (const auto &touchpadNode = node["touchpad"]) {
+            for (const auto &touchpadHandler : asSequence(touchpadNode)) {
+                handlers.push_back(decodeHandler<TouchpadTriggerHandler>(touchpadHandler));
+            }
+        }
         return true;
     }
 };
@@ -722,8 +792,8 @@ struct convert<std::unique_ptr<Trigger>>
         if (const auto &endPositionsNode = node["end_positions"]) {
             trigger->setEndPositions(endPositionsNode.as<std::vector<Range<QPointF>>>());
         }
-        for (const auto &conditionNode : node["conditions"]) {
-            trigger->setCondition(conditionNode.as<std::shared_ptr<Condition>>());
+        if (const auto &conditionsNode = node["conditions"]) {
+            trigger->setCondition(conditionsNode.as<std::shared_ptr<Condition>>());
         }
         for (const auto &actionNode : node["actions"]) {
             trigger->addAction(actionNode.as<std::unique_ptr<TriggerAction>>());
@@ -795,8 +865,8 @@ struct convert<std::unique_ptr<TriggerAction>>
 
         action->setOn(on);
         action->setRepeatInterval(node["interval"].as<ActionInterval>(ActionInterval()));
-        for (const auto &conditionNode : node["conditions"]) {
-            action->setCondition(conditionNode.as<std::shared_ptr<Condition>>());
+        if (const auto &conditionsNode = node["conditions"]) {
+            action->setCondition(conditionsNode.as<std::shared_ptr<Condition>>());
         }
 
         return true;
@@ -976,7 +1046,7 @@ ENUM_DECODER(On, "action event (on)", (std::unordered_map<QString, On> {
     {"cancel", On::Cancel},
     {"end", On::End},
     {"end_cancel", On::EndCancel}
-}));
+}))
 
 FLAGS_DECODER(WindowStates, "window state", (std::unordered_map<QString, WindowState> {
     {"maximized", WindowState::Maximized},

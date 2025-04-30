@@ -36,30 +36,23 @@ Bold properties must be set.
 | range(type)                 | Range of numbers of *type*. Format: ``min-max``. ``-`` may be surrounded by exactly one space on each side.<br><br>Example: ``range(int)`` - ``1 - 2``, ``range(point)`` - ``0;0 - 0.5;0.5`` |
 
 ## Root
-| Property    | Type                            | Description                                                                | Default |
-|-------------|---------------------------------|----------------------------------------------------------------------------|---------|
-| autoreload  | *bool*                          | Whether the configuration should be automatically reloaded on file change. | *true*  |
-| mouse       | *[Mouse](#mouse--device)*       |                                                                            |         |
-| touchpad    | *[Touchpad](#touchpad--device)* |                                                                            |         |
+| Property    | Type                                                       | Description                                                                    | Default |
+|-------------|------------------------------------------------------------|--------------------------------------------------------------------------------|---------|
+| autoreload  | *bool*                                                     | Whether the configuration should be automatically reloaded on file change.     | *true*  |
+| mouse       | *[MouseEventHandler](#)* or *list([MouseEventHandler](#))* | A list is only necessary if you need different gestures for different devices. |         |
+| touchpad    | *[TouchpadEventHandler](#)*                                |                                                                                |         |
 
-## Device
-The device is the root element in the configuration file:
-```yaml
-mouse:
-  gestures:
-    # ...
-  
-touchpad:
-  gestures:
-    # ...
-```
+## EventHandler
+| Property     | Type                        | Description                                                                              | Default |
+|--------------|-----------------------------|------------------------------------------------------------------------------------------|---------|
+| **gestures** | *list([Gesture](#gesture))* | Gestures for this device.                                                                |         |
+| blacklist    | *list(string)*              | Names of devices that should be ignored.<br><br>Mutually exclusive with *whitelist*.     |         |
+| speed        | *[Speed](#speed)*           | Settings for how gesture speed is determined.                                            |         |
+| whitelist    | *list(string)*              | Names of devices that should not be ignored.<br><br>Mutually exclusive with *blacklist*. |         |
 
-| Property         | Type                        | Description                                   | Default |
-|------------------|-----------------------------|-----------------------------------------------|---------|
-| **gestures**     | *list([Gesture](#gesture))* | Gestures for this device.                     |         |
-| speed            | *[Speed](#speed)*           | Settings for how gesture speed is determined. |         |
+### Mouse : [EventHandler](#event-handler)
+Supports trackpoints as well.
 
-### Mouse : [Device](#device)
 | Property                   | Type   | Description                                                                                                                                                                                                                      | Default |
 |----------------------------|--------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------|
 | motion_timeout             | *time* | The time during which a motion gesture must be performed. If not, a press gesture will be started. If no press gestures are activated, all pressed mouse buttons will actually be pressed, after having been blocked previously. | *200*   |
@@ -67,6 +60,8 @@ touchpad:
 | unblock_buttons_on_timeout | *bool* | Whether blocked mouse buttons should be pressed immediately on timeout. If false, they will be pressed and instantly released on button release.                                                                                 | *true*  |
 
 ### Touchpad : [Device](#device)
+The *blacklist* and *whitelist* properties are currently not supported for touchpads.
+
 | Property         | Type    | Description                                                                | Default |
 |------------------|---------|----------------------------------------------------------------------------|---------|
 | delta_multiplier | *float* | Delta multiplier used for *move_by_delta* mouse input actions.             | *1.0*   |
@@ -133,7 +128,7 @@ All specified subconditions must be satisfied in order for the condition to be s
 |--------------|-------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------|---------|
 | negate       | *flags(window_class, window_state)* | Which properties to negate.                                                                                                                           |         |
 | window_class | *regex*                             | Executed on the currently focused window's resource class and resource name. If a match is not found for either, the condition will not be satisfied. |         |
-| window_state | *flags(fullscreen, maximized)*      |                                                                                                                                                       |         | 
+| window_state | *flags(fullscreen, maximized)*      |                                                                                                                                                       |         |
 
 ## Action
 | Property        | Type                                           | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                          | Default |
@@ -174,6 +169,15 @@ Like actions, the group type is determined by the presence of one of the followi
 
 # Example
 ```yaml
+mouse:
+  - whitelist: [ 'TPPS/2 IBM TrackPoint' ]
+    gestures:
+      # ...
+
+  # Input events from 'TPPS/2 IBM TrackPoint' will not reach the handler below.
+  - gestures:
+      # ...
+
 touchpad:
   speed:
     swipe_threshold: 15

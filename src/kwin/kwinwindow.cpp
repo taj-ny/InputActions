@@ -49,12 +49,12 @@ bool KWinWindow::fullscreen() const
     return m_window->isFullScreen();
 }
 
-std::optional<std::shared_ptr<libinputactions::Window>> KWinWindowProvider::active() const
+std::shared_ptr<libinputactions::Window> KWinWindowProvider::active() const
 {
     auto window = KWin::effects->activeWindow();
     if (!window) {
-        return std::nullopt;
+        return {};
     }
 
-    return std::shared_ptr<libinputactions::Window>(new KWinWindow(window->window()));
+    return std::make_shared<KWinWindow>(window->window());
 }

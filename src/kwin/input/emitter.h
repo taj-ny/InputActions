@@ -38,6 +38,11 @@ typedef KWin::InputRedirection::KeyboardKeyState KeyboardKeyState;
 #define PointerButtonStateReleased KWin::InputRedirection::PointerButtonReleased
 #endif
 
+namespace libinputactions
+{
+class InputBackend;
+}
+
 class InputDevice : public KWin::InputDevice
 {
 public:
@@ -67,18 +72,15 @@ public:
     ~KWinInputEmitter() override;
 
     void keyboardKey(const uint32_t &key, const bool &state) override;
-    void keyboardClearModifiers() override;
 
     void mouseButton(const uint32_t &button, const bool &state) override;
-    void mouseMoveAbsolute(const QPointF &pos) override;
     void mouseMoveRelative(const QPointF &pos) override;
 
-    bool isEmittingInput() const override;
+    InputDevice *device() const;
 
 private:
     KWin::PointerInputRedirection *m_pointer;
     KWin::KeyboardInputRedirection *m_keyboard;
 
-    bool m_isEmittingInput{};
     std::unique_ptr<InputDevice> m_device;
 };

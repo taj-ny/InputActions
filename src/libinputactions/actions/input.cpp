@@ -18,6 +18,7 @@
 
 #include <libinputactions/actions/input.h>
 #include <libinputactions/input/emitter.h>
+#include <libinputactions/input/pointer.h>
 
 namespace libinputactions
 {
@@ -41,7 +42,7 @@ void InputTriggerAction::execute()
         }
 
         if (!action.mouseMoveAbsolute.isNull()) {
-            input->mouseMoveAbsolute(action.mouseMoveAbsolute);
+            Pointer::instance()->setPosition(action.mouseMoveAbsolute);
         }
         if (!action.mouseMoveRelative.isNull()) {
             input->mouseMoveRelative(action.mouseMoveRelative);

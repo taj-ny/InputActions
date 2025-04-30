@@ -19,7 +19,8 @@
 #include "mouse.h"
 
 #include <libinputactions/input/emitter.h>
-#include <libinputactions/input/state.h>
+#include <libinputactions/input/keyboard.h>
+#include <libinputactions/input/pointer.h>
 #include <libinputactions/triggers/press.h>
 
 Q_LOGGING_CATEGORY(LIBINPUTACTIONS_HANDLER_MOUSE, "libinputactions.handler.mouse", QtWarningMsg)
@@ -37,9 +38,29 @@ MouseTriggerHandler::MouseTriggerHandler()
     m_motionTimeoutTimer.setSingleShot(true);
 }
 
-bool MouseTriggerHandler::handleButtonEvent(const Qt::MouseButton &button, const quint32 &nativeButton, const bool &state)
+bool MouseTriggerHandler::handleEvent(const InputEvent *event)
 {
+    MotionTriggerHandler::handleEvent(event);
+    switch (event->type()) {
+        case InputEventType::MouseButton:
+            return handleEvent(static_cast<const MouseButtonEvent *>(event));
+        case InputEventType::MouseMotion:
+            return handleMotionEvent(static_cast<const MotionEvent *>(event));
+        case InputEventType::MouseWheel:
+            return handleWheelEvent(static_cast<const MotionEvent *>(event));
+        default:
+            return false;
+    }
+}
+
+bool MouseTriggerHandler::handleEvent(const MouseButtonEvent *event)
+{
+    const auto &button = event->button();
+    const auto &nativeButton = event->nativeButton();
+    const auto &state = event->state();
     qCDebug(LIBINPUTACTIONS_HANDLER_MOUSE).nospace() << "Event (type: PointerMotion, button: " << button << ", state: " << state << ")";
+
+    endTriggers(TriggerType::Wheel);
 
     if (state) {
         m_buttons |= button;
@@ -126,19 +147,20 @@ bool MouseTriggerHandler::handleButtonEvent(const Qt::MouseButton &button, const
     return false;
 }
 
-void MouseTriggerHandler::handleMotionEvent(const QPointF &delta)
+bool MouseTriggerHandler::handleMotionEvent(const MotionEvent *event)
 {
+    const auto &delta = event->delta();
     qCDebug(LIBINPUTACTIONS_HANDLER_MOUSE).nospace() << "Event (type: PointerMotion, delta: " << delta << ")";
 
     if (m_pressTimeoutTimer.isActive()) {
         qCDebug(LIBINPUTACTIONS_HANDLER_MOUSE, "Event processed (type: PointerMotion, status: PressingButtons)");
-        return;
+        return true;
     }
 
     m_mouseMotionSinceButtonPress += std::hypot(delta.x(), delta.y());
     if (m_mouseMotionSinceButtonPress < 5) {
         qCDebug(LIBINPUTACTIONS_HANDLER_MOUSE).nospace() << "Event processed (type: PointerMotion, status: InsufficientMotion, delta: " << delta << ")";
-        return;
+        return true;
     }
 
     if (!hasActiveTriggers(TriggerType::All & ~TriggerType::Press)) {
@@ -153,20 +175,19 @@ void MouseTriggerHandler::handleMotionEvent(const QPointF &delta)
     }
 
     const auto hadActiveGestures = hasActiveTriggers(TriggerType::StrokeSwipe);
-    handleMotion(delta);
+    const auto block = handleMotion(delta);
     if (hadActiveGestures && !hasActiveTriggers(TriggerType::StrokeSwipe)) {
         qCDebug(LIBINPUTACTIONS_HANDLER_MOUSE, "Mouse motion gesture ended/cancelled during motion");
         // Swipe gesture cancelled due to wrong speed or direction
         pressBlockedMouseButtons();
     }
+    return block;
 }
 
-bool MouseTriggerHandler::handleWheelEvent(const qreal &delta, const Qt::Orientation &orientation)
+bool MouseTriggerHandler::handleWheelEvent(const MotionEvent *event)
 {
-    const auto motionDelta = orientation == Qt::Orientation::Horizontal
-        ? QPointF(delta, 0)
-        : QPointF(0, delta);
-    qCDebug(LIBINPUTACTIONS_HANDLER_MOUSE).nospace() << "Event (type: Wheel, delta: " << motionDelta << ")";
+    const auto &delta = event->delta();
+    qCDebug(LIBINPUTACTIONS_HANDLER_MOUSE).nospace() << "Event (type: Wheel, delta: " << delta << ")";
 
     if (!activateTriggers(TriggerType::Wheel)) {
         qCDebug(LIBINPUTACTIONS_HANDLER_MOUSE, "Event processed (type: Wheel, status: NoGestures)");
@@ -174,21 +195,24 @@ bool MouseTriggerHandler::handleWheelEvent(const qreal &delta, const Qt::Orienta
     }
 
     SwipeDirection direction = SwipeDirection::Left;
-    if (motionDelta.x() > 0) {
+    if (delta.x() > 0) {
         direction = SwipeDirection::Right;
-    } else if (motionDelta.y() > 0) {
+    } else if (delta.y() > 0) {
         direction = SwipeDirection::Down;
-    } else if (motionDelta.y() < 0) {
+    } else if (delta.y() < 0) {
         direction = SwipeDirection::Up;
     }
-    DirectionalMotionTriggerUpdateEvent event;
-    event.setDelta(motionDelta.x() != 0 ? motionDelta.x() : motionDelta.y());
-    event.setDirection(static_cast<TriggerDirection>(direction));
-    updateTriggers(TriggerType::Wheel, &event);
+    DirectionalMotionTriggerUpdateEvent updateEvent;
+    updateEvent.setDelta(delta.x() != 0 ? delta.x() : delta.y());
+    updateEvent.setDirection(static_cast<TriggerDirection>(direction));
+    const auto hasTriggers = updateTriggers(TriggerType::Wheel, &updateEvent);
+    if (!m_buttons && !Keyboard::instance()->modifiers()) {
+        qCDebug(LIBINPUTACTIONS_HANDLER_MOUSE, "Wheel trigger will end immediately");
+        endTriggers(TriggerType::Wheel);
+    }
 
-    const auto hadTriggers = endTriggers(TriggerType::Wheel);
-    qCDebug(LIBINPUTACTIONS_HANDLER_MOUSE).noquote().nospace() << "Event processed (type: Wheel, hasGestures: " << hadTriggers << ")";
-    return hadTriggers;
+    qCDebug(LIBINPUTACTIONS_HANDLER_MOUSE).noquote().nospace() << "Event processed (type: Wheel, hasGestures: " << hasTriggers << ")";
+    return hasTriggers;
 }
 
 void MouseTriggerHandler::setMotionTimeout(const uint32_t &timeout)
@@ -211,14 +235,14 @@ std::unique_ptr<TriggerActivationEvent> MouseTriggerHandler::createActivationEve
 {
     auto event = TriggerHandler::createActivationEvent();
     event->mouseButtons = m_buttons;
-    event->position = InputState::instance()->mousePosition();
+    event->position = Pointer::instance()->screenPosition();
     return event;
 }
 
 std::unique_ptr<TriggerEndEvent> MouseTriggerHandler::createEndEvent() const
 {
     auto event = TriggerHandler::createEndEvent();
-    event->position = InputState::instance()->mousePosition();
+    event->position = Pointer::instance()->screenPosition();
     return event;
 }
 

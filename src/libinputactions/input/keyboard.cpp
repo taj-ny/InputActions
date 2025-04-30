@@ -16,31 +16,48 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include "state.h"
+#include "keyboard.h"
+#include "events.h"
 
 namespace libinputactions
 {
 
-std::optional<Qt::KeyboardModifiers> InputState::keyboardModifiers() const
+void Keyboard::handleEvent(const KeyboardKeyEvent *event)
 {
-    return std::nullopt;
+    Qt::KeyboardModifier modifier{};
+    if (s_modifiers.contains(event->nativeKey())) {
+        modifier = s_modifiers.at(event->nativeKey());
+    }
+    if (!modifier) {
+        return;
+    }
+
+    if (event->state()) {
+        m_modifiers |= modifier;
+    } else {
+        m_modifiers &= ~modifier;
+    }
 }
 
-std::optional<QPointF> InputState::mousePosition() const
+const Qt::KeyboardModifiers &Keyboard::modifiers() const
 {
-    return std::nullopt;
+    return m_modifiers;
 }
 
-InputState *InputState::instance()
+void Keyboard::clearModifiers()
+{
+}
+
+Keyboard *Keyboard::instance()
 {
     return s_instance.get();
 }
 
-void InputState::setInstance(std::unique_ptr<InputState> instance)
+void Keyboard::setInstance(std::unique_ptr<Keyboard> instance)
 {
     s_instance = std::move(instance);
 }
 
-std::unique_ptr<InputState> InputState::s_instance = std::unique_ptr<InputState>(new InputState);
+std::unique_ptr<Keyboard> Keyboard::s_instance = std::unique_ptr<Keyboard>(new Keyboard);
 
 }

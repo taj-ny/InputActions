@@ -33,72 +33,7 @@ class TouchpadTriggerHandler : public MultiTouchMotionTriggerHandler
 public:
     TouchpadTriggerHandler();
 
-    /**
-     * Handles an event. Called by the input collector.
-     * @return Whether the event should be blocked.
-     */
-    bool handleHoldBeginEvent(const uint8_t &fingers);
-    /**
-     * Handles an event. Called by the input collector.
-     * @return Whether the event should be blocked.
-     */
-    bool handleHoldEndEvent();
-    /**
-     * Handles an event. Called by the input collector.
-     * @return Whether the event should be blocked.
-     */
-    bool handleHoldCancelEvent();
-
-    /**
-     * Handles an event. Called by the input collector.
-     * @return Whether the event should be blocked.
-     */
-    bool handlePinchBeginEvent(const uint8_t &fingers);
-    /**
-     * Handles an event. Called by the input collector.
-     * @return Whether the event should be blocked.
-     */
-    bool handlePinchUpdateEvent(const qreal &scale, const qreal &angleDelta);
-    /**
-      * Handles an event. Called by the input collector.
-      * @return Whether the event should be blocked.
-      */
-    bool handlePinchEndEvent();
-    /**
-     * Handles an event. Called by the input collector.
-     * @return Whether the event should be blocked.
-     */
-    bool handlePinchCancelEvent();
-
-    /**
-     * Handles an event. Called by the input collector.
-     * @return Whether the event should be blocked.
-     */
-    bool handleSwipeBeginEvent(const uint8_t &fingers);
-    /**
-     * Handles an event. Called by the input collector.
-     * @return Whether the event should be blocked.
-     */
-    bool handleSwipeUpdateEvent(const QPointF &delta);
-    /**
-     * Handles an event. Called by the input collector.
-     * @return Whether the event should be blocked.
-     */
-    bool handleSwipeEndEvent();
-    /**
-     * Handles an event. Called by the input collector.
-     * @return Whether the event should be blocked.
-     */
-    bool handleSwipeCancelEvent();
-
-    /**
-     * Handles an event. Called by the input collector.
-     * The event is treated as a 2-finger swipe. Will not work if edge scrolling is enabled. The handler is not aware
-     * when the finger count changes, therefore it relies on a timeout to end triggers.
-     * @return Whether the input event should be blocked.
-     * @see setScrollTimeout
-     */
-    bool handleScrollEvent(const qreal &delta, const Qt::Orientation &orientation, const qreal &inverted);
+    bool handleEvent(const InputEvent *event) override;
 
     /**
      * The time of inactivity in milliseconds after which 2-finger motion triggers will end.
@@ -106,6 +41,16 @@ public:
     void setScrollTimeout(const uint32_t &timeout);
 
 private:
+    bool handleEvent(const TouchpadGestureLifecyclePhaseEvent *event);
+    bool handleEvent(const TouchpadPinchEvent *event);
+    /**
+     * The event is treated as a 2-finger swipe. Will not work if edge scrolling is enabled. The handler is not aware
+     * when the finger count changes, therefore it relies on a timeout to end triggers.
+     * @see setScrollTimeout
+     */
+    bool handleScrollEvent(const MotionEvent *event);
+    bool handleSwipeEvent(const MotionEvent *event);
+
     uint32_t m_scrollTimeout = 100;
     QTimer m_scrollTimeoutTimer;
 };

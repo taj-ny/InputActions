@@ -17,6 +17,8 @@
 */
 
 #include "backend.h"
+#include "keyboard.h"
+#include "triggers/stroke.h"
 
 namespace libinputactions
 {
@@ -25,6 +27,30 @@ InputBackend::InputBackend()
 {
     m_strokeRecordingTimeoutTimer.setSingleShot(true);
     connect(&m_strokeRecordingTimeoutTimer, &QTimer::timeout, this, &InputBackend::finishStrokeRecording);
+}
+
+bool InputBackend::handleEvent(const InputEvent *event)
+{
+    if (event->type() == InputEventType::KeyboardKey) {
+        Keyboard::instance()->handleEvent(static_cast<const KeyboardKeyEvent *>(event));
+    }
+
+    for (const auto &handler : m_handlers) {
+        if (handler->handleEvent(event)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+void InputBackend::addEventHandler(std::unique_ptr<InputEventHandler> handler)
+{
+    m_handlers.push_back(std::move(handler));
+}
+
+void InputBackend::clearEventHandlers()
+{
+    m_handlers.clear();
 }
 
 void InputBackend::recordStroke()
@@ -39,14 +65,9 @@ void InputBackend::finishStrokeRecording()
     m_strokePoints.clear();
 }
 
-void InputBackend::setMouseTriggerHandler(std::unique_ptr<MouseTriggerHandler> handler)
+void InputBackend::setIgnoreEvents(const bool &value)
 {
-    m_mouseTriggerHandler = std::move(handler);
-}
-
-void InputBackend::setTouchpadTriggerHandler(std::unique_ptr<TouchpadTriggerHandler> handler)
-{
-    m_touchpadTriggerHandler = std::move(handler);
+    m_ignoreEvents = value;
 }
 
 InputBackend *InputBackend::instance()

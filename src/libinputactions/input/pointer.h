@@ -18,42 +18,36 @@
 
 #pragma once
 
-#include <QString>
+#include <memory>
+
+#include <QPointF>
 
 namespace libinputactions
 {
 
-class Window
+class Pointer
 {
 public:
-    virtual ~Window() = default;
-
-    virtual QString title() const = 0;
-    virtual QString resourceClass() const = 0;
-    virtual QString resourceName() const = 0;
-    virtual bool maximized() const = 0;
-    virtual bool fullscreen() const = 0;
-
-protected:
-    Window() = default;
-};
-
-class WindowProvider
-{
-public:
-    WindowProvider() = default;
-    virtual ~WindowProvider() = default;
+    virtual ~Pointer() = default;
 
     /**
-     * @return The currently active window, or nullptr if no window is active.
+     * @return Global position in pixels or std::nullopt if not available.
      */
-    virtual std::shared_ptr<Window> active() const;
+    virtual std::optional<QPointF> globalPosition() const;
+    /**
+     * @return Position on the current screen ranging from (0,0) to (1,1), std::nullopt if not available.
+     */
+    virtual std::optional<QPointF> screenPosition() const;
+    virtual void setPosition(const QPointF &position);
 
-    static WindowProvider *instance();
-    static void setInstance(std::unique_ptr<WindowProvider> instance);
+    static Pointer *instance();
+    static void setInstance(std::unique_ptr<Pointer> instance);
+
+protected:
+    Pointer() = default;
 
 private:
-    static std::unique_ptr<WindowProvider> s_instance;
+    static std::unique_ptr<Pointer> s_instance;
 };
 
 }

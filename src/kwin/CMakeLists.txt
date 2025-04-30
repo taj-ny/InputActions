@@ -20,7 +20,8 @@ endif()
 set(kwin_gestures_SOURCES
     input/backend.cpp
     input/emitter.cpp
-    input/state.cpp
+    input/keyboard.cpp
+    input/pointer.cpp
     dbusinterface.cpp
     effect.cpp
     kwinwindow.cpp

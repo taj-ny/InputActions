@@ -20,6 +20,7 @@
 
 #include <libinputactions/actions/input.h>
 #include <libinputactions/input/emitter.h>
+#include <libinputactions/input/keyboard.h>
 
 Q_LOGGING_CATEGORY(LIBINPUTACTIONS_TRIGGER, "libinputactions.trigger", QtWarningMsg)
 
@@ -79,8 +80,8 @@ void Trigger::update(const TriggerUpdateEvent *event)
         m_started = true;
 
         if (m_clearModifiers && *m_clearModifiers) {
-            qCDebug(LIBINPUTACTIONS_TRIGGER).noquote() << QString("Clearing keyboard modifiers").arg(m_name);
-            InputEmitter::instance()->keyboardClearModifiers();
+            qCDebug(LIBINPUTACTIONS_TRIGGER).noquote() << QString("Clearing keyboard modifiers (trigger: %1)").arg(m_name);
+            Keyboard::instance()->clearModifiers();
         }
 
         for (const auto &action : m_actions) {

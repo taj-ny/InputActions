@@ -65,6 +65,8 @@ bool MultiTouchMotionTriggerHandler::handlePinch(const qreal &scale, const qreal
             delta = angleDelta;
             type = TriggerType::Rotate;
             break;
+        case PinchType::Unknown:
+            break;
     }
 
     TriggerSpeed speed{};

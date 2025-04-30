@@ -22,7 +22,10 @@ set(libinputactions_SRCS
     libinputactions/handlers/trigger.cpp
     libinputactions/input/backend.cpp
     libinputactions/input/emitter.cpp
-    libinputactions/input/state.cpp
+    libinputactions/input/events.cpp
+    libinputactions/input/handler.cpp
+    libinputactions/input/keyboard.cpp
+    libinputactions/input/pointer.cpp
     libinputactions/triggers/directionalmotion.cpp
     libinputactions/triggers/motion.cpp
     libinputactions/triggers/press.cpp
@@ -39,7 +42,7 @@ target_link_libraries(libinputactions PRIVATE
     Qt6::DBus
 )
 target_compile_definitions(libinputactions PUBLIC TEST_VIRTUAL=$<IF:$<BOOL:${BUILD_TESTS}>,virtual,>)
-target_include_directories(libinputactions PRIVATE libinputactions)
+target_include_directories(libinputactions PRIVATE libinputactions libinputactions/.)
 set_target_properties(libinputactions PROPERTIES PREFIX "")
 
 target_link_libraries(libinputactions PRIVATE yaml-cpp)

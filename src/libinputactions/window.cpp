@@ -23,9 +23,9 @@
 namespace libinputactions
 {
 
-std::optional<std::shared_ptr<Window>> WindowProvider::active() const
+std::shared_ptr<Window> WindowProvider::active() const
 {
-    return std::nullopt;
+    return {};
 }
 
 WindowProvider *WindowProvider::instance()

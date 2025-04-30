@@ -42,5 +42,5 @@ class KWinWindowProvider : public libinputactions::WindowProvider
 public:
     KWinWindowProvider() = default;
 
-    std::optional<std::shared_ptr<libinputactions::Window>> active() const override;
+    std::shared_ptr<libinputactions::Window> active() const override;
 };

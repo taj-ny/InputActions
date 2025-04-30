@@ -17,8 +17,9 @@
 */
 
 #include "dbusinterface.h"
-
 #include "effect/effecthandler.h"
+
+#include <libinputactions/triggers/stroke.h>
 
 static QString s_service = "org.inputactions";
 static QString s_path = "/";
@@ -40,10 +41,10 @@ void DBusInterface::recordStroke(const QDBusMessage &message)
     KWin::effects->showOnScreenMessage("Input Actions is recording input. Perform a stroke gesture by moving your mouse or performing a touchpad swipe. Recording will end after 250 ms of inactivity.");
 
     message.setDelayedReply(true);
-    auto reply = message.createReply();
+    m_reply = message.createReply();
 
     auto backend = libinputactions::InputBackend::instance();
-    connect(backend, &KWinInputBackend::strokeRecordingFinished, this, [this, reply](const auto &stroke) {
+    connect(backend, &KWinInputBackend::strokeRecordingFinished, this, [this](const auto &stroke) {
         QByteArray bytes;
         const auto &points = stroke.points();
         for (size_t i = 0; i < points.size(); i++) {
@@ -54,8 +55,8 @@ void DBusInterface::recordStroke(const QDBusMessage &message)
             bytes.push_back(static_cast<char>(points[i].alpha * 100));
         }
 
-        static_cast<QDBusMessage>(reply) << QString("'%1'").arg(bytes.toBase64()); // wtf
-        m_bus.send(reply);
+        m_reply << QString("'%1'").arg(bytes.toBase64());
+        m_bus.send(m_reply);
 
         KWin::effects->hideOnScreenMessage();
     }, Qt::SingleShotConnection);

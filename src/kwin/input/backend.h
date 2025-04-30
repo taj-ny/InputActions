@@ -21,9 +21,6 @@
 #include "input.h"
 
 #include <libinputactions/input/backend.h>
-#include <libinputactions/triggers/stroke.h>
-
-#include <QTimer>
 
 /**
  * Captures input events, forwards them to the proper instance of GestureHandler, and blocks them if necessary.
@@ -69,5 +66,5 @@ public:
 private:
     bool isMouse(const KWin::InputDevice *device) const;
 
-    bool m_pinchGestureActive = false;
+    bool m_pinchGestureActive{};
 };

@@ -41,4 +41,5 @@ public slots:
 
 private:
     QDBusConnection m_bus = QDBusConnection::sessionBus();
+    QDBusMessage m_reply;
 };

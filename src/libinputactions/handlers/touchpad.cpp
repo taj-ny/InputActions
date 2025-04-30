@@ -29,79 +29,58 @@ TouchpadTriggerHandler::TouchpadTriggerHandler()
     });
 }
 
-bool TouchpadTriggerHandler::handleHoldBeginEvent(const uint8_t &fingers)
+bool TouchpadTriggerHandler::handleEvent(const InputEvent *event)
 {
-    return activateTriggers(TriggerType::Press, fingers);
-}
-
-bool TouchpadTriggerHandler::handleHoldEndEvent()
-{
-    return endTriggers(TriggerType::Press);
-}
-
-bool TouchpadTriggerHandler::handleHoldCancelEvent()
-{
-    return cancelTriggers(TriggerType::Press);
-}
-
-bool TouchpadTriggerHandler::handlePinchBeginEvent(const uint8_t &fingers)
-{
-    return activateTriggers(TriggerType::PinchRotate, fingers);
-}
-
-bool TouchpadTriggerHandler::handlePinchUpdateEvent(const qreal &scale, const qreal &angleDelta)
-{
-    return handlePinch(scale, angleDelta);
-}
-
-bool TouchpadTriggerHandler::handlePinchEndEvent()
-{
-    return endTriggers(TriggerType::PinchRotate);
-}
-
-bool TouchpadTriggerHandler::handlePinchCancelEvent()
-{
-    return cancelTriggers(TriggerType::PinchRotate);
-}
-
-bool TouchpadTriggerHandler::handleSwipeBeginEvent(const uint8_t &fingers)
-{
-    return activateTriggers(TriggerType::StrokeSwipe, fingers);
-}
-
-bool TouchpadTriggerHandler::handleSwipeUpdateEvent(const QPointF &delta)
-{
-    return handleMotion(delta);
-}
-
-bool TouchpadTriggerHandler::handleSwipeEndEvent()
-{
-    return endTriggers(TriggerType::StrokeSwipe);
-}
-
-bool TouchpadTriggerHandler::handleSwipeCancelEvent()
-{
-    return cancelTriggers(TriggerType::StrokeSwipe);
-}
-
-bool TouchpadTriggerHandler::handleScrollEvent(const qreal &delta, const Qt::Orientation &orientation, const qreal &inverted)
-{
-    auto motionDelta = orientation == Qt::Orientation::Horizontal
-        ? QPointF(delta, 0)
-        : QPointF(0, delta);
-    if (inverted) {
-        motionDelta *= -1;
+    MultiTouchMotionTriggerHandler::handleEvent(event);
+    switch (event->type()) {
+        case InputEventType::TouchpadGestureLifecyclePhase:
+            return handleEvent(static_cast<const TouchpadGestureLifecyclePhaseEvent *>(event));
+        case InputEventType::TouchpadPinch:
+            return handleEvent(static_cast<const TouchpadPinchEvent *>(event));
+        case InputEventType::TouchpadScroll:
+            return handleScrollEvent(static_cast<const MotionEvent *>(event));
+        case InputEventType::TouchpadSwipe:
+            return handleSwipeEvent(static_cast<const MotionEvent *>(event));
+        default:
+            return false;
     }
+}
 
+bool TouchpadTriggerHandler::handleEvent(const TouchpadGestureLifecyclePhaseEvent *event)
+{
+    switch (event->phase()) {
+        case TouchpadGestureLifecyclePhase::Begin:
+            return activateTriggers(event->triggers(), event->fingers());
+        case TouchpadGestureLifecyclePhase::Cancel:
+            return cancelTriggers(event->triggers());
+        case TouchpadGestureLifecyclePhase::End:
+            return endTriggers(event->triggers());
+        default:
+            return false;
+    }
+}
+
+bool TouchpadTriggerHandler::handleEvent(const TouchpadPinchEvent *event)
+{
+    return handlePinch(event->scale(), event->angleDelta());
+}
+
+bool TouchpadTriggerHandler::handleScrollEvent(const MotionEvent *event)
+{
     if (!m_scrollTimeoutTimer.isActive()) {
         activateTriggers(TriggerType::StrokeSwipe, 2);
     }
     m_scrollTimeoutTimer.start(m_scrollTimeout);
-    if (handleMotion(motionDelta)) {
+    if (handleMotion(event->delta())) {
         return true;
     }
     m_scrollTimeoutTimer.stop();
     return false;
+}
+
+bool TouchpadTriggerHandler::handleSwipeEvent(const MotionEvent *event)
+{
+    return handleMotion(event->delta());
 }
 
 void TouchpadTriggerHandler::setScrollTimeout(const uint32_t &timeout)

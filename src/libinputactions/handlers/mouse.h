@@ -43,20 +43,7 @@ class MouseTriggerHandler : public MotionTriggerHandler
 public:
     MouseTriggerHandler();
 
-    /**
-     * Handles an event. Called by the input collector.
-     * @return Whether the event should be blocked.
-     */
-    bool handleButtonEvent(const Qt::MouseButton &button, const quint32 &nativeButton, const bool &state);
-    /**
-     * Handles an event. Called by the input collector.
-     */
-    void handleMotionEvent(const QPointF &delta);
-    /**
-     * Handles an event. Called by the input collector.
-     * @return Whether the event should be blocked.
-     */
-    bool handleWheelEvent(const qreal &delta, const Qt::Orientation &orientation);
+    bool handleEvent(const InputEvent *event) override;
 
     /**
      * The amount of time in milliseconds the handler will wait for motion to be performed (wheel is considered motion
@@ -95,6 +82,10 @@ protected:
     std::unique_ptr<TriggerEndEvent> createEndEvent() const override;
 
 private:
+    bool handleEvent(const MouseButtonEvent *event);
+    bool handleMotionEvent(const MotionEvent *event);
+    bool handleWheelEvent(const MotionEvent *event);
+
     /**
      * Checks whether there is an activatable trigger that uses the specified button. Mouse buttons are ignored when
      * checking activatibility. If a trigger has multiple buttons, all of them will be blocked, even if only one was
