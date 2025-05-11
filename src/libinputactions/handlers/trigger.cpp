@@ -148,7 +148,7 @@ bool TriggerHandler::updateTriggers(const std::map<TriggerType, const TriggerUpd
             if (trigger->overridesOtherTriggersOnUpdate()) {
                 cancelTriggers(trigger);
                 break;
-            } else if (types & TriggerType::StrokeSwipe) { // TODO This should be in MotionTriggerHandler
+            } else if (types & TriggerType::Stroke) { // TODO This should be in MotionTriggerHandler
                 cancelTriggers(TriggerType::Swipe);
                 break;
             }
