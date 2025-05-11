@@ -1,29 +1,23 @@
 # Input Actions
 Input handler built on top of libinput and KWin, currently in a very early stage of development.
 
-Supported environments: Plasma 6 Wayland
+Supported environments: Plasma 6 Wayland<br>
+[Looking for help to make this work well on other environments as well](https://github.com/taj-ny/InputActions/issues/98)
 
 # Features
+- Stroke gestures: draw any shape
 - Mouse gestures: press, stroke, swipe, wheel
-  - **Requires Plasma 6.3**
-  - Activated by pressing mouse button(s), keyboard modifier(s) or both
-  - Mouse buttons can still be used for normal clicks and motion (a small delay for button presses is introduced, can be changed)
+  - Mouse buttons can still be used for normal clicks and dragging, depending on the gestures
   - Supports horizontal scrolling wheels
 - Touchpad gestures: pinch, press, rotate, stroke, swipe
-  - Supports 2-finger motion gestures by treating scroll events as swipe events
-- Many different ways of performing gestures, can be combined
-  - Begin/end position(s) (mouse only for now): Rectangle(s) where the gesture must begin and/or end
-  - Pressed keyboard modifiers
-  - Pressed mouse buttons
-  - Speed: fast, slow
-  - Threshold (min and/or max): Time for press gestures, distance for all others
-- Stroke gestures: draw any shape
-- Actions: run command, simulate input (low-latency, no external tools or input group required), invoke Plasma global shortcut
-  - Executed at a specific point of the gesture's lifecycle (begin, update, end, cancel), allowing for complex gestures like 3-finger window drag or alt+tab without them being hard-coded
+  - Supports 2-finger swipe and stroke gestures (requires edge scrolling to be disabled)
+- Actions: run command, emit input, invoke Plasma global shortcut
+  - Executed at a specific point of the gesture's lifecycle (begin, update, end, cancel)
   - Update actions can repeat at a specified interval
-- Bi-directional motion gestures: change direction during a gesture and start executing different update actions - useful for gestures like volume control
-- Conditions: Window class, state
-- Blocks input events when necessary
+- Compatibility with tools that operate at evdev level
+- Selective input event blocking
+- Powerful condition system with [many variables and operators](docs/configuration.md#variables)
+- [And more](docs/configuration.md)
 
 # Installation
 <details>
@@ -118,7 +112,7 @@ Remove the *build* directory when rebuilding the effect.
 > If the effect stops working after a system upgrade, you will need to rebuild it.
 
 1. Install the plugin.
-2. Open the Desktop Effects page in System Settings.
+2. Open the *Desktop Effects* page in *System Settings*.
 3. Enable the *Input Actions* effect in the *Tools* category.
 
 [Documentation](docs/index.md)
