@@ -74,10 +74,13 @@ public:
 
     void addAction(std::unique_ptr<TriggerAction> action);
     /**
-     * @param condition Must be satisfied in order for the trigger to be activated. To add multiple conditions, use a
-     * condition group.
+     * @param condition Must be satisfied in order for the trigger to be activated.
      */
-    void setCondition(const std::shared_ptr<const Condition> &condition);
+    void setActivationCondition(const std::shared_ptr<const Condition> &condition);
+    /**
+     * @param condition Must be satisfied in order for the trigger to end..
+     */
+    void setEndCondition(const std::shared_ptr<const Condition> &condition);
 
     /**
      * @return Whether conditions, fingers, keyboard modifiers, mouse buttons and begin positions are satisfied.
@@ -130,37 +133,12 @@ public:
     bool overridesOtherTriggersOnUpdate();
 
     /**
-     * Ignored unless set. Does not apply to mouse triggers.
-     * @param fingers Range of fingers the trigger must be performed with.
-     * @internal
-     */
-    void setFingers(const Range<uint8_t> &fingers);
-    /**
-     * Ignored unless set.
-     *
-     * Currently only supports mouse triggers, for which the cursor position relative to the screen it is currently
-     * on is used.
-     *
-     * @param positions Exact rectangle(s) on the input device where the trigger must begin.
-     */
-    void setStartPositions(const std::vector<Range<QPointF>> &positions);
-    /**
-     * @see setStartPositions
-     */
-    void setEndPositions(const std::vector<Range<QPointF>> &positions);
-    /**
      * Ignored unless set.
      *
      * @param threshold How far the gesture must progress in order to begin.
      */
     void setThreshold(const Range<qreal> &threshold);
 
-    /**
-     * Ignored unless set.
-     *
-     * @param modifiers Keyboard modifiers that must be pressed before and during the trigger.
-     */
-    void setKeyboardModifiers(const Qt::KeyboardModifiers &modifiers);
     /**
      * @param value Whether keyboard modifiers should be cleared when this trigger starts. By default true if the
      * trigger has an input action, otherwise false.
@@ -201,11 +179,9 @@ private:
     bool m_started = false;
     std::optional<bool> m_clearModifiers;
 
-    std::optional<std::shared_ptr<const Condition>> m_condition;
-    std::optional<Range<uint8_t>> m_fingers;
-    std::optional<std::vector<Range<QPointF>>> m_startPositions;
-    std::optional<std::vector<Range<QPointF>>> m_endPositions;
-    std::optional<Qt::KeyboardModifiers> m_keyboardModifiers;
+    std::optional<std::shared_ptr<const Condition>> m_activationCondition;
+    std::optional<std::shared_ptr<const Condition>> m_endCondition;
+
     std::optional<Qt::MouseButtons> m_mouseButtons;
 
     std::optional<Range<qreal>> m_threshold;

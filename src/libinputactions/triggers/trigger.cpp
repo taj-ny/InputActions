@@ -38,23 +38,23 @@ void Trigger::addAction(std::unique_ptr<TriggerAction> action)
     m_actions.push_back(std::move(action));
 }
 
-void Trigger::setCondition(const std::shared_ptr<const Condition> &condition)
+void Trigger::setActivationCondition(const std::shared_ptr<const Condition> &condition)
 {
-    m_condition = condition;
+    m_activationCondition = condition;
+}
+
+void Trigger::setEndCondition(const std::shared_ptr<const Condition> &condition)
+{
+    m_endCondition = condition;
 }
 
 bool Trigger::canActivate(const TriggerActivationEvent *event) const
 {
-    if ((m_fingers && event->fingers && !m_fingers->contains(*event->fingers))
-        || (m_keyboardModifiers && event->keyboardModifiers && *m_keyboardModifiers != event->keyboardModifiers)
-        || (m_mouseButtons && event->mouseButtons && *m_mouseButtons != event->mouseButtons)
-        || (m_startPositions && event->position && std::find_if(m_startPositions->begin(), m_startPositions->end(), [&event](const auto &position) {
-        return position.contains(*event->position);
-    }) == m_startPositions->end())) {
+    if (m_mouseButtons && event->mouseButtons && *m_mouseButtons != event->mouseButtons) {
         return false;
     }
 
-    return !m_condition || m_condition.value()->satisfied();
+    return !m_activationCondition || m_activationCondition.value()->satisfied();
 }
 
 bool Trigger::canUpdate(const TriggerUpdateEvent *) const
@@ -94,13 +94,7 @@ void Trigger::update(const TriggerUpdateEvent *event)
 
 bool Trigger::canEnd(const TriggerEndEvent *event) const
 {
-    if (!m_endPositions || !event->position) {
-        return true;
-    }
-
-    return std::find_if(m_endPositions->begin(), m_endPositions->end(), [event](const auto &position) {
-        return position.contains(event->position.value());
-    }) == m_endPositions->end();
+    return !m_endCondition || m_endCondition.value()->satisfied();
 }
 
 void Trigger::end()
@@ -169,29 +163,9 @@ void Trigger::updateActions(const TriggerUpdateEvent *event)
     }
 }
 
-void Trigger::setFingers(const Range<uint8_t> &fingers)
-{
-    m_fingers = fingers;
-}
-
-void Trigger::setStartPositions(const std::vector<Range<QPointF>> &positions)
-{
-    m_startPositions = positions;
-}
-
-void Trigger::setEndPositions(const std::vector<Range<QPointF>> &positions)
-{
-    m_endPositions = positions;
-}
-
 void Trigger::setThreshold(const Range<qreal> &threshold)
 {
     m_threshold = threshold;
-}
-
-void Trigger::setKeyboardModifiers(const Qt::KeyboardModifiers &modifiers)
-{
-    m_keyboardModifiers = modifiers;
 }
 
 void Trigger::setClearModifiers(const bool &value)

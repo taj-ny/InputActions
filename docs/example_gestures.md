@@ -18,19 +18,25 @@
   ```yaml
   - type: wheel
     direction: up
-    keyboard_modifiers: [ meta ]
+
+    conditions:
+      - $keyboard_modifiers == meta
 
     actions:
-      - input:
-        - keyboard: [ volumeup ]
+      - on: update
+        input:
+          - keyboard: [ volumeup ]
 
   - type: wheel
     direction: down
-    keyboard_modifiers: [ meta ]
+
+    conditions:
+      - $keyboard_modifiers == meta
 
     actions:
-      - input:
-        - keyboard: [ volumedown ]
+      - on: update
+        input:
+          - keyboard: [ volumedown ]
   ```
 </details>
 <details>
@@ -38,9 +44,11 @@
 
   ```yaml
   - type: press
-    keyboard_modifiers: [ meta ]
     mouse_buttons: [ left ]
     instant: true
+
+    conditions:
+      - $keyboard_modifiers == meta
 
     actions:
       - on: begin
@@ -48,14 +56,17 @@
           - mouse: [ back ]
 
   - type: press
-    keyboard_modifiers: [ meta ]
     mouse_buttons: [ right ]
     instant: true
+
+    conditions:
+      - $keyboard_modifiers == meta
 
     actions:
       - on: begin
         input:
           - mouse: [ forward ]
+
   ```
 </details>
 <details>
@@ -64,8 +75,10 @@
   ```yaml
   - type: swipe
     direction: up
-    keyboard_modifiers: [ meta ]
     mouse_buttons: [ left ]
+    
+    conditions:
+      - $keyboard_modifiers == meta
 
     actions:
       - on: begin
@@ -74,8 +87,10 @@
 
   - type: swipe
     direction: down
-    keyboard_modifiers: [ meta ]
     mouse_buttons: [ left ]
+    
+    conditions:
+      - $keyboard_modifiers == meta
 
     actions:
       - on: begin
@@ -89,8 +104,10 @@
   ```yaml
   - type: press
     mouse_buttons: [ left ]
-    start_positions: [ 0%;0% - 0.01%;0.01% ]
     instant: true
+
+    conditions:
+      - $pointer_position_screen_percentage <= 0.01,0.01
 
     actions:
       - on: begin
@@ -103,8 +120,10 @@
   ```yaml
   - type: press
     mouse_buttons: [ middle ]
-    start_positions: [ 0%;0% - 100%;0.01% ]
     instant: true
+    
+    conditions:
+      - $pointer_position_screen_percentage_y <= 0.01
 
     actions:
       - on: begin
@@ -121,7 +140,9 @@
   ```yaml
   - type: swipe
     direction: any
-    fingers: 3
+    
+    conditions:
+      - $fingers == 3
 
     actions:
       - on: begin
@@ -144,8 +165,10 @@
   
   ```yaml
   - type: swipe
-    fingers: 3
     direction: left
+    
+    conditions:
+      - $fingers == 3
 
     actions:
       - on: begin
@@ -153,8 +176,10 @@
           - mouse: [ back ]
 
   - type: swipe
-    fingers: 3
     direction: right
+    
+    conditions:
+      - $fingers == 3
 
     actions:
       - on: begin
@@ -168,8 +193,10 @@
 
   ```yaml
   - type: rotate
-    fingers: 2
     direction: any
+    
+    conditions:
+      - $fingers == 2
 
     actions:
       - on: update
@@ -192,9 +219,11 @@
   ```yaml
   - type: swipe
     direction: left_right
-    fingers: 4
     speed: fast
 
+    conditions:
+      - $fingers == 4
+    
     actions:
       - on: begin
         input:
@@ -217,8 +246,10 @@
   # Quick window switching (left)
   - type: swipe
     direction: left
-    fingers: 4
     speed: slow
+    
+    conditions:
+      - $fingers == 4
 
     actions:
       - on: begin
@@ -228,8 +259,10 @@
   # Quick window switching (right)
   - type: swipe
     direction: right
-    fingers: 4
     speed: slow
+    
+    conditions:
+      - $fingers == 4
 
     actions:
       - on: begin
@@ -242,19 +275,21 @@
   
   ```yaml
   - type: swipe
-    fingers: 4
     direction: down
+    
+    conditions:
+      - $fingers == 4
 
     actions:
       - on: begin
         one:
           - plasma_shortcut: kwin,Window Fullscreen
             conditions:
-              - window_state: [ fullscreen ]
+              - $window_fullscreen == true
 
           - plasma_shortcut: kwin,Window Maximize
             conditions:
-              - window_state: [ maximized ]
+              - $window_maximized == true
 
           - plasma_shortcut: kwin,Window Minimize
   ```

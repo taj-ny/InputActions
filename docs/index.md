@@ -4,10 +4,10 @@
 
 # Gestures
 ## Lifecycle
-- activate - If a gesture's activation conditions (finger count, keyboard modifiers, mouse buttons, start position) are satisfied, it is added to the list of active gestures and can receive update events. If one of the activated gestures has set speed, all of them will only receive events after it is determined (*Speed.events*)
+- activate - If a gesture's activation conditions are satisfied, it is added to the list of active gestures and can receive update events. If one of the activated gestures has set speed, all of them will only receive events after it is determined (*Speed.events*)
 - begin - A gesture usually begins on the first update event, but that can be delayed or prevented entirely by thresholds.
 - update - Before the gesture receives an update event, its update conditions (direction) are checked first. If not satisfied, the gesture is cancelled.
-- end - End actions are only executed if the gesture had begun.
+- end - The gesture has ended and end conditions have been satisfied.
 - cancel - The gesture's update conditions were not satisfied, the finger count has changed (touchpad), or there is a gesture conflict (see section below). Cancel actions are only executed if the gesture had begun.
 
 ## Conflict resolution

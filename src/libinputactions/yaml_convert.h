@@ -23,16 +23,19 @@
 #include <libinputactions/actions/oneactiongroup.h>
 #include <libinputactions/actions/plasmaglobalshortcut.h>
 #include <libinputactions/conditions/conditiongroup.h>
-#include <libinputactions/conditions/legacycondition.h>
+#include <libinputactions/conditions/variable.h>
 #include <libinputactions/handlers/mouse.h>
 #include <libinputactions/handlers/touchpad.h>
 #include <libinputactions/input/handler.h>
 #include <libinputactions/triggers/directionalmotion.h>
 #include <libinputactions/triggers/press.h>
 #include <libinputactions/triggers/stroke.h>
+#include <libinputactions/variable.h>
 
 #include <QRegularExpression>
 #include <QVector>
+
+#include <unordered_set>
 
 #include "yaml-cpp/yaml.h"
 
@@ -591,6 +594,30 @@ static const Node asSequence(const Node &node)
     return result;
 }
 
+static std::any asAny(const Node &node, const std::type_index &type)
+{
+    if (type == typeid(bool)) {
+        return node.as<bool>();
+    } else if (type == typeid(CursorShape)) {
+        return node.as<CursorShape>();
+    } else if (type == typeid(Qt::KeyboardModifiers)) {
+        return asSequence(node).as<Qt::KeyboardModifiers>();
+    } else if (type == typeid(qreal)) {
+        return node.as<qreal>();
+    } else if (type == typeid(QPointF)) {
+        return node.as<QPointF>();
+    } else if (type == typeid(QString)) {
+        return node.as<QString>();
+    }
+    throw Exception(node.Mark(), "Unexpected type");
+}
+
+static bool isEnum(const std::type_index &type)
+{
+    static const std::unordered_set<std::type_index> enums{typeid(Qt::KeyboardModifiers)};
+    return enums.contains(type);
+}
+
 template<typename T>
 struct convert<Range<T>>
 {
@@ -608,20 +635,64 @@ struct convert<Range<T>>
     }
 };
 
-template<>
-struct convert<Range<QPointF>>
+template <>
+struct convert<std::shared_ptr<VariableCondition>>
 {
-    static bool decode(const Node &node, Range<QPointF> &range)
+    static bool decode(const Node &node, std::shared_ptr<VariableCondition> &condition)
     {
-        const auto raw = node.as<QString>().replace(" ", "").replace("%", "").split("-");
-        if (raw.size() != 2) {
-            throw Exception(node.Mark(), "Invalid point range");
+        auto raw = node.as<QString>();
+        bool negate{};
+        if (raw.startsWith('!')) {
+            raw = raw.mid(1);
+            negate = true;
+        }
+        raw = raw.mid(1); // Remove $
+
+        const auto firstSpace = raw.indexOf(' ');
+        const auto secondSpace = raw.indexOf(' ', firstSpace + 1);
+
+        const auto variableName = raw.left(firstSpace);
+        const auto variable = VariableManager::instance()->getVariable(variableName);
+        if (!variable) {
+            throw Exception(node.Mark(), QString("Variable '%1' does not exist.").arg(variableName).toStdString());
         }
 
-        const auto rawMin = raw[0].split(";");
-        const auto rawMax = raw[1].split(";");
-        range = Range<QPointF>(QPointF(rawMin[0].toDouble(), rawMin[1].toDouble()) / 100.0, QPointF(rawMax[0].toDouble(), rawMax[1].toDouble()) / 100.0);
+        static const std::unordered_map<QString, ComparisonOperator> operators = {
+            {"==", ComparisonOperator::EqualTo},
+            {"!=", ComparisonOperator::NotEqualTo},
+            {">", ComparisonOperator::GreaterThan},
+            {">=", ComparisonOperator::GreaterThanOrEqual},
+            {"<", ComparisonOperator::LessThan},
+            {"<=", ComparisonOperator::LessThanOrEqual},
+            {"contains", ComparisonOperator::Contains},
+            {"between", ComparisonOperator::Between},
+            {"matches", ComparisonOperator::Regex},
+            {"one_of", ComparisonOperator::OneOf},
+        };
+        const auto operatorRaw = raw.mid(firstSpace + 1, secondSpace - firstSpace - 1);
+        if (!operators.contains(operatorRaw)) {
+            throw Exception(node.Mark(), "Invalid operator");
+        }
+        const auto comparisonOperator = operators.at(operatorRaw);
 
+        const auto rightRaw = raw.mid(secondSpace + 1);
+        const auto rightNode = YAML::Load(rightRaw.toStdString());
+        std::vector<std::any> right;
+
+
+        if (!isEnum(variable->type()) && rightNode.IsSequence()) {
+            for (const auto &child : rightNode) {
+                right.push_back(asAny(child, variable->type()));
+            }
+        } else if (rightRaw.contains(';')) {
+            const auto split = rightRaw.split(';');
+            right.push_back(asAny(YAML::Load(split[0].toStdString()), variable->type()));
+            right.push_back(asAny(YAML::Load(split[1].toStdString()), variable->type()));
+        } else {
+            right.push_back(asAny(rightNode, variable->type()));
+        }
+        condition = std::make_shared<VariableCondition>(variableName, right, comparisonOperator);
+        condition->setNegate(negate);
         return true;
     }
 };
@@ -629,38 +700,89 @@ struct convert<Range<QPointF>>
 template<>
 struct convert<std::shared_ptr<Condition>>
 {
+    static bool isLegacy(const Node &node)
+    {
+        return node.IsMap() && (node["negate"] || node["window_class"] || node["window_state"]);
+    }
+
     static bool decode(const Node &node, std::shared_ptr<Condition> &condition)
     {
-        auto group = std::make_shared<ConditionGroup>();
-        condition = group;
-        group->setMode(ConditionGroupMode::Any);
-
-        for (const auto &legacyConditionNode : node) {
-            auto legacyCondition = std::make_shared<LegacyCondition>();
-            group->add(legacyCondition);
-
-            const auto negatedNode = node["negate"];
-            if (negatedNode.IsDefined()) {
-                for (const auto &negatedRaw : negatedNode.as<QStringList>(QStringList())) {
-                    if (negatedRaw.contains("window_class")) {
-                        legacyCondition->setNegateWindowClass(true);
-                    } else if (negatedRaw.contains("window_state")) {
-                        legacyCondition->setNegateWindowState(true);
-                    } else {
-                        throw Exception(node.Mark(), "Invalid negated condition property");
-                    }
+        if (node.IsMap()) {
+            std::optional<ConditionGroupMode> groupMode;
+            Node groupChildren;
+            if (node["all"]) {
+                groupMode = ConditionGroupMode::All;
+                groupChildren = Clone(node["all"]);
+            } else if (node["any"]) {
+                groupMode = ConditionGroupMode::Any;
+                groupChildren = Clone(node["any"]);
+            } else if (node["none"]) {
+                groupMode = ConditionGroupMode::None;
+                groupChildren = Clone(node["none"]);
+            }
+            if (groupMode) {
+                auto group = std::make_shared<ConditionGroup>(*groupMode);
+                for (const auto &child: groupChildren) {
+                    group->add(child.as<std::shared_ptr<Condition>>());
                 }
+                condition = group;
+                return true;
             }
 
-            const auto windowClass = node["window_class"];
-            if (windowClass.IsDefined()) {
-                legacyCondition->setWindowClass(windowClass.as<QRegularExpression>());
+            if (isLegacy(node)) {
+                auto group = std::make_shared<ConditionGroup>();
+                const auto negate = node["negate"].as<QStringList>(QStringList());
+                if (const auto &windowClassNode = node["window_class"]) {
+                    const auto value = windowClassNode.as<QString>();
+                    auto classGroup = std::make_shared<ConditionGroup>(ConditionGroupMode::Any);
+                    classGroup->add(std::make_shared<VariableCondition>("window_class", value,
+                        ComparisonOperator::Regex));
+                    classGroup->add(std::make_shared<VariableCondition>("window_name", value,
+                        ComparisonOperator::Regex));
+                    classGroup->setNegate(negate.contains("window_class"));
+                    group->add(classGroup);
+                }
+                if (const auto &windowStateNode = node["window_state"]) {
+                    const auto value = windowStateNode.as<QStringList>(QStringList());
+                    auto classGroup = std::make_shared<ConditionGroup>(ConditionGroupMode::Any);
+                    if (value.contains("fullscreen")) {
+                        classGroup->add(std::make_shared<VariableCondition>("window_fullscreen", true, ComparisonOperator::EqualTo));
+                    }
+                    if (value.contains("maximized")) {
+                        classGroup->add(std::make_shared<VariableCondition>("window_maximized", true, ComparisonOperator::EqualTo));
+                    }
+                    classGroup->setNegate(negate.contains("window_state"));
+                    group->add(classGroup);
+                }
+                condition = group;
+                return true;
             }
-            legacyCondition->setWindowState(node["window_state"].as<WindowStates>(WindowState::All));
         }
 
+        // Not in any group
+        if (node.IsSequence()) {
+            auto group = std::make_shared<ConditionGroup>(isLegacy(node[0]) ? ConditionGroupMode::Any : ConditionGroupMode::All);
+            for (const auto &child : node) {
+                group->add(child.as<std::shared_ptr<Condition>>());
+            }
+            condition = group;
+            return true;
+        }
 
-        return true;
+        if (node.IsScalar()) {
+            // Hack to load negated conditions without forcing users to quote the entire thing
+            auto conditionNode = node;
+            if (node.Tag().starts_with('!')) {
+                conditionNode = node.Tag() + " " + node.as<std::string>();
+            }
+
+            const auto raw = conditionNode.as<QString>("");
+            if (raw.startsWith("$") || raw.startsWith("!$")) {
+                condition = node.as<std::shared_ptr<VariableCondition>>();
+                return true;
+            }
+        }
+        return false;
     }
 };
 
@@ -718,6 +840,49 @@ struct convert<std::vector<std::unique_ptr<InputEventHandler>>>
     }
 };
 
+template <>
+struct convert<std::vector<std::unique_ptr<Trigger>>>
+{
+    static bool decode(const Node &node, std::vector<std::unique_ptr<Trigger>> &triggers)
+    {
+        for (const auto &triggerNode : node) {
+            if (const auto &subTriggersNode = triggerNode["gestures"]) {
+                // Trigger group
+                for (const auto &subTriggerNode : subTriggersNode) {
+                    // Trigger group
+                    auto clonedNode = Clone(subTriggerNode);
+                    for (auto it = triggerNode.begin(); it != triggerNode.end(); it++) {
+                        auto name = it->first.as<QString>();
+                        auto value = it->second;
+
+                        if (name == "conditions") {
+                            Node conditionsNode;
+                            conditionsNode["all"] = Node();
+                            conditionsNode["all"].push_back(triggerNode["conditions"]);
+                            if (subTriggerNode["conditions"]) {
+                                conditionsNode["all"].push_back(subTriggerNode["conditions"]);
+                            }
+                            clonedNode["conditions"] = conditionsNode;
+                        } else if (name != "gestures") {
+                            clonedNode[name.toStdString()] = value;
+                        }
+                    }
+
+                    Node list;
+                    list.push_back(clonedNode);
+                    for (auto &trigger : list.as<std::vector<std::unique_ptr<Trigger>>>()) {
+                        triggers.push_back(std::move(trigger));
+                    }
+                }
+                continue;
+            }
+
+            triggers.push_back(triggerNode.as<std::unique_ptr<Trigger>>());
+        }
+        return true;
+    }
+};
+
 template<>
 struct convert<std::unique_ptr<Trigger>>
 {
@@ -756,44 +921,50 @@ struct convert<std::unique_ptr<Trigger>>
             throw Exception(node.Mark(), "Invalid trigger type");
         }
 
+        auto conditionGroup = std::make_shared<ConditionGroup>();
+
         if (const auto &nameNode = node["name"]) {
             trigger->setName(nameNode.as<QString>());
         }
         if (const auto &fingersNode = node["fingers"]) {
-            auto range = fingersNode.as<Range<uint8_t>>();
+            auto range = fingersNode.as<Range<qreal>>();
             if (!range.max()) {
-                range = Range<uint8_t>(range.min(), range.min());
+                conditionGroup->add(std::make_shared<VariableCondition>(BuiltinVariables::Fingers.name(),
+                    range.min().value(), ComparisonOperator::EqualTo));
+            } else {
+                conditionGroup->add(std::make_shared<VariableCondition>(BuiltinVariables::Fingers.name(),
+                    std::vector<std::any>{range.min().value(), range.max().value()}, ComparisonOperator::Between));
             }
-            trigger->setFingers(range);
         }
         if (const auto &thresholdNode = node["threshold"]) {
             trigger->setThreshold(thresholdNode.as<Range<qreal>>());
         }
         if (const auto &modifiersNode = node["keyboard_modifiers"]) {
+            std::optional<Qt::KeyboardModifiers> modifiers;
             if (modifiersNode.IsSequence()) {
-                if (const auto modifiers = modifiersNode.as<Qt::KeyboardModifiers>(Qt::KeyboardModifier::NoModifier)) {
-                    trigger->setKeyboardModifiers(modifiers);
-                }
+                modifiers = modifiersNode.as<Qt::KeyboardModifiers>();
             } else {
                 const auto modifierMatchingMode = modifiersNode.as<QString>();
                 if (modifierMatchingMode == "none") {
-                    trigger->setKeyboardModifiers(Qt::KeyboardModifier::NoModifier);
+                    modifiers = Qt::KeyboardModifier::NoModifier;
                 } else if (modifierMatchingMode != "any") {
                     throw Exception(node.Mark(), "Invalid keyboard modifier");
                 }
+            }
+
+            if (modifiers) {
+                conditionGroup->add(std::make_shared<VariableCondition>(BuiltinVariables::KeyboardModifiers.name(),
+                    modifiers.value(), ComparisonOperator::EqualTo));
             }
         }
         if (const auto &mouseButtonsNode = node["mouse_buttons"]) {
             trigger->setMouseButtons(mouseButtonsNode.as<Qt::MouseButtons>());
         }
-        if (const auto &startPositionsNode = node["start_positions"]) {
-            trigger->setStartPositions(startPositionsNode.as<std::vector<Range<QPointF>>>());
-        }
-        if (const auto &endPositionsNode = node["end_positions"]) {
-            trigger->setEndPositions(endPositionsNode.as<std::vector<Range<QPointF>>>());
-        }
         if (const auto &conditionsNode = node["conditions"]) {
-            trigger->setCondition(conditionsNode.as<std::shared_ptr<Condition>>());
+            conditionGroup->add(conditionsNode.as<std::shared_ptr<Condition>>());
+        }
+        if (const auto &endConditionsNode = node["end_conditions"]) {
+            trigger->setEndCondition(endConditionsNode.as<std::shared_ptr<Condition>>());
         }
         for (const auto &actionNode : node["actions"]) {
             trigger->addAction(actionNode.as<std::unique_ptr<TriggerAction>>());
@@ -808,6 +979,7 @@ struct convert<std::unique_ptr<Trigger>>
             }
         }
 
+        trigger->setActivationCondition(conditionGroup);
         return true;
     }
 };
@@ -902,8 +1074,8 @@ static void decodeTriggerHandler(const Node &node, TriggerHandler *handler)
     if (!triggersNode.IsDefined()) {
         throw Exception(node.Mark(), "No gestures specified");
     }
-    for (const auto &triggerNode : triggersNode) {
-        handler->addTrigger(triggerNode.as<std::unique_ptr<Trigger>>());
+    for (auto &trigger : triggersNode.as<std::vector<std::unique_ptr<Trigger>>>()) {
+        handler->addTrigger(std::move(trigger));
     }
 }
 
@@ -1015,11 +1187,43 @@ struct convert<std::unique_ptr<TouchpadTriggerHandler>>
         }                                                                                                              \
     };
 
-
-ENUM_DECODER(TriggerSpeed, "trigger speed", (std::unordered_map<QString, TriggerSpeed> {
-    {"fast", TriggerSpeed::Fast},
-    {"slow", TriggerSpeed::Slow},
-    {"any", TriggerSpeed::Any}
+ENUM_DECODER(On, "action event (on)", (std::unordered_map<QString, On> {
+    {"begin", On::Begin},
+    {"update", On::Update},
+    {"cancel", On::Cancel},
+    {"end", On::End},
+    {"end_cancel", On::EndCancel}
+}))
+ENUM_DECODER(CursorShape, "cursor shape", (std::unordered_map<QString, CursorShape> {
+    {"default", CursorShape::Default},
+    {"up_arrow", CursorShape::UpArrow},
+    {"crosshair", CursorShape::Crosshair},
+    {"wait", CursorShape::Wait},
+    {"text", CursorShape::Text},
+    {"ns_resize", CursorShape::NSResize},
+    {"ew_resize", CursorShape::EWResize},
+    {"nesw_resize", CursorShape::NESWResize},
+    {"nwse_resize", CursorShape::NWSEResize},
+    {"all_scroll", CursorShape::AllScroll},
+    {"row_resize", CursorShape::RowResize},
+    {"col_resize", CursorShape::ColResize},
+    {"pointer", CursorShape::Pointer},
+    {"not_allowed", CursorShape::NotAllowed},
+    {"grab", CursorShape::Grab},
+    {"grabbing", CursorShape::Grabbing},
+    {"help", CursorShape::Help},
+    {"progress", CursorShape::Progress},
+    {"move", CursorShape::Move},
+    {"copy", CursorShape::Copy},
+    {"alias", CursorShape::Alias},
+    {"ne_resize", CursorShape::NEResize},
+    {"n_resize", CursorShape::NResize},
+    {"nw_resize", CursorShape::NWResize},
+    {"e_resize", CursorShape::EResize},
+    {"w_resize", CursorShape::WResize},
+    {"se_resize", CursorShape::SEResize},
+    {"s_resize", CursorShape::SResize},
+    {"sw_resize", CursorShape::SWResize}
 }))
 ENUM_DECODER(PinchDirection, "pinch direction", (std::unordered_map<QString, PinchDirection> {
     {"in", PinchDirection::In},
@@ -1040,18 +1244,12 @@ ENUM_DECODER(SwipeDirection, "swipe direction", (std::unordered_map<QString, Swi
     {"left_right", SwipeDirection::LeftRight},
     {"any", SwipeDirection::Any}
 }))
-ENUM_DECODER(On, "action event (on)", (std::unordered_map<QString, On> {
-    {"begin", On::Begin},
-    {"update", On::Update},
-    {"cancel", On::Cancel},
-    {"end", On::End},
-    {"end_cancel", On::EndCancel}
+ENUM_DECODER(TriggerSpeed, "trigger speed", (std::unordered_map<QString, TriggerSpeed> {
+    {"fast", TriggerSpeed::Fast},
+    {"slow", TriggerSpeed::Slow},
+    {"any", TriggerSpeed::Any}
 }))
 
-FLAGS_DECODER(WindowStates, "window state", (std::unordered_map<QString, WindowState> {
-    {"maximized", WindowState::Maximized},
-    {"fullscreen", WindowState::Fullscreen}
-}))
 FLAGS_DECODER(Qt::KeyboardModifiers, "keyboard modifier", (std::unordered_map<QString, Qt::KeyboardModifier> {
     {"alt", Qt::KeyboardModifier::AltModifier},
     {"ctrl", Qt::KeyboardModifier::ControlModifier},
@@ -1139,6 +1337,28 @@ struct convert<std::vector<InputAction>>
             }
         }
 
+        return true;
+    }
+};
+
+template <>
+struct convert<QPointF>
+{
+    static bool decode(const Node &node, QPointF &point)
+    {
+        const auto raw = node.as<QString>().split(",");
+        if (raw.size() != 2) {
+            throw Exception(node.Mark(), "Invalid point");
+        }
+
+        bool okX, okY = false;
+        const auto x = raw[0].toDouble(&okX);
+        const auto y = raw[1].toDouble(&okY);
+        if (!okX || !okY) {
+            throw Exception(node.Mark(), "Failed to parse number");
+        }
+
+        point = {x, y};
         return true;
     }
 };

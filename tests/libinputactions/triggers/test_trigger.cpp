@@ -30,11 +30,11 @@ void TestTrigger::canActivate_data()
     QTest::newRow("nothing") << trigger << event << true;
     trigger = new Trigger;
     event = new TriggerActivationEvent;
-    trigger->setCondition(std::make_shared<CallbackCondition>([]() { return false; }));
+    trigger->setActivationCondition(std::make_shared<CallbackCondition>([]() { return false; }));
     QTest::newRow("false condition") << trigger << event << false;
     trigger = new Trigger;
     event = new TriggerActivationEvent;
-    trigger->setCondition(std::make_shared<CallbackCondition>([]() { return true; }));
+    trigger->setActivationCondition(std::make_shared<CallbackCondition>([]() { return true; }));
     QTest::newRow("true condition") << trigger << event << true;
 
     const uint8_t fingers = 1;

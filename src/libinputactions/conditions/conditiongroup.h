@@ -34,19 +34,21 @@ enum class ConditionGroupMode
 };
 
 /**
- * Contains multiple conditions. Checks whether all, any or none of them are satisfied.
+ * Contains multiple conditions. Checks whether all, any or none of them are satisfied, depending on the specified
+ * mode.
  */
 class ConditionGroup : public Condition
 {
 public:
-    bool satisfied() const override;
+    explicit ConditionGroup(const ConditionGroupMode &mode = ConditionGroupMode::All);
 
     void add(const std::shared_ptr<const Condition> &condition);
-    void setMode(const ConditionGroupMode &mode);
 
 protected:
+    bool satisfiedInternal() const override;
+
     std::vector<std::shared_ptr<const Condition>> m_conditions;
-    ConditionGroupMode m_mode = ConditionGroupMode::All;
+    ConditionGroupMode m_mode;
 };
 
 }

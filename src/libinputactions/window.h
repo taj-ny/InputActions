@@ -18,6 +18,7 @@
 
 #pragma once
 
+#include <QRectF>
 #include <QString>
 
 namespace libinputactions
@@ -28,11 +29,12 @@ class Window
 public:
     virtual ~Window() = default;
 
-    virtual QString title() const = 0;
-    virtual QString resourceClass() const = 0;
-    virtual QString resourceName() const = 0;
-    virtual bool maximized() const = 0;
-    virtual bool fullscreen() const = 0;
+    virtual std::optional<QRectF> geometry() const;
+    virtual std::optional<QString> title() const;
+    virtual std::optional<QString> resourceClass() const;
+    virtual std::optional<QString> resourceName() const;
+    virtual std::optional<bool> maximized() const;
+    virtual std::optional<bool> fullscreen() const;
 
 protected:
     Window() = default;
@@ -45,9 +47,13 @@ public:
     virtual ~WindowProvider() = default;
 
     /**
-     * @return The currently active window, or nullptr if no window is active.
+     * @return The currently active window, or nullptr if not available.
      */
     virtual std::shared_ptr<Window> active() const;
+    /**
+     * @return The window under the pointer, or nullptr if not available.
+     */
+    virtual std::shared_ptr<Window> underPointer() const;
 
     static WindowProvider *instance();
     static void setInstance(std::unique_ptr<WindowProvider> instance);

@@ -28,6 +28,11 @@ std::shared_ptr<Window> WindowProvider::active() const
     return {};
 }
 
+std::shared_ptr<Window> WindowProvider::underPointer() const
+{
+    return {};
+}
+
 WindowProvider *WindowProvider::instance()
 {
     return s_instance.get();
@@ -39,5 +44,35 @@ void WindowProvider::setInstance(std::unique_ptr<WindowProvider> instance)
 }
 
 std::unique_ptr<WindowProvider> WindowProvider::s_instance = std::make_unique<WindowProvider>();
+
+std::optional<QRectF> Window::geometry() const
+{
+    return {};
+}
+
+std::optional<QString> Window::title() const
+{
+    return {};
+}
+
+std::optional<QString> Window::resourceClass() const
+{
+    return {};
+}
+
+std::optional<QString> Window::resourceName() const
+{
+    return {};
+}
+
+std::optional<bool> Window::fullscreen() const
+{
+    return {};
+}
+
+std::optional<bool> Window::maximized() const
+{
+    return {};
+}
 
 }

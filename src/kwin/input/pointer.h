@@ -25,7 +25,12 @@ class KWinPointer : public libinputactions::Pointer
 public:
     KWinPointer() = default;
 
+    std::optional<libinputactions::CursorShape> shape() override;
+
     std::optional<QPointF> globalPosition() const override;
     std::optional<QPointF> screenPosition() const override;
     void setPosition(const QPointF &position) override;
+
+private:
+    std::optional<libinputactions::CursorShape> m_cachedShape{};
 };

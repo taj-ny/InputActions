@@ -23,7 +23,12 @@
 namespace libinputactions
 {
 
-bool ConditionGroup::satisfied() const
+ConditionGroup::ConditionGroup(const ConditionGroupMode &mode)
+    : m_mode(mode)
+{
+}
+
+bool ConditionGroup::satisfiedInternal() const
 {
     const auto begin = m_conditions.begin();
     const auto end = m_conditions.end();
@@ -33,9 +38,9 @@ bool ConditionGroup::satisfied() const
     switch (m_mode)
     {
         case ConditionGroupMode::All:
-            return !m_conditions.empty() && std::all_of(begin, end, pred);
+            return std::all_of(begin, end, pred);
         case ConditionGroupMode::Any:
-            return !m_conditions.empty() && std::any_of(begin, end, pred);
+            return std::any_of(begin, end, pred);
         case ConditionGroupMode::None:
             return std::none_of(begin, end, pred);
         default:
@@ -46,11 +51,6 @@ bool ConditionGroup::satisfied() const
 void ConditionGroup::add(const std::shared_ptr<const Condition> &condition)
 {
     m_conditions.push_back(condition);
-}
-
-void ConditionGroup::setMode(const ConditionGroupMode &mode)
-{
-    m_mode = mode;
 }
 
 }

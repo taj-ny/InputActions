@@ -1,6 +1,6 @@
 # Configuration
 > [!IMPORTANT]
-> Due to the plugin's ability to simulate input and execute commands, you may want to restrict write access to the configuration file.
+> Depending on your threat model, it may be desired to restrict write access to the configuration file, as the plugin can block input events, simulate them and run commands as the user, allowing for escaping improperly configured sandboxes.
 >
 > Until v1.0.0 is released, breaking changes may be introduced at any time, after that only major versions (v2.0.0, v3.0.0 etc.) will introduce breaking changes.
 
@@ -8,7 +8,7 @@ This page only explains the configuration structure, to learn how certain featur
 
 There is currently no configuration UI. The configuration file is located at ``~/.config/kwingestures.yml``. It is created automatically when the plugin is loaded. The plugin should be reconfigured when the file changes. If it doesn't, disable and enable it manually or run ``qdbus org.kde.KWin /Effects org.kde.kwin.Effects.reconfigureEffect kwin_gestures``.
 
-When the configuration fails to load, the error will be logged. To see it, run ``journalctl --boot=0 -g "inputactions:" -n 5``. The message should contain the approximate position of where the error has occurred.
+When the configuration fails to load, the error will be logged. To see the last five, run ``journalctl --boot=0 -g "inputactions:" -n 5``. The message should contain the approximate position of where the error is located.
 ```
 inputactions: Failed to load configuration: Invalid swipe direction (line 4, column 17)
 ```
@@ -32,7 +32,7 @@ Bold properties must be set.
 | enum(value1, value2, ...)   | Single value from the list of valid values in brackets.<br><br>Example: ``value2``                                                                                                           |
 | flags(value1, value2, ...)  | List of one or multiple values from the list of valid values in brackets.<br><br>Example: ``[ value1, value2 ]``                                                                             |
 | list(type)                  | List containing elements of *type*.<br><br>Example: ``list(int)`` - ``[ 1, 2, 3 ]`` or:<br>- 1<br>- 2<br>- 3                                                                                 |
-| point                       | Format: ``x;y``                                                                                                                                                                              |
+| point                       | Format: ``x,y``                                                                                                                                                                              |
 | range(type)                 | Range of numbers of *type*. Format: ``min-max``. ``-`` may be surrounded by exactly one space on each side.<br><br>Example: ``range(int)`` - ``1 - 2``, ``range(point)`` - ``0;0 - 0.5;0.5`` |
 
 ## Root
@@ -43,12 +43,12 @@ Bold properties must be set.
 | touchpad    | *[TouchpadEventHandler](#touchpadeventhandler--eventhandler)*                                                            |                                                                                |         |
 
 ## EventHandler
-| Property     | Type                        | Description                                                                              |
-|--------------|-----------------------------|------------------------------------------------------------------------------------------|
-| **gestures** | *list([Gesture](#gesture))* |                                                                                          |
-| blacklist    | *list(string)*              | Names of devices that should be ignored.<br><br>Mutually exclusive with *whitelist*.     |
-| speed        | *[Speed](#speed)*           | Settings for how gesture speed is determined.                                            |
-| whitelist    | *list(string)*              | Names of devices that should not be ignored.<br><br>Mutually exclusive with *blacklist*. |
+| Property     | Type                                                         | Description                                                                              |
+|--------------|--------------------------------------------------------------|------------------------------------------------------------------------------------------|
+| **gestures** | *list([Gesture](#gesture) or [GestureGroup](#gesturegroup))* |                                                                                          |
+| blacklist    | *list(string)*                                               | Names of devices that should be ignored.<br><br>Mutually exclusive with *whitelist*.     |
+| speed        | *[Speed](#speed)*                                            | Settings for how gesture speed is determined.                                            |
+| whitelist    | *list(string)*                                               | Names of devices that should not be ignored.<br><br>Mutually exclusive with *blacklist*. |
 
 ### MouseEventHandler : [EventHandler](#eventhandler)
 Supports trackpoints as well.
@@ -81,20 +81,19 @@ The defaults may not work for everyone, as they depend on the device's sensitivi
 ## Gesture
 See [example_gestures.md](example_gestures.md) for examples.
 
-| Property           | Type                                                 | Description                                                                                                                                                                                                                                                                                                                                                                                                                                              | Default                                                  |
-|--------------------|------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------|
-| **type**           | *enum(pinch, press, rotate, stroke, swipe, wheel)*   | *hold* is a deprecated alias for *press*.                                                                                                                                                                                                                                                                                                                                                                                                                |                                                          |
-| actions            | *list([Action](#action))*                            |                                                                                                                                                                                                                                                                                                                                                                                                                                                          |                                                          |
-| clear_modifiers    | *bool*                                               | Whether keyboard modifiers should be cleared when this gesture begins.                                                                                                                                                                                                                                                                                                                                                                                   | *true* if gesture has an input action, *false* otherwise |
-| conditions         | *list([Condition](#condition))*                      | At least one condition (or 0 if none specified) must be satisfied in order for this gesture to be triggered.                                                                                                                                                                                                                                                                                                                                             |                                                          |
-| end_positions      | *list(range(point))*                                 | The exact rectangle(s) where the gesture must end. See *start_positions*.                                                                                                                                                                                                                                                                                                                                                                                |                                                          |
-| fingers            | *uint* (exact amount) or *range(uint)*               | The exact amount or range of fingers this gesture must be performed with. Does not apply to mouse gestures. <br><br>Minimum value: *1* for *press* gestures, *2* for *pinch*, *rotate*, *stroke* and *swipe* gestures.<br>Maximum value: Depends on how many fingers the device can detect.                                                                                                                                                              | *1*                                                      |
-| keyboard_modifiers | *flags(alt, ctrl, meta, shift)* or *enum(any, none)* | *any* - Modifiers are ignored<br>*none* - No modifier keys must be pressed<br><br>Keyboard modifiers, all of which must be pressed in order for the gesture to be activated.<br><br>When any gesture with keyboard modifiers is activated, **all** pressed modifiers are released in order to prevent conflicts with input actions.                                                                                                                      | *any*                                                    |
-| mouse_buttons      | *flags(left, middle, right, back, forward)*          | Mouse buttons, all of which must be pressed in order for the gesture to be activated.                                                                                                                                                                                                                                                                                                                                                                    |                                                          |
-| name               | *string*                                             | Available in debug logs.                                                                                                                                                                                                                                                                                                                                                                                                                                 |                                                          |
-| speed              | *enum(fast, slow)*                                   | The speed at which the gesture must be performed. Does not apply to press gestures.                                                                                                                                                                                                                                                                                                                                                                      |                                                          |
-| start_positions    | *list(range(point))*                                 | The exact rectangle(s) where the gesture must begin. Currently only supports mouse gestures, for which the cursor position relative to the screen it is currently on is used.<br><br>Points range from 0% to 100%. The percent sign is required, as more units may be added in the future. First point is top-left, second is bottom-right.<br><br>Examples:<br>- Right edge: ``99.9%;0% - 100%;100%``<br>- Bottom-left corner: ``0%;99.9% - 0.1%;100%`` |                                                          |
-| threshold          | *float* (min) or *range(float)* (min and max)        | How far this gesture needs to progress in order to begin.<br><br>Gestures with *begin* or *update* actions can't have maximum thresholds.                                                                                                                                                                                                                                                                                                                |                                                          |
+| Property               | Type                                                         | Description                                                                                                                                                                     | Default                                                  |
+|------------------------|--------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------|
+| **type**               | *enum(pinch, press, rotate, stroke, swipe, wheel)*           | *hold* is a deprecated alias for *press*.                                                                                                                                       |                                                          |
+| actions                | *list([Action](#action))*                                    |                                                                                                                                                                                 |                                                          |
+| clear_modifiers        | *bool*                                                       | Whether keyboard modifiers should be cleared when this gesture begins.                                                                                                          | *true* if gesture has an input action, *false* otherwise |
+| conditions             | *[Condition](#condition)* or *list([Condition](#condition))* | Must be satisfied in order for this gesture to be activated.<br><br>Condition lists not in a group will be put in an *all* [ConditionGroup](#conditiongroup--condition).        |                                                          |                                                          |
+| end_condition          | *[Condition](#condition)* or *list([Condition](#condition))* | If satisfied, the gesture will end, otherwise it will be cancelled.<br><br>Condition lists not in a group will be put in an *all* [ConditionGroup](#conditiongroup--condition). |                                                          |
+| mouse_buttons          | *flags(left, middle, right, back, forward)*                  | Mouse buttons, all of which must be pressed in order for the gesture to be activated.                                                                                           |                                                          |
+| name                   | *string*                                                     | Available in debug logs.                                                                                                                                                        |                                                          |
+| speed                  | enum(fast, slow)                                             | The speed at which the gesture must be performed. Does not apply to press gestures.<br><br>Will be available as a variable in the future.                                       |                                                          |
+| threshold              | *float* (min) or *range(float)* (min and max)                | How far this gesture needs to progress in order to begin.<br><br>Gestures with *begin* or *update* actions can't have maximum thresholds.                                       |                                                          |
+| ~~fingers~~            |                                                              | **Deprecated.** Use the *fingers* variable in a [VariableCondition](#variablecondition--condition) instead.                                                                     |                                                          |
+| ~~keyboard_modifiers~~ |                                                              | **Deprecated.** Use the *keyboard_modifiers* variable in a [VariableCondition](#variablecondition--condition) instead.                                                          |                                                          |
 
 ### RotateGesture : [Gesture](#gesture)
 | Property      | Type                                     | Description                                                                         |
@@ -122,22 +121,89 @@ See [example_gestures.md](example_gestures.md) for examples.
 | **direction** | *enum(left, right, up, down, left_right, up_down, any)* | *any*, *left_right* and *up_down* are bi-directional gestures. The direction can be changed during the gesture. |
 
 ## Condition
-All specified subconditions must be satisfied in order for the condition to be satisfied.  OR conditions can be created by adding multiple conditions.
+Support for legacy conditions from versions before v0.6 will be removed in v0.7. They should not be mixed with the new ones in a single *conditions/end_conditions* property.
 
-| Property     | Type                                | Description                                                                                                                                           |
-|--------------|-------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------|
-| negate       | *flags(window_class, window_state)* | Which properties to negate.                                                                                                                           |
-| window_class | *regex*                             | Executed on the currently focused window's resource class and resource name. If a match is not found for either, the condition will not be satisfied. |
-| window_state | *flags(fullscreen, maximized)*      |                                                                                                                                                       |
+### ConditionGroup : [Condition](#condition)
+Contains one or more conditions. Group type is determined by the presence of one of the following properties, all of which are mutually exclusive with each other.
 
-## Action
-| Property        | Type                                           | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                          | Default |
-|-----------------|------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------|
-| on              | *enum(begin, end, cancel, update, end_cancel)* | At which point of the gesture's lifecycle the action should be executed.                                                                                                                                                                                                                                                                                                                                                                                             | *end*   |
-| conditions      | *list([Condition](#condition))*                | Same as *[Gesture](#gesture).conditions*, but only for this action.                                                                                                                                                                                                                                                                                                                                                                                                  |         |
-| interval        | *float* or *string*                            | How often an *update* action should execute. Can be negative for bi-directional gestures.<br><br>``0`` - Execute exactly once per event<br>``'+'`` - Execute exactly once per event with positive delta<br>``'-'`` - Execute exactly once per event with negative delta<br> ``number`` - Execute when total delta is positive and is equal to or larger than *number*<br>``-number`` - Execute when total delta is negative and is equal to or smaller than *number* | *0*     |
-| name            | *string*                                       | Available in debug logs.                                                                                                                                                                                                                                                                                                                                                                                                                                             |         |
-| threshold       | *float* (min) or *range(float)* (min and max)  | Same as *[Gesture](#gesture).threshold*, but only for this action.<br><br>*Begin* actions can't have thresholds.                                                                                                                                                                                                                                                                                                                                                     |         |
+| Property | Type                                      | Description                               |
+|----------|-------------------------------------------|-------------------------------------------|
+| all      | *list([Condition](#condition))*           | All conditions must be satisfied.         |
+| any      | *list([Condition](#condition))*           | At least one condition must be satisfied. |
+| none     | *list([Condition](#condition))*           | No conditions must be satisfied.          |
+
+### VariableCondition : [Condition](#condition)
+Variable conditions have the following format:
+```
+[!]$(variable_name) (operator) (value)
+```
+
+An exclamation mark placed before ``$`` will negate the condition.
+
+The value can be:
+- a value of the same type as *variable_name* (automatically converted to lists when necessary, no need to put single values in ``[]``),
+- a list of values of the same types as *variable_name*, may be empty (``[]``).
+
+#### Variables
+Variables are currently only used in conditions and cannot be created by users.
+
+| Name                               | Type                                                                                                                                                                                                                                                                                              | Description                                                                                                                                                                                            |
+|------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| fingers                            | *number*                                                                                                                                                                                                                                                                                          | Amount of fingers currently on the input device.<br><br>Does not change thorough the gesture.                                                                                                          |
+| keyboard_modifiers                 | *flags(alt, ctrl, meta, shift)*                                                                                                                                                                                                                                                                   | Currently pressed keyboard modifiers.<br><br>Does not change thorough the gesture.                                                                                                                     |
+| pointer_position_screen_percentage | *point*                                                                                                                                                                                                                                                                                           | Pointer position relative to the top-left corner of the screen it is currently on as a percentage.                                                                                                     |
+| pointer_position_window_percentage | *point*                                                                                                                                                                                                                                                                                           | Pointer position relative to the top-left corner of the window it is currently hovering over as a percentage.                                                                                          |
+| pointer_shape                      | *enum(alias, all_scroll, col_resize, copy, crosshair, default, e_resize, ew_resize, grab, grabbing, help, move, n_resize, ne_resize, nesw_resize, not_allowed, ns_resize, nw_resize, nwse_resize, pointer, progress, row_resize, s_resize, se_resize, sw_resize, text, up_arrow, w_resize, wait)* | See table at https://developer.mozilla.org/en-US/docs/Web/CSS/cursor#syntax for preview.                                                                                                               |
+| window{_under}_class               | *string*                                                                                                                                                                                                                                                                                          | The window's resource class.                                                                                                                                                                           |
+| window{_under}_fullscreen          | *bool*                                                                                                                                                                                                                                                                                            | Whether the window is fullscreen.                                                                                                                                                                      |
+| window{_under}_maximized           | *bool*                                                                                                                                                                                                                                                                                            | Whether the active window is maximized.                                                                                                                                                                |
+| window{_under}_name                | *string*                                                                                                                                                                                                                                                                                          | The window's resource name.                                                                                                                                                                            |
+| window{_under}_title               | *string*                                                                                                                                                                                                                                                                                          |                                                                                                                                                                                                        |
+
+All variables of the *point* type have variants with the ``_x`` and ``_y`` suffixes that return the X and Y values respectively.
+
+``window_`` variables have ``window_under_`` variants that return information about the window the pointer is hovering over.
+
+
+#### Operators
+*T2* must be the same as *T1* unless stated otherwise.
+
+| Operator   | Variable type (T1) | Value type (T2) | Description                                                                                                    |
+|------------|--------------------|-----------------|----------------------------------------------------------------------------------------------------------------|
+| ==         | all                |                 | Equal to.                                                                                                      |
+| !=         | all                |                 | Not equal to.                                                                                                  |
+| one_of     | all                | *list(T1)*      | Whether the variable's value is present in the specified list.                                                 |
+| \>         | *number*, *point*  |                 | Greater than.                                                                                                  |
+| \<         | *number*, *point*  |                 | Less than.                                                                                                     |
+| \>=        | *number*, *point*  |                 | Greater than or equal to.                                                                                      |
+| \<=        | *number*, *point*  |                 | Less than or equal to.                                                                                         |
+| between    | *number*, *point*  |                 | Whether the value fits within the specified range (inclusive).<br><br>Format: ``a;b``                          |
+| contains   | *flags*, *string*  |                 | Whether the string value contains the specified string or the flags value contains all of the specified flags. |
+| matches    | *string*           | *regex*         | Whether the value matches the specified regular expression.                                                    |
+
+#### Example
+```yaml
+conditions:
+  all:
+    - any:
+        - $fingers between 3;4
+        - $keyboard_modifiers == [] # No modifiers must be pressed
+    - !$keyboard_modifiers contains meta # Any modifiers are allowed as long as meta isn't one of them
+    - !$window_class one_of [ Terraria.bin.x86_64, some, other, blacklisted, games ]
+    - $pointer_position_window_percentage_x < .5 # Left side
+    - $pointer_position_screen_percentage >= .99 # Bottom-right corner
+    - $pointer_position_window_percentage between .4,.4;.6,.6 # Middle
+    - $pointer_shape != text
+```
+
+### Action
+| Property        | Type                                                         | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                          | Default |
+|-----------------|--------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------|
+| on              | *enum(begin, end, cancel, update, end_cancel)*               | At which point of the gesture's lifecycle the action should be executed.                                                                                                                                                                                                                                                                                                                                                                                             | *end*   |
+| conditions      | *[Condition](#condition)* or *list([Condition](#condition))* | Same as *[Gesture](#gesture).conditions*, but only for this action.<br><br>Condition lists not in a group will be put in an *all* [ConditionGroup](#conditiongroup--condition).                                                                                                                                                                                                                                                                                      |         |
+| interval        | *float* or *string*                                          | How often an *update* action should execute. Can be negative for bi-directional gestures.<br><br>``0`` - Execute exactly once per event<br>``'+'`` - Execute exactly once per event with positive delta<br>``'-'`` - Execute exactly once per event with negative delta<br> ``number`` - Execute when total delta is positive and is equal to or larger than *number*<br>``-number`` - Execute when total delta is negative and is equal to or smaller than *number* | *0*     |
+| name            | *string*                                                     | Available in debug logs.                                                                                                                                                                                                                                                                                                                                                                                                                                             |         |
+| threshold       | *float* (min) or *range(float)* (min and max)                | Same as *[Gesture](#gesture).threshold*, but only for this action.<br><br>*Begin* actions can't have thresholds.                                                                                                                                                                                                                                                                                                                                                     |         |
 
 Unlike gestures, the action type is determined only by the presence of one of the following properties.
 
@@ -167,7 +233,94 @@ Like actions, the group type is determined by the presence of one of the followi
 |----------|---------------------------|------------------------------------------------------|
 | **one**  | *list([Action](#action))* | Executes only the first action that can be executed. |
 
-# Example
+#### Example
+```yaml
+# Exit fullscreen if fullscreen, unmaximize if maximized and minimize otherwise
+one:
+  - plasma_shortcut: kwin,Window Fullscreen
+    conditions:
+      - $window_fullscreen == true
+
+  - plasma_shortcut: kwin,Window Maximize
+    conditions:
+      - $window_maximized == true
+
+  - plasma_shortcut: kwin,Window Minimize
+```
+
+# Advanced
+## YAML Anchors
+Anchors can be used to reduce duplication.
+
+``&name`` - Define (must be defined before referencing) <br>
+``*name`` - Reference
+
+The merge operator ``<<`` is not supported, therefore this only works well with simple types.
+ 
+### Example
+
+```yaml
+call_this_whatever_you_want:
+  - &touchpad_interval_p 75
+  - &touchpad_interval_n -75
+  
+touchpad:
+  gestures:
+    - type: swipe
+      direction: up
+
+      actions:
+        - on: update
+          interval: *touchpad_interval_n
+          # ...
+          
+        - on: update
+          interval: *touchpad_interval_p
+          # ...
+```
+
+## GestureGroup
+Gesture groups apply all properties except *gestures* to the gestures specified in the *gestures* property. This can also be used to reduce duplication.
+
+### Example
+```yaml
+touchpad:
+  gestures:
+    # Firefox gestures
+    - conditions:
+        - $window_class == firefox
+
+      gestures:
+        # Firefox swipe gestures with meta modifier
+        - type: swipe
+          conditions:
+            - $keyboard_modifiers == meta
+  
+          gestures:
+            - direction: right
+              conditions:
+                - $pointer_position_window_percentage_x < 0.5
+              
+            - direction: left
+              conditions:
+                - $pointer_position_window_percentage_x >= 0.5
+
+        # Firefox swipe gestures with alt modifier
+        - type: swipe
+          conditions:
+            - $keyboard_modifiers == alt
+
+          gestures:
+            - direction: right
+              conditions:
+                - $pointer_position_window_percentage_x < 0.5
+
+            - direction: left
+              conditions:
+                - $pointer_position_window_percentage_x >= 0.5
+```
+
+# Configuration example
 ```yaml
 mouse:
   - whitelist: [ 'TPPS/2 IBM TrackPoint' ]

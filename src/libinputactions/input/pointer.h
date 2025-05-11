@@ -25,10 +25,45 @@
 namespace libinputactions
 {
 
+enum class CursorShape : uint32_t
+{
+    Alias,
+    AllScroll,
+    ColResize,
+    Copy,
+    Crosshair,
+    Default,
+    EResize,
+    EWResize,
+    Grab,
+    Grabbing,
+    Help,
+    Move,
+    NEResize,
+    NESWResize,
+    NResize,
+    NSResize,
+    NWResize,
+    NWSEResize,
+    NotAllowed,
+    Pointer,
+    Progress,
+    RowResize,
+    SEResize,
+    SResize,
+    SWResize,
+    Text,
+    UpArrow,
+    WResize,
+    Wait
+};
+
 class Pointer
 {
 public:
     virtual ~Pointer() = default;
+
+    virtual std::optional<CursorShape> shape();
 
     /**
      * @return Global position in pixels or std::nullopt if not available.

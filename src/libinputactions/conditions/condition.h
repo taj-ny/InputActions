@@ -26,10 +26,13 @@ class Condition
 public:
     virtual ~Condition() = default;
 
-    virtual bool satisfied() const;
+    bool satisfied() const;
+    void setNegate(const bool &value);
 
-protected:
-    Condition() = default;
+private:
+    virtual bool satisfiedInternal() const;
+
+    bool m_negate{};
 };
 
 }

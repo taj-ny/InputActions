@@ -17,34 +17,42 @@
 */
 
 #include "kwinwindow.h"
+
 #include "effect/effecthandler.h"
+#include "core/output.h"
+#include "workspace.h"
 
 KWinWindow::KWinWindow(KWin::Window *window)
     : m_window(window)
 {
 }
 
-QString KWinWindow::title() const
+std::optional<QRectF> KWinWindow::geometry() const
+{
+    return m_window->frameGeometry();
+}
+
+std::optional<QString> KWinWindow::title() const
 {
     return m_window->caption();
 }
 
-QString KWinWindow::resourceClass() const
+std::optional<QString> KWinWindow::resourceClass() const
 {
     return m_window->resourceClass();
 }
 
-QString KWinWindow::resourceName() const
+std::optional<QString> KWinWindow::resourceName() const
 {
     return m_window->resourceName();
 }
 
-bool KWinWindow::maximized() const
+std::optional<bool> KWinWindow::maximized() const
 {
     return m_window->maximizeMode() == KWin::MaximizeMode::MaximizeFull;
 }
 
-bool KWinWindow::fullscreen() const
+std::optional<bool> KWinWindow::fullscreen() const
 {
     return m_window->isFullScreen();
 }
@@ -55,6 +63,14 @@ std::shared_ptr<libinputactions::Window> KWinWindowProvider::active() const
     if (!window) {
         return {};
     }
-
     return std::make_shared<KWinWindow>(window->window());
+}
+
+std::shared_ptr<libinputactions::Window> KWinWindowProvider::underPointer() const
+{
+    auto window = KWin::workspace()->windowUnderMouse(KWin::workspace()->activeOutput());
+    if (!window) {
+        return {};
+    }
+    return std::make_shared<KWinWindow>(window);
 }

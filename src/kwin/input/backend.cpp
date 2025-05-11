@@ -148,7 +148,7 @@ bool KWinInputBackend::pinchGestureBegin(int fingerCount, std::chrono::microseco
     ENSURE_SESSION_UNLOCKED();
 
     m_pinchGestureActive = true;
-    const TouchpadGestureLifecyclePhaseEvent event(TouchpadGestureLifecyclePhase::Begin, TriggerType::PinchRotate);
+    const TouchpadGestureLifecyclePhaseEvent event(TouchpadGestureLifecyclePhase::Begin, TriggerType::PinchRotate, fingerCount);
     handleEvent(&event);
     return false;
 }

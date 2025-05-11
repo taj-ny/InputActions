@@ -28,9 +28,10 @@ namespace libinputactions
 class CallbackCondition : public Condition
 {
 public:
-    CallbackCondition(const std::function<bool()> &func);
+    explicit CallbackCondition(const std::function<bool()> &func);
 
-    bool satisfied() const override;
+protected:
+    bool satisfiedInternal() const override;
 
 private:
     std::function<bool()> m_func;

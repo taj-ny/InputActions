@@ -22,6 +22,7 @@
 #include <libinputactions/input/keyboard.h>
 #include <libinputactions/input/pointer.h>
 #include <libinputactions/triggers/press.h>
+#include <libinputactions/variable.h>
 
 Q_LOGGING_CATEGORY(LIBINPUTACTIONS_HANDLER_MOUSE, "libinputactions.handler.mouse", QtWarningMsg)
 
@@ -64,6 +65,12 @@ bool MouseTriggerHandler::handleEvent(const MouseButtonEvent *event)
 
     if (state) {
         m_buttons |= button;
+    } else {
+        m_buttons &= ~button;
+    }
+    VariableManager::instance()->getVariable(BuiltinVariables::MouseButtons)->set(m_buttons);
+
+    if (state) {
         m_mouseMotionSinceButtonPress = 0;
         m_hadMouseGestureSinceButtonPress = false;
         cancelTriggers(TriggerType::All);
@@ -117,7 +124,6 @@ bool MouseTriggerHandler::handleEvent(const MouseButtonEvent *event)
             return true;
         }
     } else {
-        m_buttons &= ~button;
         endTriggers(TriggerType::All);
 
         // Prevent gesture skipping when clicking rapidly
@@ -189,7 +195,7 @@ bool MouseTriggerHandler::handleWheelEvent(const MotionEvent *event)
     const auto &delta = event->delta();
     qCDebug(LIBINPUTACTIONS_HANDLER_MOUSE).nospace() << "Event (type: Wheel, delta: " << delta << ")";
 
-    if (!activateTriggers(TriggerType::Wheel)) {
+    if (!hasActiveTriggers(TriggerType::Wheel) && !activateTriggers(TriggerType::Wheel)) {
         qCDebug(LIBINPUTACTIONS_HANDLER_MOUSE, "Event processed (type: Wheel, status: NoGestures)");
         return false;
     }

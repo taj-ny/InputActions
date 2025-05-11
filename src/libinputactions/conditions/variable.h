@@ -16,19 +16,30 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include "callbackcondition.h"
+#pragma once
+
+#include "condition.h"
+
+#include <libinputactions/variable.h>
 
 namespace libinputactions
 {
 
-CallbackCondition::CallbackCondition(const std::function<bool()> &func)
-    : m_func(func)
-{
-}
+enum class ComparisonOperator;
 
-bool CallbackCondition::satisfiedInternal() const
+class VariableCondition : public Condition
 {
-    return m_func();
-}
+public:
+    VariableCondition(const QString &variableName, const std::vector<std::any> &values, const ComparisonOperator &comparisonOperator);
+    VariableCondition(const QString &variableName, const std::any &value, const ComparisonOperator &comparisonOperator);
+
+protected:
+    bool satisfiedInternal() const override;
+
+private:
+    QString m_variableName;
+    std::vector<std::any> m_values;
+    ComparisonOperator m_comparisonOperator;
+};
 
 }

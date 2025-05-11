@@ -14,7 +14,7 @@ set(libinputactions_SRCS
     libinputactions/conditions/callbackcondition.cpp
     libinputactions/conditions/condition.cpp
     libinputactions/conditions/conditiongroup.cpp
-    libinputactions/conditions/legacycondition.cpp
+    libinputactions/conditions/variable.cpp
     libinputactions/handlers/motion.cpp
     libinputactions/handlers/mouse.cpp
     libinputactions/handlers/multitouchmotion.cpp
@@ -33,6 +33,7 @@ set(libinputactions_SRCS
     libinputactions/triggers/trigger.cpp
     libinputactions/globals.h
     libinputactions/range.cpp
+    libinputactions/variable.cpp
     libinputactions/window.cpp
 )
 

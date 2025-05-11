@@ -27,11 +27,12 @@ class KWinWindow : public libinputactions::Window
 public:
     KWinWindow(KWin::Window *window);
 
-    QString title() const override;
-    QString resourceClass() const override;
-    QString resourceName() const override;
-    bool maximized() const override;
-    bool fullscreen() const override;
+    std::optional<QRectF> geometry() const override;
+    std::optional<QString> title() const override;
+    std::optional<QString> resourceClass() const override;
+    std::optional<QString> resourceName() const override;
+    std::optional<bool> maximized() const override;
+    std::optional<bool> fullscreen() const override;
 
 private:
     KWin::Window *m_window;
@@ -43,4 +44,5 @@ public:
     KWinWindowProvider() = default;
 
     std::shared_ptr<libinputactions::Window> active() const override;
+    std::shared_ptr<libinputactions::Window> underPointer() const override;
 };

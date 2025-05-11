@@ -21,14 +21,19 @@
 namespace libinputactions
 {
 
+std::optional<CursorShape> Pointer::shape()
+{
+    return {};
+}
+
 std::optional<QPointF> Pointer::globalPosition() const
 {
-    return std::nullopt;
+    return {};
 }
 
 std::optional<QPointF> Pointer::screenPosition() const
 {
-    return std::nullopt;
+    return {};
 }
 
 void Pointer::setPosition(const QPointF &position)

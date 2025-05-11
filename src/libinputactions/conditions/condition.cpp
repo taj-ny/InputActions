@@ -23,7 +23,17 @@ namespace libinputactions
 
 bool Condition::satisfied() const
 {
-    return false;
+    return satisfiedInternal() == !m_negate;
+}
+
+void Condition::setNegate(const bool &value)
+{
+    m_negate = value;
+}
+
+bool Condition::satisfiedInternal() const
+{
+    return true;
 }
 
 }
