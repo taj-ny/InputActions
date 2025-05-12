@@ -86,6 +86,7 @@ bool MouseTriggerHandler::handleEvent(const MouseButtonEvent *event)
             }
         }
 
+        m_motionTimeoutTimer.stop();
         disconnect(&m_pressTimeoutTimer, nullptr, nullptr, nullptr);
         disconnect(&m_motionTimeoutTimer, nullptr, nullptr, nullptr);
         connect(&m_pressTimeoutTimer, &QTimer::timeout, this, [this] {
