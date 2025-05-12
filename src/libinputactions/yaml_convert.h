@@ -583,7 +583,7 @@ namespace YAML
 
 static const Node asSequence(const Node &node)
 {
-    Node result;
+    Node result(NodeType::Sequence);
     if (node.IsSequence()) {
         for (const auto &child : node) {
             result.push_back(child);
@@ -678,7 +678,6 @@ struct convert<std::shared_ptr<VariableCondition>>
         const auto rightRaw = raw.mid(secondSpace + 1);
         const auto rightNode = YAML::Load(rightRaw.toStdString());
         std::vector<std::any> right;
-
 
         if (!isEnum(variable->type()) && rightNode.IsSequence()) {
             for (const auto &child : rightNode) {
