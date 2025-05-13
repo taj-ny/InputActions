@@ -27,6 +27,7 @@ class KWinWindow : public libinputactions::Window
 public:
     KWinWindow(KWin::Window *window);
 
+    std::optional<QString> id() const override;
     std::optional<QRectF> geometry() const override;
     std::optional<QString> title() const override;
     std::optional<QString> resourceClass() const override;

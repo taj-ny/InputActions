@@ -27,6 +27,11 @@ KWinWindow::KWinWindow(KWin::Window *window)
 {
 }
 
+std::optional<QString> KWinWindow::id() const
+{
+    return m_window->internalId().toString();
+}
+
 std::optional<QRectF> KWinWindow::geometry() const
 {
     return m_window->frameGeometry();

@@ -29,6 +29,7 @@ class Window
 public:
     virtual ~Window() = default;
 
+    virtual std::optional<QString> id() const;
     virtual std::optional<QRectF> geometry() const;
     virtual std::optional<QString> title() const;
     virtual std::optional<QString> resourceClass() const;

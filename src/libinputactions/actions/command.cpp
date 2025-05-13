@@ -18,6 +18,8 @@
 
 #include "command.h"
 
+#include <libinputactions/variable.h>
+
 #include <thread>
 
 namespace libinputactions
@@ -26,14 +28,15 @@ namespace libinputactions
 void CommandTriggerAction::execute()
 {
     std::thread thread([this]() {
-        std::ignore = std::system(m_command.c_str());
+        auto command = VariableManager::instance()->expandString(m_command).toStdString();
+        std::ignore = std::system(command.c_str());
     });
     thread.detach();
 }
 
 void CommandTriggerAction::setCommand(const QString &command)
 {
-    m_command = command.toStdString();
+    m_command = command;
 }
 
 }

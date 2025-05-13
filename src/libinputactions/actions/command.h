@@ -35,7 +35,7 @@ public:
     void setCommand(const QString &command);
 
 private:
-    std::string m_command;
+    QString m_command;
 };
 
 }

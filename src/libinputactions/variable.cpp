@@ -65,6 +65,11 @@ VariableManager::VariableManager()
             value = window->fullscreen();
         }
     });
+    registerRemoteVariable<QString>("window_id", [](auto &value) {
+        if (const auto window = WindowProvider::instance()->active()) {
+            value = window->id();
+        }
+    });
     registerRemoteVariable<bool>("window_maximized", [](auto &value) {
         if (const auto window = WindowProvider::instance()->active()) {
             value = window->maximized();
@@ -88,6 +93,11 @@ VariableManager::VariableManager()
     registerRemoteVariable<bool>("window_under_fullscreen", [](auto &value) {
         if (const auto window = WindowProvider::instance()->underPointer()) {
             value = window->fullscreen();
+        }
+    });
+    registerRemoteVariable<QString>("window_under_id", [](auto &value) {
+        if (const auto window = WindowProvider::instance()->underPointer()) {
+            value = window->id();
         }
     });
     registerRemoteVariable<bool>("window_under_maximized", [](auto &value) {
@@ -158,6 +168,24 @@ template <typename T>
 void VariableManager::registerRemoteVariable(const QString &name, const std::function<void(std::optional<T> &)> getter)
 {
     registerVariable(name, std::make_unique<RemoteVariable<T>>(getter));
+}
+
+QString VariableManager::expandString(const QString &s) const
+{
+    QString result = s;
+    for (const auto &[name, variable] : m_variables) {
+        if (variable->type() != typeid(QString)) {
+            continue;
+        }
+
+        const auto value = static_cast<TypedVariable<QString> *>(variable.get())->get();
+        if (!value) {
+            continue;
+        }
+
+        result = result.replace(QRegularExpression("(?<!\\\\)\\$" + name), value.value());
+    }
+    return result;
 }
 
 template TypedVariable<qreal> *VariableManager::getVariable(const VariableInfo<qreal> &variable);

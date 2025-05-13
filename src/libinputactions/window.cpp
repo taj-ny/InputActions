@@ -45,6 +45,11 @@ void WindowProvider::setInstance(std::unique_ptr<WindowProvider> instance)
 
 std::unique_ptr<WindowProvider> WindowProvider::s_instance = std::make_unique<WindowProvider>();
 
+std::optional<QString> Window::id() const
+{
+    return {};
+}
+
 std::optional<QRectF> Window::geometry() const
 {
     return {};

@@ -23,8 +23,6 @@
 #include <libinputactions/input/backend.h>
 
 /**
- * Captures input events, forwards them to the proper instance of GestureHandler, and blocks them if necessary.
- *
  * Installed before GlobalShortcutFilter, which is responsible for handling touchpad gestures.
  *
  * @remark If KWin version <=6.1.90, this filter is installed as the first one. For this reason, all methods that
