@@ -111,9 +111,9 @@ See [example_gestures.md](example_gestures.md) for examples.
 | instant  | *bool* | Whether the gesture should begin immediately. By default, there is a delay to prevent conflicts with normal clicks and stroke/swipe gestures.<br><br>Currently only supported for mouse gestures. | *false* |
 
 ### StrokeGesture : [Gesture](#gesture)
-| Property    | Type           | Description                                                                                                    |
-|-------------|----------------|----------------------------------------------------------------------------------------------------------------|
-| **strokes** | *list(string)* | Base64-encoded strings containing the processed strokes. Can be obtained from the stroke recorder in settings. |
+| Property    | Type                       | Description                                                                                                    |
+|-------------|----------------------------|----------------------------------------------------------------------------------------------------------------|
+| **strokes** | *string* or *list(string)* | Base64-encoded strings containing the processed strokes. Can be obtained from the stroke recorder in settings. |
 
 ### SwipeGesture : [Gesture](#gesture), WheelGesture : [Gesture](#gesture)
 | Property      | Type                                                    | Description                                                                                                     |

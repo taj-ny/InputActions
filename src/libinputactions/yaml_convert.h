@@ -899,7 +899,7 @@ struct convert<std::unique_ptr<Trigger>>
             trigger.reset(pinchTrigger);
         } else if (type == "stroke") {
             auto strokeTrigger = new StrokeTrigger;
-            strokeTrigger->setStrokes(node["strokes"].as<std::vector<Stroke>>());
+            strokeTrigger->setStrokes(asSequence(node["strokes"]).as<std::vector<Stroke>>());
             trigger.reset(strokeTrigger);
         } else if (type == "swipe") {
             auto swipeTrigger = new DirectionalMotionTrigger;
