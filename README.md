@@ -2,7 +2,6 @@
 Input handler built on top of libinput and KWin, currently in a very early stage of development.
 
 Supported environments: Plasma 6 Wayland<br>
-[Looking for help to make this work well on other environments as well](https://github.com/taj-ny/InputActions/issues/98)
 
 # Features
 - Stroke gestures: draw any shape
@@ -115,7 +114,7 @@ Remove the *build* directory when rebuilding the effect.
 2. Open the *Desktop Effects* page in *System Settings*.
 3. Enable the *Input Actions* effect in the *Tools* category.
 
-[Documentation](docs/index.md)
+[Documentation](https://github.com/InputActions/docs/blob/HEAD/index.md)
 
 # Credits
 - [Strokognition](https://invent.kde.org/jpetso/strokognition), [wstroke](https://github.com/dkondor/wstroke), [easystroke](https://github.com/thjaeger/easystroke) - Stroke gestures
