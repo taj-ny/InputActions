@@ -1,5 +1,5 @@
 <!DOCTYPE RCC><RCC version="1.0">
-  <qresource prefix="/effects/kwin_gestures/kcm/">
+  <qresource prefix="/effects/inputactions_kwin/kcm/">
     <file>about.html</file>
   </qresource>
 </RCC>

@@ -1,20 +1,30 @@
-# KWin Gestures
-Custom touchpad gestures for Plasma 6.
+# Input Actions
+Input handler built on top of libinput and KWin, currently in a very early stage of development.
 
-X11 is currently not supported.
-
-https://github.com/user-attachments/assets/2c16790a-869b-44f3-a760-590137293759
-
-[peterfajdiga/kwin4_effect_geometry_change](https://github.com/peterfajdiga/kwin4_effect_geometry_change) was used for tile animations.
+Supported environments: Plasma 6 Wayland
 
 # Features
-- Gestures: hold, pinch, swipe
-- Actions: run command, input (keyboard keys, mouse buttons, relative and absolute mouse movement, full control over when keys/buttons are pressed/released), invoke global shortcut
-- Override/block built-in Plasma gestures
-- Application-specific gestures
-- Trigger actions before fingers are lifted for a more responsive feel
-- Repeating actions with support for changing the direction mid-gesture
-- Fast and slow gestures
+- Stroke gesture: draw any shape
+  - Can specify multiple strokes per gesture
+- Mouse gestures: press, stroke, swipe, wheel
+  - Horizontal scrolling wheels are supported
+  - Multiple mouse buttons can be specified (and all of them must be pressed in any order)
+  - Mouse buttons can still be used for normal clicks and dragging, depending on gestures
+  - Supports left, middle, right and 24 extra mouse buttons
+- Touchpad gestures: pinch, press, rotate, stroke, swipe
+  - Supports 2-finger swipe and stroke gestures (requires edge scrolling to be disabled)
+- Actions: run command, emit input, invoke Plasma global shortcut
+  - Executed at a specific point of the gesture's lifecycle (begin, update, end, cancel)
+  - Update actions can repeat at a specified interval 
+    - Based on time for press gestures and distance for all other ones
+    - Bidirectional motion gestures can have actions with negative intervals
+- Thresholds: actions and/or gestures will not trigger unless it is reached (based on time/distance just like intervals)
+- Compatible with tools that operate at evdev level (Input Actions operates at compositor level, so it will process events after those tools)
+- Selective input event blocking
+  - Blocks built-in Plasma gestures if a custom one is activated 
+- Powerful condition system with [many variables](https://github.com/InputActions/docs/blob/HEAD/variables.md) and [operators](https://github.com/InputActions/docs/blob/HEAD/configuration.md#operators)
+  - End conditions: determine whether a gesture is ended or cancelled
+- [And more](https://github.com/InputActions/docs/blob/HEAD/configuration.md)
 
 # Installation
 <details>
@@ -27,8 +37,8 @@ https://github.com/user-attachments/assets/2c16790a-869b-44f3-a760-590137293759
     inputs = {
       nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
 
-      kwin-gestures = {
-        url = "github:taj-ny/kwin-gestures";
+      inputactions = {
+        url = "github:taj-ny/InputActions";
         inputs.nixpkgs.follows = "nixpkgs";
       };
     };
@@ -40,7 +50,7 @@ https://github.com/user-attachments/assets/2c16790a-869b-44f3-a760-590137293759
 
   {
     environment.systemPackages = [
-      inputs.kwin-gestures.packages.${pkgs.system}.default
+      inputs.inputactions.packages.${pkgs.system}.inputactions-kwin
     ];
   }
   ```
@@ -93,8 +103,8 @@ https://github.com/user-attachments/assets/2c16790a-869b-44f3-a760-590137293759
 
 ### Building
 ```sh
-git clone https://github.com/taj-ny/kwin-gestures
-cd kwin-gestures
+git clone https://github.com/taj-ny/InputActions
+cd InputActions
 mkdir build
 cd build
 cmake ../ -DCMAKE_INSTALL_PREFIX=/usr
@@ -109,15 +119,11 @@ Remove the *build* directory when rebuilding the effect.
 > If the effect stops working after a system upgrade, you will need to rebuild it.
 
 1. Install the plugin.
-2. Open the Desktop Effects page in System Settings.
-3. Enable the *Gestures* effect in the *Tools* category.
+2. Open the *Desktop Effects* page in *System Settings*.
+3. Enable the *Input Actions* effect in the *Tools* category.
 
-See [docs/configuration.md](docs/configuration.md) for instructions on how to configure this plugin.
-
-# Gesture recognition issues
-Before reporting any issues related to gesture recognition, run ``libinput debug-events`` as root and ensure the gesture is recognized properly. If it's not, there's nothing I can do.
-
-Depending on the touchpad, 3 or 4-finger pinch gestures may sometimes be incorrectly interpreted as swipe gestures due to the touchpad only being able to track 2 fingers. As a workaround, move only 2 fingers in opposite directions. See https://wayland.freedesktop.org/libinput/doc/1.25.0/gestures.html#gestures-on-two-finger-touchpads for more information.
+[Documentation](https://github.com/InputActions/docs/blob/HEAD/index.md)
 
 # Credits
-- [KWin](https://invent.kde.org/plasma/kwin) - Gesture recognition code (parts of it), sending keystrokes
+- [Strokognition](https://invent.kde.org/jpetso/strokognition), [wstroke](https://github.com/dkondor/wstroke), [easystroke](https://github.com/thjaeger/easystroke) - Stroke gestures
+- [KWin](https://invent.kde.org/plasma/kwin) - Gesture handling code (heavily extended and modified)

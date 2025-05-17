@@ -18,10 +18,13 @@ if(${KWin_VERSION} VERSION_GREATER_EQUAL 6.2.90)
 endif()
 
 set(kwin_gestures_SOURCES
-    impl/kwininput.cpp
-    impl/kwinwindowinfoprovider.cpp
+    input/backend.cpp
+    input/emitter.cpp
+    input/keyboard.cpp
+    input/pointer.cpp
+    dbusinterface.cpp
     effect.cpp
-    inputfilter.cpp
+    kwinwindow.cpp
     main.cpp
     utils.h
 )
@@ -29,7 +32,7 @@ set(kwin_gestures_SOURCES
 add_library(kwin_gestures MODULE ${kwin_gestures_SOURCES})
 target_link_libraries(kwin_gestures PRIVATE
     KWin::kwin
-    libgestures
+    libinputactions
     Qt6::Widgets
     XKB::XKB
 )
