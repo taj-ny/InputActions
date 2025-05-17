@@ -18,8 +18,7 @@
 
 #pragma once
 
-#include <functional>
-#include <variant>
+#include <set>
 
 #include <QString>
 
@@ -39,6 +38,10 @@ public:
 
 private:
     QString m_expression;
+    /**
+     * Variable names referenced in the expression.
+     */
+    std::set<QString> m_variables;
 };
 
 }

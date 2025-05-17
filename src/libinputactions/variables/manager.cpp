@@ -173,6 +173,15 @@ void VariableManager::registerRemoteVariable(const QString &name, const std::fun
     registerVariable(name, std::make_unique<RemoteVariable>(typeid(T), anyGetter));
 }
 
+std::map<QString, const Variable *> VariableManager::variables() const
+{
+    std::map<QString, const Variable *> variables;
+    for (const auto &[name, variable] : m_variables) {
+        variables[name] = variable.get();
+    }
+    return variables;
+}
+
 QString VariableManager::expandString(const QString &s)
 {
     QString result = s;

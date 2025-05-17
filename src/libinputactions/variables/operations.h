@@ -35,14 +35,15 @@ public:
     virtual ~VariableOperationsBase() = default;
 
     bool compare(const std::vector<std::any> &right, const ComparisonOperator &comparisonOperator) const;
-    virtual bool compare(const std::any &left, const std::any &right, const ComparisonOperator &comparisonOperator) const;
-
-    virtual QString toString(const std::any &value) const;
+    QString toString() const;
 
     static std::unique_ptr<VariableOperationsBase> create(Variable *variable);
 
 protected:
     VariableOperationsBase(Variable *variable);
+
+    virtual bool compare(const std::any &left, const std::any &right, const ComparisonOperator &comparisonOperator) const;
+    virtual QString toString(const std::any &value) const;
 
 private:
     Variable *m_variable;
@@ -54,11 +55,13 @@ class VariableOperations : public VariableOperationsBase
 public:
     VariableOperations(Variable *variable);
 
-    bool compare(const std::any &left, const std::any &right, const ComparisonOperator &comparisonOperator) const override;
-    QString toString(const std::any &value) const override;
-
+public:
     static bool compare(const T &left, const T &right, const ComparisonOperator &comparisonOperator);
     static QString toString(const T &value);
+
+protected:
+    bool compare(const std::any &left, const std::any &right, const ComparisonOperator &comparisonOperator) const override;
+    QString toString(const std::any &value) const override;
 };
 
 }

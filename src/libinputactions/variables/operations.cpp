@@ -62,6 +62,11 @@ bool VariableOperationsBase::compare(const std::any &left, const std::any &right
     return false;
 }
 
+QString VariableOperationsBase::toString() const
+{
+    return toString(m_variable->get());
+}
+
 QString VariableOperationsBase::toString(const std::any &value) const
 {
     return {};

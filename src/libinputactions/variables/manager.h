@@ -78,6 +78,8 @@ public:
     template<typename T>
     void registerRemoteVariable(const QString &name, const std::function<void(std::optional<T> &value)> getter);
 
+    std::map<QString, const Variable *> variables() const;
+
     QString expandString(const QString &s);
 
     static VariableManager *instance();

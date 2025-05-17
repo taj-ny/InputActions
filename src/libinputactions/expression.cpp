@@ -20,8 +20,9 @@
 
 #include <libinputactions/globals.h>
 #include <libinputactions/variables/manager.h>
+#include <libinputactions/variables/variable.h>
 
-#include <QString>
+#include <QRegularExpression>
 
 namespace libinputactions
 {
@@ -30,12 +31,33 @@ template<typename T>
 Expression<T>::Expression(const QString &expression)
 {
     m_expression = expression;
+
+    static const QRegularExpression variableReferenceRegex("\\$([a-zA-Z0-9_])+");
+    const auto variables = VariableManager::instance()->variables();
+    auto it = variableReferenceRegex.globalMatch(m_expression);
+    while (it.hasNext()) {
+        const auto match = it.next();
+        const auto variableName = match.captured(0).mid(1);
+        if (!variables.contains(variableName)) {
+            continue;
+        }
+        m_variables.insert(variableName);
+    }
 }
 
 template<>
 QString Expression<QString>::evaluate() const
 {
-    return VariableManager::instance()->expandString(m_expression);
+    if (m_variables.empty()) {
+        return m_expression;
+    }
+
+    QString result = m_expression;
+    for (const auto &variable : m_variables) {
+        const auto value = VariableManager::instance()->getVariable(variable)->operations()->toString();
+        result = result.replace(QRegularExpression("\\$" + variable + "(?![a-zA-Z0-9_])"), value);
+    }
+    return result;
 }
 
 template class Expression<QString>;
