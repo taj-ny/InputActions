@@ -79,8 +79,5 @@ public:
     InputDevice *device() const;
 
 private:
-    KWin::PointerInputRedirection *m_pointer;
-    KWin::KeyboardInputRedirection *m_keyboard;
-
     std::unique_ptr<InputDevice> m_device;
 };
