@@ -22,9 +22,11 @@
 #include "input/pointer.h"
 #include "kwinwindow.h"
 
+#include <libinputactions/variables/manager.h>
 #include <libinputactions/yaml_convert.h>
 
 #include "effect/effecthandler.h"
+#include "workspace.h"
 
 #include <QDir>
 #include <QLoggingCategory>
@@ -41,6 +43,14 @@ Effect::Effect()
     libinputactions::Keyboard::setInstance(std::make_unique<KWinKeyboard>());
     libinputactions::Pointer::setInstance(std::make_unique<KWinPointer>());
     libinputactions::WindowProvider::setInstance(std::make_unique<KWinWindowProvider>());
+
+    // This should be moved to libinputactions eventually
+    auto *variableManager = libinputactions::VariableManager::instance();
+    variableManager->registerRemoteVariable<QString>("screen_name", [](auto &value) {
+        if (const auto *output = KWin::workspace()->activeOutput()) {
+            value = output->name();
+        }
+    });
 
 #ifdef KWIN_6_2_OR_GREATER
     KWin::input()->installInputEventFilter(m_backend);
