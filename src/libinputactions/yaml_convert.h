@@ -1001,6 +1001,10 @@ struct convert<std::unique_ptr<TriggerAction>>
         } else if (node["plasma_shortcut"].IsDefined()) {
             auto plasmaShortcutAction = new PlasmaGlobalShortcutTriggerAction;
             const auto split = node["plasma_shortcut"].as<QString>().split(",");
+            if (split.length() != 2) {
+                throw Exception(node.Mark(), "Invalid Plasma shortcut format");
+            }
+
             plasmaShortcutAction->setComponent(split[0]);
             plasmaShortcutAction->setShortcut(split[1]);
             action.reset(plasmaShortcutAction);
