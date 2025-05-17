@@ -111,9 +111,8 @@ std::optional<QPointF> KWinPointer::screenPosition() const
 void KWinPointer::setPosition(const QPointF &position)
 {
     auto *device = static_cast<KWinInputEmitter *>(libinputactions::InputEmitter::instance())->device();
-    auto pointer = KWin::input()->pointer();
     libinputactions::InputBackend::instance()->setIgnoreEvents(true);
-    pointer->processMotionAbsolute(position, timestamp(), device);
-    pointer->processFrame(device);
+    Q_EMIT device->pointerMotionAbsolute(position, timestamp(), device);
+    Q_EMIT device->pointerFrame(device);
     libinputactions::InputBackend::instance()->setIgnoreEvents(false);
 }
