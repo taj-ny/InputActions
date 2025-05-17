@@ -67,9 +67,15 @@ class VariableManager
 {
 public:
     template<typename T>
-    VariableWrapper<T> getVariable(const VariableInfo<T> &name);
+    std::optional<VariableWrapper<T>> getVariable(const VariableInfo<T> &name);
+    /**
+     * @return A statically-typed wrapper for the specified variable, nullptr if not found or type doesn't match.
+     */
     template<typename T>
-    VariableWrapper<T> getVariable(const QString &name);
+    std::optional<VariableWrapper<T>> getVariable(const QString &name);
+    /**
+     * @return The variable with the specified name or nullptr if not found.
+     */
     Variable *getVariable(const QString &name);
 
     void registerVariable(const QString &name, std::unique_ptr<Variable> variable);
@@ -79,8 +85,6 @@ public:
     void registerRemoteVariable(const QString &name, const std::function<void(std::optional<T> &value)> getter);
 
     std::map<QString, const Variable *> variables() const;
-
-    QString expandString(const QString &s);
 
     static VariableManager *instance();
 

@@ -38,7 +38,8 @@ DBusInterface::~DBusInterface()
 
 void DBusInterface::recordStroke(const QDBusMessage &message)
 {
-    KWin::effects->showOnScreenMessage("Input Actions is recording input. Perform a stroke gesture by moving your mouse or performing a touchpad swipe. Recording will end after 250 ms of inactivity.");
+    KWin::effects->showOnScreenMessage("Input Actions is recording input. Perform a stroke gesture by moving your mouse or performing a touchpad swipe."
+                                       " Recording will end after 250 ms of inactivity.");
 
     message.setDelayedReply(true);
     m_reply = message.createReply();

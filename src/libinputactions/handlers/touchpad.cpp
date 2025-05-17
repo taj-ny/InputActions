@@ -52,7 +52,7 @@ bool TouchpadTriggerHandler::handleEvent(const TouchpadGestureLifecyclePhaseEven
 {
     switch (event->phase()) {
         case TouchpadGestureLifecyclePhase::Begin:
-            VariableManager::instance()->getVariable(BuiltinVariables::Fingers).set(event->fingers());
+            VariableManager::instance()->getVariable(BuiltinVariables::Fingers)->set(event->fingers());
             return activateTriggers(event->triggers(), event->fingers());
         case TouchpadGestureLifecyclePhase::Cancel:
             return cancelTriggers(event->triggers());
@@ -71,7 +71,7 @@ bool TouchpadTriggerHandler::handleEvent(const TouchpadPinchEvent *event)
 bool TouchpadTriggerHandler::handleScrollEvent(const MotionEvent *event)
 {
     if (!m_scrollTimeoutTimer.isActive()) {
-        VariableManager::instance()->getVariable(BuiltinVariables::Fingers).set(2);
+        VariableManager::instance()->getVariable(BuiltinVariables::Fingers)->set(2);
         activateTriggers(TriggerType::StrokeSwipe, 2);
     }
     m_scrollTimeoutTimer.start(m_scrollTimeout);

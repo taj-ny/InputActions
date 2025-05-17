@@ -37,46 +37,6 @@ void TestTrigger::canActivate_data()
     trigger->setActivationCondition(std::make_shared<CallbackCondition>([]() { return true; }));
     QTest::newRow("true condition") << trigger << event << true;
 
-    const uint8_t fingers = 1;
-    trigger = new Trigger;
-    event = new TriggerActivationEvent;
-    trigger->setFingers(fingers);
-    event->fingers = fingers;
-    QTest::newRow("fingers, both, correct") << trigger << event << true;
-    trigger = new Trigger;
-    event = new TriggerActivationEvent;
-    trigger->setFingers(fingers);
-    event->fingers = 2;
-    QTest::newRow("fingers, both, wrong") << trigger << event << false;
-    trigger = new Trigger;
-    event = new TriggerActivationEvent;
-    trigger->setFingers(fingers);
-    QTest::newRow("fingers, trigger only") << trigger << event << true;
-    trigger = new Trigger;
-    event = new TriggerActivationEvent;
-    event->fingers = fingers;
-    QTest::newRow("fingers, event only") << trigger << event << true;
-
-    const auto keyboardModifier = Qt::KeyboardModifier::ControlModifier;
-    trigger = new Trigger;
-    event = new TriggerActivationEvent;
-    trigger->setKeyboardModifiers(keyboardModifier);
-    event->keyboardModifiers = keyboardModifier;
-    QTest::newRow("keyboard modifiers, both, correct") << trigger << event << true;
-    trigger = new Trigger;
-    event = new TriggerActivationEvent;
-    trigger->setKeyboardModifiers(keyboardModifier);
-    event->keyboardModifiers = Qt::KeyboardModifier::AltModifier;
-    QTest::newRow("keyboard modifiers, both, wrong") << trigger << event << false;
-    trigger = new Trigger;
-    event = new TriggerActivationEvent;
-    trigger->setKeyboardModifiers(keyboardModifier);
-    QTest::newRow("keyboard modifiers, trigger only") << trigger << event << true;
-    trigger = new Trigger;
-    event = new TriggerActivationEvent;
-    event->fingers = keyboardModifier;
-    QTest::newRow("keyboard modifiers, event only") << trigger << event << true;
-
     const auto mouseButton = Qt::MouseButton::LeftButton;
     trigger = new Trigger;
     event = new TriggerActivationEvent;

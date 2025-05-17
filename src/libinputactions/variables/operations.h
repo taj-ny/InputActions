@@ -29,12 +29,23 @@ namespace libinputactions
 
 class Variable;
 
+/**
+ * Operations for variables of a specific type. Each variable has its own operations that contain a pointer to the variable.
+ */
 class VariableOperationsBase
 {
 public:
     virtual ~VariableOperationsBase() = default;
 
+    /**
+     * Compares the variables value to the specified value(s) using the specified operator.
+     * @param right Must contain exactly 2 values if operator is Between. Must contain at least 1 value if operator is OneOf. All other operators require
+     * exactly 1 value.
+     */
     bool compare(const std::vector<std::any> &right, const ComparisonOperator &comparisonOperator) const;
+    /**
+     * @return A string representation of the variable's value or an empty string if not supported.
+     */
     QString toString() const;
 
     static std::unique_ptr<VariableOperationsBase> create(Variable *variable);
@@ -42,6 +53,9 @@ public:
 protected:
     VariableOperationsBase(Variable *variable);
 
+    /**
+     * The operators NotEqualTo, OneOf and Between are not handled here.
+     */
     virtual bool compare(const std::any &left, const std::any &right, const ComparisonOperator &comparisonOperator) const;
     virtual QString toString(const std::any &value) const;
 

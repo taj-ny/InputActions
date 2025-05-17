@@ -28,16 +28,24 @@
 namespace libinputactions
 {
 
-
 class Variable
 {
 public:
     Variable(const std::type_index &type);
     virtual ~Variable() = default;
 
+    /**
+     * @return May be empty.
+     */
     virtual std::any get() const;
+    /**
+     * @param value Must be the same as the variable's type or empty.
+     */
     virtual void set(const std::any &value);
 
+    /**
+     * @return Operations for this variable's type.
+     */
     const VariableOperationsBase *operations() const;
 
     const std::type_index &type() const;
@@ -49,7 +57,7 @@ private:
 };
 
 /**
- * A locally stored variable with quick access.
+ * A locally stored variable with instant access.
  */
 class LocalVariable : public Variable
 {
@@ -63,9 +71,15 @@ private:
     std::any m_value;
 };
 
+/**
+ * A variable whose value is calculated or fetched on demand. Variables with slow access are currently not supported.
+ */
 class RemoteVariable : public Variable
 {
 public:
+    /**
+     * @param getter Must always return the same type as the variable or empty.
+     */
     RemoteVariable(const std::type_index &type, const std::function<void(std::any &value)> &getter);
 
     std::any get() const override;

@@ -29,6 +29,9 @@ namespace libinputactions
 
 enum class ComparisonOperator;
 
+/**
+ * If a non-existent variable is used, the condition will always be satisfied.
+ */
 class VariableCondition : public Condition
 {
 public:

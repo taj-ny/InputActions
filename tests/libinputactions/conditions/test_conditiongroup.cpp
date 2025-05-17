@@ -16,7 +16,7 @@ void TestConditionGroup::satisfies_data()
 
     QTest::newRow("none, none") << std::vector<bool>{} << ConditionGroupMode::None << true;
     QTest::newRow("none, any") << std::vector<bool>{} << ConditionGroupMode::Any << false;
-    QTest::newRow("none, all") << std::vector<bool>{} << ConditionGroupMode::All << false;
+    QTest::newRow("none, all") << std::vector<bool>{} << ConditionGroupMode::All << true;
     QTest::newRow("true, none") << std::vector<bool>{ true } << ConditionGroupMode::None << false;
     QTest::newRow("true, any") << std::vector<bool>{ true } << ConditionGroupMode::Any << true;
     QTest::newRow("true, all") << std::vector<bool>{ true } << ConditionGroupMode::All << true;
@@ -34,8 +34,7 @@ void TestConditionGroup::satisfies()
     QFETCH(ConditionGroupMode, mode);
     QFETCH(bool, result);
 
-    ConditionGroup group;
-    group.setMode(mode);
+    ConditionGroup group(mode);
     for (const auto &conditionResult : conditions) {
         group.add(conditionResult ? makeCondition(true) : makeCondition(false));
     }

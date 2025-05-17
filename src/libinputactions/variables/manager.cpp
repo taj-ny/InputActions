@@ -23,7 +23,10 @@
 #include <libinputactions/input/pointer.h>
 #include <libinputactions/window.h>
 
+#include <QLoggingCategory>
 #include <QRegularExpression>
+
+Q_LOGGING_CATEGORY(LIBINPUTACTIONS_VARIABLE_MANAGER, "libinputactions.variable.manager", QtWarningMsg)
 
 namespace libinputactions
 {
@@ -116,12 +119,12 @@ VariableManager::VariableManager()
     for (const auto &[name, variable] : m_variables) {
         if (variable->type() == typeid(QPointF)) {
             registerRemoteVariable<qreal>(name + "_x", [this, name](auto &value) {
-                if (const auto point = getVariable<QPointF>(name).get()) {
+                if (const auto point = getVariable<QPointF>(name)->get()) {
                     value = point->x();
                 }
             });
             registerRemoteVariable<qreal>(name + "_y", [this, name](auto &value) {
-                if (const auto point = getVariable<QPointF>(name).get()) {
+                if (const auto point = getVariable<QPointF>(name)->get()) {
                     value = point->y();
                 }
             });
@@ -130,20 +133,30 @@ VariableManager::VariableManager()
 }
 
 template<typename T>
-VariableWrapper<T> VariableManager::getVariable(const VariableInfo<T> &variable)
+std::optional<VariableWrapper<T>> VariableManager::getVariable(const VariableInfo<T> &variable)
 {
-    return VariableWrapper<T>(getVariable(variable.name()));
+    return getVariable<T>(variable.name());
 }
 
 template<typename T>
-VariableWrapper<T> VariableManager::getVariable(const QString &name)
+std::optional<VariableWrapper<T>> VariableManager::getVariable(const QString &name)
 {
+    auto *variable = getVariable(name);
+    if (!variable) {
+        return {};
+    } else if (variable->type() != typeid(T)) {
+        qCWarning(LIBINPUTACTIONS_VARIABLE_MANAGER).noquote() << QString("VariableManager::getVariable<T> called with the wrong type (variable: %1, type: %2")
+            .arg(variable->type().name(), typeid(T).name());
+        return {};
+    }
+
     return VariableWrapper<T>(getVariable(name));
 }
 
 Variable *VariableManager::getVariable(const QString &name)
 {
     if (!m_variables.contains(name)) {
+        qCDebug(LIBINPUTACTIONS_VARIABLE_MANAGER).noquote() << QString("Variable %1 not found").arg(name);
         return nullptr;
     }
     return m_variables.at(name).get();
@@ -182,24 +195,6 @@ std::map<QString, const Variable *> VariableManager::variables() const
     return variables;
 }
 
-QString VariableManager::expandString(const QString &s)
-{
-    QString result = s;
-    for (const auto &[name, variable] : m_variables) {
-        if (variable->type() != typeid(QString)) {
-            continue;
-        }
-
-        const auto value = getVariable<QString>(name).get();
-        if (!value) {
-            continue;
-        }
-
-        result = result.replace(QRegularExpression(R"((?<!\\)\$)" + name), value.value());
-    }
-    return result;
-}
-
 VariableManager *VariableManager::instance()
 {
     return s_instance.get();
@@ -207,8 +202,8 @@ VariableManager *VariableManager::instance()
 
 std::unique_ptr<VariableManager> VariableManager::s_instance = std::unique_ptr<VariableManager>(new VariableManager);
 
-template VariableWrapper<QString> VariableManager::getVariable(const QString &variable);
-template VariableWrapper<qreal> VariableManager::getVariable(const VariableInfo<qreal> &variable);
+template std::optional<VariableWrapper<QString>> VariableManager::getVariable(const QString &variable);
+template std::optional<VariableWrapper<qreal>> VariableManager::getVariable(const VariableInfo<qreal> &variable);
 
 template<typename T>
 VariableWrapper<T>::VariableWrapper(Variable *variable)

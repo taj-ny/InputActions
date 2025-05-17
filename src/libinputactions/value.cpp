@@ -40,7 +40,7 @@ template<typename T>
 Value<T> Value<T>::variable(const QString &name)
 {
     return Value<T>([name] {
-        return VariableManager::instance()->getVariable<T>(name).get().value();
+        return VariableManager::instance()->getVariable<T>(name)->get().value();
     });
 }
 

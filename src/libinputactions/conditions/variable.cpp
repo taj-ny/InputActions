@@ -46,9 +46,8 @@ bool VariableCondition::satisfiedInternal() const
 {
     const auto variable = VariableManager::instance()->getVariable(m_variableName);
     if (!variable) {
-        qCWarning(LIBINPUTACTIONS_CONDITION_VARIABLE).noquote()
-            << QString("Variable \"%1\" is unsupported or doesn't exist, assuming the condition is satisfied.")
-                .arg(m_variableName);
+        qCWarning(LIBINPUTACTIONS_CONDITION_VARIABLE).noquote() << QString("Failed to get variable %1, assuming the condition is satisfied.")
+            .arg(m_variableName);
         return true;
     }
     return variable->operations()->compare(m_values, m_comparisonOperator);
