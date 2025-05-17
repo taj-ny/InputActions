@@ -1,4 +1,4 @@
-# Input Actions
+# Input Actions [![AUR Version](https://img.shields.io/aur/version/input-actions)](https://aur.archlinux.org/packages/input-actions)
 Input handler built on top of libinput and KWin, currently in a very early stage of development.
 
 Supported environments: Plasma 6 Wayland
@@ -116,7 +116,7 @@ Remove the *build* directory when rebuilding the effect.
 
 # Usage
 > [!NOTE]
-> If the effect stops working after a system upgrade, you will need to rebuild it.
+> If the plugin stops working after a system update, you will need to rebuild it. Choose cleanBuild when rebuilding the AUR package.
 
 1. Install the plugin.
 2. Open the *Desktop Effects* page in *System Settings*.
