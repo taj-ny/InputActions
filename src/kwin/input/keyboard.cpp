@@ -18,11 +18,11 @@
 
 #include "keyboard.h"
 
-#include "keyboard_input.h"
 #include "workspace.h"
 
 #include <libinputactions/input/backend.h>
 #include <libinputactions/input/emitter.h>
+#include <libinputactions/input/keyboard.h>
 
 void KWinKeyboard::clearModifiers()
 {
@@ -34,7 +34,7 @@ void KWinKeyboard::clearModifiers()
     }
 
     auto emitter = libinputactions::InputEmitter::instance();
-    const auto modifiers = KWin::input()->keyboard()->modifiers();
+    const auto modifiers = libinputactions::Keyboard::instance()->modifiers(); // This is not the real state, but it's fine in this case.
     for (const auto &[key, modifier] : libinputactions::s_modifiers) {
         if (modifiers & modifier) {
             emitter->keyboardKey(key, false);

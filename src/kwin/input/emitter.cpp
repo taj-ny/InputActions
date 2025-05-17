@@ -18,14 +18,6 @@
 
 #include "emitter.h"
 #include "utils.h"
-#include "cursor.h"
-
-#include "core/output.h"
-#include "keyboard_input.h"
-#include "pointer_input.h"
-#include "workspace.h"
-
-#include <linux/input-event-codes.h>
 
 #include <libinputactions/input/backend.h>
 
@@ -34,8 +26,6 @@ KWinInputEmitter::KWinInputEmitter()
 {
     auto input = KWin::input();
     input->addInputDevice(m_device.get());
-    m_pointer = input->pointer();
-    m_keyboard = input->keyboard();
 }
 
 KWinInputEmitter::~KWinInputEmitter()
@@ -48,23 +38,23 @@ KWinInputEmitter::~KWinInputEmitter()
 void KWinInputEmitter::keyboardKey(const uint32_t &key, const bool &state)
 {
     libinputactions::InputBackend::instance()->setIgnoreEvents(true);
-    m_keyboard->processKey(key, state ? KeyboardKeyStatePressed : KeyboardKeyStateReleased, timestamp(), m_device.get());
+    Q_EMIT m_device->keyChanged(key, state ? KeyboardKeyStatePressed : KeyboardKeyStateReleased, timestamp(), m_device.get());
     libinputactions::InputBackend::instance()->setIgnoreEvents(false);
 }
 
 void KWinInputEmitter::mouseButton(const uint32_t &button, const bool &state)
 {
     libinputactions::InputBackend::instance()->setIgnoreEvents(true);
-    m_pointer->processButton(button, state ? PointerButtonStatePressed : PointerButtonStateReleased, timestamp(), m_device.get());
-    m_pointer->processFrame(m_device.get());
+    Q_EMIT m_device->pointerButtonChanged(button, state ? PointerButtonStatePressed : PointerButtonStateReleased, timestamp(), m_device.get());
+    Q_EMIT m_device->pointerFrame(m_device.get());
     libinputactions::InputBackend::instance()->setIgnoreEvents(false);
 }
 
 void KWinInputEmitter::mouseMoveRelative(const QPointF &pos)
 {
     libinputactions::InputBackend::instance()->setIgnoreEvents(true);
-    m_pointer->processMotion(pos, pos, timestamp(), m_device.get());
-    m_pointer->processFrame(m_device.get());
+    Q_EMIT m_device->pointerMotion(pos, pos, timestamp(), m_device.get());
+    Q_EMIT m_device->pointerFrame(m_device.get());
     libinputactions::InputBackend::instance()->setIgnoreEvents(false);
 }
 

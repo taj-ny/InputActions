@@ -49,7 +49,9 @@ public:
     void handleEvent(const KeyboardKeyEvent *event);
 
     /**
-     * @return Currently pressed keyboard modifiers.
+     * @return Currently pressed keyboard modifiers
+     * @remark Key events that have been ignored by the input backend will not be used to update the modifier state. For example, clearing modifiers will not
+     * update the modifier state to none. This allows gestures with keyboard modifier conditions to be used again.
      */
     const Qt::KeyboardModifiers &modifiers() const;
     virtual void clearModifiers();
