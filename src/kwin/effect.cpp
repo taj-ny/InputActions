@@ -33,7 +33,12 @@
 
 Q_LOGGING_CATEGORY(INPUTACTIONS_KWIN, "inputactions", QtWarningMsg)
 
-const QString configFile = QStandardPaths::writableLocation(QStandardPaths::ConfigLocation) + "/kwingestures.yml";
+const static QString s_configFile = QStandardPaths::writableLocation(QStandardPaths::ConfigLocation) + "/kwingestures.yml";
+
+/**
+ * Used to detect and prevent infinite compositor crash loops when loading the configuration.
+ */
+const static QString s_initFile = QStandardPaths::writableLocation(QStandardPaths::TempLocation) + "/inputactions_init";
 
 Effect::Effect()
 {
@@ -60,10 +65,10 @@ Effect::Effect()
 
     reconfigure(ReconfigureAll);
 
-    if (!QFile::exists(configFile)) {
-        QFile(configFile).open(QIODevice::WriteOnly);
+    if (!QFile::exists(s_configFile)) {
+        QFile(s_configFile).open(QIODevice::WriteOnly);
     }
-    m_configFileWatcher.addPath(configFile);
+    m_configFileWatcher.addPath(s_configFile);
     m_configFileWatcher.addPath(QStandardPaths::writableLocation(QStandardPaths::ConfigLocation));
     connect(&m_configFileWatcher, &QFileSystemWatcher::directoryChanged, this, &Effect::slotConfigDirectoryChanged);
     connect(&m_configFileWatcher, &QFileSystemWatcher::fileChanged, this, &Effect::slotConfigFileChanged);
@@ -78,8 +83,8 @@ Effect::~Effect()
 
 void Effect::slotConfigFileChanged()
 {
-    if (!m_configFileWatcher.files().contains(configFile)) {
-        m_configFileWatcher.addPath(configFile);
+    if (!m_configFileWatcher.files().contains(s_configFile)) {
+        m_configFileWatcher.addPath(s_configFile);
     }
 
     if (m_autoReload) {
@@ -89,8 +94,8 @@ void Effect::slotConfigFileChanged()
 
 void Effect::slotConfigDirectoryChanged()
 {
-    if (!m_configFileWatcher.files().contains(configFile) && QFile::exists(configFile)) {
-        m_configFileWatcher.addPath(configFile);
+    if (!m_configFileWatcher.files().contains(s_configFile) && QFile::exists(s_configFile)) {
+        m_configFileWatcher.addPath(s_configFile);
         if (m_autoReload) {
             reconfigure(ReconfigureAll);
         }
@@ -99,16 +104,22 @@ void Effect::slotConfigDirectoryChanged()
 
 void Effect::reconfigure(ReconfigureFlags flags)
 {
-    try {
-        const auto config = YAML::LoadFile(configFile.toStdString());
-        m_autoReload = config["autoreload"].as<bool>(true);
+    if (!QFile::exists(s_initFile)) {
+        QFile(s_initFile).open(QIODevice::WriteOnly);
+        try {
+            const auto config = YAML::LoadFile(s_configFile.toStdString());
+            m_autoReload = config["autoreload"].as<bool>(true);
 
-        m_backend->clearEventHandlers();
-        for (auto &eventHandler : config.as<std::vector<std::unique_ptr<InputEventHandler>>>()) {
-            m_backend->addEventHandler(std::move(eventHandler));
+            m_backend->clearEventHandlers();
+            for (auto &eventHandler : config.as<std::vector<std::unique_ptr<InputEventHandler>>>()) {
+                m_backend->addEventHandler(std::move(eventHandler));
+            }
+        } catch (const YAML::Exception &e) {
+            qCritical(INPUTACTIONS_KWIN).noquote() << QString("Failed to load configuration: %1 (line %2, column %3)")
+                .arg(QString::fromStdString(e.msg), QString::number(e.mark.line), QString::number(e.mark.column));
         }
-    } catch (const YAML::Exception &e) {
-        qCritical(INPUTACTIONS_KWIN).noquote() << QStringLiteral("Failed to load configuration: ") + QString::fromStdString(e.msg)
-                + " (line " + QString::number(e.mark.line) + ", column " + QString::number(e.mark.column) + ")";
+    } else {
+        qCWarning(INPUTACTIONS_KWIN) << "Configuration was not loaded automatically due to a crash.";
     }
+    QFile::remove(s_initFile);
 }
