@@ -23,7 +23,7 @@
 namespace libinputactions
 {
 
-template <typename T>
+template<typename T>
 class Range
 {
 public:
@@ -36,7 +36,7 @@ public:
     const std::optional<T> &min() const;
     const std::optional<T> &max() const;
 
-    template <typename U>
+    template<typename U>
     explicit operator Range<U>() const;
 
 private:

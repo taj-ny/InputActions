@@ -20,6 +20,8 @@
 
 #include "action.h"
 
+#include <libinputactions/value.h>
+
 #include <QString>
 
 namespace libinputactions
@@ -31,11 +33,12 @@ namespace libinputactions
 class CommandTriggerAction : public TriggerAction
 {
 public:
+    explicit CommandTriggerAction(const Value<QString> &command);
+
     void execute() override;
-    void setCommand(const QString &command);
 
 private:
-    QString m_command;
+    Value<QString> m_command;
 };
 
 }

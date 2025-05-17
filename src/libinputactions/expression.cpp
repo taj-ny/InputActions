@@ -16,42 +16,28 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#pragma once
+#include "expression.h"
 
 #include <libinputactions/globals.h>
+#include <libinputactions/variables/manager.h>
 
-#include <memory>
-
-#include <QPointF>
+#include <QString>
 
 namespace libinputactions
 {
 
-class Pointer
+template<typename T>
+Expression<T>::Expression(const QString &expression)
 {
-public:
-    virtual ~Pointer() = default;
+    m_expression = expression;
+}
 
-    virtual std::optional<CursorShape> shape();
+template<>
+QString Expression<QString>::evaluate() const
+{
+    return VariableManager::instance()->expandString(m_expression);
+}
 
-    /**
-     * @return Global position in pixels or std::nullopt if not available.
-     */
-    virtual std::optional<QPointF> globalPosition() const;
-    /**
-     * @return Position on the current screen ranging from (0,0) to (1,1), std::nullopt if not available.
-     */
-    virtual std::optional<QPointF> screenPosition() const;
-    virtual void setPosition(const QPointF &position);
-
-    static Pointer *instance();
-    static void setInstance(std::unique_ptr<Pointer> instance);
-
-protected:
-    Pointer() = default;
-
-private:
-    static std::unique_ptr<Pointer> s_instance;
-};
+template class Expression<QString>;
 
 }

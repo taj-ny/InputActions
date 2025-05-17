@@ -30,7 +30,10 @@
 #include <libinputactions/triggers/directionalmotion.h>
 #include <libinputactions/triggers/press.h>
 #include <libinputactions/triggers/stroke.h>
-#include <libinputactions/variable.h>
+#include <libinputactions/variables/manager.h>
+#include <libinputactions/variables/variable.h>
+#include <libinputactions/expression.cpp>
+#include <libinputactions/value.h>
 
 #include <QRegularExpression>
 #include <QVector>
@@ -204,7 +207,7 @@ static const std::unordered_map<QString, uint32_t> s_keyboard = {
     {"CLOSECD", KEY_CLOSECD},
     {"EJECTCD", KEY_EJECTCD},
     {"EJECTCLOSECD", KEY_EJECTCLOSECD},
-    {"NEXTSONG", KEY_NEXTSONG},
+    {"NEXT SONG", KEY_NEXTSONG},
     {"PLAYPAUSE", KEY_PLAYPAUSE},
     {"PREVIOUSSONG", KEY_PREVIOUSSONG},
     {"STOPCD", KEY_STOPCD},
@@ -635,7 +638,7 @@ struct convert<Range<T>>
     }
 };
 
-template <>
+template<>
 struct convert<std::shared_ptr<VariableCondition>>
 {
     static bool decode(const Node &node, std::shared_ptr<VariableCondition> &condition)
@@ -771,7 +774,8 @@ struct convert<std::shared_ptr<Condition>>
         if (node.IsScalar()) {
             // Hack to load negated conditions without forcing users to quote the entire thing
             auto conditionNode = node;
-            if (node.Tag().starts_with('!')) {
+            const auto tag = node.Tag();
+            if (tag != "!" && tag.starts_with('!')) {
                 conditionNode = node.Tag() + " " + node.as<std::string>();
             }
 
@@ -815,7 +819,7 @@ struct convert<std::unique_ptr<InputEventHandler>>
 template<>
 struct convert<std::vector<std::unique_ptr<InputEventHandler>>>
 {
-    template <typename T>
+    template<typename T>
     static std::unique_ptr<InputEventHandler> decodeHandler(const Node &node)
     {
         auto result = node.as<std::unique_ptr<InputEventHandler>>();
@@ -839,7 +843,7 @@ struct convert<std::vector<std::unique_ptr<InputEventHandler>>>
     }
 };
 
-template <>
+template<>
 struct convert<std::vector<std::unique_ptr<Trigger>>>
 {
     static bool decode(const Node &node, std::vector<std::unique_ptr<Trigger>> &triggers)
@@ -989,9 +993,7 @@ struct convert<std::unique_ptr<TriggerAction>>
     static bool decode(const Node &node, std::unique_ptr<TriggerAction> &action)
     {
         if (node["command"].IsDefined()) {
-            auto commandAction = new CommandTriggerAction();
-            commandAction->setCommand(node["command"].as<QString>());
-            action.reset(commandAction);
+            action = std::make_unique<CommandTriggerAction>(node["command"].as<libinputactions::Value<QString>>());
         } else if (node["input"].IsDefined()) {
             auto inputAction = new InputTriggerAction;
             inputAction->setSequence(node["input"].as<std::vector<InputAction>>());
@@ -1260,7 +1262,31 @@ FLAGS_DECODER(Qt::MouseButtons, "mouse button", (std::unordered_map<QString, Qt:
     {"middle", Qt::MouseButton::MiddleButton},
     {"right", Qt::MouseButton::RightButton},
     {"back", Qt::MouseButton::ExtraButton1},
-    {"forward", Qt::MouseButton::ExtraButton2}
+    {"forward", Qt::MouseButton::ExtraButton2},
+    {"extra1", Qt::MouseButton::ExtraButton1},
+    {"extra2", Qt::MouseButton::ExtraButton2},
+    {"extra3", Qt::MouseButton::ExtraButton3},
+    {"extra4", Qt::MouseButton::ExtraButton4},
+    {"extra5", Qt::MouseButton::ExtraButton5},
+    {"extra6", Qt::MouseButton::ExtraButton6},
+    {"extra7", Qt::MouseButton::ExtraButton7},
+    {"extra8", Qt::MouseButton::ExtraButton8},
+    {"extra9", Qt::MouseButton::ExtraButton9},
+    {"extra10", Qt::MouseButton::ExtraButton10},
+    {"extra11", Qt::MouseButton::ExtraButton11},
+    {"extra12", Qt::MouseButton::ExtraButton12},
+    {"extra13", Qt::MouseButton::ExtraButton13},
+    {"extra14", Qt::MouseButton::ExtraButton14},
+    {"extra15", Qt::MouseButton::ExtraButton15},
+    {"extra16", Qt::MouseButton::ExtraButton16},
+    {"extra17", Qt::MouseButton::ExtraButton17},
+    {"extra18", Qt::MouseButton::ExtraButton18},
+    {"extra19", Qt::MouseButton::ExtraButton19},
+    {"extra20", Qt::MouseButton::ExtraButton20},
+    {"extra21", Qt::MouseButton::ExtraButton21},
+    {"extra22", Qt::MouseButton::ExtraButton22},
+    {"extra23", Qt::MouseButton::ExtraButton23},
+    {"extra24", Qt::MouseButton::ExtraButton24}
 }))
 
 template<>
@@ -1340,7 +1366,7 @@ struct convert<std::vector<InputAction>>
     }
 };
 
-template <>
+template<>
 struct convert<QPointF>
 {
     static bool decode(const Node &node, QPointF &point)
@@ -1390,6 +1416,22 @@ struct convert<QRegularExpression>
     static bool decode(const Node &node, QRegularExpression &regex)
     {
         regex = QRegularExpression(node.as<QString>());
+        return true;
+    }
+};
+
+template<typename T>
+struct convert<libinputactions::Value<T>>
+{
+    static bool decode(const Node &node, libinputactions::Value<T> &value)
+    {
+        const auto raw = node.as<QString>();
+        // TODO Variable reference only
+        if (typeid(T) == typeid(QString)) { // String with possible variable references (too lazy to check)
+            value = libinputactions::Value<T>(Expression<QString>(raw));
+        } else {
+            value = libinputactions::Value<T>(node.as<T>());
+        }
         return true;
     }
 };

@@ -31,9 +31,13 @@ set(libinputactions_SRCS
     libinputactions/triggers/press.cpp
     libinputactions/triggers/stroke.cpp
     libinputactions/triggers/trigger.cpp
+    libinputactions/variables/manager.cpp
+    libinputactions/variables/operations.cpp
+    libinputactions/variables/variable.cpp
+    libinputactions/expression.cpp
     libinputactions/globals.h
     libinputactions/range.cpp
-    libinputactions/variable.cpp
+    libinputactions/value.cpp
     libinputactions/window.cpp
 )
 

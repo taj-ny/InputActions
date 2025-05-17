@@ -25,46 +25,46 @@
 namespace libinputactions
 {
 
-template <typename T>
+template<typename T>
 Range<T>::Range(const T &minmax)
     : Range(minmax, minmax)
 {
 }
 
-template <typename T>
+template<typename T>
 Range<T>::Range(const std::optional<T> &min, const std::optional<T> &max)
     : m_min(min)
     , m_max(max)
 {
 }
 
-template <typename T>
+template<typename T>
 bool Range<T>::contains(const T &value) const
 {
     return (!m_min || value >= m_min) && (!m_max || value <= m_max);
 }
 
-template <>
+template<>
 bool Range<QPointF>::contains(const QPointF &value) const
 {
     return (!m_min || (value.x() >= m_min->x() && value.y() >= m_min->y()))
         && (!m_max || (value.x() <= m_max->x() && value.y() <= m_max->y()));
 }
 
-template <typename T>
+template<typename T>
 const std::optional<T> &Range<T>::min() const
 {
     return m_min;
 }
 
-template <typename T>
+template<typename T>
 const std::optional<T> &Range<T>::max() const
 {
     return m_max;
 }
 
-template <typename T>
-template <typename U>
+template<typename T>
+template<typename U>
 Range<T>::operator Range<U>() const
 {
     return Range<U>(static_cast<std::optional<U>>(m_min), static_cast<std::optional<U>>(m_max));

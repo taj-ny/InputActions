@@ -18,40 +18,29 @@
 
 #pragma once
 
-#include <libinputactions/globals.h>
+#include "expression.h"
 
-#include <memory>
+#include <functional>
+#include <variant>
 
-#include <QPointF>
+#include <QString>
 
 namespace libinputactions
 {
 
-class Pointer
+template<typename T>
+class Value
 {
 public:
-    virtual ~Pointer() = default;
+    Value(const T &value = {});
+    Value(const std::function<T()> &getter);
+    Value(const Expression<T> &expression);
+    static Value<T> variable(const QString &name);
 
-    virtual std::optional<CursorShape> shape();
-
-    /**
-     * @return Global position in pixels or std::nullopt if not available.
-     */
-    virtual std::optional<QPointF> globalPosition() const;
-    /**
-     * @return Position on the current screen ranging from (0,0) to (1,1), std::nullopt if not available.
-     */
-    virtual std::optional<QPointF> screenPosition() const;
-    virtual void setPosition(const QPointF &position);
-
-    static Pointer *instance();
-    static void setInstance(std::unique_ptr<Pointer> instance);
-
-protected:
-    Pointer() = default;
+    T get() const;
 
 private:
-    static std::unique_ptr<Pointer> s_instance;
+    std::variant<T, std::function<T()>> m_value;
 };
 
 }

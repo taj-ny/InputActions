@@ -19,7 +19,8 @@
 #include "variable.h"
 #include "conditiongroup.h"
 
-#include <libinputactions/variable.h>
+#include <libinputactions/variables/manager.h>
+#include <libinputactions/variables/variable.h>
 
 #include <QLoggingCategory>
 #include <QRegularExpression>
@@ -50,7 +51,7 @@ bool VariableCondition::satisfiedInternal() const
                 .arg(m_variableName);
         return true;
     }
-    return variable->compare(m_values, m_comparisonOperator);
+    return variable->operations()->compare(m_values, m_comparisonOperator);
 }
 
 }

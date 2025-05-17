@@ -18,25 +18,23 @@
 
 #include "command.h"
 
-#include <libinputactions/variable.h>
-
 #include <thread>
 
 namespace libinputactions
 {
 
+CommandTriggerAction::CommandTriggerAction(const Value<QString> &command)
+    : m_command(command)
+{
+}
+
 void CommandTriggerAction::execute()
 {
     std::thread thread([this]() {
-        auto command = VariableManager::instance()->expandString(m_command).toStdString();
+        const auto command = m_command.get().toStdString();
         std::ignore = std::system(command.c_str());
     });
     thread.detach();
-}
-
-void CommandTriggerAction::setCommand(const QString &command)
-{
-    m_command = command;
 }
 
 }

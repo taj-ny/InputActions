@@ -22,7 +22,6 @@
 #include <libinputactions/input/keyboard.h>
 #include <libinputactions/input/pointer.h>
 #include <libinputactions/triggers/press.h>
-#include <libinputactions/variable.h>
 
 Q_LOGGING_CATEGORY(LIBINPUTACTIONS_HANDLER_MOUSE, "libinputactions.handler.mouse", QtWarningMsg)
 
@@ -62,17 +61,11 @@ bool MouseTriggerHandler::handleEvent(const MouseButtonEvent *event)
     qCDebug(LIBINPUTACTIONS_HANDLER_MOUSE).nospace() << "Event (type: PointerMotion, button: " << button << ", state: " << state << ")";
 
     endTriggers(TriggerType::Wheel);
-
-    if (state) {
-        m_buttons |= button;
-    } else {
-        m_buttons &= ~button;
-    }
-    VariableManager::instance()->getVariable(BuiltinVariables::MouseButtons)->set(m_buttons);
-
     if (state) {
         m_mouseMotionSinceButtonPress = 0;
         m_hadMouseGestureSinceButtonPress = false;
+        m_buttons |= button;
+
         cancelTriggers(TriggerType::All);
         m_activationEvent = createActivationEvent();
 
@@ -125,6 +118,7 @@ bool MouseTriggerHandler::handleEvent(const MouseButtonEvent *event)
             return true;
         }
     } else {
+        m_buttons &= ~button;
         endTriggers(TriggerType::All);
 
         // Prevent gesture skipping when clicking rapidly

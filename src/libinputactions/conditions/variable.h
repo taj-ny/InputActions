@@ -20,7 +20,9 @@
 
 #include "condition.h"
 
-#include <libinputactions/variable.h>
+#include <any>
+
+#include <QString>
 
 namespace libinputactions
 {

@@ -1,22 +1,30 @@
 # Input Actions
 Input handler built on top of libinput and KWin, currently in a very early stage of development.
 
-Supported environments: Plasma 6 Wayland<br>
+Supported environments: Plasma 6 Wayland
 
 # Features
-- Stroke gestures: draw any shape
+- Stroke gesture: draw any shape
+  - Can specify multiple strokes per gesture
 - Mouse gestures: press, stroke, swipe, wheel
-  - Mouse buttons can still be used for normal clicks and dragging, depending on the gestures
-  - Supports horizontal scrolling wheels
+  - Horizontal scrolling wheels are supported
+  - Multiple mouse buttons can be specified (and all of them must be pressed in any order)
+  - Mouse buttons can still be used for normal clicks and dragging, depending on gestures
+  - Supports left, middle, right and 24 extra mouse buttons
 - Touchpad gestures: pinch, press, rotate, stroke, swipe
   - Supports 2-finger swipe and stroke gestures (requires edge scrolling to be disabled)
 - Actions: run command, emit input, invoke Plasma global shortcut
   - Executed at a specific point of the gesture's lifecycle (begin, update, end, cancel)
-  - Update actions can repeat at a specified interval
-- Compatibility with tools that operate at evdev level
+  - Update actions can repeat at a specified interval 
+    - Based on time for press gestures and distance for all other ones
+    - Bidirectional motion gestures can have actions with negative intervals
+- Thresholds: actions and/or gestures will not trigger unless it is reached (based on time/distance just like intervals)
+- Compatible with tools that operate at evdev level (Input Actions operates at compositor level, so it will process events after those tools)
 - Selective input event blocking
-- Powerful condition system with [many variables and operators](docs/configuration.md#variables)
-- [And more](docs/configuration.md)
+  - Blocks built-in Plasma gestures if a custom one is activated 
+- Powerful condition system with [many variables](https://github.com/InputActions/docs/blob/HEAD/variables.md) and [operators](https://github.com/InputActions/docs/blob/HEAD/configuration.md#operators)
+  - End conditions: determine whether a gesture is ended or cancelled
+- [And more](https://github.com/InputActions/docs/blob/HEAD/configuration.md)
 
 # Installation
 <details>
