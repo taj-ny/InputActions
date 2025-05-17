@@ -998,15 +998,6 @@ struct convert<std::unique_ptr<TriggerAction>>
             auto inputAction = new InputTriggerAction;
             inputAction->setSequence(node["input"].as<std::vector<InputAction>>());
             action.reset(inputAction);
-        } else if (node["keyboard"].IsDefined()) {
-            Node keyboardNode;
-            keyboardNode["keyboard"] = node["keyboard"];
-            Node inputNode;
-            inputNode.push_back(keyboardNode);
-
-            auto inputAction = new InputTriggerAction;
-            inputAction->setSequence(inputNode.as<std::vector<InputAction>>());
-            action.reset(inputAction);
         } else if (node["plasma_shortcut"].IsDefined()) {
             auto plasmaShortcutAction = new PlasmaGlobalShortcutTriggerAction;
             const auto split = node["plasma_shortcut"].as<QString>().split(",");
