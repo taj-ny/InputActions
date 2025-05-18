@@ -204,6 +204,7 @@ std::unique_ptr<VariableManager> VariableManager::s_instance = std::unique_ptr<V
 
 template std::optional<VariableWrapper<QString>> VariableManager::getVariable(const QString &variable);
 template std::optional<VariableWrapper<qreal>> VariableManager::getVariable(const VariableInfo<qreal> &variable);
+template void VariableManager::registerLocalVariable<qreal>(const QString &name);
 
 template<typename T>
 VariableWrapper<T>::VariableWrapper(Variable *variable)

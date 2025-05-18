@@ -20,6 +20,7 @@
 
 #include "input.h"
 
+#include <libinputactions/input/backends/libevdev.h>
 #include <libinputactions/input/backend.h>
 
 /**
@@ -32,7 +33,7 @@
  * @returns All methods that process events should return @c true to stop further event processing, @c false to pass to
  * next filter.
  */
-class KWinInputBackend : public libinputactions::InputBackend, public KWin::InputEventFilter
+class KWinInputBackend : public libinputactions::InputBackend, public libinputactions::LibevdevComplementaryInputBackend, public KWin::InputEventFilter
 {
 public:
     KWinInputBackend();
