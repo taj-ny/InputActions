@@ -38,9 +38,7 @@ KWinGesturesKCM::KWinGesturesKCM(QObject *parent, const KPluginMetaData &data)
 
     QFile about(":/effects/inputactions_kwin/kcm/about.html");
     if (about.open(QIODevice::ReadOnly)) {
-        const auto html = about.readAll()
-                              .replace("${version}", ABOUT_VERSION_STRING)
-                              .replace("${repo}", "https://github.com/taj-ny/InputActions");
+        const auto html = about.readAll().replace("${version}", ABOUT_VERSION_STRING);
         ui.aboutText->setHtml(html);
     }
 
