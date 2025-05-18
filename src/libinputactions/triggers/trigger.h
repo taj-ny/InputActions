@@ -36,10 +36,7 @@ namespace libinputactions
 class TriggerActivationEvent
 {
 public:
-    std::optional<uint8_t> fingers;
-    std::optional<Qt::KeyboardModifiers> keyboardModifiers;
     std::optional<Qt::MouseButtons> mouseButtons;
-    std::optional<QPointF> position;
 };
 class TriggerUpdateEvent
 {

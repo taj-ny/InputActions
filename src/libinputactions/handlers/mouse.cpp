@@ -236,7 +236,6 @@ std::unique_ptr<TriggerActivationEvent> MouseTriggerHandler::createActivationEve
 {
     auto event = TriggerHandler::createActivationEvent();
     event->mouseButtons = m_buttons;
-    event->position = Pointer::instance()->screenPosition();
     return event;
 }
 

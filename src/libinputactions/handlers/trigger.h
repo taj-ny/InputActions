@@ -71,11 +71,7 @@ protected:
      */
     bool activateTriggers(const TriggerTypes &types, const TriggerActivationEvent *event);
     /**
-     * @see activateTriggers(const TriggerTypes &, const TriggerActivateEvent *)
-     */
-    bool activateTriggers(const TriggerTypes &types, const uint8_t &fingers);
-    /**
-     * @see activateTriggers(const TriggerTypes &, const TriggerActivateEvent *)
+     * @see activateTriggers(const TriggerTypes &, const TriggerActivationEvent *)
      */
     bool activateTriggers(const TriggerTypes &types);
 
