@@ -65,8 +65,8 @@ bool Trigger::canUpdate(const TriggerUpdateEvent *) const
 void Trigger::update(const TriggerUpdateEvent *event)
 {
     m_absoluteAccumulatedDelta += std::abs(event->delta());
-    m_thresholdReached = !m_threshold || m_threshold->contains(m_absoluteAccumulatedDelta);
-    if (!m_thresholdReached) {
+    m_withinThreshold = !m_threshold || m_threshold->contains(m_absoluteAccumulatedDelta);
+    if (!m_withinThreshold) {
         qCDebug(LIBINPUTACTIONS_TRIGGER).noquote()
             << QString("Threshold not reached (name: %1, current: %2, min: %3, max: %4")
                 .arg(m_name, QString::number(m_absoluteAccumulatedDelta), QString::number(m_threshold->min().value_or(-1)), QString::number(m_threshold->max().value_or(-1)));
@@ -94,7 +94,7 @@ void Trigger::update(const TriggerUpdateEvent *event)
 
 bool Trigger::canEnd(const TriggerEndEvent *event) const
 {
-    return !m_endCondition || m_endCondition.value()->satisfied();
+    return m_withinThreshold && (!m_endCondition || m_endCondition.value()->satisfied());
 }
 
 void Trigger::end()
@@ -127,7 +127,7 @@ void Trigger::cancel()
 
 bool Trigger::overridesOtherTriggersOnEnd()
 {
-    if (!m_thresholdReached) {
+    if (!m_withinThreshold) {
         return false;
     }
 
@@ -138,7 +138,7 @@ bool Trigger::overridesOtherTriggersOnEnd()
 
 bool Trigger::overridesOtherTriggersOnUpdate()
 {
-    if (!m_thresholdReached) {
+    if (!m_withinThreshold) {
         return false;
     }
 
@@ -207,7 +207,7 @@ void Trigger::reset()
 {
     m_started = false;
     m_absoluteAccumulatedDelta = 0;
-    m_thresholdReached = false;
+    m_withinThreshold = false;
 }
 
 const qreal &TriggerUpdateEvent::delta() const

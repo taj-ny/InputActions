@@ -185,7 +185,7 @@ private:
     std::optional<Qt::MouseButtons> m_mouseButtons;
 
     std::optional<Range<qreal>> m_threshold;
-    bool m_thresholdReached = false;
+    bool m_withinThreshold = false;
     qreal m_absoluteAccumulatedDelta = 0;
 
     friend class TestTrigger;
