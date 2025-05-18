@@ -22,6 +22,7 @@
 #include <libinputactions/input/keyboard.h>
 #include <libinputactions/input/pointer.h>
 #include <libinputactions/triggers/press.h>
+#include <libinputactions/triggers/wheel.h>
 
 Q_LOGGING_CATEGORY(LIBINPUTACTIONS_HANDLER_MOUSE, "libinputactions.handler.mouse", QtWarningMsg)
 
@@ -206,8 +207,15 @@ bool MouseTriggerHandler::handleWheelEvent(const MotionEvent *event)
     DirectionalMotionTriggerUpdateEvent updateEvent;
     updateEvent.setDelta(delta.x() != 0 ? delta.x() : delta.y());
     updateEvent.setDirection(static_cast<TriggerDirection>(direction));
+
     const auto hasTriggers = updateTriggers(TriggerType::Wheel, &updateEvent);
-    if (!m_buttons && !Keyboard::instance()->modifiers()) {
+    bool continuous = false;
+    for (const auto &trigger : activeTriggers(TriggerType::Wheel)) {
+        if (static_cast<WheelTrigger *>(trigger)->continuous()) {
+            continuous = true;
+        }
+    }
+    if (!continuous || (!m_buttons && !Keyboard::instance()->modifiers())) {
         qCDebug(LIBINPUTACTIONS_HANDLER_MOUSE, "Wheel trigger will end immediately");
         endTriggers(TriggerType::Wheel);
     }

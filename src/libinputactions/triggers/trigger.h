@@ -156,6 +156,11 @@ public:
     void setType(const TriggerType &type);
 
 protected:
+    /**
+     * Called when an action is added. May be used to change default behavior.
+     */
+    virtual void actionAdded(TriggerAction *action);
+
     const std::vector<TriggerAction *> actions();
 
     virtual void updateActions(const TriggerUpdateEvent *event);

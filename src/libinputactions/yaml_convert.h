@@ -27,9 +27,9 @@
 #include <libinputactions/handlers/mouse.h>
 #include <libinputactions/handlers/touchpad.h>
 #include <libinputactions/input/handler.h>
-#include <libinputactions/triggers/directionalmotion.h>
 #include <libinputactions/triggers/press.h>
 #include <libinputactions/triggers/stroke.h>
+#include <libinputactions/triggers/wheel.h>
 #include <libinputactions/variables/manager.h>
 #include <libinputactions/variables/variable.h>
 #include <libinputactions/expression.cpp>
@@ -916,8 +916,7 @@ struct convert<std::unique_ptr<Trigger>>
             rotateTrigger->setDirection(static_cast<TriggerDirection>(node["direction"].as<RotateDirection>()));
             trigger.reset(rotateTrigger);
         } else if (type == "wheel") {
-            auto wheelTrigger = new DirectionalMotionTrigger;
-            wheelTrigger->setType(TriggerType::Wheel);
+            auto wheelTrigger = new WheelTrigger;
             wheelTrigger->setDirection(static_cast<TriggerDirection>(node["direction"].as<SwipeDirection>()));
             trigger.reset(wheelTrigger);
         } else {

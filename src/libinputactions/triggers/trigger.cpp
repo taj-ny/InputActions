@@ -29,12 +29,7 @@ namespace libinputactions
 
 void Trigger::addAction(std::unique_ptr<TriggerAction> action)
 {
-    if (dynamic_cast<InputTriggerAction *>(action.get())) {
-        if (!m_clearModifiers) {
-            m_clearModifiers = true;
-        }
-    }
-
+    actionAdded(action.get());
     m_actions.push_back(std::move(action));
 }
 
@@ -145,6 +140,15 @@ bool Trigger::overridesOtherTriggersOnUpdate()
     return std::any_of(m_actions.begin(), m_actions.end(), [](const auto &action) {
         return action->executed() || (action->on() == On::Update && action->canExecute());
     });
+}
+
+void Trigger::actionAdded(TriggerAction *action)
+{
+    if (dynamic_cast<InputTriggerAction *>(action)) {
+        if (!m_clearModifiers) {
+            m_clearModifiers = true;
+        }
+    }
 }
 
 const std::vector<TriggerAction *> Trigger::actions()

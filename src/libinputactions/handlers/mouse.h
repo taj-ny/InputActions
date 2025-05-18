@@ -33,10 +33,6 @@ namespace libinputactions
  * triggers instant as well.
  * @see setMotionTimeout
  * @see PressTrigger::setInstant
- *
- * Wheel triggers have a different lifecycle than other triggers, as they are activated, updated and ended on
- * every single event. They are never cancelled and do not support speed or thresholds, although there are no checks
- * against that.
  */
 class MouseTriggerHandler : public MotionTriggerHandler
 {
