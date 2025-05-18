@@ -31,6 +31,7 @@ set(libinputactions_SRCS
     libinputactions/triggers/press.cpp
     libinputactions/triggers/stroke.cpp
     libinputactions/triggers/trigger.cpp
+    libinputactions/triggers/wheel.cpp
     libinputactions/variables/manager.cpp
     libinputactions/variables/operations.cpp
     libinputactions/variables/variable.cpp
