@@ -240,13 +240,6 @@ std::unique_ptr<TriggerActivationEvent> MouseTriggerHandler::createActivationEve
     return event;
 }
 
-std::unique_ptr<TriggerEndEvent> MouseTriggerHandler::createEndEvent() const
-{
-    auto event = TriggerHandler::createEndEvent();
-    event->position = Pointer::instance()->screenPosition();
-    return event;
-}
-
 bool MouseTriggerHandler::shouldBlockMouseButton(const Qt::MouseButton &button)
 {
     const auto event = createActivationEvent();

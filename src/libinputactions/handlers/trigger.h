@@ -59,7 +59,7 @@ protected:
     /**
      * Registers a custom handler that will be executed when the specified trigger type is ended.
      */
-    void registerTriggerEndHandler(const TriggerType &type, const std::function<void(const TriggerEndEvent *)> &func);
+    void registerTriggerEndHandler(const TriggerType &type, const std::function<void()> &func);
     /**
      * Registers a custom handler that will be executed when the specified trigger type is ended or cancelled.
      */
@@ -96,11 +96,7 @@ protected:
      * Ends the specified types of triggers.
      * @return Whether there were any active triggers of the specified types.
      */
-    TEST_VIRTUAL bool endTriggers(const TriggerTypes &types, const TriggerEndEvent *event);
-    /**
-     * @see endTriggers(const TriggerTypes &, const TriggerEndEvent *)
-     */
-    bool endTriggers(const TriggerTypes &types);
+    TEST_VIRTUAL bool endTriggers(const TriggerTypes &types);
 
     /**
      * Cancels the specified types of triggers.
@@ -130,10 +126,6 @@ protected:
      * This implementation sets keyboard modifiers.
      */
     virtual std::unique_ptr<TriggerActivationEvent> createActivationEvent() const;
-    /**
-     * Creates a trigger end event with information that can be provided by the input device(s).
-     */
-    virtual std::unique_ptr<TriggerEndEvent> createEndEvent() const;
 
     /**
      * Called before a trigger is activated.
@@ -167,7 +159,7 @@ private:
     /**
      * Executed when a trigger type is ended.
      */
-    std::map<TriggerType, std::function<void(const TriggerEndEvent *)>> m_triggerEndHandlers;
+    std::map<TriggerType, std::function<void()>> m_triggerEndHandlers;
     /**
      * Executed when a trigger type is ended or cancelled.
      */

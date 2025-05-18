@@ -53,13 +53,6 @@ public:
 private:
     qreal m_delta = 0;
 };
-/**
- * Unset optional fields are not checked by triggers.
- */
-struct TriggerEndEvent
-{
-    std::optional<QPointF> position;
-};
 
 /**
  * An input action that does not involve motion.
@@ -104,7 +97,7 @@ public:
      * @return Whether the trigger can be ended.
      * @internal
      */
-    bool canEnd(const TriggerEndEvent *event) const;
+    bool canEnd() const;
     /**
      * Resets the trigger and notifies all actions that it has ended.
      * @internal

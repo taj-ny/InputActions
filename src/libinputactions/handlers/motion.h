@@ -80,7 +80,7 @@ protected:
     void reset() override;
 
 private:
-    void strokeTriggerEndHandler(const TriggerEndEvent *event);
+    void strokeTriggerEndHandler();
 
     Axis m_currentSwipeAxis = Axis::None;
     QPointF m_currentSwipeDelta;

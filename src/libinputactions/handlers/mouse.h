@@ -73,13 +73,6 @@ protected:
      * @see TriggerHandler::createActivationEvent
      */
     std::unique_ptr<TriggerActivationEvent> createActivationEvent() const override;
-    /**
-    * This implementation sets the position.
-    *
-    * @see MouseTriggerHandler::createActivationEvent
-    * @see TriggerHandler::createEndEvent
-    */
-    std::unique_ptr<TriggerEndEvent> createEndEvent() const override;
 
 private:
     bool handleEvent(const MouseButtonEvent *event);

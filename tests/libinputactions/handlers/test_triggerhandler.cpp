@@ -100,7 +100,7 @@ void TestTriggerHandler::keyboardKey()
     QFETCH(bool, state);
     QFETCH(bool, endsTriggers);
 
-    EXPECT_CALL(*m_handler, endTriggers(static_cast<TriggerTypes>(TriggerType::All), _))
+    EXPECT_CALL(*m_handler, endTriggers(static_cast<TriggerTypes>(TriggerType::All)))
         .Times(Exactly(endsTriggers ? 1 : 0));
 
     const KeyboardKeyEvent event(key, state);

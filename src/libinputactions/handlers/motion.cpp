@@ -27,7 +27,7 @@ namespace libinputactions
 
 MotionTriggerHandler::MotionTriggerHandler()
 {
-    registerTriggerEndHandler(TriggerType::Stroke, std::bind(&MotionTriggerHandler::strokeTriggerEndHandler, this, std::placeholders::_1));
+    registerTriggerEndHandler(TriggerType::Stroke, std::bind(&MotionTriggerHandler::strokeTriggerEndHandler, this));
 
     setSpeedThreshold(TriggerType::Pinch, 0.04, static_cast<TriggerDirection>(PinchDirection::In));
     setSpeedThreshold(TriggerType::Pinch, 0.08, static_cast<TriggerDirection>(PinchDirection::Out));
@@ -198,7 +198,7 @@ void MotionTriggerHandler::reset()
     m_stroke.clear();
 }
 
-void MotionTriggerHandler::strokeTriggerEndHandler(const TriggerEndEvent *event)
+void MotionTriggerHandler::strokeTriggerEndHandler()
 {
     if (m_stroke.empty()) {
         return;
@@ -211,7 +211,7 @@ void MotionTriggerHandler::strokeTriggerEndHandler(const TriggerEndEvent *event)
     Trigger *best = nullptr;
     double bestScore = 0;
     for (const auto &trigger : activeTriggers(TriggerType::Stroke)) {
-        if (!trigger->canEnd(event)) {
+        if (!trigger->canEnd()) {
             continue;
         }
 
