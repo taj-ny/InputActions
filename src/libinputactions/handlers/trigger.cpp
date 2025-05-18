@@ -68,7 +68,7 @@ void TriggerHandler::registerTriggerActivateHandler(const TriggerType &type, con
     m_triggerActivateHandlers[type] = func;
 }
 
-void TriggerHandler::registerTriggerEndHandler(const TriggerType &type, const std::function<void(const TriggerEndEvent *)> &func)
+void TriggerHandler::registerTriggerEndHandler(const TriggerType &type, const std::function<void()> &func)
 {
     m_triggerEndHandlers[type] = func;
 }
@@ -80,7 +80,7 @@ void TriggerHandler::registerTriggerEndCancelHandler(const TriggerType &type, co
 
 bool TriggerHandler::activateTriggers(const TriggerTypes &types, const TriggerActivationEvent *event)
 {
-    qCDebug(LIBINPUTACTIONS_HANDLER_TRIGGER).noquote().nospace() << "Triggers activating (types: " << types << ", fingers: " << event->fingers << ", mouseButtons: " << event->mouseButtons << ", keyboardModifiers: " << event->keyboardModifiers << ", position: " << event->position << ")";
+    qCDebug(LIBINPUTACTIONS_HANDLER_TRIGGER).noquote().nospace() << "Triggers activating (types: " << types << ")";
     cancelTriggers(TriggerType::All);
     reset();
 
@@ -99,13 +99,6 @@ bool TriggerHandler::activateTriggers(const TriggerTypes &types, const TriggerAc
     const auto triggerCount = m_activeTriggers.size();
     qCDebug(LIBINPUTACTIONS_HANDLER_TRIGGER).noquote().nospace() << "Triggers activated (count: " << triggerCount << ")";
     return triggerCount != 0;
-}
-
-bool TriggerHandler::activateTriggers(const TriggerTypes &types, const uint8_t &fingers)
-{
-    auto event = createActivationEvent();
-    event->fingers = fingers;
-    return activateTriggers(types, event.get());
 }
 
 bool TriggerHandler::activateTriggers(const TriggerTypes &types)
@@ -164,7 +157,7 @@ bool TriggerHandler::updateTriggers(const TriggerType &type, const TriggerUpdate
     return updateTriggers({ {type, event } });
 }
 
-bool TriggerHandler::endTriggers(const TriggerTypes &types, const TriggerEndEvent *event)
+bool TriggerHandler::endTriggers(const TriggerTypes &types)
 {
     if (!hasActiveTriggers(types)) {
         return false;
@@ -176,7 +169,7 @@ bool TriggerHandler::endTriggers(const TriggerTypes &types, const TriggerEndEven
         if (!(types & type)) {
             continue;
         }
-        handler(event);
+        handler();
     }
     for (const auto &[type, handler] : m_triggerEndCancelHandlers) {
         if (!(types & type)) {
@@ -193,7 +186,7 @@ bool TriggerHandler::endTriggers(const TriggerTypes &types, const TriggerEndEven
         }
 
         it = m_activeTriggers.erase(it);
-        if (!trigger->canEnd(event)) {
+        if (!trigger->canEnd()) {
             trigger->cancel();
             continue;
         }
@@ -208,12 +201,6 @@ bool TriggerHandler::endTriggers(const TriggerTypes &types, const TriggerEndEven
         trigger->end();
     }
     return true;
-}
-
-bool TriggerHandler::endTriggers(const TriggerTypes &types)
-{
-    auto event = createEndEvent();
-    return endTriggers(types, event.get());
 }
 
 bool TriggerHandler::cancelTriggers(const TriggerTypes &types)
@@ -296,14 +283,7 @@ void TriggerHandler::pressUpdate(const qreal &delta)
 
 std::unique_ptr<TriggerActivationEvent> TriggerHandler::createActivationEvent() const
 {
-    auto event = std::make_unique<TriggerActivationEvent>();
-    event->keyboardModifiers = Keyboard::instance()->modifiers();
-    return event;
-}
-
-std::unique_ptr<TriggerEndEvent> TriggerHandler::createEndEvent() const
-{
-    return std::make_unique<TriggerEndEvent>();
+    return std::make_unique<TriggerActivationEvent>();
 }
 
 void TriggerHandler::triggerActivating(const Trigger *trigger)

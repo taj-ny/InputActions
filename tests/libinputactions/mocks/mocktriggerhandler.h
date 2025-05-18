@@ -12,7 +12,7 @@ class MockTriggerHandler : public TriggerHandler
 public:
     MockTriggerHandler() = default;
 
-    MOCK_METHOD(bool, endTriggers, (const TriggerTypes &types, const TriggerEndEvent *event), (override));
+    MOCK_METHOD(bool, endTriggers, (const TriggerTypes &types), (override));
     MOCK_METHOD(bool, cancelTriggers, (const TriggerTypes &event), (override));
 };
 

@@ -92,7 +92,7 @@ void Trigger::update(const TriggerUpdateEvent *event)
     updateActions(event);
 }
 
-bool Trigger::canEnd(const TriggerEndEvent *event) const
+bool Trigger::canEnd() const
 {
     return m_withinThreshold && (!m_endCondition || m_endCondition.value()->satisfied());
 }

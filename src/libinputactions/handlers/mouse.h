@@ -67,19 +67,10 @@ protected:
     void triggerActivating(const Trigger *trigger) override;
 
     /**
-     * This implementation sets mouse buttons and position, which is the position of the pointer relative to the screen
-     * it is on ranging from (0,0) to (1,1).
-     *
+     * This implementation sets mouse buttons.
      * @see TriggerHandler::createActivationEvent
      */
     std::unique_ptr<TriggerActivationEvent> createActivationEvent() const override;
-    /**
-    * This implementation sets the position.
-    *
-    * @see MouseTriggerHandler::createActivationEvent
-    * @see TriggerHandler::createEndEvent
-    */
-    std::unique_ptr<TriggerEndEvent> createEndEvent() const override;
 
 private:
     bool handleEvent(const MouseButtonEvent *event);

@@ -36,10 +36,7 @@ namespace libinputactions
 class TriggerActivationEvent
 {
 public:
-    std::optional<uint8_t> fingers;
-    std::optional<Qt::KeyboardModifiers> keyboardModifiers;
     std::optional<Qt::MouseButtons> mouseButtons;
-    std::optional<QPointF> position;
 };
 class TriggerUpdateEvent
 {
@@ -52,13 +49,6 @@ public:
 
 private:
     qreal m_delta = 0;
-};
-/**
- * Unset optional fields are not checked by triggers.
- */
-struct TriggerEndEvent
-{
-    std::optional<QPointF> position;
 };
 
 /**
@@ -104,7 +94,7 @@ public:
      * @return Whether the trigger can be ended.
      * @internal
      */
-    bool canEnd(const TriggerEndEvent *event) const;
+    bool canEnd() const;
     /**
      * Resets the trigger and notifies all actions that it has ended.
      * @internal
