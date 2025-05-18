@@ -43,6 +43,9 @@ bool MouseTriggerHandler::handleEvent(const InputEvent *event)
 {
     MotionTriggerHandler::handleEvent(event);
     switch (event->type()) {
+        case InputEventType::KeyboardKey:
+            m_hadTriggerSincePress = false;
+            return false;
         case InputEventType::MouseButton:
             return handleEvent(static_cast<const MouseButtonEvent *>(event));
         case InputEventType::MouseMotion:
@@ -64,7 +67,7 @@ bool MouseTriggerHandler::handleEvent(const MouseButtonEvent *event)
     endTriggers(TriggerType::Wheel);
     if (state) {
         m_mouseMotionSinceButtonPress = 0;
-        m_hadMouseGestureSinceButtonPress = false;
+        m_hadTriggerSincePress = false;
         m_buttons |= button;
 
         cancelTriggers(TriggerType::All);
@@ -85,7 +88,7 @@ bool MouseTriggerHandler::handleEvent(const MouseButtonEvent *event)
         disconnect(&m_motionTimeoutTimer, nullptr, nullptr, nullptr);
         connect(&m_pressTimeoutTimer, &QTimer::timeout, this, [this] {
             const auto swipeTimeout = [this] {
-                if (m_hadMouseGestureSinceButtonPress) {
+                if (m_hadTriggerSincePress) {
                     qCDebug(LIBINPUTACTIONS_HANDLER_MOUSE, "Mouse gesture updated before motion timeout");
                     return;
                 }
@@ -135,13 +138,13 @@ bool MouseTriggerHandler::handleEvent(const MouseButtonEvent *event)
         }
 
         const auto block = m_blockedMouseButtons.contains(nativeButton);
-        if (m_blockedMouseButtons.removeAll(nativeButton) && !m_hadMouseGestureSinceButtonPress) {
+        if (m_blockedMouseButtons.removeAll(nativeButton) && !m_hadTriggerSincePress) {
             qCDebug(LIBINPUTACTIONS_HANDLER_MOUSE).nospace() << "Mouse button pressed and released (button: " << nativeButton << ")";
             InputEmitter::instance()->mouseButton(nativeButton, true);
             InputEmitter::instance()->mouseButton(nativeButton, false);
         }
         if (m_blockedMouseButtons.empty()) {
-            m_hadMouseGestureSinceButtonPress = false;
+            m_hadTriggerSincePress = false;
         }
         return block;
     }
@@ -165,7 +168,7 @@ bool MouseTriggerHandler::handleMotionEvent(const MotionEvent *event)
         return true;
     }
 
-    if (!hasActiveTriggers(TriggerType::All & ~TriggerType::Press)) {
+    if (!m_hadTriggerSincePress && !hasActiveTriggers(TriggerType::All & ~TriggerType::Press)) {
         cancelTriggers(TriggerType::All);
         m_motionTimeoutTimer.stop();
 
@@ -237,7 +240,7 @@ void MouseTriggerHandler::setPressTimeout(const uint32_t &timeout)
 void MouseTriggerHandler::triggerActivating(const Trigger *trigger)
 {
     MotionTriggerHandler::triggerActivating(trigger);
-    m_hadMouseGestureSinceButtonPress = true;
+    m_hadTriggerSincePress = true;
 }
 
 std::unique_ptr<TriggerActivationEvent> MouseTriggerHandler::createActivationEvent() const
