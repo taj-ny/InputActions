@@ -100,7 +100,10 @@ private:
 
     bool m_instantPress = false;
     qreal m_mouseMotionSinceButtonPress = 0;
-    bool m_hadMouseGestureSinceButtonPress = false;
+    /**
+     * Whether any triggers had been active since the last button/key press.
+     */
+    bool m_hadTriggerSincePress = false;
 
     QList<quint32> m_blockedMouseButtons;
     Qt::MouseButtons m_buttons{};
