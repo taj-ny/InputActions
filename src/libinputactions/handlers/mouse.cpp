@@ -44,7 +44,10 @@ bool MouseTriggerHandler::handleEvent(const InputEvent *event)
     MotionTriggerHandler::handleEvent(event);
     switch (event->type()) {
         case InputEventType::KeyboardKey:
-            m_hadTriggerSincePress = false;
+            // If a modifier is released before mouse button, this will mess up blocking
+            if (m_blockedMouseButtons.empty()) {
+                m_hadTriggerSincePress = false;
+            }
             return false;
         case InputEventType::MouseButton:
             return handleEvent(static_cast<const MouseButtonEvent *>(event));
@@ -168,7 +171,9 @@ bool MouseTriggerHandler::handleMotionEvent(const MotionEvent *event)
         return true;
     }
 
-    if (!m_hadTriggerSincePress && !hasActiveTriggers(TriggerType::All & ~TriggerType::Press)) {
+    // Don't activate triggers if there already had been one since the last press, unless there is an active press trigger, in which case motion should cancel
+    // and replace it.
+    if ((!m_hadTriggerSincePress || hasActiveTriggers(TriggerType::Press)) && !hasActiveTriggers(TriggerType::All & ~TriggerType::Press)) {
         cancelTriggers(TriggerType::All);
         m_motionTimeoutTimer.stop();
 
