@@ -26,6 +26,8 @@
 namespace libinputactions
 {
 
+const static uint8_t s_fingerVariableCount = 5;
+
 class Variable;
 
 template<typename T>

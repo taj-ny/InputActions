@@ -36,6 +36,7 @@ enum class InputEventType
 
     TouchpadGestureLifecyclePhase,
     TouchpadScroll,
+    TouchpadSlot,
     TouchpadSwipe,
     TouchpadPinch
 };
@@ -128,6 +129,21 @@ private:
     TouchpadGestureLifecyclePhase m_phase;
     TriggerTypes m_triggers;
     uint8_t m_fingers;
+};
+
+struct TouchpadSlot
+{
+    QPointF position;
+};
+
+class TouchpadSlotEvent : public InputEvent
+{
+public:
+    TouchpadSlotEvent(const std::vector<std::optional<TouchpadSlot>> &fingerSlots);
+
+    const std::vector<std::optional<TouchpadSlot>> &fingerSlots() const;
+private:
+    std::vector<std::optional<TouchpadSlot>> m_slots;
 };
 
 }

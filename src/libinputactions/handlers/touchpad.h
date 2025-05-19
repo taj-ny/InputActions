@@ -43,6 +43,7 @@ public:
 private:
     bool handleEvent(const TouchpadGestureLifecyclePhaseEvent *event);
     bool handleEvent(const TouchpadPinchEvent *event);
+    bool handleEvent(const TouchpadSlotEvent *event);
     /**
      * The event is treated as a 2-finger swipe. Will not work if edge scrolling is enabled. The handler is not aware
      * when the finger count changes, therefore it relies on a timeout to end triggers.

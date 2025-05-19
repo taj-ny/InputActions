@@ -124,6 +124,11 @@ Remove the *build* directory when rebuilding the effect.
 
 [Documentation](https://github.com/InputActions/docs/blob/HEAD/index.md)
 
+# Additional setup (optional)
+Add user to the ``input`` group to get access to touchpad finger position variables. This will allow any program read and write access to all input devices.
+
+TODO udev rule
+
 # Credits
 - [Strokognition](https://invent.kde.org/jpetso/strokognition), [wstroke](https://github.com/dkondor/wstroke), [easystroke](https://github.com/thjaeger/easystroke) - Stroke gestures
 - [KWin](https://invent.kde.org/plasma/kwin) - Gesture handling code (heavily extended and modified)

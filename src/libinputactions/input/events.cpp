@@ -131,4 +131,15 @@ const uint8_t &TouchpadGestureLifecyclePhaseEvent::fingers() const
     return m_fingers;
 }
 
+TouchpadSlotEvent::TouchpadSlotEvent(const std::vector<std::optional<TouchpadSlot>> &fingerSlots)
+    : InputEvent(InputEventType::TouchpadSlot)
+    , m_slots(fingerSlots)
+{
+}
+
+const std::vector<std::optional<TouchpadSlot>> &TouchpadSlotEvent::fingerSlots() const
+{
+    return m_slots;
+}
+
 }

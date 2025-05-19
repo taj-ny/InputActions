@@ -18,11 +18,15 @@
 
 #pragma once
 
+#include <libinputactions/input/backend.h>
+
 // i hate cmake, why does this have a version, it'll probably break at some point
 #include <libevdev-1.0/libevdev/libevdev.h>
 
 #include <thread>
+#include <vector>
 
+#include <QPoint>
 #include <QSize>
 
 namespace libinputactions
@@ -32,10 +36,13 @@ struct TouchpadDevice
 {
     libevdev *device;
     int fd;
-    QSize size;
+    QSizeF size;
+    bool multiTouchTypeB; // https://www.kernel.org/doc/Documentation/input/multi-touch-protocol.txt
+    std::vector<std::optional<TouchpadSlot>> fingerSlots{5};
+    uint32_t currentSlot{};
 };
 
-class LibevdevComplementaryInputBackend
+class LibevdevComplementaryInputBackend : public virtual InputBackend
 {
 public:
     LibevdevComplementaryInputBackend();

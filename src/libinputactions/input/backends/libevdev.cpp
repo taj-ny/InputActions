@@ -36,7 +36,7 @@ LibevdevComplementaryInputBackend::LibevdevComplementaryInputBackend()
         const auto path = QString("/dev/input/%1").arg(name).toStdString();
         const auto fd = open(path.c_str(), O_RDONLY | O_NONBLOCK);
         if (fd == -1) {
-            qCDebug(LIBINPUTACTIONS_BACKEND_LIBEVDEV).noquote() << QString("Failed to open %1 (error %2)").arg(path, fd);
+            qCDebug(LIBINPUTACTIONS_BACKEND_LIBEVDEV).noquote() << QString("Failed to open %1 (error %2)").arg(QString::fromStdString(path), QString::number(errno));
             continue;
         }
 
@@ -57,20 +57,23 @@ LibevdevComplementaryInputBackend::LibevdevComplementaryInputBackend()
             continue;
         }
 
-        qCDebug(LIBINPUTACTIONS_BACKEND_LIBEVDEV) << "Found valid touchpad, size: " << size;
-        m_devices.push_back({
+        const bool multiTouchTypeB = libevdev_has_event_code(device, EV_ABS, ABS_MT_SLOT);
+        qCDebug(LIBINPUTACTIONS_BACKEND_LIBEVDEV) << "Found valid touchpad, size: " << size << " type B: " << multiTouchTypeB;
+        TouchpadDevice touchpadDevice = {
             .device = device,
             .fd = fd,
-            .size = size
-        });
+            .size = size,
+            .multiTouchTypeB = multiTouchTypeB
+        };
+        if (!multiTouchTypeB) {
+            touchpadDevice.fingerSlots[0] = TouchpadSlot();
+        }
+        m_devices.push_back(touchpadDevice);
     }
 
     if (m_devices.empty()) {
         return;
     }
-
-    VariableManager::instance()->registerLocalVariable<qreal>("finger_1_position_percentage_x");
-    VariableManager::instance()->registerLocalVariable<qreal>("finger_1_position_percentage_y");
 
     m_inputLoopThread = std::thread([this] {
         inputLoop();
@@ -93,20 +96,45 @@ void LibevdevComplementaryInputBackend::inputLoop()
     while (!m_devices.empty()) {
         input_event event;
         bool pending{};
-        for (const auto &device : m_devices) {
-            if (libevdev_next_event(device.device, LIBEVDEV_READ_FLAG_NORMAL, &event) != 0
-                || event.type != EV_ABS) {
+        for (auto &device : m_devices) {
+            if (libevdev_next_event(device.device, LIBEVDEV_READ_FLAG_NORMAL, &event) != 0) {
+                continue;
+            }
+            if (event.type == EV_SYN && event.code == SYN_REPORT) {
+                const TouchpadSlotEvent slotEvent(device.fingerSlots);
+                handleEvent(&slotEvent);
                 continue;
             }
 
-            // not thread safe
-            switch (event.code) {
-                case ABS_X:
-                    VariableManager::instance()->getVariable<qreal>("finger_1_position_percentage_x")->set(event.value / static_cast<qreal>(device.size.width()));
-                    break;
-                case ABS_Y:
-                    VariableManager::instance()->getVariable<qreal>("finger_1_position_percentage_y")->set(event.value / static_cast<qreal>(device.size.height()));
-                    break;
+            const auto value = event.value;
+            if (device.multiTouchTypeB) {
+                switch (event.code) {
+                    case ABS_MT_SLOT:
+                        device.currentSlot = value;
+                        break;
+                    case ABS_MT_TRACKING_ID:
+                        if (value == -1) {
+                            device.fingerSlots[device.currentSlot] = {};
+                        } else {
+                            device.fingerSlots[device.currentSlot] = TouchpadSlot();
+                        }
+                        break;
+                    case ABS_MT_POSITION_X:
+                        device.fingerSlots[device.currentSlot].value().position.setX(value / device.size.width());
+                        break;
+                    case ABS_MT_POSITION_Y:
+                        device.fingerSlots[device.currentSlot].value().position.setY(value / device.size.height());
+                        break;
+                }
+            } else {
+                switch (event.code) {
+                    case ABS_X:
+                        device.fingerSlots[0].value().position.setX(value / device.size.width());
+                        break;
+                    case ABS_Y:
+                        device.fingerSlots[0].value().position.setY(value / device.size.height());
+                        break;
+                }
             }
 
             if (!pending) {

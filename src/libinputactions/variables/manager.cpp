@@ -36,6 +36,9 @@ VariableManager::VariableManager()
     registerRemoteVariable<CursorShape>("cursor_shape", [](auto &value) {
         value = Pointer::instance()->shape();
     });
+    for (auto i = 1; i <= s_fingerVariableCount; i ++) {
+        registerLocalVariable<QPointF>(QString("finger_%1_position_percentage").arg(i));
+    }
     registerLocalVariable<qreal>("fingers");
     registerRemoteVariable<Qt::KeyboardModifiers>("keyboard_modifiers", [](auto &value) {
         value = Keyboard::instance()->modifiers();
@@ -233,6 +236,7 @@ void VariableWrapper<T>::set(const std::optional<T> &value)
 }
 
 template class VariableWrapper<qreal>;
+template class VariableWrapper<QPointF>;
 template class VariableWrapper<QString>;
 
 template<typename T>

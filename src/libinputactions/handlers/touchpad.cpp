@@ -39,6 +39,8 @@ bool TouchpadTriggerHandler::handleEvent(const InputEvent *event)
             return handleEvent(static_cast<const TouchpadGestureLifecyclePhaseEvent *>(event));
         case InputEventType::TouchpadPinch:
             return handleEvent(static_cast<const TouchpadPinchEvent *>(event));
+        case InputEventType::TouchpadSlot:
+            return handleEvent(static_cast<const TouchpadSlotEvent *>(event));
         case InputEventType::TouchpadScroll:
             return handleScrollEvent(static_cast<const MotionEvent *>(event));
         case InputEventType::TouchpadSwipe:
@@ -66,6 +68,21 @@ bool TouchpadTriggerHandler::handleEvent(const TouchpadGestureLifecyclePhaseEven
 bool TouchpadTriggerHandler::handleEvent(const TouchpadPinchEvent *event)
 {
     return handlePinch(event->scale(), event->angleDelta());
+}
+
+bool TouchpadTriggerHandler::handleEvent(const TouchpadSlotEvent *event)
+{
+    for (auto i = 0; i < s_fingerVariableCount; i++) {
+        const auto &slot = event->fingerSlots()[i];
+        auto variable = VariableManager::instance()->getVariable<QPointF>(QString("finger_%1_position_percentage").arg(i + 1));
+
+        if (slot.has_value()) {
+            variable->set(slot->position);
+        } else {
+            variable->set({});
+        }
+    }
+    return false;
 }
 
 bool TouchpadTriggerHandler::handleScrollEvent(const MotionEvent *event)
