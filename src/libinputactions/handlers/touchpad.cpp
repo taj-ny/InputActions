@@ -72,14 +72,19 @@ bool TouchpadTriggerHandler::handleEvent(const TouchpadPinchEvent *event)
 
 bool TouchpadTriggerHandler::handleEvent(const TouchpadSlotEvent *event)
 {
-    for (auto i = 0; i < s_fingerVariableCount; i++) {
+    for (auto i = 0; i < std::min(static_cast<uint8_t>(event->fingerSlots().size()), s_fingerVariableCount); i++) {
         const auto &slot = event->fingerSlots()[i];
-        auto variable = VariableManager::instance()->getVariable<QPointF>(QString("finger_%1_position_percentage").arg(i + 1));
+        const auto fingerVariableNumber = i + 1;
 
-        if (slot.has_value()) {
-            variable->set(slot->position);
+        auto positionVariable = VariableManager::instance()->getVariable<QPointF>(QString("finger_%1_position_percentage").arg(fingerVariableNumber));
+        auto pressureVariable = VariableManager::instance()->getVariable<qreal>(QString("finger_%1_pressure").arg(fingerVariableNumber));
+
+        if (slot.active) {
+            positionVariable->set(slot.position);
+            pressureVariable->set(slot.pressure);
         } else {
-            variable->set({});
+            positionVariable->set({});
+            pressureVariable->set({});
         }
     }
     return false;

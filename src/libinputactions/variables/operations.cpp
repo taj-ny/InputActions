@@ -83,12 +83,15 @@ std::unique_ptr<VariableOperationsBase> VariableOperationsBase::create(Variable 
         return std::make_unique<VariableOperations<CursorShape>>(variable);
     } else if (type == typeid(Qt::KeyboardModifiers)) {
         return std::make_unique<VariableOperations<Qt::KeyboardModifiers>>(variable);
+    } else if (type == typeid(Qt::MouseButtons)) {
+        return std::make_unique<VariableOperations<Qt::MouseButtons>>(variable);
     } else if (type == typeid(QPointF)) {
         return std::make_unique<VariableOperations<QPointF>>(variable);
     } else if (type == typeid(QString)) {
         return std::make_unique<VariableOperations<QString>>(variable);
     }
 
+    qCDebug(LIBINPUTACTIONS_VARIABLE_OPERATIONS).noquote() << "No variable operations for type " << type.name();
     return {};
 }
 
@@ -189,14 +192,14 @@ QString VariableOperations<QString>::toString(const QString &value)
 template<typename T>
 QString VariableOperations<T>::toString(const T &value)
 {
-    return {};
+    return "{toString operation not defined}";
 }
 
 template<typename T>
 QString VariableOperations<T>::toString(const std::any &value) const
 {
     if (!value.has_value()) {
-        return {};
+        return "{}";
     }
     return toString(std::any_cast<T>(value));
 }

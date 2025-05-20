@@ -38,6 +38,9 @@ public:
 
 public slots:
     Q_NOREPLY void recordStroke(const QDBusMessage &message);
+#ifdef DEBUG
+    QString variables(const QString &filter = "");
+#endif
 
 private:
     QDBusConnection m_bus = QDBusConnection::sessionBus();

@@ -38,6 +38,7 @@ VariableManager::VariableManager()
     });
     for (auto i = 1; i <= s_fingerVariableCount; i ++) {
         registerLocalVariable<QPointF>(QString("finger_%1_position_percentage").arg(i));
+        registerLocalVariable<qreal>(QString("finger_%1_pressure").arg(i));
     }
     registerLocalVariable<qreal>("fingers");
     registerRemoteVariable<Qt::KeyboardModifiers>("keyboard_modifiers", [](auto &value) {
@@ -49,12 +50,15 @@ VariableManager::VariableManager()
     });
     registerRemoteVariable<QPointF>("pointer_position_window_percentage", [](auto &value) {
         const auto window = WindowProvider::instance()->underPointer();
-        const auto windowGeometry = window->geometry();
-        const auto pointerPos = Pointer::instance()->globalPosition();
-        if (!window || !pointerPos || !windowGeometry || !windowGeometry->contains(pointerPos.value())) {
+        if (!window) {
             return;
         }
 
+        const auto windowGeometry = window->geometry();
+        const auto pointerPos = Pointer::instance()->globalPosition();
+        if (!pointerPos || !windowGeometry) {
+            return;
+        }
         const auto translatedPosition = pointerPos.value() - windowGeometry->topLeft();
         value = QPointF(translatedPosition.x() / windowGeometry->width(), translatedPosition.y() / windowGeometry->height());
     });

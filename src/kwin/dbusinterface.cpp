@@ -20,6 +20,8 @@
 #include "effect/effecthandler.h"
 
 #include <libinputactions/triggers/stroke.h>
+#include <libinputactions/variables/manager.h>
+#include <libinputactions/variables/variable.h>
 
 static QString s_service = "org.inputactions";
 static QString s_path = "/";
@@ -63,3 +65,18 @@ void DBusInterface::recordStroke(const QDBusMessage &message)
     }, Qt::SingleShotConnection);
     backend->recordStroke();
 }
+
+#ifdef DEBUG
+QString DBusInterface::variables(const QString &filter)
+{
+    QStringList result;
+    const QRegularExpression filterRegex(filter);
+    for (const auto &[name, variable] : libinputactions::VariableManager::instance()->variables()) {
+        if (!filterRegex.match(name).hasMatch()) {
+            continue;
+        }
+        result.push_back(QString("%1: %2").arg(name, variable->operations()->toString()));
+    }
+    return result.join('\n');
+}
+#endif

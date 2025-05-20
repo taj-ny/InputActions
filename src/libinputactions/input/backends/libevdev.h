@@ -26,7 +26,9 @@
 #include <thread>
 #include <vector>
 
+#include <QFileSystemWatcher>
 #include <QPoint>
+#include <QTimer>
 #include <QSize>
 
 namespace libinputactions
@@ -37,11 +39,19 @@ struct TouchpadDevice
     libevdev *device;
     int fd;
     QSizeF size;
-    bool multiTouchTypeB; // https://www.kernel.org/doc/Documentation/input/multi-touch-protocol.txt
-    std::vector<std::optional<TouchpadSlot>> fingerSlots{5};
-    uint32_t currentSlot{};
+    bool multiTouch;
+    /**
+     * If device doesn't support MT type B protocol, only the first slot will be used.
+     */
+    std::vector<TouchpadSlot> fingerSlots;
+    uint8_t currentSlot{};
 };
 
+/**
+ * Events: TouchpadSlotEvent
+ *
+ * Complementary input backends must be used in conjunction with a primary backend.
+ */
 class LibevdevComplementaryInputBackend : public virtual InputBackend
 {
 public:
@@ -49,9 +59,12 @@ public:
     ~LibevdevComplementaryInputBackend();
 
 private:
-    void inputLoop();
+    void addDevices();
+    void removeDevices();
+    void processEvents();
 
     std::vector<TouchpadDevice> m_devices;
-    std::thread m_inputLoopThread;
+    QTimer m_inputTimer;
+    QFileSystemWatcher m_devInputWatcher;
 };
 }

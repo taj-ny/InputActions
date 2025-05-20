@@ -133,17 +133,19 @@ private:
 
 struct TouchpadSlot
 {
+    bool active{};
     QPointF position;
+    uint32_t pressure{};
 };
 
 class TouchpadSlotEvent : public InputEvent
 {
 public:
-    TouchpadSlotEvent(const std::vector<std::optional<TouchpadSlot>> &fingerSlots);
+    TouchpadSlotEvent(const std::vector<TouchpadSlot> &fingerSlots);
 
-    const std::vector<std::optional<TouchpadSlot>> &fingerSlots() const;
+    const std::vector<TouchpadSlot> &fingerSlots() const;
 private:
-    std::vector<std::optional<TouchpadSlot>> m_slots;
+    std::vector<TouchpadSlot> m_slots;
 };
 
 }
