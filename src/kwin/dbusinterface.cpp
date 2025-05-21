@@ -47,7 +47,7 @@ void DBusInterface::recordStroke(const QDBusMessage &message)
     m_reply = message.createReply();
 
     auto backend = libinputactions::InputBackend::instance();
-    connect(backend, &KWinInputBackend::strokeRecordingFinished, this, [this](const auto &stroke) {
+    backend->recordStroke([this](const auto &stroke) {
         QByteArray bytes;
         const auto &points = stroke.points();
         for (size_t i = 0; i < points.size(); i++) {
@@ -62,8 +62,7 @@ void DBusInterface::recordStroke(const QDBusMessage &message)
         m_bus.send(m_reply);
 
         KWin::effects->hideOnScreenMessage();
-    }, Qt::SingleShotConnection);
-    backend->recordStroke();
+    });
 }
 
 #ifdef DEBUG

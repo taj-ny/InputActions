@@ -30,12 +30,14 @@ class Stroke;
 /**
  * Collects input events and forwards them to handlers.
  */
-class InputBackend : public QObject
+class InputBackend
 {
-    Q_OBJECT
-
 public:
-    void recordStroke();
+    /**
+     * @param callback Will be called when the stroke has been recorded.
+     * @remark Calling this when a stroke is already being recorded will result in the previous callback never being called.
+     */
+    void recordStroke(const std::function<void(const Stroke &stroke)> &callback);
 
     void addEventHandler(std::unique_ptr<InputEventHandler> handler);
     void clearEventHandlers();
@@ -44,9 +46,6 @@ public:
 
     static InputBackend *instance();
     static void setInstance(std::unique_ptr<InputBackend> instance);
-
-signals:
-    void strokeRecordingFinished(const Stroke &stroke);
 
 protected:
     InputBackend();
@@ -66,6 +65,8 @@ protected:
     QTimer m_strokeRecordingTimeoutTimer;
 
 private:
+    std::function<void(const Stroke &stroke)> m_strokeCallback;
+
     static std::unique_ptr<InputBackend> s_instance;
 };
 

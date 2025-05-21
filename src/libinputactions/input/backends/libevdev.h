@@ -23,6 +23,7 @@
 // i hate cmake, why does this have a version, it'll probably break at some point
 #include <libevdev-1.0/libevdev/libevdev.h>
 
+#include <set>
 #include <thread>
 #include <vector>
 
@@ -36,6 +37,7 @@ namespace libinputactions
 
 struct TouchpadDevice
 {
+    QString devInputName;
     libevdev *device;
     int fd;
     QSizeF size;
@@ -59,12 +61,17 @@ public:
     ~LibevdevComplementaryInputBackend();
 
 private:
-    void addDevices();
-    void removeDevices();
+    void devInputChanged();
+    void deviceAdded(const QString &name);
+    void deviceRemoved(const QString &name);
+    QList<QString> devInputDevices() const;
+
     void processEvents();
 
     std::vector<TouchpadDevice> m_devices;
     QTimer m_inputTimer;
+
     QFileSystemWatcher m_devInputWatcher;
+    std::set<QString> m_devInputDevices;
 };
 }

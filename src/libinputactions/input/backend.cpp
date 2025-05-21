@@ -20,13 +20,15 @@
 #include "keyboard.h"
 #include "triggers/stroke.h"
 
+#include <QObject>
+
 namespace libinputactions
 {
 
 InputBackend::InputBackend()
 {
     m_strokeRecordingTimeoutTimer.setSingleShot(true);
-    connect(&m_strokeRecordingTimeoutTimer, &QTimer::timeout, this, &InputBackend::finishStrokeRecording);
+    QObject::connect(&m_strokeRecordingTimeoutTimer, &QTimer::timeout, [this] { finishStrokeRecording(); });
 }
 
 bool InputBackend::handleEvent(const InputEvent *event)
@@ -53,15 +55,16 @@ void InputBackend::clearEventHandlers()
     m_handlers.clear();
 }
 
-void InputBackend::recordStroke()
+void InputBackend::recordStroke(const std::function<void(const Stroke &stroke)> &callback)
 {
     m_isRecordingStroke = true;
+    m_strokeCallback = callback;
 }
 
 void InputBackend::finishStrokeRecording()
 {
     m_isRecordingStroke = false;
-    Q_EMIT strokeRecordingFinished(Stroke(m_strokePoints));
+    m_strokeCallback(Stroke(m_strokePoints));
     m_strokePoints.clear();
 }
 

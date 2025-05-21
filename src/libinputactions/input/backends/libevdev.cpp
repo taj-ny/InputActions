@@ -24,6 +24,7 @@
 
 #include <QDir>
 #include <QLoggingCategory>
+#include <QObject>
 
 namespace libinputactions
 {
@@ -34,88 +35,106 @@ LibevdevComplementaryInputBackend::LibevdevComplementaryInputBackend()
 {
     m_inputTimer.setTimerType(Qt::TimerType::PreciseTimer);
     m_inputTimer.setInterval(100);
-    connect(&m_inputTimer, &QTimer::timeout, this, [this] {
-        processEvents();
-    });
+    QObject::connect(&m_inputTimer, &QTimer::timeout, [this] { processEvents(); });
 
     m_devInputWatcher.addPath("/dev/input");
-    connect(&m_devInputWatcher, &QFileSystemWatcher::directoryChanged, this, [this] {
-        qCDebug(LIBINPUTACTIONS_BACKEND_LIBEVDEV, "/dev/input changed");
-        removeDevices();
-        addDevices();
-    });
-
-    addDevices();
+    QObject::connect(&m_devInputWatcher, &QFileSystemWatcher::directoryChanged, [this] { devInputChanged(); });
+    devInputChanged();
 }
 
 LibevdevComplementaryInputBackend::~LibevdevComplementaryInputBackend()
 {
-    removeDevices();
-}
-
-void LibevdevComplementaryInputBackend::addDevices()
-{
-    for (const auto &name: QDir("/dev/input").entryList(QDir::Filter::System).filter("event")) {
-        const auto path = QString("/dev/input/%1").arg(name).toStdString();
-        const auto fd = open(path.c_str(), O_RDONLY | O_NONBLOCK);
-        if (fd == -1) {
-            qCDebug(LIBINPUTACTIONS_BACKEND_LIBEVDEV).noquote()
-                << QString("Failed to open %1 (error %2)").arg(QString::fromStdString(path), QString::number(errno));
-            continue;
-        }
-
-        libevdev *device;
-        libevdev_new_from_fd(fd, &device);
-        qCDebug(LIBINPUTACTIONS_BACKEND_LIBEVDEV).noquote().nospace() << "Opened device (name: " << libevdev_get_name(device) << ")";
-
-        if (!libevdev_has_event_type(device, EV_ABS)) {
-            qCDebug(LIBINPUTACTIONS_BACKEND_LIBEVDEV, "Device is not absolute");
-            libevdev_free(device);
-            close(fd);
-            continue;
-        }
-
-        const QSize size(libevdev_get_abs_maximum(device, ABS_X), libevdev_get_abs_maximum(device, ABS_Y));
-        if (size.width() == 0 || size.height() == 0) {
-            qCDebug(LIBINPUTACTIONS_BACKEND_LIBEVDEV, "Device has a size of 0");
-            libevdev_free(device);
-            close(fd);
-            continue;
-        }
-
-        bool multiTouch{};
-        uint8_t slotCount = 1;
-        if (libevdev_has_event_code(device, EV_ABS, ABS_MT_SLOT)) {
-            multiTouch = true;
-            slotCount = libevdev_get_abs_maximum(device, ABS_MT_SLOT);
-        }
-        qCDebug(LIBINPUTACTIONS_BACKEND_LIBEVDEV).noquote().nospace()
-            << "Found valid touchpad (size: " << size << ", multiTouch: " << multiTouch << ", slots: " << slotCount << ")";
-        TouchpadDevice touchpadDevice = {
-            .device = device,
-            .fd = fd,
-            .size = size,
-            .multiTouch = multiTouch,
-            .fingerSlots = std::vector<TouchpadSlot>{slotCount}
-        };
-        m_devices.push_back(touchpadDevice);
-    }
-
-    if (m_devices.empty()) {
-        return;
-    }
-
-    m_inputTimer.start();
-}
-
-void LibevdevComplementaryInputBackend::removeDevices()
-{
-    m_inputTimer.stop();
     for (auto &device : m_devices) {
         close(device.fd);
         libevdev_free(device.device);
     }
     m_devices.clear();
+}
+
+void LibevdevComplementaryInputBackend::devInputChanged()
+{
+    const auto devInput = devInputDevices();
+    for (const auto &device : m_devInputDevices) {
+        if (!devInput.contains(device)) {
+            deviceRemoved(device);
+        }
+    }
+    for (const auto &device : devInput) {
+        if (!m_devInputDevices.contains(device)) {
+            deviceAdded(device);
+        }
+    }
+}
+
+void LibevdevComplementaryInputBackend::deviceAdded(const QString &name)
+{
+    qCDebug(LIBINPUTACTIONS_BACKEND_LIBEVDEV).noquote().nospace() << "Device added (name: " << name << ")";
+    m_devInputDevices.insert(name);
+
+    const auto path = QString("/dev/input/%1").arg(name).toStdString();
+    const auto fd = open(path.c_str(), O_RDONLY | O_NONBLOCK);
+    if (fd == -1) {
+        qCDebug(LIBINPUTACTIONS_BACKEND_LIBEVDEV).noquote()
+            << QString("Failed to open %1 (error %2)").arg(QString::fromStdString(path), QString::number(errno));
+        return;
+    }
+
+    libevdev *device;
+    libevdev_new_from_fd(fd, &device);
+    qCDebug(LIBINPUTACTIONS_BACKEND_LIBEVDEV).noquote().nospace() << "Opened device (name: " << libevdev_get_name(device) << ")";
+
+    if (!libevdev_has_event_type(device, EV_ABS)) {
+        qCDebug(LIBINPUTACTIONS_BACKEND_LIBEVDEV, "Device is not absolute");
+        libevdev_free(device);
+        close(fd);
+        return;
+    }
+
+    const QSize size(libevdev_get_abs_maximum(device, ABS_X), libevdev_get_abs_maximum(device, ABS_Y));
+    if (size.width() == 0 || size.height() == 0) {
+        qCDebug(LIBINPUTACTIONS_BACKEND_LIBEVDEV, "Device has a size of 0");
+        libevdev_free(device);
+        close(fd);
+        return;
+    }
+
+    bool multiTouch{};
+    uint8_t slotCount = 1;
+    if (libevdev_has_event_code(device, EV_ABS, ABS_MT_SLOT)) {
+        multiTouch = true;
+        slotCount = libevdev_get_abs_maximum(device, ABS_MT_SLOT);
+    }
+    qCDebug(LIBINPUTACTIONS_BACKEND_LIBEVDEV).noquote().nospace()
+        << "Found valid touchpad (size: " << size << ", multiTouch: " << multiTouch << ", slots: " << slotCount << ")";
+    TouchpadDevice touchpadDevice = {
+        .devInputName = name,
+        .device = device,
+        .fd = fd,
+        .size = size,
+        .multiTouch = multiTouch,
+        .fingerSlots = std::vector<TouchpadSlot>{slotCount}
+    };
+    m_devices.push_back(touchpadDevice);
+    m_inputTimer.start();
+}
+
+void LibevdevComplementaryInputBackend::deviceRemoved(const QString &name)
+{
+    qCDebug(LIBINPUTACTIONS_BACKEND_LIBEVDEV).noquote().nospace() << "Device removed (name: " << name << ")";
+    m_devInputDevices.erase(name);
+    for (auto it = m_devices.begin(); it != m_devices.end(); it++) {
+        if (it->devInputName == name) {
+            close(it->fd);
+            libevdev_free(it->device);
+            m_devices.erase(it);
+            break;
+        }
+    }
+}
+
+QList<QString> LibevdevComplementaryInputBackend::devInputDevices() const
+{
+    return QDir("/dev/input").entryList(QDir::Filter::System).filter("event");
 }
 
 void LibevdevComplementaryInputBackend::processEvents()
