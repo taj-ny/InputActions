@@ -114,6 +114,14 @@ sudo make install
 
 Remove the *build* directory when rebuilding the effect.
 
+# Additional setup (optional)
+To gain access to extra touchpad features (finger position and pressure variables, click gestures), create a file at ``/etc/udev/rules.d/71-touchpad.rules`` with the following content:
+```
+ENV{ID_INPUT_TOUCHPAD}=="1", TAG+="uaccess"
+```
+
+This will give all programs read and write access to all touchpads.
+
 # Usage
 > [!NOTE]
 > If the plugin stops working after a system update, you will need to rebuild it. Choose cleanBuild when rebuilding the AUR package.
@@ -123,14 +131,6 @@ Remove the *build* directory when rebuilding the effect.
 3. Enable the *Input Actions* effect in the *Tools* category.
 
 [Documentation](https://github.com/InputActions/docs/blob/HEAD/index.md)
-
-# Additional setup (optional)
-Add user to the ``input`` group to get access to touchpad finger position variables. This will give all programs read and write access to all input devices.
-```shell
-sudo usermod -a -G input [user]
-```
-
-TODO udev rule
 
 # Credits
 - [Strokognition](https://invent.kde.org/jpetso/strokognition), [wstroke](https://github.com/dkondor/wstroke), [easystroke](https://github.com/thjaeger/easystroke) - Stroke gestures
