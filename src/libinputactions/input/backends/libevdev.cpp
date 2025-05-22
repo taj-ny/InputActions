@@ -162,12 +162,39 @@ void LibevdevComplementaryInputBackend::poll()
                     if (code == SYN_REPORT) {
                         const TouchpadSlotEvent slotEvent(InputDevice(InputDeviceType::Touchpad), device.fingerSlots);
                         handleEvent(&slotEvent);
+
+                        static const std::map<uint16_t, uint8_t> fingerCountCodes = {
+                            {0, 0},
+                            {BTN_TOOL_FINGER, 1},
+                            {BTN_TOOL_DOUBLETAP, 2},
+                            {BTN_TOOL_TRIPLETAP, 3},
+                            {BTN_TOOL_QUADTAP, 4},
+                            {BTN_TOOL_QUINTTAP, 5}
+                        };
+                        VariableManager::instance()->getVariable(BuiltinVariables::Fingers)->set(fingerCountCodes.at(device.currentFingerCode));
                     }
                     continue;
                 case EV_KEY:
-                    if (device.buttonPad && (code == BTN_LEFT || code == BTN_MIDDLE || code == BTN_RIGHT)) {
-                        const TouchpadClickEvent clickEvent(InputDevice(InputDeviceType::Touchpad), value);
-                        handleEvent(&clickEvent);
+                    switch (code) {
+                        case BTN_TOOL_FINGER:
+                        case BTN_TOOL_DOUBLETAP:
+                        case BTN_TOOL_TRIPLETAP:
+                        case BTN_TOOL_QUADTAP:
+                        case BTN_TOOL_QUINTTAP:
+                            if (value == 1) {
+                                device.currentFingerCode = code;
+                            } else if (value == 0 && device.currentFingerCode == code) {
+                                device.currentFingerCode = 0;
+                            }
+                            continue;
+                        case BTN_LEFT:
+                        case BTN_MIDDLE:
+                        case BTN_RIGHT:
+                            if (device.buttonPad) {
+                                const TouchpadClickEvent clickEvent(InputDevice(InputDeviceType::Touchpad), value);
+                                handleEvent(&clickEvent);
+                            }
+                            continue;
                     }
                     continue;
                 case EV_ABS:

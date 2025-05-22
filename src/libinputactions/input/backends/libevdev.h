@@ -50,6 +50,10 @@ struct TouchpadDevice
      */
     std::vector<TouchpadSlot> fingerSlots;
     uint8_t currentSlot{};
+    /**
+     * 0, BTN_TOOL_FINGER, BTN_TOOL_DOUBLETAP, BTN_TOOL_TRIPLETAP, BTN_TOOL_QUADTAP or BTN_TOOL_QUINTTAP
+     */
+    uint16_t currentFingerCode{};
 };
 
 /**

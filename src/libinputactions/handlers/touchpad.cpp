@@ -111,7 +111,6 @@ bool TouchpadTriggerHandler::handleEvent(const TouchpadPinchEvent *event)
 bool TouchpadTriggerHandler::handleEvent(const TouchpadSlotEvent *event)
 {
     m_usesLibevdevBackend = true;
-    uint8_t totalFingers{};
     for (auto i = 0; i < std::min(static_cast<uint8_t>(event->fingerSlots().size()), s_fingerVariableCount); i++) {
         const auto &slot = event->fingerSlots()[i];
         const auto fingerVariableNumber = i + 1;
@@ -122,13 +121,11 @@ bool TouchpadTriggerHandler::handleEvent(const TouchpadSlotEvent *event)
         if (slot.active) {
             positionVariable->set(slot.position);
             pressureVariable->set(slot.pressure);
-            totalFingers++;
         } else {
             positionVariable->set({});
             pressureVariable->set({});
         }
     }
-    VariableManager::instance()->getVariable(BuiltinVariables::Fingers)->set(totalFingers);
     return false;
 }
 
