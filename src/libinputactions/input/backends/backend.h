@@ -18,7 +18,7 @@
 
 #pragma once
 
-#include "handler.h"
+#include <libinputactions/input/handler.h>
 
 #include <QTimer>
 
@@ -33,6 +33,13 @@ class Stroke;
 class InputBackend
 {
 public:
+    virtual ~InputBackend() = default;
+
+    /**
+     * Polls and handles events from all devices until there are no events to handle.
+     */
+     virtual void poll();
+
     /**
      * @param callback Will be called when the stroke has been recorded.
      * @remark Calling this when a stroke is already being recorded will result in the previous callback never being called.

@@ -55,7 +55,7 @@ bool KWinInputBackend::holdGestureBegin(int fingerCount, std::chrono::microsecon
 {
     ENSURE_SESSION_UNLOCKED();
 
-    const TouchpadGestureLifecyclePhaseEvent event(TouchpadGestureLifecyclePhase::Begin, TriggerType::Press, fingerCount);
+    const TouchpadGestureLifecyclePhaseEvent event(m_touchpad, TouchpadGestureLifecyclePhase::Begin, TriggerType::Press, fingerCount);
     handleEvent(&event);
     return false;
 }
@@ -64,7 +64,7 @@ bool KWinInputBackend::holdGestureEnd(std::chrono::microseconds time)
 {
     ENSURE_SESSION_UNLOCKED();
 
-    const TouchpadGestureLifecyclePhaseEvent event(TouchpadGestureLifecyclePhase::End, TriggerType::Press);
+    const TouchpadGestureLifecyclePhaseEvent event(m_touchpad, TouchpadGestureLifecyclePhase::End, TriggerType::Press);
     if (handleEvent(&event)) {
         KWin::input()->processSpies([&time](auto &&spy) {
             spy->holdGestureCancelled(time);
@@ -81,7 +81,7 @@ bool KWinInputBackend::holdGestureCancelled(std::chrono::microseconds time)
 {
     ENSURE_SESSION_UNLOCKED();
 
-    const TouchpadGestureLifecyclePhaseEvent event(TouchpadGestureLifecyclePhase::Cancel, TriggerType::Press);
+    const TouchpadGestureLifecyclePhaseEvent event(m_touchpad, TouchpadGestureLifecyclePhase::Cancel, TriggerType::Press);
     handleEvent(&event);
     return false;
 }
@@ -94,7 +94,7 @@ bool KWinInputBackend::swipeGestureBegin(int fingerCount, std::chrono::microseco
         return true;
     }
 
-    const TouchpadGestureLifecyclePhaseEvent event(TouchpadGestureLifecyclePhase::Begin, TriggerType::StrokeSwipe, fingerCount);
+    const TouchpadGestureLifecyclePhaseEvent event(m_touchpad, TouchpadGestureLifecyclePhase::Begin, TriggerType::StrokeSwipe, fingerCount);
     handleEvent(&event);
     return false;
 }
@@ -108,7 +108,7 @@ bool KWinInputBackend::swipeGestureUpdate(const QPointF &delta, std::chrono::mic
         return true;
     }
 
-    const MotionEvent event(delta, InputEventType::TouchpadSwipe);
+    const MotionEvent event(m_touchpad, InputEventType::TouchpadSwipe, delta);
     return handleEvent(&event);
 }
 
@@ -121,7 +121,7 @@ bool KWinInputBackend::swipeGestureEnd(std::chrono::microseconds time)
         return true;
     }
 
-    const TouchpadGestureLifecyclePhaseEvent event(TouchpadGestureLifecyclePhase::End, TriggerType::StrokeSwipe);
+    const TouchpadGestureLifecyclePhaseEvent event(m_touchpad, TouchpadGestureLifecyclePhase::End, TriggerType::StrokeSwipe);
     if (handleEvent(&event)) {
         KWin::input()->processSpies([&time](auto &&spy) {
             spy->swipeGestureCancelled(time);
@@ -138,7 +138,7 @@ bool KWinInputBackend::swipeGestureCancelled(std::chrono::microseconds time)
 {
     ENSURE_SESSION_UNLOCKED();
 
-    const TouchpadGestureLifecyclePhaseEvent event(TouchpadGestureLifecyclePhase::Cancel, TriggerType::StrokeSwipe);
+    const TouchpadGestureLifecyclePhaseEvent event(m_touchpad, TouchpadGestureLifecyclePhase::Cancel, TriggerType::StrokeSwipe);
     handleEvent(&event);
     return false;
 }
@@ -148,7 +148,7 @@ bool KWinInputBackend::pinchGestureBegin(int fingerCount, std::chrono::microseco
     ENSURE_SESSION_UNLOCKED();
 
     m_pinchGestureActive = true;
-    const TouchpadGestureLifecyclePhaseEvent event(TouchpadGestureLifecyclePhase::Begin, TriggerType::PinchRotate, fingerCount);
+    const TouchpadGestureLifecyclePhaseEvent event(m_touchpad, TouchpadGestureLifecyclePhase::Begin, TriggerType::PinchRotate, fingerCount);
     handleEvent(&event);
     return false;
 }
@@ -163,7 +163,7 @@ bool KWinInputBackend::pinchGestureUpdate(qreal scale, qreal angleDelta, const Q
         pinchGestureBegin(2, time);
     }
 
-    const TouchpadPinchEvent event(scale, angleDelta);
+    const TouchpadPinchEvent event(m_touchpad, scale, angleDelta);
     return handleEvent(&event);
 }
 
@@ -172,7 +172,7 @@ bool KWinInputBackend::pinchGestureEnd(std::chrono::microseconds time)
     ENSURE_SESSION_UNLOCKED();
 
     m_pinchGestureActive = false;
-    const TouchpadGestureLifecyclePhaseEvent event(TouchpadGestureLifecyclePhase::End, TriggerType::PinchRotate);
+    const TouchpadGestureLifecyclePhaseEvent event(m_touchpad, TouchpadGestureLifecyclePhase::End, TriggerType::PinchRotate);
     if (handleEvent(&event)) {
         KWin::input()->processSpies([&time](auto &&spy) {
             spy->pinchGestureCancelled(time);
@@ -190,7 +190,7 @@ bool KWinInputBackend::pinchGestureCancelled(std::chrono::microseconds time)
     ENSURE_SESSION_UNLOCKED();
 
     m_pinchGestureActive = false;
-    const TouchpadGestureLifecyclePhaseEvent event(TouchpadGestureLifecyclePhase::Cancel, TriggerType::PinchRotate);
+    const TouchpadGestureLifecyclePhaseEvent event(m_touchpad, TouchpadGestureLifecyclePhase::Cancel, TriggerType::PinchRotate);
     handleEvent(&event);
     return false;
 }
@@ -207,7 +207,7 @@ bool KWinInputBackend::pointerMotion(KWin::PointerMotionEvent *event)
         m_strokePoints.push_back(event->delta);
         m_strokeRecordingTimeoutTimer.start(s_strokeRecordingTimeout);
     } else {
-        const MotionEvent motionEvent(event->delta, InputEventType::MouseMotion, device->name());
+        const MotionEvent motionEvent(getDevice(device), InputEventType::PointerMotion, event->delta);
         handleEvent(&motionEvent);
     }
     return false;
@@ -215,11 +215,11 @@ bool KWinInputBackend::pointerMotion(KWin::PointerMotionEvent *event)
 
 bool KWinInputBackend::pointerButton(KWin::PointerButtonEvent *event)
 {
-    if (m_ignoreEvents || !event->device || !isMouse(event->device)) {
+    if (m_ignoreEvents || !event->device) {
         return false;
     }
 
-    const MouseButtonEvent buttonEvent(event->button, event->nativeButton, event->state == PointerButtonStatePressed, event->device->name());
+    const PointerButtonEvent buttonEvent(getDevice(event->device), event->button, event->nativeButton, event->state == PointerButtonStatePressed);
     return handleEvent(&buttonEvent);
 }
 
@@ -229,7 +229,7 @@ bool KWinInputBackend::keyboardKey(KWin::KeyboardKeyEvent *event)
         return false;
     }
 
-    const KeyboardKeyEvent keyEvent(event->nativeScanCode, event->state == KeyboardKeyStatePressed);
+    const KeyboardKeyEvent keyEvent(getDevice(event->device), event->nativeScanCode, event->state == KeyboardKeyStatePressed);
     handleEvent(&keyEvent);
     return false;
 }
@@ -266,7 +266,7 @@ bool KWinInputBackend::wheelEvent(KWin::WheelEvent *event)
     }
 
     if (mouse) {
-        const MotionEvent wheelEvent(delta, InputEventType::MouseWheel, device->name());
+        const MotionEvent wheelEvent(getDevice(device), InputEventType::PointerScroll, delta);
         return handleEvent(&wheelEvent);
     }
 
@@ -276,11 +276,27 @@ bool KWinInputBackend::wheelEvent(KWin::WheelEvent *event)
         return true;
     }
 
-    const MotionEvent scrollEvent(delta, InputEventType::TouchpadScroll);
+    const MotionEvent scrollEvent(getDevice(device), InputEventType::PointerScroll, delta);
     return handleEvent(&scrollEvent);
 }
 
 bool KWinInputBackend::isMouse(const KWin::InputDevice *device) const
 {
     return device->isPointer() && !device->isTouch() && !device->isTouchpad();
+}
+
+libinputactions::InputDevice KWinInputBackend::getDevice(const KWin::InputDevice *device) const
+{
+    InputDeviceTypes types{};
+    const auto name = device->name();
+    if (device->isKeyboard()) {
+        types |= InputDeviceType::Keyboard;
+    }
+    if (isMouse(device)) {
+        types |= InputDeviceType::Mouse;
+    }
+    if (device->isTouchpad()) {
+        types |= InputDeviceType::Touchpad;
+    }
+    return libinputactions::InputDevice(types, name);
 }

@@ -17,8 +17,9 @@
 */
 
 #include "backend.h"
-#include "keyboard.h"
-#include "triggers/stroke.h"
+
+#include <libinputactions/input/keyboard.h>
+#include <libinputactions/triggers/stroke.h>
 
 #include <QObject>
 
@@ -73,6 +74,10 @@ void InputBackend::setIgnoreEvents(const bool &value)
     m_ignoreEvents = value;
 }
 
+void InputBackend::poll()
+{
+}
+
 InputBackend *InputBackend::instance()
 {
     return s_instance.get();
@@ -82,6 +87,7 @@ void InputBackend::setInstance(std::unique_ptr<InputBackend> instance)
 {
     s_instance = std::move(instance);
 }
+
 
 std::unique_ptr<InputBackend> InputBackend::s_instance = std::unique_ptr<InputBackend>(new InputBackend);
 

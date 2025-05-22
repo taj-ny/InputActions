@@ -69,12 +69,13 @@ Q_ENUM_NS(TriggerSpeed)
 
 enum class TriggerType : uint32_t {
     None = 0,
-    Pinch = 1u << 0,
-    Press = 1u << 1,
-    Rotate = 1u << 2,
-    Stroke = 1u << 3,
-    Swipe = 1u << 4,
-    Wheel = 1u << 5,
+    Click = 1u << 0,
+    Pinch = 1u << 1,
+    Press = 1u << 2,
+    Rotate = 1u << 3,
+    Stroke = 1u << 4,
+    Swipe = 1u << 5,
+    Wheel = 1u << 6,
 
     PinchRotate = Pinch | Rotate,
     StrokeSwipe = Stroke | Swipe,

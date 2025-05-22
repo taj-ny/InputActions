@@ -20,8 +20,8 @@
 
 #include "input.h"
 
+#include <libinputactions/input/backends/backend.h>
 #include <libinputactions/input/backends/libevdev.h>
-#include <libinputactions/input/backend.h>
 
 /**
  * Installed before GlobalShortcutFilter, which is responsible for handling touchpad gestures.
@@ -64,6 +64,8 @@ public:
 
 private:
     bool isMouse(const KWin::InputDevice *device) const;
+    libinputactions::InputDevice getDevice(const KWin::InputDevice *device) const;
 
     bool m_pinchGestureActive{};
+    libinputactions::InputDevice m_touchpad{libinputactions::InputDeviceType::Touchpad};
 };

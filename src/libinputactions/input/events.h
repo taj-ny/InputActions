@@ -18,6 +18,8 @@
 
 #pragma once
 
+#include "device.h"
+
 #include <libinputactions/globals.h>
 
 #include <QKeyCombination>
@@ -30,12 +32,12 @@ enum class InputEventType
 {
     KeyboardKey,
 
-    MouseButton,
-    MouseMotion,
-    MouseWheel,
+    PointerButton,
+    PointerMotion,
+    PointerScroll,
 
+    TouchpadClick,
     TouchpadGestureLifecyclePhase,
-    TouchpadScroll,
     TouchpadSlot,
     TouchpadSwipe,
     TouchpadPinch
@@ -54,20 +56,20 @@ public:
     virtual ~InputEvent() = default;
 
     const InputEventType &type() const;
-    const std::optional<QString> &sender() const;
+    const InputDevice &sender() const;
 
 protected:
-    InputEvent(const InputEventType &type, const std::optional<QString> &sender = {});
+    InputEvent(const InputEventType &type, const InputDevice &sender);
 
 private:
     InputEventType m_type;
-    std::optional<QString> m_sender;
+    InputDevice m_sender;
 };
 
 class MotionEvent : public InputEvent
 {
 public:
-    MotionEvent(const QPointF &delta, const InputEventType &type, const std::optional<QString> &sender = {});
+    MotionEvent(const InputDevice &sender, const InputEventType &type, const QPointF &delta);
 
     const QPointF &delta() const;
 
@@ -75,10 +77,23 @@ private:
     QPointF m_delta;
 };
 
-class MouseButtonEvent : public InputEvent
+class KeyboardKeyEvent : public InputEvent
 {
 public:
-    MouseButtonEvent(const Qt::MouseButton &button, const quint32 &nativeButton, const bool &state, const std::optional<QString> &sender = {});
+    KeyboardKeyEvent(const InputDevice &sender, const uint32_t &nativeKey, const bool &state);
+
+    const uint32_t &nativeKey() const;
+    const bool &state() const;
+
+private:
+    uint32_t m_nativeKey;
+    bool m_state;
+};
+
+class PointerButtonEvent : public InputEvent
+{
+public:
+    PointerButtonEvent(const InputDevice &sender, const Qt::MouseButton &button, const quint32 &nativeButton, const bool &state);
 
     const Qt::MouseButton &button() const;
     const quint32 &nativeButton() const;
@@ -90,23 +105,21 @@ private:
     bool m_state;
 };
 
-class KeyboardKeyEvent : public InputEvent
+class TouchpadClickEvent : public InputEvent
 {
 public:
-    KeyboardKeyEvent(const uint32_t &nativeKey, const bool &state);
+    TouchpadClickEvent(const InputDevice &sender, const bool &state);
 
-    const uint32_t &nativeKey() const;
     const bool &state() const;
 
 private:
-    uint32_t m_nativeKey;
     bool m_state;
 };
 
 class TouchpadPinchEvent : public InputEvent
 {
 public:
-    TouchpadPinchEvent(const qreal &scale, const qreal &angleDelta);
+    TouchpadPinchEvent(const InputDevice &sender, const qreal &scale, const qreal &angleDelta);
 
     const qreal &scale() const;
     const qreal &angleDelta() const;
@@ -119,7 +132,7 @@ private:
 class TouchpadGestureLifecyclePhaseEvent : public InputEvent
 {
 public:
-    TouchpadGestureLifecyclePhaseEvent(const TouchpadGestureLifecyclePhase &phase, const TriggerTypes &triggers, const uint8_t &fingers = 0);
+    TouchpadGestureLifecyclePhaseEvent(const InputDevice &sender, const TouchpadGestureLifecyclePhase &phase, const TriggerTypes &triggers, const uint8_t &fingers = 0);
 
     const TouchpadGestureLifecyclePhase &phase() const;
     const TriggerTypes &triggers() const;
@@ -141,7 +154,7 @@ struct TouchpadSlot
 class TouchpadSlotEvent : public InputEvent
 {
 public:
-    TouchpadSlotEvent(const std::vector<TouchpadSlot> &fingerSlots);
+    TouchpadSlotEvent(const InputDevice &sender, const std::vector<TouchpadSlot> &fingerSlots);
 
     const std::vector<TouchpadSlot> &fingerSlots() const;
 private:

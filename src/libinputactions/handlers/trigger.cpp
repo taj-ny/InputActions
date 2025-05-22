@@ -26,15 +26,13 @@ Q_LOGGING_CATEGORY(LIBINPUTACTIONS_HANDLER_TRIGGER, "libinputactions.handler.tri
 namespace libinputactions
 {
 
+static const std::vector<TriggerType> TIMED_TRIGGERS = { TriggerType::Click, TriggerType::Press };
+
 TriggerHandler::TriggerHandler()
 {
-    m_pressTimer.setTimerType(Qt::PreciseTimer);
-    connect(&m_pressTimer, &QTimer::timeout, this, [this] {
-        pressUpdate(s_pressDelta);
-    });
-
-    registerTriggerActivateHandler(TriggerType::Press, std::bind(&TriggerHandler::pressTriggerActivateHandler, this));
-    registerTriggerEndCancelHandler(TriggerType::Press, std::bind(&TriggerHandler::pressTriggerEndCancelHandler, this));
+    m_timedTriggerUpdateTimer.setTimerType(Qt::PreciseTimer);
+    m_timedTriggerUpdateTimer.setInterval(m_timedTriggerUpdateDelta);
+    connect(&m_timedTriggerUpdateTimer, &QTimer::timeout, this, [this] { updateTimedTriggers(); });
 }
 
 void TriggerHandler::addTrigger(std::unique_ptr<Trigger> trigger)
@@ -61,6 +59,12 @@ bool TriggerHandler::handleEvent(const InputEvent *event)
             return false;
     }
     return false;
+}
+
+void TriggerHandler::setTimedTriggerUpdateDelta(const uint32_t &value)
+{
+    m_timedTriggerUpdateDelta = value;
+    m_timedTriggerUpdateTimer.setInterval(value);
 }
 
 void TriggerHandler::registerTriggerActivateHandler(const TriggerType &type, const std::function<void()> &func)
@@ -96,6 +100,8 @@ bool TriggerHandler::activateTriggers(const TriggerTypes &types, const TriggerAc
         m_activeTriggers.push_back(trigger);
         qCDebug(LIBINPUTACTIONS_HANDLER_TRIGGER).noquote() << QString("Trigger activated (name: %1)").arg(trigger->name());
     }
+    m_timedTriggerUpdateTimer.start();
+
     const auto triggerCount = m_activeTriggers.size();
     qCDebug(LIBINPUTACTIONS_HANDLER_TRIGGER).noquote().nospace() << "Triggers activated (count: " << triggerCount << ")";
     return triggerCount != 0;
@@ -263,22 +269,35 @@ std::vector<Trigger *> TriggerHandler::activeTriggers(const TriggerTypes &types)
 
 bool TriggerHandler::hasActiveTriggers(const TriggerTypes &types)
 {
+    if (types == TriggerType::All) {
+        return !m_activeTriggers.empty();
+    }
     return std::any_of(m_activeTriggers.begin(), m_activeTriggers.end(), [&types](const auto &trigger) {
         return types & trigger->type();
     });
 }
 
-void TriggerHandler::pressUpdate(const qreal &delta)
+void TriggerHandler::updateTimedTriggers()
 {
-    if (!hasActiveTriggers(TriggerType::Press)) {
+    if (!hasActiveTriggers()) {
+        m_timedTriggerUpdateTimer.stop();
         return;
     }
 
-    qCDebug(LIBINPUTACTIONS_HANDLER_TRIGGER).nospace() << "Event (type: Press, delta: " << delta << ")";
-    TriggerUpdateEvent event;
-    event.setDelta(delta);
-    const auto hasGestures = updateTriggers(TriggerType::Press, &event);
-    qCDebug(LIBINPUTACTIONS_HANDLER_TRIGGER).nospace() << "Event processed (type: Pinch, hasGestures: " << hasGestures << ")";
+    std::map<TriggerType, const TriggerUpdateEvent *> events;
+    for (const auto &type : TIMED_TRIGGERS) {
+        auto *event = new TriggerUpdateEvent;
+        event->setDelta(m_timedTriggerUpdateDelta);
+        events[type] = event;
+    }
+
+    qCDebug(LIBINPUTACTIONS_HANDLER_TRIGGER).nospace() << "Event (type: Time, delta: " << m_timedTriggerUpdateDelta << ")";
+    const auto hasTriggers = updateTriggers(events);
+    qCDebug(LIBINPUTACTIONS_HANDLER_TRIGGER).nospace() << "Event processed (type: Time, hasTriggers: " << hasTriggers << ")";
+
+    for (auto &[_, event] : events) {
+        delete event;
+    }
 }
 
 std::unique_ptr<TriggerActivationEvent> TriggerHandler::createActivationEvent() const
@@ -293,18 +312,6 @@ void TriggerHandler::triggerActivating(const Trigger *trigger)
 void TriggerHandler::reset()
 {
     m_conflictsResolved = false;
-}
-
-void TriggerHandler::pressTriggerActivateHandler()
-{
-    qCDebug(LIBINPUTACTIONS_HANDLER_TRIGGER) << "Starting press timer";
-    m_pressTimer.start(s_pressDelta);
-}
-
-void TriggerHandler::pressTriggerEndCancelHandler()
-{
-    qCDebug(LIBINPUTACTIONS_HANDLER_TRIGGER) << "Stopping press timer";
-    m_pressTimer.stop();
 }
 
 }

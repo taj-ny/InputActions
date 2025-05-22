@@ -23,8 +23,9 @@ set(libinputactions_SRCS
     libinputactions/handlers/multitouchmotion.cpp
     libinputactions/handlers/touchpad.cpp
     libinputactions/handlers/trigger.cpp
+    libinputactions/input/backends/backend.cpp
     libinputactions/input/backends/libevdev.cpp
-    libinputactions/input/backend.cpp
+    libinputactions/input/device.cpp
     libinputactions/input/emitter.cpp
     libinputactions/input/events.cpp
     libinputactions/input/handler.cpp

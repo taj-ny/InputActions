@@ -41,6 +41,8 @@ public:
     void setScrollTimeout(const uint32_t &timeout);
 
 private:
+    bool handleEvent(const PointerButtonEvent *event);
+    bool handleEvent(const TouchpadClickEvent *event);
     bool handleEvent(const TouchpadGestureLifecyclePhaseEvent *event);
     bool handleEvent(const TouchpadPinchEvent *event);
     bool handleEvent(const TouchpadSlotEvent *event);
@@ -54,6 +56,9 @@ private:
 
     uint32_t m_scrollTimeout = 100;
     QTimer m_scrollTimeoutTimer;
+
+    bool m_usesLibevdevBackend{};
+    bool m_clicked{};
 };
 
 }

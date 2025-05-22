@@ -11,8 +11,10 @@ Supported environments: Plasma 6 Wayland
   - Multiple mouse buttons can be specified (and all of them must be pressed in any order)
   - Mouse buttons can still be used for normal clicks and dragging, depending on gestures
   - Supports left, middle, right and 24 extra mouse buttons
-- Touchpad gestures: pinch, press, rotate, stroke, swipe
+- Touchpad gestures: click, pinch, press, rotate, stroke, swipe
   - Supports 2-finger swipe and stroke gestures (requires edge scrolling to be disabled)
+  - Click gestures are only supported on touchpads that do not have bottom physical buttons and instead act as one button
+  - Absolute positions for each finger on the touchpad are provided in variables
 - Actions: run command, emit input, invoke Plasma global shortcut
   - Executed at a specific point of the gesture's lifecycle (begin, update, end, cancel)
   - Update actions can repeat at a specified interval 

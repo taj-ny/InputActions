@@ -49,18 +49,27 @@ bool MouseTriggerHandler::handleEvent(const InputEvent *event)
                 m_hadTriggerSincePress = false;
             }
             return false;
-        case InputEventType::MouseButton:
-            return handleEvent(static_cast<const MouseButtonEvent *>(event));
-        case InputEventType::MouseMotion:
+        case InputEventType::PointerButton:
+            if (!(event->sender().types() & InputDeviceType::Mouse)) {
+                return false;
+            }
+            return handleEvent(static_cast<const PointerButtonEvent *>(event));
+        case InputEventType::PointerMotion:
+            if (!(event->sender().types() & InputDeviceType::Mouse)) {
+                return false;
+            }
             return handleMotionEvent(static_cast<const MotionEvent *>(event));
-        case InputEventType::MouseWheel:
+        case InputEventType::PointerScroll:
+            if (!(event->sender().types() & InputDeviceType::Mouse)) {
+                return false;
+            }
             return handleWheelEvent(static_cast<const MotionEvent *>(event));
         default:
             return false;
     }
 }
 
-bool MouseTriggerHandler::handleEvent(const MouseButtonEvent *event)
+bool MouseTriggerHandler::handleEvent(const PointerButtonEvent *event)
 {
     const auto &button = event->button();
     const auto &nativeButton = event->nativeButton();
@@ -135,7 +144,7 @@ bool MouseTriggerHandler::handleEvent(const MouseButtonEvent *event)
 
             if (m_instantPress) {
                 activateTriggers(TriggerType::Press, m_activationEvent.get());
-                pressUpdate();
+                updateTimedTriggers();
                 endTriggers(TriggerType::Press);
             }
         }

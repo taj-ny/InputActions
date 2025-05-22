@@ -23,7 +23,7 @@ namespace libinputactions
 
 bool InputEventHandler::handleEvent(const InputEvent *event)
 {
-    if (!m_triggerHandler || (event->sender() && !matchesDevice(*event->sender()))) {
+    if (!m_triggerHandler || (event->sender().name() && !matchesDevice(*event->sender().name()))) {
         return false;
     }
     return m_triggerHandler->handleEvent(event);

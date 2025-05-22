@@ -18,7 +18,7 @@
 
 #pragma once
 
-#include <libinputactions/input/backend.h>
+#include <libinputactions/input/backends/backend.h>
 
 // i hate cmake, why does this have a version, it'll probably break at some point
 #include <libevdev-1.0/libevdev/libevdev.h>
@@ -40,8 +40,11 @@ struct TouchpadDevice
     QString devInputName;
     libevdev *device;
     int fd;
+
     QSizeF size;
     bool multiTouch;
+    bool buttonPad{};
+
     /**
      * If device doesn't support MT type B protocol, only the first slot will be used.
      */
@@ -50,9 +53,9 @@ struct TouchpadDevice
 };
 
 /**
- * Events: TouchpadSlotEvent
+ * Uses libevdev to get additional touchpad data that libinput does not provide.
  *
- * Complementary input backends must be used in conjunction with a primary backend.
+ * Emitted events: TouchpadClick, TouchpadSlot
  */
 class LibevdevComplementaryInputBackend : public virtual InputBackend
 {
@@ -60,13 +63,18 @@ public:
     LibevdevComplementaryInputBackend();
     ~LibevdevComplementaryInputBackend();
 
+    /**
+     * Polls and handles events from all devices until there are no events to handle.
+     */
+    void poll() override;
+
+    void setPollingInterval(const uint32_t &interval);
+
 private:
     void devInputChanged();
     void deviceAdded(const QString &name);
     void deviceRemoved(const QString &name);
     QList<QString> devInputDevices() const;
-
-    void processEvents();
 
     std::vector<TouchpadDevice> m_devices;
     QTimer m_inputTimer;
