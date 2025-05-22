@@ -20,7 +20,7 @@
 
 #include "workspace.h"
 
-#include <libinputactions/input/backend.h>
+#include <libinputactions/input/backends/backend.h>
 #include <libinputactions/input/emitter.h>
 #include <libinputactions/input/keyboard.h>
 

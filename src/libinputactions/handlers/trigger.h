@@ -32,11 +32,6 @@ struct InputEvent;
 struct KeyboardKeyEvent;
 
 /**
- * Press timer interval and delta.
- */
-static int s_pressDelta = 5;
-
-/**
  * Base class of all handlers.
  */
 class TriggerHandler : public QObject
@@ -48,6 +43,8 @@ public:
 
     virtual bool handleEvent(const InputEvent *event);
     void handleEvent(const KeyboardKeyEvent *event);
+
+    void setTimedTriggerUpdateDelta(const uint32_t &value);
 
 protected:
     TriggerHandler();
@@ -115,7 +112,7 @@ protected:
     /**
      * @return Whether there are any triggers of the specified types.
      */
-    bool hasActiveTriggers(const TriggerTypes &types);
+    bool hasActiveTriggers(const TriggerTypes &types = TriggerType::All);
 
     /**
      * Creates a trigger activation event with information that can be provided by the input device(s).
@@ -132,21 +129,19 @@ protected:
      */
     virtual void reset();
 
-    void pressUpdate(const qreal &delta = s_pressDelta);
+    void updateTimedTriggers();
 
 private:
-    void pressTriggerActivateHandler();
-    void pressTriggerEndCancelHandler();
-
     /**
      * Whether conflicting triggers have been cancelled since activation.
      */
     bool m_conflictsResolved = false;
 
     /**
-     * Updates hold triggers.
+     * Updates timed triggers. Stops itself if no triggers are active.
      */
-    QTimer m_pressTimer;
+    QTimer m_timedTriggerUpdateTimer;
+    uint32_t m_timedTriggerUpdateDelta = 5;
 
     /**
      * Executed when a trigger type is activated.

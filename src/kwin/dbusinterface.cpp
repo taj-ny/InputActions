@@ -20,6 +20,8 @@
 #include "effect/effecthandler.h"
 
 #include <libinputactions/triggers/stroke.h>
+#include <libinputactions/variables/manager.h>
+#include <libinputactions/variables/variable.h>
 
 static QString s_service = "org.inputactions";
 static QString s_path = "/";
@@ -45,7 +47,7 @@ void DBusInterface::recordStroke(const QDBusMessage &message)
     m_reply = message.createReply();
 
     auto backend = libinputactions::InputBackend::instance();
-    connect(backend, &KWinInputBackend::strokeRecordingFinished, this, [this](const auto &stroke) {
+    backend->recordStroke([this](const auto &stroke) {
         QByteArray bytes;
         const auto &points = stroke.points();
         for (size_t i = 0; i < points.size(); i++) {
@@ -60,6 +62,20 @@ void DBusInterface::recordStroke(const QDBusMessage &message)
         m_bus.send(m_reply);
 
         KWin::effects->hideOnScreenMessage();
-    }, Qt::SingleShotConnection);
-    backend->recordStroke();
+    });
 }
+
+#ifdef DEBUG
+QString DBusInterface::variables(const QString &filter)
+{
+    QStringList result;
+    const QRegularExpression filterRegex(filter);
+    for (const auto &[name, variable] : libinputactions::VariableManager::instance()->variables()) {
+        if (!filterRegex.match(name).hasMatch()) {
+            continue;
+        }
+        result.push_back(QString("%1: %2").arg(name, variable->operations()->toString()));
+    }
+    return result.join('\n');
+}
+#endif

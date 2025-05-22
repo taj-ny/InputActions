@@ -16,33 +16,25 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include "input/backend.h"
+#include "device.h"
 
-#include <QDBusConnection>
-#include <QDBusMessage>
-#include <QObject>
-
-class DBusInterface : public QObject
+namespace libinputactions
 {
-    Q_OBJECT
 
-public:
-    /**
-     * Registers the interface.
-     */
-    DBusInterface();
-    /**
-     * Unregisters the interface.
-     */
-    ~DBusInterface() override;
+InputDevice::InputDevice(const InputDeviceTypes &types, const std::optional<QString> &name)
+    : m_types(types)
+    , m_name(name)
+{
+}
 
-public slots:
-    Q_NOREPLY void recordStroke(const QDBusMessage &message);
-#ifdef DEBUG
-    QString variables(const QString &filter = "");
-#endif
+const InputDeviceTypes &InputDevice::types() const
+{
+    return m_types;
+}
 
-private:
-    QDBusConnection m_bus = QDBusConnection::sessionBus();
-    QDBusMessage m_reply;
-};
+const std::optional<QString> &InputDevice::name() const
+{
+    return m_name;
+}
+
+}

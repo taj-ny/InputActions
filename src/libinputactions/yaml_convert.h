@@ -892,7 +892,10 @@ struct convert<std::unique_ptr<Trigger>>
     static bool decode(const Node &node, std::unique_ptr<Trigger> &trigger)
     {
         const auto type = node["type"].as<QString>();
-        if (type == "hold" || type == "press") {
+        if (type == "click") {
+            trigger = std::make_unique<Trigger>();
+            trigger->setType(TriggerType::Click);
+        } else if (type == "hold" || type == "press") {
             auto pressTrigger = new PressTrigger;
             pressTrigger->setInstant(node["instant"].as<bool>(false));
             trigger.reset(pressTrigger);
@@ -1071,6 +1074,9 @@ static void decodeTriggerHandler(const Node &node, TriggerHandler *handler)
     }
     for (auto &trigger : triggersNode.as<std::vector<std::unique_ptr<Trigger>>>()) {
         handler->addTrigger(std::move(trigger));
+    }
+    if (const auto &timeDeltaNode = node["__time_delta"]) {
+        handler->setTimedTriggerUpdateDelta(timeDeltaNode.as<uint32_t>());
     }
 }
 

@@ -17,8 +17,11 @@
 */
 
 #include "backend.h"
-#include "keyboard.h"
-#include "triggers/stroke.h"
+
+#include <libinputactions/input/keyboard.h>
+#include <libinputactions/triggers/stroke.h>
+
+#include <QObject>
 
 namespace libinputactions
 {
@@ -26,7 +29,7 @@ namespace libinputactions
 InputBackend::InputBackend()
 {
     m_strokeRecordingTimeoutTimer.setSingleShot(true);
-    connect(&m_strokeRecordingTimeoutTimer, &QTimer::timeout, this, &InputBackend::finishStrokeRecording);
+    QObject::connect(&m_strokeRecordingTimeoutTimer, &QTimer::timeout, [this] { finishStrokeRecording(); });
 }
 
 bool InputBackend::handleEvent(const InputEvent *event)
@@ -53,21 +56,26 @@ void InputBackend::clearEventHandlers()
     m_handlers.clear();
 }
 
-void InputBackend::recordStroke()
+void InputBackend::recordStroke(const std::function<void(const Stroke &stroke)> &callback)
 {
     m_isRecordingStroke = true;
+    m_strokeCallback = callback;
 }
 
 void InputBackend::finishStrokeRecording()
 {
     m_isRecordingStroke = false;
-    Q_EMIT strokeRecordingFinished(Stroke(m_strokePoints));
+    m_strokeCallback(Stroke(m_strokePoints));
     m_strokePoints.clear();
 }
 
 void InputBackend::setIgnoreEvents(const bool &value)
 {
     m_ignoreEvents = value;
+}
+
+void InputBackend::poll()
+{
 }
 
 InputBackend *InputBackend::instance()
@@ -79,6 +87,7 @@ void InputBackend::setInstance(std::unique_ptr<InputBackend> instance)
 {
     s_instance = std::move(instance);
 }
+
 
 std::unique_ptr<InputBackend> InputBackend::s_instance = std::unique_ptr<InputBackend>(new InputBackend);
 

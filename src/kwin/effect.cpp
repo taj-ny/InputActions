@@ -114,6 +114,10 @@ void Effect::reconfigure(ReconfigureFlags flags)
             for (auto &eventHandler : config.as<std::vector<std::unique_ptr<InputEventHandler>>>()) {
                 m_backend->addEventHandler(std::move(eventHandler));
             }
+
+            if (const auto &pollingIntervalNode = config["__libevdev_polling_interval"]) {
+                static_cast<LibevdevComplementaryInputBackend *>(m_backend)->setPollingInterval(pollingIntervalNode.as<uint32_t>());
+            }
         } catch (const YAML::Exception &e) {
             qCritical(INPUTACTIONS_KWIN).noquote() << QString("Failed to load configuration: %1 (line %2, column %3)")
                 .arg(QString::fromStdString(e.msg), QString::number(e.mark.line), QString::number(e.mark.column));
