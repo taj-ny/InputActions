@@ -105,7 +105,7 @@ void LibevdevComplementaryInputBackend::deviceAdded(const QString &name)
     uint8_t slotCount = 1;
     if (libevdev_has_event_code(device, EV_ABS, ABS_MT_SLOT)) {
         multiTouch = true;
-        slotCount = libevdev_get_abs_maximum(device, ABS_MT_SLOT);
+        slotCount = libevdev_get_abs_maximum(device, ABS_MT_SLOT) + 1;
     }
     qCDebug(LIBINPUTACTIONS_BACKEND_LIBEVDEV).noquote().nospace()
         << "Found valid touchpad (size: " << size << ", multiTouch: " << multiTouch << ", slots: " << slotCount << ")";
