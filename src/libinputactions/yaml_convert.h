@@ -1143,9 +1143,6 @@ struct convert<std::unique_ptr<TouchpadTriggerHandler>>
         if (const auto &deltaMultiplierNode = node["delta_multiplier"]) {
             touchpadTriggerHandler->setSwipeDeltaMultiplier(deltaMultiplierNode.as<qreal>());
         }
-        if (const auto &scrollTimeoutNode = node["scroll_timeout"]) {
-            touchpadTriggerHandler->setScrollTimeout(scrollTimeoutNode.as<uint32_t>());
-        }
         return true;
     }
 };

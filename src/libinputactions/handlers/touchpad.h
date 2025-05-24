@@ -31,28 +31,20 @@ namespace libinputactions
 class TouchpadTriggerHandler : public MultiTouchMotionTriggerHandler
 {
 public:
-    TouchpadTriggerHandler();
+    TouchpadTriggerHandler() = default;
 
     bool handleEvent(const InputEvent *event) override;
-
-    /**
-     * The time of inactivity in milliseconds after which 2-finger motion triggers will end.
-     */
-    void setScrollTimeout(const uint32_t &timeout);
 
 private:
     bool handleEvent(const TouchpadGestureLifecyclePhaseEvent *event);
     bool handleEvent(const TouchpadPinchEvent *event);
     /**
-     * The event is treated as a 2-finger swipe. Will not work if edge scrolling is enabled. The handler is not aware
-     * when the finger count changes, therefore it relies on a timeout to end triggers.
-     * @see setScrollTimeout
+     * The event is treated as two-finger motion. Will not work if edge scrolling is enabled.
      */
     bool handleScrollEvent(const MotionEvent *event);
     bool handleSwipeEvent(const MotionEvent *event);
 
-    uint32_t m_scrollTimeout = 100;
-    QTimer m_scrollTimeoutTimer;
+    bool m_scrollInProgress{};
 };
 
 }
