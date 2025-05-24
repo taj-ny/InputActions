@@ -258,6 +258,7 @@ bool KWinInputBackend::wheelEvent(KWin::WheelEvent *event)
         return false;
     }
 
+    // A scroll delta of (0,0) marks the end of a scroll gesture
     auto delta = orientation == Qt::Orientation::Horizontal
         ? QPointF(eventDelta, 0)
         : QPointF(0, eventDelta);
@@ -271,8 +272,11 @@ bool KWinInputBackend::wheelEvent(KWin::WheelEvent *event)
     }
 
     if (m_isRecordingStroke) {
-        m_strokePoints.push_back(delta);
-        m_strokeRecordingTimeoutTimer.start(s_strokeRecordingTimeout);
+        if (delta.isNull()) {
+            finishStrokeRecording();
+        } else {
+            m_strokePoints.push_back(delta);
+        }
         return true;
     }
 

@@ -24,14 +24,6 @@
 namespace libinputactions
 {
 
-TouchpadTriggerHandler::TouchpadTriggerHandler()
-{
-    m_scrollTimeoutTimer.setSingleShot(true);
-    connect(&m_scrollTimeoutTimer, &QTimer::timeout, this, [this] {
-        endTriggers(TriggerType::StrokeSwipe);
-    });
-}
-
 bool TouchpadTriggerHandler::handleEvent(const InputEvent *event)
 {
     MultiTouchMotionTriggerHandler::handleEvent(event);
@@ -131,28 +123,28 @@ bool TouchpadTriggerHandler::handleEvent(const TouchpadSlotEvent *event)
 
 bool TouchpadTriggerHandler::handleScrollEvent(const MotionEvent *event)
 {
-    if (!m_scrollTimeoutTimer.isActive()) {
+    if (event->delta().isNull()) {
+        endTriggers(TriggerType::StrokeSwipe);
+        m_scrollInProgress = false;
+        return false; // Blocking a (0,0) event breaks kinetic scrolling
+    }
+
+    if (!m_scrollInProgress) {
         if (!m_usesLibevdevBackend) {
             VariableManager::instance()->getVariable(BuiltinVariables::Fingers)->set(2);
         }
+        m_scrollInProgress = true;
         activateTriggers(TriggerType::StrokeSwipe);
     }
-    m_scrollTimeoutTimer.start(m_scrollTimeout);
     if (handleMotion(event->delta())) {
         return true;
     }
-    m_scrollTimeoutTimer.stop();
     return false;
 }
 
 bool TouchpadTriggerHandler::handleSwipeEvent(const MotionEvent *event)
 {
     return handleMotion(event->delta());
-}
-
-void TouchpadTriggerHandler::setScrollTimeout(const uint32_t &timeout)
-{
-    m_scrollTimeout = timeout;
 }
 
 }

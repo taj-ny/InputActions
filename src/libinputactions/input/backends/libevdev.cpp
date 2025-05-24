@@ -236,9 +236,9 @@ void LibevdevComplementaryInputBackend::poll()
     }
 }
 
-void LibevdevComplementaryInputBackend::setPollingInterval(const uint32_t &interval)
+void LibevdevComplementaryInputBackend::setPollingInterval(const uint32_t &value)
 {
-    m_inputTimer.setInterval(interval);
+    m_inputTimer.setInterval(value);
 }
 
 }

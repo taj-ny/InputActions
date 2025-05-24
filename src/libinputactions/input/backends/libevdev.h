@@ -20,7 +20,6 @@
 
 #include <libinputactions/input/backends/backend.h>
 
-// i hate cmake, why does this have a version, it'll probably break at some point
 #include <libevdev-1.0/libevdev/libevdev.h>
 
 #include <set>
@@ -67,17 +66,20 @@ public:
     LibevdevComplementaryInputBackend();
     ~LibevdevComplementaryInputBackend();
 
-    /**
-     * Polls and handles events from all devices until there are no events to handle.
-     */
     void poll() override;
 
-    void setPollingInterval(const uint32_t &interval);
+    /**
+     * @param value How often to poll input events. A too high value may result in missed events.
+     */
+    void setPollingInterval(const uint32_t &value);
 
 private:
     void devInputChanged();
     void deviceAdded(const QString &name);
     void deviceRemoved(const QString &name);
+    /**
+     * @return Names of all devices in /dev/input matching "event*".
+     */
     QList<QString> devInputDevices() const;
 
     std::vector<TouchpadDevice> m_devices;

@@ -28,7 +28,7 @@ namespace libinputactions
 class Stroke;
 
 /**
- * Collects input events and forwards them to handlers.
+ * Collects input events and forwards them to event handlers.
  */
 class InputBackend
 {
@@ -36,7 +36,7 @@ public:
     virtual ~InputBackend() = default;
 
     /**
-     * Polls and handles events from all devices until there are no events to handle.
+     * Polls and handles events from all devices until there are no events left in the queue.
      */
      virtual void poll();
 

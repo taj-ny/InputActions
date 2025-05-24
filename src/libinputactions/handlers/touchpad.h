@@ -24,21 +24,19 @@ namespace libinputactions
 {
 
 /**
- * Handles touchpad triggers: pinch, press, rotate, stroke, swipe.
- * This handler follows libinput's gesture lifecycle, making it not possible to for example ignore finger count
- * changes.
+ * Handles touchpad triggers: click, pinch, press, rotate, stroke, swipe.
+ *
+ * Pinch triggers may not be detected correctly because libinput appears to be really bad at it. Five-finger triggers also do not work for some reason, even on
+ * a touchpad with five slots.
+ *
+ * If the libevdev backend is not available, the finger count is fetched from libinput's gesture begin events and scroll events.
  */
 class TouchpadTriggerHandler : public MultiTouchMotionTriggerHandler
 {
 public:
-    TouchpadTriggerHandler();
+    TouchpadTriggerHandler() = default;
 
     bool handleEvent(const InputEvent *event) override;
-
-    /**
-     * The time of inactivity in milliseconds after which 2-finger motion triggers will end.
-     */
-    void setScrollTimeout(const uint32_t &timeout);
 
 private:
     bool handleEvent(const PointerButtonEvent *event);
@@ -47,15 +45,12 @@ private:
     bool handleEvent(const TouchpadPinchEvent *event);
     bool handleEvent(const TouchpadSlotEvent *event);
     /**
-     * The event is treated as a 2-finger swipe. Will not work if edge scrolling is enabled. The handler is not aware
-     * when the finger count changes, therefore it relies on a timeout to end triggers.
-     * @see setScrollTimeout
+     * The event is treated as two-finger motion. Will not work if edge scrolling is enabled.
      */
     bool handleScrollEvent(const MotionEvent *event);
     bool handleSwipeEvent(const MotionEvent *event);
 
-    uint32_t m_scrollTimeout = 100;
-    QTimer m_scrollTimeoutTimer;
+    bool m_scrollInProgress{};
 
     bool m_usesLibevdevBackend{};
     bool m_clicked{};
