@@ -21,16 +21,16 @@
 namespace libinputactions
 {
 
-InputDevice::InputDevice(const InputDeviceTypes &types, const QString &name, const QString &sysName)
-    : m_types(types)
+InputDevice::InputDevice(const InputDeviceType &types, const QString &name, const QString &sysName)
+    : m_type(types)
     , m_name(name)
     , m_sysName(sysName)
 {
 }
 
-const InputDeviceTypes &InputDevice::types() const
+const InputDeviceType &InputDevice::type() const
 {
-    return m_types;
+    return m_type;
 }
 
 const QString &InputDevice::name() const

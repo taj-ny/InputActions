@@ -50,17 +50,17 @@ bool MouseTriggerHandler::handleEvent(const InputEvent *event)
             }
             return false;
         case InputEventType::PointerButton:
-            if (!(event->sender()->types() & InputDeviceType::Mouse)) {
+            if (event->sender()->type() != InputDeviceType::Mouse) {
                 return false;
             }
             return handleEvent(static_cast<const PointerButtonEvent *>(event));
         case InputEventType::PointerMotion:
-            if (!(event->sender()->types() & InputDeviceType::Mouse)) {
+            if (event->sender()->type() != InputDeviceType::Mouse) {
                 return false;
             }
             return handleMotionEvent(static_cast<const MotionEvent *>(event));
         case InputEventType::PointerScroll:
-            if (!(event->sender()->types() & InputDeviceType::Mouse)) {
+            if (event->sender()->type() != InputDeviceType::Mouse) {
                 return false;
             }
             return handleWheelEvent(static_cast<const MotionEvent *>(event));

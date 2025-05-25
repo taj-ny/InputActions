@@ -28,12 +28,12 @@ bool TouchpadTriggerHandler::handleEvent(const InputEvent *event)
     MultiTouchMotionTriggerHandler::handleEvent(event);
     switch (event->type()) {
         case InputEventType::PointerButton:
-            if (!(event->sender()->types() & InputDeviceType::Touchpad)) {
+            if (event->sender()->type() != InputDeviceType::Touchpad) {
                 return false;
             }
             return handleEvent(static_cast<const PointerButtonEvent *>(event));
         case InputEventType::PointerScroll:
-            if (!(event->sender()->types() & InputDeviceType::Touchpad)) {
+            if (event->sender()->type() != InputDeviceType::Touchpad) {
                 return false;
             }
             return handleScrollEvent(static_cast<const MotionEvent *>(event));

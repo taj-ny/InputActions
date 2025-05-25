@@ -54,7 +54,7 @@ void LibevdevComplementaryInputBackend::deviceAdded(InputDevice *device)
         return;
     }
 
-    if (!(device->types() & InputDeviceType::Touchpad)) {
+    if (device->type() != InputDeviceType::Touchpad) {
         return;
     }
 

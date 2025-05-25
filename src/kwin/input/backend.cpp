@@ -305,18 +305,16 @@ bool KWinInputBackend::wheelEvent(KWin::WheelEvent *event)
 
 void KWinInputBackend::kwinDeviceAdded(const KWin::InputDevice *device)
 {
-    InputDeviceTypes types{};
+    InputDeviceType type = InputDeviceType::Unknown;
     if (device->isKeyboard()) {
-        types |= InputDeviceType::Keyboard;
-    }
-    if (isMouse(device)) {
-        types |= InputDeviceType::Mouse;
-    }
-    if (device->isTouchpad()) {
-        types |= InputDeviceType::Touchpad;
+        type = InputDeviceType::Keyboard;
+    } else if (isMouse(device)) {
+        type = InputDeviceType::Mouse;
+    } else if (device->isTouchpad()) {
+        type = InputDeviceType::Touchpad;
     }
     // https://invent.kde.org/plasma/kwin/-/blob/3fff57f0/src/backends/libinput/device.h#L69
-    addDevice(std::make_unique<libinputactions::InputDevice>(types, device->name(), device->property("sysName").toString()));
+    addDevice(std::make_unique<libinputactions::InputDevice>(type, device->name(), device->property("sysName").toString()));
 }
 
 void KWinInputBackend::kwinDeviceRemoved(const KWin::InputDevice *device)

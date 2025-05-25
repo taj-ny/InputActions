@@ -141,7 +141,7 @@ bool InputBackend::handleEvent(const InputEvent *event)
     if (event->type() == InputEventType::KeyboardKey) {
         Keyboard::instance()->handleEvent(static_cast<const KeyboardKeyEvent *>(event));
     }
-    if (event->sender()->types() != InputDeviceType::Keyboard) {
+    if (event->sender()->type() != InputDeviceType::Keyboard) {
         VariableManager::instance()->getVariable(BuiltinVariables::DeviceName)->set(event->sender()->name());
     }
 

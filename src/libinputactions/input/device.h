@@ -22,7 +22,6 @@
 
 #include <optional>
 
-#include <QFlags>
 #include <QRegularExpression>
 #include <QSizeF>
 
@@ -36,8 +35,6 @@ enum class InputDeviceType
     Touchpad,
     Unknown
 };
-Q_DECLARE_FLAGS(InputDeviceTypes, InputDeviceType)
-Q_DECLARE_OPERATORS_FOR_FLAGS(InputDeviceTypes)
 
 class InputDeviceProperties
 {
@@ -83,16 +80,16 @@ private:
 class InputDevice
 {
 public:
-    InputDevice(const InputDeviceTypes &types, const QString &name, const QString &sysName);
+    InputDevice(const InputDeviceType &type, const QString &name, const QString &sysName);
 
-    const InputDeviceTypes &types() const;
+    const InputDeviceType &type() const;
     const QString &name() const;
     const QString &sysName() const;
     InputDeviceProperties &properties();
     const InputDeviceProperties &properties() const;
 
 private:
-    InputDeviceTypes m_types;
+    InputDeviceType m_type;
     QString m_name;
     QString m_sysName;
     InputDeviceProperties m_properties;
