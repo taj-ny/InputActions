@@ -80,7 +80,7 @@ private:
 class InputDevice
 {
 public:
-    InputDevice(const InputDeviceType &type, const QString &name, const QString &sysName);
+    InputDevice(const InputDeviceType &type, const QString &name = {}, const QString &sysName = {});
 
     const InputDeviceType &type() const;
     const QString &name() const;

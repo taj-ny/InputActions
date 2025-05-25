@@ -103,7 +103,8 @@ void TestTriggerHandler::keyboardKey()
     EXPECT_CALL(*m_handler, endTriggers(static_cast<TriggerTypes>(TriggerType::All)))
         .Times(Exactly(endsTriggers ? 1 : 0));
 
-    const KeyboardKeyEvent event(InputDevice(InputDeviceType::Keyboard), key, state);
+    InputDevice device(InputDeviceType::Keyboard);
+    const KeyboardKeyEvent event(&device, key, state);
     m_handler->handleEvent(&event);
 
     QVERIFY(Mock::VerifyAndClearExpectations(m_handler.get()));
