@@ -36,42 +36,27 @@ LibevdevComplementaryInputBackend::LibevdevComplementaryInputBackend()
     m_inputTimer.setTimerType(Qt::TimerType::PreciseTimer);
     m_inputTimer.setInterval(100);
     QObject::connect(&m_inputTimer, &QTimer::timeout, [this] { poll(); });
-
-    m_devInputWatcher.addPath("/dev/input");
-    QObject::connect(&m_devInputWatcher, &QFileSystemWatcher::directoryChanged, [this] { devInputChanged(); });
-    devInputChanged();
 }
 
 LibevdevComplementaryInputBackend::~LibevdevComplementaryInputBackend()
 {
-    for (auto &device : m_devices) {
+    for (auto &[_, device] : m_libevdevDevices) {
         close(device.fd);
-        libevdev_free(device.device);
+        libevdev_free(device.libevdevDevice);
     }
-    m_devices.clear();
+    m_libevdevDevices.clear();
 }
 
-void LibevdevComplementaryInputBackend::devInputChanged()
+void LibevdevComplementaryInputBackend::deviceAdded(InputDevice *device)
 {
-    const auto devInput = devInputDevices();
-    for (const auto &device : m_devInputDevices) {
-        if (!devInput.contains(device)) {
-            deviceRemoved(device);
-        }
+    InputBackend::deviceAdded(device);
+    if (!(device->types() & InputDeviceType::Touchpad)) {
+        return;
     }
-    for (const auto &device : devInput) {
-        if (!m_devInputDevices.contains(device)) {
-            deviceAdded(device);
-        }
-    }
-}
 
-void LibevdevComplementaryInputBackend::deviceAdded(const QString &name)
-{
-    qCDebug(LIBINPUTACTIONS_BACKEND_LIBEVDEV).noquote().nospace() << "Device added (name: " << name << ")";
-    m_devInputDevices.insert(name);
+    qCDebug(LIBINPUTACTIONS_BACKEND_LIBEVDEV).noquote().nospace() << "Device added (name: " << device->name() << ")";
 
-    const auto path = QString("/dev/input/%1").arg(name).toStdString();
+    const auto path = QString("/dev/input/%1").arg(device->sysName()).toStdString();
     const auto fd = open(path.c_str(), O_RDONLY | O_NONBLOCK);
     if (fd == -1) {
         qCDebug(LIBINPUTACTIONS_BACKEND_LIBEVDEV).noquote()
@@ -79,79 +64,76 @@ void LibevdevComplementaryInputBackend::deviceAdded(const QString &name)
         return;
     }
 
-    libevdev *device;
-    if (libevdev_new_from_fd(fd, &device) != 0) {
+    libevdev *libevdevDevice;
+    if (libevdev_new_from_fd(fd, &libevdevDevice) != 0) {
         close(fd);
         return;
     }
-    qCDebug(LIBINPUTACTIONS_BACKEND_LIBEVDEV).noquote().nospace() << "Opened device (name: " << libevdev_get_name(device) << ")";
+    qCDebug(LIBINPUTACTIONS_BACKEND_LIBEVDEV).noquote().nospace() << "Opened device (name: " << libevdev_get_name(libevdevDevice) << ")";
 
-    if (!libevdev_has_event_type(device, EV_ABS)) {
+    if (!libevdev_has_event_type(libevdevDevice, EV_ABS)) {
         qCDebug(LIBINPUTACTIONS_BACKEND_LIBEVDEV, "Device is not absolute");
-        libevdev_free(device);
+        libevdev_free(libevdevDevice);
         close(fd);
         return;
     }
 
-    const QSize size(libevdev_get_abs_maximum(device, ABS_X), libevdev_get_abs_maximum(device, ABS_Y));
+    const QSize size(libevdev_get_abs_maximum(libevdevDevice, ABS_X), libevdev_get_abs_maximum(libevdevDevice, ABS_Y));
     if (size.width() == 0 || size.height() == 0) {
         qCDebug(LIBINPUTACTIONS_BACKEND_LIBEVDEV, "Device has a size of 0");
-        libevdev_free(device);
+        libevdev_free(libevdevDevice);
         close(fd);
         return;
     }
 
+    bool buttonPad = libevdev_has_property(libevdevDevice, INPUT_PROP_BUTTONPAD) == 1;
     bool multiTouch{};
     uint8_t slotCount = 1;
-    if (libevdev_has_event_code(device, EV_ABS, ABS_MT_SLOT)) {
+    if (libevdev_has_event_code(libevdevDevice, EV_ABS, ABS_MT_SLOT)) {
         multiTouch = true;
-        slotCount = libevdev_get_abs_maximum(device, ABS_MT_SLOT) + 1;
+        slotCount = libevdev_get_abs_maximum(libevdevDevice, ABS_MT_SLOT) + 1;
     }
     qCDebug(LIBINPUTACTIONS_BACKEND_LIBEVDEV).noquote().nospace()
         << "Found valid touchpad (size: " << size << ", multiTouch: " << multiTouch << ", slots: " << slotCount << ")";
-    TouchpadDevice touchpadDevice = {
-        .devInputName = name,
-        .device = device,
+
+    auto &properties = device->properties();
+    properties.setSize(size);
+    properties.setMultiTouch(multiTouch);
+    properties.setButtonPad(buttonPad);
+
+    m_libevdevDevices[device] = {
+        .libevdevDevice = libevdevDevice,
         .fd = fd,
-        .size = size,
-        .multiTouch = multiTouch,
-        .buttonPad = libevdev_has_property(device, INPUT_PROP_BUTTONPAD) == 1,
-        .fingerSlots = std::vector<TouchpadSlot>{slotCount}
+        .fingerSlots = std::vector<TouchpadSlot>{slotCount},
     };
-    m_devices.push_back(touchpadDevice);
     m_inputTimer.start();
 }
 
-void LibevdevComplementaryInputBackend::deviceRemoved(const QString &name)
+void LibevdevComplementaryInputBackend::deviceRemoved(const InputDevice *device)
 {
-    qCDebug(LIBINPUTACTIONS_BACKEND_LIBEVDEV).noquote().nospace() << "Device removed (name: " << name << ")";
-    m_devInputDevices.erase(name);
-    for (auto it = m_devices.begin(); it != m_devices.end(); it++) {
-        if (it->devInputName == name) {
-            close(it->fd);
-            libevdev_free(it->device);
-            m_devices.erase(it);
+    qCDebug(LIBINPUTACTIONS_BACKEND_LIBEVDEV).noquote().nospace() << "Device removed (name: " << device->name() << ")";
+    for (auto it = m_libevdevDevices.begin(); it != m_libevdevDevices.end(); it++) {
+        if (it->first == device) {
+            close(it->second.fd);
+            libevdev_free(it->second.libevdevDevice);
+            m_libevdevDevices.erase(it);
             break;
         }
     }
 
-    if (m_devices.empty()) {
+    if (m_libevdevDevices.empty()) {
         m_inputTimer.stop();
     }
-}
-
-QList<QString> LibevdevComplementaryInputBackend::devInputDevices() const
-{
-    return QDir("/dev/input").entryList(QDir::Filter::System).filter("event");
 }
 
 void LibevdevComplementaryInputBackend::poll()
 {
     input_event event;
-    for (auto &device : m_devices) {
-        while (libevdev_has_event_pending(device.device)) {
+    for (auto &[device, libevdevDevice] : m_libevdevDevices) {
+        const auto &properties = device->properties();
+        while (libevdev_has_event_pending(libevdevDevice.libevdevDevice)) {
             // This doesn't handle LIBEVDEV_READ_STATUS_SYNC
-            if (libevdev_next_event(device.device, LIBEVDEV_READ_FLAG_NORMAL, &event) != LIBEVDEV_READ_STATUS_SUCCESS) {
+            if (libevdev_next_event(libevdevDevice.libevdevDevice, LIBEVDEV_READ_FLAG_NORMAL, &event) != LIBEVDEV_READ_STATUS_SUCCESS) {
                 continue;
             }
 
@@ -160,7 +142,7 @@ void LibevdevComplementaryInputBackend::poll()
             switch (event.type) {
                 case EV_SYN:
                     if (code == SYN_REPORT) {
-                        const TouchpadSlotEvent slotEvent(InputDevice(InputDeviceType::Touchpad), device.fingerSlots);
+                        const TouchpadSlotEvent slotEvent(device, libevdevDevice.fingerSlots);
                         handleEvent(&slotEvent);
 
                         static const std::map<uint16_t, uint8_t> fingerCountCodes = {
@@ -171,7 +153,7 @@ void LibevdevComplementaryInputBackend::poll()
                             {BTN_TOOL_QUADTAP, 4},
                             {BTN_TOOL_QUINTTAP, 5}
                         };
-                        VariableManager::instance()->getVariable(BuiltinVariables::Fingers)->set(fingerCountCodes.at(device.currentFingerCode));
+                        VariableManager::instance()->getVariable(BuiltinVariables::Fingers)->set(fingerCountCodes.at(libevdevDevice.currentFingerCode));
                     }
                     continue;
                 case EV_KEY:
@@ -182,36 +164,36 @@ void LibevdevComplementaryInputBackend::poll()
                         case BTN_TOOL_QUADTAP:
                         case BTN_TOOL_QUINTTAP:
                             if (value == 1) {
-                                device.currentFingerCode = code;
-                            } else if (value == 0 && device.currentFingerCode == code) {
-                                device.currentFingerCode = 0;
+                                libevdevDevice.currentFingerCode = code;
+                            } else if (value == 0 && libevdevDevice.currentFingerCode == code) {
+                                libevdevDevice.currentFingerCode = 0;
                             }
                             continue;
                         case BTN_LEFT:
                         case BTN_MIDDLE:
                         case BTN_RIGHT:
-                            if (device.buttonPad) {
-                                const TouchpadClickEvent clickEvent(InputDevice(InputDeviceType::Touchpad), value);
+                            if (properties.buttonPad()) {
+                                const TouchpadClickEvent clickEvent(device, value);
                                 handleEvent(&clickEvent);
                             }
                             continue;
                     }
                     continue;
                 case EV_ABS:
-                    auto &currentSlot = device.fingerSlots[device.currentSlot];
-                    if (device.multiTouch) {
+                    auto &currentSlot = libevdevDevice.fingerSlots[libevdevDevice.currentSlot];
+                    if (properties.multiTouch()) {
                         switch (code) {
                             case ABS_MT_SLOT:
-                                device.currentSlot = value;
+                                libevdevDevice.currentSlot = value;
                                 continue;
                             case ABS_MT_TRACKING_ID:
                                 currentSlot.active = value != -1;
                                 continue;
                             case ABS_MT_POSITION_X:
-                                currentSlot.position.setX(value / device.size.width());
+                                currentSlot.position.setX(value / properties.size().width());
                                 continue;
                             case ABS_MT_POSITION_Y:
-                                currentSlot.position.setY(value / device.size.height());
+                                currentSlot.position.setY(value / properties.size().height());
                                 continue;
                             case ABS_MT_PRESSURE:
                                 currentSlot.pressure = value;
@@ -220,10 +202,10 @@ void LibevdevComplementaryInputBackend::poll()
                     } else {
                         switch (code) {
                             case ABS_X:
-                                currentSlot.position.setX(value / device.size.width());
+                                currentSlot.position.setX(value / properties.size().width());
                                 continue;
                             case ABS_Y:
-                                currentSlot.position.setY(value / device.size.height());
+                                currentSlot.position.setY(value / properties.size().height());
                                 continue;
                             case ABS_PRESSURE:
                                 currentSlot.pressure = value;

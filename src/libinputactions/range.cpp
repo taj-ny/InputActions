@@ -71,6 +71,7 @@ Range<T>::operator Range<U>() const
 }
 
 template class Range<uint8_t>;
+template class Range<uint32_t>;
 template class Range<qreal>;
 template class Range<QPointF>;
 

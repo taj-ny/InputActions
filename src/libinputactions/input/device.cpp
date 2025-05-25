@@ -21,9 +21,10 @@
 namespace libinputactions
 {
 
-InputDevice::InputDevice(const InputDeviceTypes &types, const std::optional<QString> &name)
+InputDevice::InputDevice(const InputDeviceTypes &types, const QString &name, const QString &sysName)
     : m_types(types)
     , m_name(name)
+    , m_sysName(sysName)
 {
 }
 
@@ -32,9 +33,80 @@ const InputDeviceTypes &InputDevice::types() const
     return m_types;
 }
 
-const std::optional<QString> &InputDevice::name() const
+const QString &InputDevice::name() const
 {
     return m_name;
+}
+
+const QString &InputDevice::sysName() const
+{
+    return m_sysName;
+}
+
+InputDeviceProperties &InputDevice::properties()
+{
+    return m_properties;
+}
+
+const InputDeviceProperties &InputDevice::properties() const
+{
+    return m_properties;
+}
+
+void InputDeviceProperties::apply(const InputDeviceProperties &other)
+{
+    if (other.m_multiTouch) {
+        m_multiTouch = other.m_multiTouch;
+    }
+    if (other.m_size) {
+        m_size = other.m_size;
+    }
+    if (other.m_buttonPad) {
+        m_buttonPad = other.m_buttonPad;
+    }
+    if (other.m_thumbPressureRange) {
+        m_thumbPressureRange = other.m_thumbPressureRange;
+    }
+}
+
+bool InputDeviceProperties::multiTouch() const
+{
+    return m_multiTouch.value_or(false);
+}
+
+void InputDeviceProperties::setMultiTouch(const bool &value)
+{
+    m_multiTouch = value;
+}
+
+QSizeF InputDeviceProperties::size() const
+{
+    return m_size.value_or(QSizeF());
+}
+
+void InputDeviceProperties::setSize(const QSizeF &value)
+{
+    m_size = value;
+}
+
+bool InputDeviceProperties::buttonPad() const
+{
+    return m_buttonPad.value_or(false);
+}
+
+void InputDeviceProperties::setButtonPad(const bool &value)
+{
+    m_buttonPad = value;
+}
+
+Range<uint32_t> InputDeviceProperties::thumbPressureRange() const
+{
+    return m_thumbPressureRange.value_or(Range<uint32_t>(-1, -1));
+}
+
+void InputDeviceProperties::setThumbPressureRange(const Range<uint32_t> &value)
+{
+    m_thumbPressureRange = value;
 }
 
 }

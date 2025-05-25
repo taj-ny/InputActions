@@ -1364,6 +1364,26 @@ struct convert<std::vector<InputAction>>
 };
 
 template<>
+struct convert<InputDeviceProperties>
+{
+    static bool decode(const Node &node, InputDeviceProperties &value)
+    {
+        if (const auto &multiTouchNode = node["__multiTouch"]) {
+            value.setMultiTouch(multiTouchNode.as<bool>());
+        }
+        if (const auto &buttonPad = node["buttonpad"]) {
+            value.setButtonPad(buttonPad.as<bool>());
+        }
+        if (const auto &pressureRangesNode = node["pressure_ranges"]) {
+            if (const auto &thumbNode = pressureRangesNode["thumb"]) {
+                value.setThumbPressureRange(thumbNode.as<Range<uint32_t>>());
+            }
+        }
+        return true;
+    }
+};
+
+template<>
 struct convert<QPointF>
 {
     static bool decode(const Node &node, QPointF &point)

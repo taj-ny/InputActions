@@ -35,10 +35,23 @@ class InputBackend
 public:
     virtual ~InputBackend() = default;
 
+    void addEventHandler(std::unique_ptr<InputEventHandler> handler);
+    void setIgnoreEvents(const bool &value);
     /**
      * Polls and handles events from all devices until there are no events left in the queue.
      */
-     virtual void poll();
+    virtual void poll();
+
+    std::vector<InputDevice *> devices() const;
+    /**
+     * Custom properties will not be applied to devices that have already been added to the backend. Reconfiguration is required.
+     * @see reconfigureDevices
+     */
+    void addCustomDeviceProperties(const QString &name, const InputDeviceProperties &properties);
+    /**
+     * Adds devices.
+     */
+    virtual void initialize();
 
     /**
      * @param callback Will be called when the stroke has been recorded.
@@ -46,10 +59,11 @@ public:
      */
     void recordStroke(const std::function<void(const Stroke &stroke)> &callback);
 
-    void addEventHandler(std::unique_ptr<InputEventHandler> handler);
-    void clearEventHandlers();
-
-    void setIgnoreEvents(const bool &value);
+    /**
+     * Removes all event handlers, devices and custom properties. Backend must be initialized in order to be used again.
+     * @see initialize
+     */
+    void reset();
 
     static InputBackend *instance();
     static void setInstance(std::unique_ptr<InputBackend> instance);
@@ -57,7 +71,21 @@ public:
 protected:
     InputBackend();
 
+    void addDevice(std::unique_ptr<InputDevice> device);
+    void removeDevice(InputDevice *device);
     /**
+     * @return The device with the specified name or nullptr if not found.
+     */
+    InputDevice *findDevice(const QString &name) const;
+
+    /**
+     * Backends should add device properties in this method.
+     */
+    virtual void deviceAdded(InputDevice *device);
+    virtual void deviceRemoved(const InputDevice *device);
+
+    /**
+     * @param event Events with a nullptr sender will be ignored.
      * @return Whether the event should be blocked.
      */
     bool handleEvent(const InputEvent *event);
@@ -65,7 +93,7 @@ protected:
     void finishStrokeRecording();
 
     std::vector<std::unique_ptr<InputEventHandler>> m_handlers;
-    bool m_ignoreEvents{};
+    bool m_ignoreEvents = true;
 
     bool m_isRecordingStroke = false;
     std::vector<QPointF> m_strokePoints;
@@ -73,6 +101,9 @@ protected:
 
 private:
     std::function<void(const Stroke &stroke)> m_strokeCallback;
+
+    std::vector<std::unique_ptr<InputDevice>> m_devices;
+    std::map<QString, InputDeviceProperties> m_customDeviceProperties;
 
     static std::unique_ptr<InputBackend> s_instance;
 };

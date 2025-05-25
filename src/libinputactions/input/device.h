@@ -18,10 +18,13 @@
 
 #pragma once
 
+#include <libinputactions/range.h>
+
 #include <optional>
 
 #include <QFlags>
-#include <QString>
+#include <QRegularExpression>
+#include <QSizeF>
 
 namespace libinputactions
 {
@@ -36,17 +39,63 @@ enum class InputDeviceType
 Q_DECLARE_FLAGS(InputDeviceTypes, InputDeviceType)
 Q_DECLARE_OPERATORS_FOR_FLAGS(InputDeviceTypes)
 
+class InputDeviceProperties
+{
+public:
+    InputDeviceProperties() = default;
+
+    /**
+     * Applies set properties from the other specified properties onto this one.
+     */
+    void apply(const InputDeviceProperties &other);
+
+    bool multiTouch() const;
+    /**
+     * Do not set in custom properties unless for testing purposes.
+     * @internal
+     */
+    void setMultiTouch(const bool &value);
+
+    QSizeF size() const;
+    /**
+     * Do not set in custom properties unless for testing purposes.
+     * @internal
+     */
+    void setSize(const QSizeF &value);
+
+    bool buttonPad() const;
+    /**
+     * @param value Overrides whether INPUT_PROP_BUTTONPAD is present.
+     */
+    void setButtonPad(const bool &value);
+
+    Range<uint32_t> thumbPressureRange() const;
+    void setThumbPressureRange(const Range<uint32_t> &value);
+
+private:
+    std::optional<bool> m_multiTouch;
+    std::optional<QSizeF> m_size;
+
+    std::optional<bool> m_buttonPad;
+    std::optional<Range<uint32_t>> m_thumbPressureRange;
+};
+
 class InputDevice
 {
 public:
-    InputDevice(const InputDeviceTypes &types, const std::optional<QString> &name = {});
+    InputDevice(const InputDeviceTypes &types, const QString &name, const QString &sysName);
 
     const InputDeviceTypes &types() const;
-    const std::optional<QString> &name() const;
+    const QString &name() const;
+    const QString &sysName() const;
+    InputDeviceProperties &properties();
+    const InputDeviceProperties &properties() const;
 
 private:
     InputDeviceTypes m_types;
-    std::optional<QString> m_name;
+    QString m_name;
+    QString m_sysName;
+    InputDeviceProperties m_properties;
 };
 
 }

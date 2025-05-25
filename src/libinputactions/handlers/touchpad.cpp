@@ -18,7 +18,6 @@
 
 #include "touchpad.h"
 
-#include <libinputactions/input/backends/libevdev.h>
 #include <libinputactions/variables/manager.h>
 
 namespace libinputactions
@@ -29,12 +28,12 @@ bool TouchpadTriggerHandler::handleEvent(const InputEvent *event)
     MultiTouchMotionTriggerHandler::handleEvent(event);
     switch (event->type()) {
         case InputEventType::PointerButton:
-            if (!(event->sender().types() & InputDeviceType::Touchpad)) {
+            if (!(event->sender()->types() & InputDeviceType::Touchpad)) {
                 return false;
             }
             return handleEvent(static_cast<const PointerButtonEvent *>(event));
         case InputEventType::PointerScroll:
-            if (!(event->sender().types() & InputDeviceType::Touchpad)) {
+            if (!(event->sender()->types() & InputDeviceType::Touchpad)) {
                 return false;
             }
             return handleScrollEvent(static_cast<const MotionEvent *>(event));
@@ -55,8 +54,6 @@ bool TouchpadTriggerHandler::handleEvent(const InputEvent *event)
 
 bool TouchpadTriggerHandler::handleEvent(const PointerButtonEvent *event)
 {
-    // Make sure clicked state is up to date in case libinput polled the click event before libevdev
-    InputBackend::instance()->poll();
     if (event->state() && m_clicked) {
         cancelTriggers(TriggerType::Press);
         return activateTriggers(TriggerType::Click);
@@ -77,15 +74,12 @@ bool TouchpadTriggerHandler::handleEvent(const TouchpadGestureLifecyclePhaseEven
 {
     switch (event->phase()) {
         case TouchpadGestureLifecyclePhase::Begin:
-            if (!m_usesLibevdevBackend) {
-                VariableManager::instance()->getVariable(BuiltinVariables::Fingers)->set(event->fingers());
-            }
+            VariableManager::instance()->getVariable(BuiltinVariables::Fingers)->set(event->fingers());
             return activateTriggers(event->triggers());
         case TouchpadGestureLifecyclePhase::Cancel:
             return cancelTriggers(event->triggers());
         case TouchpadGestureLifecyclePhase::End:
             // Libinput ends hold gestures when the touchpad is clicked instead of cancelling
-            InputBackend::instance()->poll();
             if (m_clicked && event->triggers() == TriggerType::Press) {
                 return cancelTriggers(event->triggers());
             }
@@ -103,20 +97,37 @@ bool TouchpadTriggerHandler::handleEvent(const TouchpadPinchEvent *event)
 bool TouchpadTriggerHandler::handleEvent(const TouchpadSlotEvent *event)
 {
     m_usesLibevdevBackend = true;
+
+    auto *manager = VariableManager::instance();
+    auto thumbPresent = manager->getVariable(BuiltinVariables::ThumbPresent);
+    auto thumbPosition = manager->getVariable(BuiltinVariables::ThumbPositionPercentage);
+    bool hasThumb{};
+
     for (auto i = 0; i < std::min(static_cast<uint8_t>(event->fingerSlots().size()), s_fingerVariableCount); i++) {
         const auto &slot = event->fingerSlots()[i];
         const auto fingerVariableNumber = i + 1;
 
-        auto positionVariable = VariableManager::instance()->getVariable<QPointF>(QString("finger_%1_position_percentage").arg(fingerVariableNumber));
-        auto pressureVariable = VariableManager::instance()->getVariable<qreal>(QString("finger_%1_pressure").arg(fingerVariableNumber));
+        auto position = manager->getVariable<QPointF>(QString("finger_%1_position_percentage").arg(fingerVariableNumber));
+        auto pressure = manager->getVariable<qreal>(QString("finger_%1_pressure").arg(fingerVariableNumber));
 
-        if (slot.active) {
-            positionVariable->set(slot.position);
-            pressureVariable->set(slot.pressure);
-        } else {
-            positionVariable->set({});
-            pressureVariable->set({});
+        if (!slot.active) {
+            position->set({});
+            pressure->set({});
+            continue;
         }
+
+        if (event->sender()->properties().thumbPressureRange().contains(slot.pressure)) {
+            hasThumb = true;
+            thumbPresent->set(true);
+            thumbPosition->set(slot.position);
+        }
+        position->set(slot.position);
+        pressure->set(slot.pressure);
+    }
+
+    if (!hasThumb) {
+        thumbPresent->set(false);
+        thumbPosition->set({});
     }
     return false;
 }

@@ -22,27 +22,17 @@
 
 #include <libevdev-1.0/libevdev/libevdev.h>
 
-#include <set>
-#include <thread>
-#include <vector>
+#include <map>
 
-#include <QFileSystemWatcher>
-#include <QPoint>
 #include <QTimer>
-#include <QSize>
 
 namespace libinputactions
 {
 
-struct TouchpadDevice
+struct LibevdevDevice
 {
-    QString devInputName;
-    libevdev *device;
+    libevdev *libevdevDevice;
     int fd;
-
-    QSizeF size;
-    bool multiTouch;
-    bool buttonPad{};
 
     /**
      * If device doesn't support MT type B protocol, only the first slot will be used.
@@ -64,7 +54,7 @@ class LibevdevComplementaryInputBackend : public virtual InputBackend
 {
 public:
     LibevdevComplementaryInputBackend();
-    ~LibevdevComplementaryInputBackend();
+    ~LibevdevComplementaryInputBackend() override;
 
     void poll() override;
 
@@ -73,19 +63,12 @@ public:
      */
     void setPollingInterval(const uint32_t &value);
 
+protected:
+    void deviceAdded(InputDevice *device) override;
+    void deviceRemoved(const InputDevice *device) override;
+
 private:
-    void devInputChanged();
-    void deviceAdded(const QString &name);
-    void deviceRemoved(const QString &name);
-    /**
-     * @return Names of all devices in /dev/input matching "event*".
-     */
-    QList<QString> devInputDevices() const;
-
-    std::vector<TouchpadDevice> m_devices;
+    std::map<InputDevice *, LibevdevDevice> m_libevdevDevices;
     QTimer m_inputTimer;
-
-    QFileSystemWatcher m_devInputWatcher;
-    std::set<QString> m_devInputDevices;
 };
 }

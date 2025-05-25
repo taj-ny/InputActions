@@ -56,20 +56,20 @@ public:
     virtual ~InputEvent() = default;
 
     const InputEventType &type() const;
-    const InputDevice &sender() const;
+    const InputDevice *sender() const;
 
 protected:
-    InputEvent(const InputEventType &type, const InputDevice &sender);
+    InputEvent(const InputEventType &type, InputDevice *sender);
 
 private:
     InputEventType m_type;
-    InputDevice m_sender;
+    InputDevice *m_sender;
 };
 
 class MotionEvent : public InputEvent
 {
 public:
-    MotionEvent(const InputDevice &sender, const InputEventType &type, const QPointF &delta);
+    MotionEvent(InputDevice *sender, const InputEventType &type, const QPointF &delta);
 
     const QPointF &delta() const;
 
@@ -80,7 +80,7 @@ private:
 class KeyboardKeyEvent : public InputEvent
 {
 public:
-    KeyboardKeyEvent(const InputDevice &sender, const uint32_t &nativeKey, const bool &state);
+    KeyboardKeyEvent(InputDevice *sender, const uint32_t &nativeKey, const bool &state);
 
     const uint32_t &nativeKey() const;
     const bool &state() const;
@@ -93,7 +93,7 @@ private:
 class PointerButtonEvent : public InputEvent
 {
 public:
-    PointerButtonEvent(const InputDevice &sender, const Qt::MouseButton &button, const quint32 &nativeButton, const bool &state);
+    PointerButtonEvent(InputDevice *sender, const Qt::MouseButton &button, const quint32 &nativeButton, const bool &state);
 
     const Qt::MouseButton &button() const;
     const quint32 &nativeButton() const;
@@ -108,7 +108,7 @@ private:
 class TouchpadClickEvent : public InputEvent
 {
 public:
-    TouchpadClickEvent(const InputDevice &sender, const bool &state);
+    TouchpadClickEvent(InputDevice *sender, const bool &state);
 
     const bool &state() const;
 
@@ -119,7 +119,7 @@ private:
 class TouchpadPinchEvent : public InputEvent
 {
 public:
-    TouchpadPinchEvent(const InputDevice &sender, const qreal &scale, const qreal &angleDelta);
+    TouchpadPinchEvent(InputDevice *sender, const qreal &scale, const qreal &angleDelta);
 
     const qreal &scale() const;
     const qreal &angleDelta() const;
@@ -132,7 +132,7 @@ private:
 class TouchpadGestureLifecyclePhaseEvent : public InputEvent
 {
 public:
-    TouchpadGestureLifecyclePhaseEvent(const InputDevice &sender, const TouchpadGestureLifecyclePhase &phase, const TriggerTypes &triggers, const uint8_t &fingers = 0);
+    TouchpadGestureLifecyclePhaseEvent(InputDevice *sender, const TouchpadGestureLifecyclePhase &phase, const TriggerTypes &triggers, const uint8_t &fingers = 0);
 
     const TouchpadGestureLifecyclePhase &phase() const;
     const TriggerTypes &triggers() const;
@@ -154,7 +154,7 @@ struct TouchpadSlot
 class TouchpadSlotEvent : public InputEvent
 {
 public:
-    TouchpadSlotEvent(const InputDevice &sender, const std::vector<TouchpadSlot> &fingerSlots);
+    TouchpadSlotEvent(InputDevice *sender, const std::vector<TouchpadSlot> &fingerSlots);
 
     const std::vector<TouchpadSlot> &fingerSlots() const;
 private:
