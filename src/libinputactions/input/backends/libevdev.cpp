@@ -50,6 +50,10 @@ LibevdevComplementaryInputBackend::~LibevdevComplementaryInputBackend()
 void LibevdevComplementaryInputBackend::deviceAdded(InputDevice *device)
 {
     InputBackend::deviceAdded(device);
+    if (!m_enabled) {
+        return;
+    }
+
     if (!(device->types() & InputDeviceType::Touchpad)) {
         return;
     }
@@ -223,6 +227,11 @@ void LibevdevComplementaryInputBackend::poll()
 void LibevdevComplementaryInputBackend::setPollingInterval(const uint32_t &value)
 {
     m_inputTimer.setInterval(value);
+}
+
+void LibevdevComplementaryInputBackend::setEnabled(const bool &value)
+{
+    m_enabled = value;
 }
 
 }

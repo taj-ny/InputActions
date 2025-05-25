@@ -121,8 +121,12 @@ void Effect::reconfigure(ReconfigureFlags flags)
             }
             m_backend->initialize();
 
+            auto *libevdev = static_cast<LibevdevComplementaryInputBackend *>(m_backend);
             if (const auto &pollingIntervalNode = config["__libevdev_polling_interval"]) {
-                static_cast<LibevdevComplementaryInputBackend *>(m_backend)->setPollingInterval(pollingIntervalNode.as<uint32_t>());
+                libevdev->setPollingInterval(pollingIntervalNode.as<uint32_t>());
+            }
+            if (const auto &enabledNode = config["__libevdev_enabled"]) {
+                libevdev->setEnabled(enabledNode.as<bool>());
             }
         } catch (const YAML::Exception &e) {
             qCritical(INPUTACTIONS_KWIN).noquote() << QString("Failed to load configuration: %1 (line %2, column %3)")

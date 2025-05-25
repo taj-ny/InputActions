@@ -59,15 +59,21 @@ public:
     void poll() override;
 
     /**
-     * @param value How often to poll input events. A too high value may result in missed events.
+     * @param value How often to poll input events.
      */
     void setPollingInterval(const uint32_t &value);
+
+    /**
+     * Will take effect only if set before initialization.
+     */
+    void setEnabled(const bool &value);
 
 protected:
     void deviceAdded(InputDevice *device) override;
     void deviceRemoved(const InputDevice *device) override;
 
 private:
+    bool m_enabled = true;
     std::map<InputDevice *, LibevdevDevice> m_libevdevDevices;
     QTimer m_inputTimer;
 };
