@@ -131,10 +131,12 @@ void LibevdevComplementaryInputBackend::poll()
     input_event event;
     for (auto &[device, libevdevDevice] : m_libevdevDevices) {
         const auto &properties = device->properties();
-        while (libevdev_has_event_pending(libevdevDevice.libevdevDevice)) {
-            // This doesn't handle LIBEVDEV_READ_STATUS_SYNC
-            if (libevdev_next_event(libevdevDevice.libevdevDevice, LIBEVDEV_READ_FLAG_NORMAL, &event) != LIBEVDEV_READ_STATUS_SUCCESS) {
-                continue;
+        int status{};
+        while (true) {
+            auto flags = status == LIBEVDEV_READ_STATUS_SYNC ? LIBEVDEV_READ_FLAG_SYNC : LIBEVDEV_READ_FLAG_NORMAL;
+            status = libevdev_next_event(libevdevDevice.libevdevDevice, flags, &event);
+            if (status != LIBEVDEV_READ_STATUS_SUCCESS && status != LIBEVDEV_READ_STATUS_SYNC) {
+                break;
             }
 
             const auto code = event.code;
