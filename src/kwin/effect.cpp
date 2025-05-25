@@ -64,6 +64,7 @@ Effect::Effect()
 #endif
 
     reconfigure(ReconfigureAll);
+    m_backend->initialize();
 
     if (!QFile::exists(s_configFile)) {
         QFile(s_configFile).open(QIODevice::WriteOnly);
@@ -110,9 +111,22 @@ void Effect::reconfigure(ReconfigureFlags flags)
             const auto config = YAML::LoadFile(s_configFile.toStdString());
             m_autoReload = config["autoreload"].as<bool>(true);
 
-            m_backend->clearEventHandlers();
+            m_backend->reset();
             for (auto &eventHandler : config.as<std::vector<std::unique_ptr<InputEventHandler>>>()) {
                 m_backend->addEventHandler(std::move(eventHandler));
+            }
+            const auto &devicesNode = config["touchpad"]["devices"];
+            for (auto it = devicesNode.begin(); it != devicesNode.end(); it++) {
+                m_backend->addCustomDeviceProperties(it->first.as<QString>(), it->second.as<InputDeviceProperties>());
+            }
+            m_backend->initialize();
+
+            auto *libevdev = static_cast<LibevdevComplementaryInputBackend *>(m_backend);
+            if (const auto &pollingIntervalNode = config["__libevdev_polling_interval"]) {
+                libevdev->setPollingInterval(pollingIntervalNode.as<uint32_t>());
+            }
+            if (const auto &enabledNode = config["__libevdev_enabled"]) {
+                libevdev->setEnabled(enabledNode.as<bool>());
             }
         } catch (const YAML::Exception &e) {
             qCritical(INPUTACTIONS_KWIN).noquote() << QString("Failed to load configuration: %1 (line %2, column %3)")

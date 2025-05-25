@@ -892,7 +892,10 @@ struct convert<std::unique_ptr<Trigger>>
     static bool decode(const Node &node, std::unique_ptr<Trigger> &trigger)
     {
         const auto type = node["type"].as<QString>();
-        if (type == "hold" || type == "press") {
+        if (type == "click") {
+            trigger = std::make_unique<Trigger>();
+            trigger->setType(TriggerType::Click);
+        } else if (type == "hold" || type == "press") {
             auto pressTrigger = new PressTrigger;
             pressTrigger->setInstant(node["instant"].as<bool>(false));
             trigger.reset(pressTrigger);
@@ -1071,6 +1074,9 @@ static void decodeTriggerHandler(const Node &node, TriggerHandler *handler)
     }
     for (auto &trigger : triggersNode.as<std::vector<std::unique_ptr<Trigger>>>()) {
         handler->addTrigger(std::move(trigger));
+    }
+    if (const auto &timeDeltaNode = node["__time_delta"]) {
+        handler->setTimedTriggerUpdateDelta(timeDeltaNode.as<uint32_t>());
     }
 }
 
@@ -1353,6 +1359,26 @@ struct convert<std::vector<InputAction>>
             }
         }
 
+        return true;
+    }
+};
+
+template<>
+struct convert<InputDeviceProperties>
+{
+    static bool decode(const Node &node, InputDeviceProperties &value)
+    {
+        if (const auto &multiTouchNode = node["__multiTouch"]) {
+            value.setMultiTouch(multiTouchNode.as<bool>());
+        }
+        if (const auto &buttonPad = node["buttonpad"]) {
+            value.setButtonPad(buttonPad.as<bool>());
+        }
+        if (const auto &pressureRangesNode = node["pressure_ranges"]) {
+            if (const auto &thumbNode = pressureRangesNode["thumb"]) {
+                value.setThumbPressureRange(thumbNode.as<Range<uint32_t>>());
+            }
+        }
         return true;
     }
 };

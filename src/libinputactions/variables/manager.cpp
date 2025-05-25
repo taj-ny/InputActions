@@ -36,25 +36,34 @@ VariableManager::VariableManager()
     registerRemoteVariable<CursorShape>("cursor_shape", [](auto &value) {
         value = Pointer::instance()->shape();
     });
-    registerLocalVariable<qreal>("fingers");
-    registerRemoteVariable<Qt::KeyboardModifiers>("keyboard_modifiers", [](auto &value) {
+    registerLocalVariable(BuiltinVariables::DeviceName);
+    for (auto i = 1; i <= s_fingerVariableCount; i ++) {
+        registerLocalVariable<QPointF>(QString("finger_%1_position_percentage").arg(i));
+        registerLocalVariable<qreal>(QString("finger_%1_pressure").arg(i));
+    }
+    registerLocalVariable(BuiltinVariables::Fingers);
+    registerRemoteVariable<Qt::KeyboardModifiers>(BuiltinVariables::KeyboardModifiers.name(), [](auto &value) {
         value = Keyboard::instance()->modifiers();
     });
-    registerLocalVariable<Qt::MouseButtons>("mouse_buttons");
     registerRemoteVariable<QPointF>("pointer_position_screen_percentage", [](auto &value) {
         value = Pointer::instance()->screenPosition();
     });
     registerRemoteVariable<QPointF>("pointer_position_window_percentage", [](auto &value) {
         const auto window = WindowProvider::instance()->underPointer();
-        const auto windowGeometry = window->geometry();
-        const auto pointerPos = Pointer::instance()->globalPosition();
-        if (!window || !pointerPos || !windowGeometry || !windowGeometry->contains(pointerPos.value())) {
+        if (!window) {
             return;
         }
 
+        const auto windowGeometry = window->geometry();
+        const auto pointerPos = Pointer::instance()->globalPosition();
+        if (!pointerPos || !windowGeometry) {
+            return;
+        }
         const auto translatedPosition = pointerPos.value() - windowGeometry->topLeft();
         value = QPointF(translatedPosition.x() / windowGeometry->width(), translatedPosition.y() / windowGeometry->height());
     });
+    registerLocalVariable(BuiltinVariables::ThumbPositionPercentage);
+    registerLocalVariable(BuiltinVariables::ThumbPresent);
     registerRemoteVariable<QString>("window_class", [](auto &value) {
         if (const auto window = WindowProvider::instance()->active()) {
             value = window->resourceClass();
@@ -174,6 +183,12 @@ void VariableManager::registerLocalVariable(const QString &name)
 }
 
 template<typename T>
+void VariableManager::registerLocalVariable(const VariableInfo<T> &variable)
+{
+    registerLocalVariable<T>(variable.name());
+}
+
+template<typename T>
 void VariableManager::registerRemoteVariable(const QString &name, const std::function<void(std::optional<T> &value)> getter)
 {
     const std::function<void(std::any &value)> anyGetter = [getter](std::any &value) {
@@ -203,7 +218,11 @@ VariableManager *VariableManager::instance()
 std::unique_ptr<VariableManager> VariableManager::s_instance = std::unique_ptr<VariableManager>(new VariableManager);
 
 template std::optional<VariableWrapper<QString>> VariableManager::getVariable(const QString &variable);
+template std::optional<VariableWrapper<bool>> VariableManager::getVariable(const VariableInfo<bool> &variable);
+template std::optional<VariableWrapper<QPointF>> VariableManager::getVariable(const VariableInfo<QPointF> &variable);
+template std::optional<VariableWrapper<QString>> VariableManager::getVariable(const VariableInfo<QString> &variable);
 template std::optional<VariableWrapper<qreal>> VariableManager::getVariable(const VariableInfo<qreal> &variable);
+template void VariableManager::registerLocalVariable<qreal>(const QString &name);
 
 template<typename T>
 VariableWrapper<T>::VariableWrapper(Variable *variable)
@@ -231,7 +250,9 @@ void VariableWrapper<T>::set(const std::optional<T> &value)
     m_variable->set(value.value());
 }
 
+template class VariableWrapper<bool>;
 template class VariableWrapper<qreal>;
+template class VariableWrapper<QPointF>;
 template class VariableWrapper<QString>;
 
 template<typename T>
@@ -246,6 +267,9 @@ const QString &VariableInfo<T>::name() const
     return m_name;
 }
 
+template class VariableInfo<bool>;
+template class VariableInfo<QPointF>;
+template class VariableInfo<QString>;
 template class VariableInfo<Qt::KeyboardModifiers>;
 template class VariableInfo<qreal>;
 

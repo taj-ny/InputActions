@@ -69,7 +69,7 @@ protected:
     std::unique_ptr<TriggerActivationEvent> createActivationEvent() const override;
 
 private:
-    bool handleEvent(const MouseButtonEvent *event);
+    bool handleEvent(const PointerButtonEvent *event);
     bool handleMotionEvent(const MotionEvent *event);
     bool handleWheelEvent(const MotionEvent *event);
 

@@ -19,7 +19,7 @@
 #include "emitter.h"
 #include "utils.h"
 
-#include <libinputactions/input/backend.h>
+#include <libinputactions/input/backends/backend.h>
 
 KWinInputEmitter::KWinInputEmitter()
     : m_device(std::make_unique<InputDevice>())

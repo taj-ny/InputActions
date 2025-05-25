@@ -11,8 +11,10 @@ Supported environments: Plasma 6 Wayland
   - Multiple mouse buttons can be specified (and all of them must be pressed in any order)
   - Mouse buttons can still be used for normal clicks and dragging, depending on gestures
   - Supports left, middle, right and 24 extra mouse buttons
-- Touchpad gestures: pinch, press, rotate, stroke, swipe
+- Touchpad gestures: click, pinch, press, rotate, stroke, swipe
   - Supports 2-finger swipe and stroke gestures (requires edge scrolling to be disabled)
+  - Click gestures are only supported on touchpads that do not have bottom physical buttons and instead act as one button
+  - Absolute positions for each finger on the touchpad are provided in variables
 - Actions: run command, emit input, invoke Plasma global shortcut
   - Executed at a specific point of the gesture's lifecycle (begin, update, end, cancel)
   - Update actions can repeat at a specified interval 
@@ -70,7 +72,7 @@ Supported environments: Plasma 6 Wayland
   <br>
 
   ```
-  sudo pacman -S --needed base-devel git extra-cmake-modules qt6-tools kwin yaml-cpp
+  sudo pacman -S --needed base-devel git extra-cmake-modules qt6-tools kwin yaml-cpp libevdev
   ```
 </details>
 
@@ -79,7 +81,7 @@ Supported environments: Plasma 6 Wayland
   <br>
 
   ```
-  sudo apt install git cmake g++ extra-cmake-modules qt6-tools-dev kwin-wayland kwin-dev libkf6configwidgets-dev gettext libkf6kcmutils-dev libyaml-cpp-dev libxkbcommon-dev
+  sudo apt install git cmake g++ extra-cmake-modules qt6-tools-dev kwin-wayland kwin-dev libkf6configwidgets-dev gettext libkf6kcmutils-dev libyaml-cpp-dev libxkbcommon-dev pkg-config libevdev-dev
   ```
 </details>
 
@@ -88,7 +90,7 @@ Supported environments: Plasma 6 Wayland
   <br>
 
   ```
-  sudo dnf install git cmake extra-cmake-modules gcc-g++ qt6-qtbase-devel kwin-devel kf6-ki18n-devel kf6-kguiaddons-devel kf6-kcmutils-devel kf6-kconfigwidgets-devel qt6-qtbase kf6-kguiaddons kf6-ki18n wayland-devel yaml-cpp yaml-cpp-devel libepoxy-devel
+  sudo dnf install git cmake extra-cmake-modules gcc-g++ qt6-qtbase-devel kwin-devel kf6-ki18n-devel kf6-kguiaddons-devel kf6-kcmutils-devel kf6-kconfigwidgets-devel qt6-qtbase kf6-kguiaddons kf6-ki18n wayland-devel yaml-cpp yaml-cpp-devel libepoxy-devel libevdev libevdev-devel
   ```
 </details>
 
@@ -97,7 +99,7 @@ Supported environments: Plasma 6 Wayland
   <br>
 
   ```
-  sudo zypper in git cmake-full gcc-c++ kf6-extra-cmake-modules kf6-kguiaddons-devel kf6-kconfigwidgets-devel kf6-ki18n-devel kf6-kcmutils-devel "cmake(KF6I18n)" "cmake(KF6KCMUtils)" "cmake(KF6WindowSystem)" "cmake(Qt6Core)" "cmake(Qt6DBus)" "cmake(Qt6Quick)" "cmake(Qt6Widgets)" libepoxy-devel kwin6-devel yaml-cpp-devel libxkbcommon-devel
+  sudo zypper in git cmake-full gcc-c++ kf6-extra-cmake-modules kf6-kguiaddons-devel kf6-kconfigwidgets-devel kf6-ki18n-devel kf6-kcmutils-devel "cmake(KF6I18n)" "cmake(KF6KCMUtils)" "cmake(KF6WindowSystem)" "cmake(Qt6Core)" "cmake(Qt6DBus)" "cmake(Qt6Quick)" "cmake(Qt6Widgets)" libepoxy-devel kwin6-devel yaml-cpp-devel libxkbcommon-devel libevdev-devel
   ```
 </details>
 
@@ -113,6 +115,14 @@ sudo make install
 ```
 
 Remove the *build* directory when rebuilding the effect.
+
+# Additional setup (optional)
+To gain access to extra touchpad features (finger position and pressure variables, click gestures), create a file at ``/etc/udev/rules.d/71-touchpad.rules`` with the following content:
+```
+ENV{ID_INPUT_TOUCHPAD}=="1", TAG+="uaccess"
+```
+
+This will give all programs read and write access to all touchpads.
 
 # Usage
 > [!NOTE]

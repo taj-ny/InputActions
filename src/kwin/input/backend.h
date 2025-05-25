@@ -20,7 +20,8 @@
 
 #include "input.h"
 
-#include <libinputactions/input/backend.h>
+#include <libinputactions/input/backends/backend.h>
+#include <libinputactions/input/backends/libevdev.h>
 
 /**
  * Installed before GlobalShortcutFilter, which is responsible for handling touchpad gestures.
@@ -32,10 +33,12 @@
  * @returns All methods that process events should return @c true to stop further event processing, @c false to pass to
  * next filter.
  */
-class KWinInputBackend : public libinputactions::InputBackend, public KWin::InputEventFilter
+class KWinInputBackend : public QObject, public libinputactions::LibevdevComplementaryInputBackend, public KWin::InputEventFilter
 {
 public:
     KWinInputBackend();
+
+    void initialize() override;
 
     bool holdGestureBegin(int fingerCount, std::chrono::microseconds time) override;
     bool holdGestureEnd(std::chrono::microseconds time) override;
@@ -62,6 +65,14 @@ public:
 #endif
 
 private:
+    void kwinDeviceAdded(const KWin::InputDevice *device);
+    void kwinDeviceRemoved(const KWin::InputDevice *device);
+    libinputactions::InputDevice *findKWinDevice(const KWin::InputDevice *device) const;
+    /**
+     * @return The device that generated the last event.
+     */
+    libinputactions::InputDevice *currentTouchpad() const;
+
     bool isMouse(const KWin::InputDevice *device) const;
 
     bool m_pinchGestureActive{};
