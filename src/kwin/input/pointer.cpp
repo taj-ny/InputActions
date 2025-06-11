@@ -78,7 +78,6 @@ std::optional<libinputactions::CursorShape> KWinPointer::shape()
         {"sw-resize", libinputactions::CursorShape::SWResize}
     };
     const QString shapeName(shapeSource->shape());
-    qWarning() << shapeName;
     if (shapes.contains(shapeName)) {
         m_cachedShape = shapes.at(shapeName);
         return m_cachedShape;
