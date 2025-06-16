@@ -1,4 +1,4 @@
-#include "test_conditiongroup.h"
+#include "TestConditionGroup.h"
 
 #include "utils.h"
 
@@ -45,4 +45,4 @@ void TestConditionGroup::satisfies()
 }
 
 QTEST_MAIN(libinputactions::TestConditionGroup)
-#include "test_conditiongroup.moc"
+#include "TestConditionGroup.moc"

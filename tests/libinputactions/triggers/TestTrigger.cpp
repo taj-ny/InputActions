@@ -1,4 +1,4 @@
-#include "test_trigger.h"
+#include "TestTrigger.h"
 
 #include <libinputactions/conditions/CallbackCondition.h>
 #include <libinputactions/conditions/ConditionGroup.h>
@@ -15,7 +15,7 @@ void TestTrigger::init()
     m_trigger = std::make_unique<Trigger>();
     m_activationEvent = std::make_unique<TriggerActivationEvent>();
     m_updateEvent = std::make_unique<TriggerUpdateEvent>();
-    m_action = new MockGestureAction; // Small memory leak, sometimes gets deleted by Trigger, sometimes not
+    m_action = new MockTriggerAction; // Small memory leak, sometimes gets deleted by Trigger, sometimes not
 }
 
 void TestTrigger::canActivate_data()
@@ -281,4 +281,4 @@ void TestTrigger::overridesOtherTriggersOnUpdate_noUpdate_false()
 }
 
 QTEST_MAIN(libinputactions::TestTrigger)
-#include "test_trigger.moc"
+#include "TestTrigger.moc"

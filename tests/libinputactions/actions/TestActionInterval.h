@@ -1,6 +1,6 @@
 #pragma once
 
-#include "mocks/mockgestureaction.h"
+#include "mocks/MockTriggerAction.h"
 
 #include <QTest>
 

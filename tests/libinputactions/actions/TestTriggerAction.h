@@ -1,13 +1,13 @@
 #pragma once
 
-#include "mocks/mockgestureaction.h"
+#include "mocks/MockTriggerAction.h"
 
 #include <QTest>
 
 namespace libinputactions
 {
 
-class TestAction : public QObject
+class TestTriggerAction : public QObject
 {
     Q_OBJECT
 
@@ -32,7 +32,7 @@ private slots:
     void gestureCancelled_data();
     void gestureCancelled();
 private:
-    std::unique_ptr<MockGestureAction> m_action;
+    std::unique_ptr<MockTriggerAction> m_action;
 };
 
 }

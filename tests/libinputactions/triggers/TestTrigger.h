@@ -1,6 +1,6 @@
 #pragma once
 
-#include "mocks/mockgestureaction.h"
+#include "mocks/MockTriggerAction.h"
 
 #include <libinputactions/triggers/Trigger.h>
 
@@ -42,7 +42,7 @@ private:
     std::unique_ptr<Trigger> m_trigger;
     std::unique_ptr<TriggerActivationEvent> m_activationEvent;
     std::unique_ptr<TriggerUpdateEvent> m_updateEvent;
-    MockGestureAction *m_action;
+    MockTriggerAction *m_action;
 };
 
 }

@@ -1,4 +1,4 @@
-#include "test_motiontrigger.h"
+#include "TestMotionTrigger.h"
 
 namespace libinputactions
 {
@@ -61,4 +61,4 @@ void TestMotionTrigger::hasSpeed()
 }
 
 QTEST_MAIN(libinputactions::TestMotionTrigger)
-#include "test_motiontrigger.moc"
+#include "TestMotionTrigger.moc"

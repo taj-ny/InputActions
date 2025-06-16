@@ -1,4 +1,4 @@
-#include "test_triggerhandler.h"
+#include "TestTriggerHandler.h"
 
 #include <linux/input-event-codes.h>
 
@@ -122,4 +122,4 @@ MockTrigger *TestTriggerHandler::makeTrigger(const TriggerType &type, const bool
 }
 
 QTEST_MAIN(libinputactions::TestTriggerHandler)
-#include "test_triggerhandler.moc"
+#include "TestTriggerHandler.moc"

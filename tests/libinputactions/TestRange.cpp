@@ -1,4 +1,4 @@
-#include "test_range.h"
+#include "TestRange.h"
 
 namespace libinputactions
 {
@@ -39,4 +39,4 @@ void TestRange::contains_qreal()
 }
 
 QTEST_MAIN(libinputactions::TestRange)
-#include "test_range.moc"
+#include "TestRange.moc"

@@ -2,8 +2,8 @@
 
 #include <libinputactions/handlers/TriggerHandler.h>
 
-#include "mocks/mocktrigger.h"
-#include "mocks/mocktriggerhandler.h"
+#include "mocks/MockTrigger.h"
+#include "mocks/MockTriggerHandler.h"
 
 #include <QTest>
 

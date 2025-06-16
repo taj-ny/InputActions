@@ -1,4 +1,4 @@
-#include "test_directionalmotiontrigger.h"
+#include "TestDirectionalMotionTrigger.h"
 
 namespace libinputactions
 {
@@ -96,4 +96,4 @@ void TestDirectionalMotionTrigger::canUpdate()
 }
 
 QTEST_MAIN(libinputactions::TestDirectionalMotionTrigger)
-#include "test_directionalmotiontrigger.moc"
+#include "TestDirectionalMotionTrigger.moc"

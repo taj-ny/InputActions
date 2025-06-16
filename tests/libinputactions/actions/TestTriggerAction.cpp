@@ -1,4 +1,4 @@
-#include "test_action.h"
+#include "TestTriggerAction.h"
 
 #include "utils.h"
 
@@ -7,12 +7,12 @@ using namespace ::testing;
 namespace libinputactions
 {
 
-void TestAction::init()
+void TestTriggerAction::init()
 {
-    m_action = std::make_unique<MockGestureAction>();
+    m_action = std::make_unique<MockTriggerAction>();
 }
 
-void TestAction::canExecute_data()
+void TestTriggerAction::canExecute_data()
 {
     QTest::addColumn<std::optional<bool>>("condition");
     QTest::addColumn<std::optional<bool>>("threshold");
@@ -29,7 +29,7 @@ void TestAction::canExecute_data()
     QTest::newRow("condition true, threshold false") << std::optional<bool>(true) << std::optional<bool>(false) << false;
 }
 
-void TestAction::canExecute()
+void TestTriggerAction::canExecute()
 {
     QFETCH(std::optional<bool>, condition);
     QFETCH(std::optional<bool>, threshold);
@@ -45,7 +45,7 @@ void TestAction::canExecute()
     QCOMPARE(m_action->TriggerAction::canExecute(), result);
 }
 
-void TestAction::tryExecute_canExecute_executes()
+void TestTriggerAction::tryExecute_canExecute_executes()
 {
     ON_CALL(*m_action, canExecute())
         .WillByDefault(Return(true));
@@ -57,7 +57,7 @@ void TestAction::tryExecute_canExecute_executes()
     QVERIFY(Mock::VerifyAndClearExpectations(m_action.get()));
 }
 
-void TestAction::tryExecute_cantExecute_doesntExecute()
+void TestTriggerAction::tryExecute_cantExecute_doesntExecute()
 {
     ON_CALL(*m_action, canExecute())
         .WillByDefault(Return(false));
@@ -69,7 +69,7 @@ void TestAction::tryExecute_cantExecute_doesntExecute()
     QVERIFY(Mock::VerifyAndClearExpectations(m_action.get()));
 }
 
-void TestAction::gestureStarted_data()
+void TestTriggerAction::gestureStarted_data()
 {
     QTest::addColumn<On>("on");
     QTest::addColumn<bool>("executes");
@@ -81,7 +81,7 @@ void TestAction::gestureStarted_data()
     QTest::newRow("end or cancel") << On::EndCancel << false;
 }
 
-void TestAction::gestureStarted()
+void TestTriggerAction::gestureStarted()
 {
     QFETCH(On, on);
     QFETCH(bool, executes);
@@ -95,7 +95,7 @@ void TestAction::gestureStarted()
     QVERIFY(Mock::VerifyAndClearExpectations(m_action.get()));
 }
 
-void TestAction::gestureUpdated_data()
+void TestTriggerAction::gestureUpdated_data()
 {
     QTest::addColumn<std::vector<qreal>>("deltas");
     QTest::addColumn<ActionInterval>("interval");
@@ -113,7 +113,7 @@ void TestAction::gestureUpdated_data()
     QTest::newRow("direction change (negative)") << std::vector<qreal>{4, -1, 4, -1} << interval << 0;
 }
 
-void TestAction::gestureUpdated()
+void TestTriggerAction::gestureUpdated()
 {
     QFETCH(std::vector<qreal>, deltas);
     QFETCH(ActionInterval, interval);
@@ -132,7 +132,7 @@ void TestAction::gestureUpdated()
     QVERIFY(Mock::VerifyAndClearExpectations(m_action.get()));
 }
 
-void TestAction::gestureEnded_data()
+void TestTriggerAction::gestureEnded_data()
 {
     QTest::addColumn<On>("on");
     QTest::addColumn<bool>("executes");
@@ -144,7 +144,7 @@ void TestAction::gestureEnded_data()
     QTest::newRow("end or cancel") << On::EndCancel << true;
 }
 
-void TestAction::gestureEnded()
+void TestTriggerAction::gestureEnded()
 {
     QFETCH(On, on);
     QFETCH(bool, executes);
@@ -158,7 +158,7 @@ void TestAction::gestureEnded()
     QVERIFY(Mock::VerifyAndClearExpectations(m_action.get()));
 }
 
-void TestAction::gestureCancelled_data()
+void TestTriggerAction::gestureCancelled_data()
 {
     QTest::addColumn<On>("on");
     QTest::addColumn<bool>("executes");
@@ -170,7 +170,7 @@ void TestAction::gestureCancelled_data()
     QTest::newRow("end or cancel") << On::EndCancel << true;
 }
 
-void TestAction::gestureCancelled()
+void TestTriggerAction::gestureCancelled()
 {
     QFETCH(On, on);
     QFETCH(bool, executes);
@@ -186,5 +186,5 @@ void TestAction::gestureCancelled()
 
 }
 
-QTEST_MAIN(libinputactions::TestAction)
-#include "test_action.moc"
+QTEST_MAIN(libinputactions::TestTriggerAction)
+#include "TestTriggerAction.moc"

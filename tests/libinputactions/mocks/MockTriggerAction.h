@@ -7,10 +7,10 @@
 namespace libinputactions
 {
 
-class MockGestureAction : public TriggerAction
+class MockTriggerAction : public TriggerAction
 {
 public:
-    MockGestureAction() = default;
+    MockTriggerAction() = default;
 
     MOCK_METHOD(void, execute, (), (override));
     MOCK_METHOD(bool, canExecute, (), (const, override));

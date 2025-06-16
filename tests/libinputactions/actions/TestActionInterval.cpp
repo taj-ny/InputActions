@@ -1,4 +1,4 @@
-#include "test_actioninterval.h"
+#include "TestActionInterval.h"
 
 namespace libinputactions
 {
@@ -35,4 +35,4 @@ void TestActionInterval::matches()
 }
 
 QTEST_MAIN(libinputactions::TestActionInterval)
-#include "test_actioninterval.moc"
+#include "TestActionInterval.moc"
