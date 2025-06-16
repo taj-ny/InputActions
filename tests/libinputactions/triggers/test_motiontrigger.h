@@ -1,6 +1,6 @@
 #pragma once
 
-#include <libinputactions/triggers/motion.h>
+#include <libinputactions/triggers/MotionTrigger.h>
 
 #include <QTest>
 

@@ -18,22 +18,22 @@
 
 #pragma once
 
-#include <libinputactions/actions/command.h>
-#include <libinputactions/actions/input.h>
-#include <libinputactions/actions/oneactiongroup.h>
-#include <libinputactions/actions/plasmaglobalshortcut.h>
-#include <libinputactions/conditions/conditiongroup.h>
-#include <libinputactions/conditions/variable.h>
-#include <libinputactions/handlers/mouse.h>
-#include <libinputactions/handlers/touchpad.h>
-#include <libinputactions/input/handler.h>
-#include <libinputactions/triggers/press.h>
-#include <libinputactions/triggers/stroke.h>
-#include <libinputactions/triggers/wheel.h>
-#include <libinputactions/variables/manager.h>
-#include <libinputactions/variables/variable.h>
-#include <libinputactions/expression.cpp>
-#include <libinputactions/value.h>
+#include <libinputactions/actions/CommandTriggerAction.h>
+#include <libinputactions/actions/InputTriggerAction.h>
+#include <libinputactions/actions/OneTriggerActionGroup.h>
+#include <libinputactions/actions/PlasmaGlobalShortcutTriggerAction.h>
+#include <libinputactions/conditions/ConditionGroup.h>
+#include <libinputactions/conditions/VariableCondition.h>
+#include <libinputactions/handlers/MouseTriggerHandler.h>
+#include <libinputactions/handlers/TouchpadTriggerHandler.h>
+#include <libinputactions/input/InputEventHandler.h>
+#include <libinputactions/triggers/PressTrigger.h>
+#include <libinputactions/triggers/StrokeTrigger.h>
+#include <libinputactions/triggers/WheelTrigger.h>
+#include <libinputactions/variables/VariableManager.h>
+#include <libinputactions/variables/Variable.h>
+#include <libinputactions/Expression.cpp>
+#include <libinputactions/Value.h>
 
 #include <QRegularExpression>
 #include <QVector>
@@ -1149,6 +1149,10 @@ struct convert<std::unique_ptr<TouchpadTriggerHandler>>
         if (const auto &deltaMultiplierNode = node["delta_multiplier"]) {
             touchpadTriggerHandler->setSwipeDeltaMultiplier(deltaMultiplierNode.as<qreal>());
         }
+        if (const auto &clickTimeoutNode = node["click_timeout"]) {
+            touchpadTriggerHandler->setClickTimeout(clickTimeoutNode.as<uint32_t>());
+        }
+
         return true;
     }
 };

@@ -18,7 +18,7 @@
 
 #pragma once
 
-#include "device.h"
+#include "InputDevice.h"
 
 #include <libinputactions/globals.h>
 

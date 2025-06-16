@@ -2,8 +2,8 @@
 
 #include "utils.h"
 
-#include <libinputactions/conditions/callbackcondition.h>
-#include <libinputactions/conditions/conditiongroup.h>
+#include <libinputactions/conditions/CallbackCondition.h>
+#include <libinputactions/conditions/ConditionGroup.h>
 
 namespace libinputactions
 {

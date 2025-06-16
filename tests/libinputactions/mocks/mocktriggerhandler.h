@@ -1,6 +1,6 @@
 #pragma once
 
-#include <libinputactions/handlers/trigger.h>
+#include <libinputactions/handlers/TriggerHandler.h>
 
 #include <gmock/gmock.h>
 

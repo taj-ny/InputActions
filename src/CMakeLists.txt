@@ -8,43 +8,48 @@ find_package(yaml-cpp REQUIRED)
 pkg_search_module(LIBEVDEV REQUIRED libevdev)
 
 set(libinputactions_SRCS
-    libinputactions/actions/action.cpp
-    libinputactions/actions/actiongroup.cpp
-    libinputactions/actions/command.cpp
-    libinputactions/actions/plasmaglobalshortcut.cpp
-    libinputactions/actions/input.cpp
-    libinputactions/actions/oneactiongroup.cpp
-    libinputactions/conditions/callbackcondition.cpp
-    libinputactions/conditions/condition.cpp
-    libinputactions/conditions/conditiongroup.cpp
-    libinputactions/conditions/variable.cpp
-    libinputactions/handlers/motion.cpp
-    libinputactions/handlers/mouse.cpp
-    libinputactions/handlers/multitouchmotion.cpp
-    libinputactions/handlers/touchpad.cpp
-    libinputactions/handlers/trigger.cpp
-    libinputactions/input/backends/backend.cpp
-    libinputactions/input/backends/libevdev.cpp
-    libinputactions/input/device.cpp
-    libinputactions/input/emitter.cpp
+    libinputactions/actions/CommandTriggerAction.cpp
+    libinputactions/actions/InputTriggerAction.cpp
+    libinputactions/actions/OneTriggerActionGroup.cpp
+    libinputactions/actions/PlasmaGlobalShortcutTriggerAction.cpp
+    libinputactions/actions/TriggerAction.cpp
+    libinputactions/actions/TriggerActionGroup.cpp
+    libinputactions/conditions/CallbackCondition.cpp
+    libinputactions/conditions/Condition.cpp
+    libinputactions/conditions/ConditionGroup.cpp
+    libinputactions/conditions/VariableCondition.cpp
+    libinputactions/handlers/MotionTriggerHandler.cpp
+    libinputactions/handlers/MouseTriggerHandler.cpp
+    libinputactions/handlers/MultiTouchMotionTriggerHandler.cpp
+    libinputactions/handlers/TouchpadTriggerHandler.cpp
+    libinputactions/handlers/TriggerHandler.cpp
+    libinputactions/input/backends/InputBackend.cpp
+    libinputactions/input/backends/LibevdevComplementaryInputBackend.cpp
+    libinputactions/input/InputDevice.cpp
+    libinputactions/input/InputEmitter.cpp
     libinputactions/input/events.cpp
-    libinputactions/input/handler.cpp
-    libinputactions/input/keyboard.cpp
-    libinputactions/input/pointer.cpp
-    libinputactions/triggers/directionalmotion.cpp
-    libinputactions/triggers/motion.cpp
-    libinputactions/triggers/press.cpp
-    libinputactions/triggers/stroke.cpp
-    libinputactions/triggers/trigger.cpp
-    libinputactions/triggers/wheel.cpp
-    libinputactions/variables/manager.cpp
-    libinputactions/variables/operations.cpp
-    libinputactions/variables/variable.cpp
-    libinputactions/expression.cpp
-    libinputactions/globals.h
-    libinputactions/range.cpp
-    libinputactions/value.cpp
-    libinputactions/window.cpp
+    libinputactions/input/InputEventHandler.cpp
+    libinputactions/input/Keyboard.cpp
+    libinputactions/interfaces/CursorShapeProvider.cpp
+    libinputactions/interfaces/InputEmitter.cpp
+    libinputactions/interfaces/PointerPositionGetter.cpp
+    libinputactions/interfaces/PointerPositionSetter.cpp
+    libinputactions/interfaces/SessionLock.cpp
+    libinputactions/interfaces/Window.cpp
+    libinputactions/interfaces/WindowProvider.cpp
+    libinputactions/triggers/DirectionalMotionTrigger.cpp
+    libinputactions/triggers/MotionTrigger.cpp
+    libinputactions/triggers/PressTrigger.cpp
+    libinputactions/triggers/StrokeTrigger.cpp
+    libinputactions/triggers/Trigger.cpp
+    libinputactions/triggers/WheelTrigger.cpp
+    libinputactions/variables/VariableManager.cpp
+    libinputactions/variables/VariableOperations.cpp
+    libinputactions/variables/Variable.cpp
+    libinputactions/Expression.cpp
+    libinputactions/globals.cpp
+    libinputactions/Range.cpp
+    libinputactions/Value.cpp
 )
 
 add_library(libinputactions STATIC ${libinputactions_SRCS})

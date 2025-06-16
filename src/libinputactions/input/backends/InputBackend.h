@@ -1,0 +1,113 @@
+/*
+    Input Actions - Input handler that executes user-defined actions
+    Copyright (C) 2024-2025 Marcin Woźniak
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+*/
+
+#pragma once
+
+#include <libinputactions/input/InputEventHandler.h>
+
+#include <QTimer>
+
+namespace libinputactions
+{
+
+class Stroke;
+
+/**
+ * Collects input events and forwards them to event handlers.
+ *
+ * The backend must ignore events when the session is locked
+ */
+class InputBackend
+{
+public:
+    virtual ~InputBackend() = default;
+
+    void addEventHandler(std::unique_ptr<InputEventHandler> handler);
+    void setIgnoreEvents(const bool &value);
+    /**
+     * Polls and handles events from all devices until there are no events left in the queue.
+     */
+    virtual void poll();
+
+    std::vector<InputDevice *> devices() const;
+    /**
+     * Custom properties will not be applied to devices that have already been added to the backend. Reconfiguration is required.
+     * @see reconfigureDevices
+     */
+    void addCustomDeviceProperties(const QString &name, const InputDeviceProperties &properties);
+    /**
+     * Adds devices.
+     */
+    virtual void initialize();
+
+    /**
+     * @param callback Will be called when the stroke has been recorded.
+     * @remark Calling this when a stroke is already being recorded will result in the previous callback never being called.
+     */
+    void recordStroke(const std::function<void(const Stroke &stroke)> &callback);
+
+    /**
+     * Removes all event handlers, devices and custom properties. Backend must be initialized in order to be used again.
+     * @see initialize
+     */
+    void reset();
+
+    static InputBackend *instance();
+    static void setInstance(std::unique_ptr<InputBackend> instance);
+
+protected:
+    InputBackend();
+
+    void addDevice(std::unique_ptr<InputDevice> device);
+    void removeDevice(InputDevice *device);
+    /**
+     * @return The device with the specified name or nullptr if not found.
+     */
+    InputDevice *findDevice(const QString &name) const;
+
+    /**
+     * Backends should add device properties in this method.
+     */
+    virtual void deviceAdded(InputDevice *device);
+    virtual void deviceRemoved(const InputDevice *device);
+
+    /**
+     * @param event Events with a nullptr sender will be ignored.
+     * @return Whether the event should be blocked.
+     */
+    bool handleEvent(const InputEvent *event);
+
+    void finishStrokeRecording();
+
+    std::vector<std::unique_ptr<InputEventHandler>> m_handlers;
+    bool m_ignoreEvents = false;
+
+    bool m_isRecordingStroke = false;
+    std::vector<QPointF> m_strokePoints;
+    QTimer m_strokeRecordingTimeoutTimer;
+
+private:
+    std::function<void(const Stroke &stroke)> m_strokeCallback;
+
+    std::vector<std::unique_ptr<InputDevice>> m_devices;
+    std::map<QString, InputDeviceProperties> m_customDeviceProperties;
+
+    static std::unique_ptr<InputBackend> s_instance;
+};
+
+}

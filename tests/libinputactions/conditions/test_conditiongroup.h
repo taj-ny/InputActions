@@ -1,6 +1,6 @@
 #pragma once
 
-#include <libinputactions/conditions/condition.h>
+#include <libinputactions/conditions/Condition.h>
 
 #include <QTest>
 

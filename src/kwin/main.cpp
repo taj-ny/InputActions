@@ -16,7 +16,7 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include "effect.h"
+#include "Effect.h"
 #include "effect/effect.h"
 
 KWIN_EFFECT_FACTORY_SUPPORTED_ENABLED(

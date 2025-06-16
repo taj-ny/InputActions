@@ -2,7 +2,7 @@
 
 #include "mocks/mockgestureaction.h"
 
-#include <libinputactions/triggers/trigger.h>
+#include <libinputactions/triggers/Trigger.h>
 
 #include <QTest>
 

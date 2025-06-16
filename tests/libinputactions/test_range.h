@@ -1,6 +1,6 @@
 #pragma once
 
-#include <libinputactions/range.h>
+#include <libinputactions/Range.h>
 
 #include <QTest>
 
