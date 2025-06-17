@@ -68,8 +68,7 @@ Effect::Effect()
     KWin::input()->prependInputEventFilter(m_backend);
 #endif
 
-    reconfigure(ReconfigureAll);
-    m_backend->initialize();
+    reconfigure(ReconfigureAll);\
 
     if (!QFile::exists(s_configFile)) {
         QFile(s_configFile).open(QIODevice::WriteOnly);
