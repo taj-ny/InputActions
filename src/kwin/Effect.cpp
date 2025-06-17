@@ -124,7 +124,6 @@ void Effect::reconfigure(ReconfigureFlags flags)
             for (auto it = devicesNode.begin(); it != devicesNode.end(); it++) {
                 m_backend->addCustomDeviceProperties(it->first.as<QString>(), it->second.as<InputDeviceProperties>());
             }
-            m_backend->initialize();
 
             auto *libevdev = static_cast<LibevdevComplementaryInputBackend *>(m_backend);
             if (const auto &pollingIntervalNode = config["__libevdev_polling_interval"]) {
@@ -133,6 +132,8 @@ void Effect::reconfigure(ReconfigureFlags flags)
             if (const auto &enabledNode = config["__libevdev_enabled"]) {
                 libevdev->setEnabled(enabledNode.as<bool>());
             }
+
+            m_backend->initialize();
         } catch (const YAML::Exception &e) {
             qCritical(INPUTACTIONS).noquote() << QString("Failed to load configuration: %1 (line %2, column %3)")
                 .arg(QString::fromStdString(e.msg), QString::number(e.mark.line), QString::number(e.mark.column));
