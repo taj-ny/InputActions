@@ -92,7 +92,7 @@ VariableManager::VariableManager()
     });
     registerRemoteVariable<QString>("window_title", [](auto &value) {
         if (const auto window = WindowProvider::instance()->activeWindow()) {
-            value = window->resourceClass();
+            value = window->title();
         }
     });
     registerRemoteVariable<QString>("window_under_class", [](auto &value) {
@@ -122,7 +122,7 @@ VariableManager::VariableManager()
     });
     registerRemoteVariable<QString>("window_under_title", [](auto &value) {
         if (const auto window = WindowProvider::instance()->windowUnderPointer()) {
-            value = window->resourceClass();
+            value = window->title();
         }
     });
 
