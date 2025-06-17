@@ -30,14 +30,27 @@ class Stroke;
 /**
  * Collects input events and forwards them to event handlers.
  *
- * The backend must ignore events when the session is locked
+ * Primary backends are responsible for managing (adding and removing) devices. Complementary backends are only allowed to set properties when a device is
+ * being added.
+ *
+ * Backends must ignore events when the session is locked or when m_ignoreEvents is set to true.
+ *
+ * To re-initialize the backend, call reset() and then initialize().
+ * @see reset
+ * @see initialize
  */
 class InputBackend
 {
+    INPUTACTIONS_DECLARE_SINGLETON(InputBackend)
+
 public:
     virtual ~InputBackend() = default;
 
     void addEventHandler(std::unique_ptr<InputEventHandler> handler);
+    /**
+     * This method should be used in order to prevent feedback loops when input is being emitted.
+     * @param value Whether to ignore all input events.
+     */
     void setIgnoreEvents(const bool &value);
     /**
      * Polls and handles events from all devices until there are no events left in the queue.
@@ -46,12 +59,13 @@ public:
 
     std::vector<InputDevice *> devices() const;
     /**
-     * Custom properties will not be applied to devices that have already been added to the backend. Reconfiguration is required.
-     * @see reconfigureDevices
+     * @param properties Custom properties that will override the ones that were detected automatically.
+     * @remark Custom properties will not be applied to devices that have already been added to the backend.
      */
     void addCustomDeviceProperties(const QString &name, const InputDeviceProperties &properties);
+
     /**
-     * Adds devices.
+     * Detects and adds devices.
      */
     virtual void initialize();
 
@@ -67,16 +81,13 @@ public:
      */
     void reset();
 
-    static InputBackend *instance();
-    static void setInstance(std::unique_ptr<InputBackend> instance);
-
 protected:
     InputBackend();
 
     void addDevice(std::unique_ptr<InputDevice> device);
     void removeDevice(InputDevice *device);
     /**
-     * @return The device with the specified name or nullptr if not found.
+     * @returns The device with the specified name or nullptr if not found.
      */
     InputDevice *findDevice(const QString &name) const;
 
@@ -106,8 +117,6 @@ private:
 
     std::vector<std::unique_ptr<InputDevice>> m_devices;
     std::map<QString, InputDeviceProperties> m_customDeviceProperties;
-
-    static std::unique_ptr<InputBackend> s_instance;
 };
 
 }

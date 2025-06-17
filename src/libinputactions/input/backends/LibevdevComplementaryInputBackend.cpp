@@ -133,7 +133,7 @@ void LibevdevComplementaryInputBackend::deviceRemoved(const InputDevice *device)
 
 void LibevdevComplementaryInputBackend::poll()
 {
-    if (SessionLock::instance()->sessionLocked()) {
+    if (m_ignoreEvents || SessionLock::instance()->sessionLocked()) {
         return;
     }
 

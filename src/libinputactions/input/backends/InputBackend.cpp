@@ -81,13 +81,6 @@ void InputBackend::reset()
     m_customDeviceProperties.clear();
 }
 
-void InputBackend::setInstance(std::unique_ptr<InputBackend> instance)
-{
-    s_instance = std::move(instance);
-}
-
-std::unique_ptr<InputBackend> InputBackend::s_instance = std::unique_ptr<InputBackend>(new InputBackend);
-
 void InputBackend::addDevice(std::unique_ptr<InputDevice> device)
 {
     auto *raw = device.get();
@@ -160,9 +153,6 @@ void InputBackend::finishStrokeRecording()
     m_strokePoints.clear();
 }
 
-InputBackend *InputBackend::instance()
-{
-    return s_instance.get();
-}
+INPUTACTIONS_SINGLETON(InputBackend)
 
 }
