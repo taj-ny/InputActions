@@ -7,12 +7,14 @@
 , qttools
 , kglobalacceld
 , yaml-cpp
+, libevdev
+, pkg-config
 , debug ? false
 }:
 
 stdenv.mkDerivation rec {
   pname = "inputactions-kwin";
-  version = "0.6.1";
+  version = "0.7.0";
 
   src = ./.;
 
@@ -25,7 +27,9 @@ stdenv.mkDerivation rec {
   buildInputs = [
     kwin
     qttools
+    libevdev
     kglobalacceld
+    pkg-config
     yaml-cpp
   ];
 

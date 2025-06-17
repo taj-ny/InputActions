@@ -21,7 +21,7 @@
 namespace libinputactions
 {
 
-InputEvent::InputEvent(const InputEventType &type, const std::optional<QString> &sender)
+InputEvent::InputEvent(const InputEventType &type, InputDevice *sender)
     : m_type(type)
     , m_sender(sender)
 {
@@ -32,12 +32,12 @@ const InputEventType &InputEvent::type() const
     return m_type;
 }
 
-const std::optional<QString> &InputEvent::sender() const
+const InputDevice *InputEvent::sender() const
 {
     return m_sender;
 }
 
-MotionEvent::MotionEvent(const QPointF &delta, const InputEventType &type, const std::optional<QString> &sender)
+MotionEvent::MotionEvent(InputDevice *sender, const InputEventType &type, const QPointF &delta)
     : InputEvent(type, sender)
     , m_delta(delta)
 {
@@ -48,32 +48,31 @@ const QPointF &MotionEvent::delta() const
     return m_delta;
 }
 
-MouseButtonEvent::MouseButtonEvent(const Qt::MouseButton &button, const quint32 &nativeButton, const bool &state,
-    const std::optional<QString> &sender)
-    : InputEvent(InputEventType::MouseButton, sender)
+PointerButtonEvent::PointerButtonEvent(InputDevice *sender, const Qt::MouseButton &button, const quint32 &nativeButton, const bool &state)
+    : InputEvent(InputEventType::PointerButton, sender)
     , m_button(button)
     , m_nativeButton(nativeButton)
     , m_state(state)
 {
 }
 
-const Qt::MouseButton &MouseButtonEvent::button() const
+const Qt::MouseButton &PointerButtonEvent::button() const
 {
     return m_button;
 }
 
-const quint32 &MouseButtonEvent::nativeButton() const
+const quint32 &PointerButtonEvent::nativeButton() const
 {
     return m_nativeButton;
 }
 
-const bool &MouseButtonEvent::state() const
+const bool &PointerButtonEvent::state() const
 {
     return m_state;
 }
 
-KeyboardKeyEvent::KeyboardKeyEvent(const uint32_t &nativeKey, const bool &state)
-    : InputEvent(InputEventType::KeyboardKey)
+KeyboardKeyEvent::KeyboardKeyEvent(InputDevice *sender, const uint32_t &nativeKey, const bool &state)
+    : InputEvent(InputEventType::KeyboardKey, sender)
     , m_nativeKey(nativeKey)
     , m_state(state)
 {
@@ -89,8 +88,19 @@ const bool &KeyboardKeyEvent::state() const
     return m_state;
 }
 
-TouchpadPinchEvent::TouchpadPinchEvent(const qreal &scale, const qreal &angleDelta)
-    : InputEvent(InputEventType::TouchpadPinch)
+TouchpadClickEvent::TouchpadClickEvent(InputDevice *sender, const bool &state)
+    : InputEvent(InputEventType::TouchpadClick, sender)
+    , m_state(state)
+{
+}
+
+const bool &TouchpadClickEvent::state() const
+{
+    return m_state;
+}
+
+TouchpadPinchEvent::TouchpadPinchEvent(InputDevice *sender, const qreal &scale, const qreal &angleDelta)
+    : InputEvent(InputEventType::TouchpadPinch, sender)
     , m_scale(scale)
     , m_angleDelta(angleDelta)
 {
@@ -106,10 +116,10 @@ const qreal &TouchpadPinchEvent::angleDelta() const
     return m_angleDelta;
 }
 
-TouchpadGestureLifecyclePhaseEvent::TouchpadGestureLifecyclePhaseEvent(const TouchpadGestureLifecyclePhase &phase,
+TouchpadGestureLifecyclePhaseEvent::TouchpadGestureLifecyclePhaseEvent(InputDevice *sender, const TouchpadGestureLifecyclePhase &phase,
     const TriggerTypes &triggers,
     const uint8_t &fingers)
-    : InputEvent(InputEventType::TouchpadGestureLifecyclePhase)
+    : InputEvent(InputEventType::TouchpadGestureLifecyclePhase, sender)
     , m_phase(phase)
     , m_triggers(triggers)
     , m_fingers(fingers)
@@ -129,6 +139,17 @@ const TriggerTypes &TouchpadGestureLifecyclePhaseEvent::triggers() const
 const uint8_t &TouchpadGestureLifecyclePhaseEvent::fingers() const
 {
     return m_fingers;
+}
+
+TouchpadSlotEvent::TouchpadSlotEvent(InputDevice *sender, const std::vector<TouchpadSlot> &fingerSlots)
+    : InputEvent(InputEventType::TouchpadSlot, sender)
+    , m_slots(fingerSlots)
+{
+}
+
+const std::vector<TouchpadSlot> &TouchpadSlotEvent::fingerSlots() const
+{
+    return m_slots;
 }
 
 }

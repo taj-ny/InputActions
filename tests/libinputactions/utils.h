@@ -1,6 +1,6 @@
 #pragma once
 
-#include <libinputactions/conditions/callbackcondition.h>
+#include <libinputactions/conditions/CallbackCondition.h>
 
 #include <memory>
 

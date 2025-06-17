@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.16.0)
 
 project(inputactions)
-set(PROJECT_VERSION "0.6.1")
+set(PROJECT_VERSION "0.7.0")
 
 set(QT_MIN_VERSION "6.6.0")
 set(QT_MAJOR_VERSION 6)
@@ -17,6 +17,9 @@ if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Choose Release or Debug" FORCE)
 endif()
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O2 -DQT_NO_DEBUG_OUTPUT")
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    add_compile_definitions(-DDEBUG)
+endif()
 
 find_package(ECM REQUIRED NO_MODULE)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${ECM_MODULE_PATH} ${ECM_KDE_MODULE_DIR})
