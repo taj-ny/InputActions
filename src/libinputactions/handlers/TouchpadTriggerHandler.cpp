@@ -25,6 +25,7 @@ namespace libinputactions
 
 TouchpadTriggerHandler::TouchpadTriggerHandler()
 {
+    m_clickTimeoutTimer.setTimerType(Qt::TimerType::PreciseTimer);
     m_clickTimeoutTimer.setSingleShot(true);
 }
 
