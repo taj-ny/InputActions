@@ -1,11 +1,11 @@
 # Input Actions [![AUR Version](https://img.shields.io/aur/version/input-actions)](https://aur.archlinux.org/packages/input-actions)
-Input handler built on top of libinput and KWin, currently in a very early stage of development.
+Input handler that executes user-defined actions, currently in a very early stage of development.
 
 Supported environments: Plasma 6 Wayland
 
 # Features
 - Stroke gesture: draw any shape
-  - Can specify multiple strokes per gesture
+  - Multiple strokes can be specified for each gesture
 - Mouse gestures: press, stroke, swipe, wheel
   - Horizontal scrolling wheels are supported
   - Multiple mouse buttons can be specified (and all of them must be pressed in any order)
@@ -13,8 +13,9 @@ Supported environments: Plasma 6 Wayland
   - Supports left, middle, right and 24 extra mouse buttons
 - Touchpad gestures: click, pinch, press, rotate, stroke, swipe
   - Supports 2-finger swipe and stroke gestures (requires edge scrolling to be disabled)
-  - Click gestures are only supported on touchpads that do not have bottom physical buttons and instead act as one button
-  - Absolute positions for each finger on the touchpad are provided in variables
+  - Click gestures (hard press) are only available on touchpads that do not have separate physical buttons below and instead act as one button
+  - Absolute positions and pressures of each finger are provided in variables and can be used in conditions - swipe from edge and tip tap gestures are possible
+    (see examples)
 - Actions: run command, emit input, invoke Plasma global shortcut
   - Executed at a specific point of the gesture's lifecycle (begin, update, end, cancel)
   - Update actions can repeat at a specified interval 
@@ -117,7 +118,8 @@ sudo make install
 Remove the *build* directory when rebuilding the effect.
 
 # Additional setup (optional)
-To gain access to extra touchpad features (finger position and pressure variables, click gestures), create a file at ``/etc/udev/rules.d/71-touchpad.rules`` with the following content:
+To gain access to extra touchpad features, create a file at ``/etc/udev/rules.d/71-touchpad.rules``
+with the following content:
 ```
 ENV{ID_INPUT_TOUCHPAD}=="1", TAG+="uaccess"
 ```
