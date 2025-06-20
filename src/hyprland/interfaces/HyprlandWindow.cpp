@@ -16,33 +16,34 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#pragma once
+#include "HyprlandWindow.h"
 
-#include "effect/effect.h"
-#include "input/KWinInputBackend.h"
-
-#include <libinputactions/Config.h>
-#include <libinputactions/DBusInterface.h>
-
-class Effect : public KWin::Effect
+HyprlandWindow::HyprlandWindow(CWindow *window)
+    : m_window(window)
 {
-public:
-    Effect();
-    ~Effect() override;
+}
 
-    static bool supported()
-    {
-        return true;
-    };
-    static bool enabledByDefault()
-    {
-        return false;
-    };
+std::optional<QString> HyprlandWindow::id()
+{
+    return QString::fromStdString(std::format("{:x}", (uintptr_t)m_window));
+}
 
-    void reconfigure(ReconfigureFlags flags) override;
+std::optional<QRectF> HyprlandWindow::geometry()
+{
+    return QRectF(m_window->m_position.x, m_window->m_position.y, m_window->m_size.x, m_window->m_size.y);
+}
 
-private:
-    KWinInputBackend *m_backend;
-    libinputactions::Config m_config;
-    libinputactions::DBusInterface m_dbusInterface;
-};
+std::optional<QString> HyprlandWindow::title()
+{
+    return QString::fromStdString(m_window->m_title);
+}
+
+std::optional<QString> HyprlandWindow::resourceClass()
+{
+    return QString::fromStdString(m_window->m_class);
+}
+
+std::optional<bool> HyprlandWindow::fullscreen()
+{
+    return m_window->isFullscreen();
+}

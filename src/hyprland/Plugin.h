@@ -18,31 +18,27 @@
 
 #pragma once
 
-#include "effect/effect.h"
-#include "input/KWinInputBackend.h"
+#include "input/HyprlandInputBackend.h"
 
 #include <libinputactions/Config.h>
 #include <libinputactions/DBusInterface.h>
 
-class Effect : public KWin::Effect
+#include <hyprland/src/plugins/HookSystem.hpp>
+#include <hyprland/src/managers/eventLoop/EventLoopTimer.hpp>
+#undef HANDLE
+
+class Plugin
 {
 public:
-    Effect();
-    ~Effect() override;
-
-    static bool supported()
-    {
-        return true;
-    };
-    static bool enabledByDefault()
-    {
-        return false;
-    };
-
-    void reconfigure(ReconfigureFlags flags) override;
+    Plugin(void *handle);
 
 private:
-    KWinInputBackend *m_backend;
+    void eventLoopTick();
+
+    void *m_handle;
+    HyprlandInputBackend *m_backend;
     libinputactions::Config m_config;
     libinputactions::DBusInterface m_dbusInterface;
+
+    SP<CEventLoopTimer> m_eventLoopTimer;
 };

@@ -18,31 +18,21 @@
 
 #pragma once
 
-#include "effect/effect.h"
-#include "input/KWinInputBackend.h"
+#include <libinputactions/interfaces/Window.h>
 
-#include <libinputactions/Config.h>
-#include <libinputactions/DBusInterface.h>
+#include <hyprland/src/desktop/Window.hpp>
 
-class Effect : public KWin::Effect
+class HyprlandWindow : public libinputactions::Window
 {
 public:
-    Effect();
-    ~Effect() override;
+    HyprlandWindow(CWindow *window);
 
-    static bool supported()
-    {
-        return true;
-    };
-    static bool enabledByDefault()
-    {
-        return false;
-    };
-
-    void reconfigure(ReconfigureFlags flags) override;
+    std::optional<QString> id();
+    std::optional<QRectF> geometry();
+    std::optional<QString> title();
+    std::optional<QString> resourceClass();
+    std::optional<bool> fullscreen();
 
 private:
-    KWinInputBackend *m_backend;
-    libinputactions::Config m_config;
-    libinputactions::DBusInterface m_dbusInterface;
+    CWindow *m_window;
 };

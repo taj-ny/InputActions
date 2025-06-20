@@ -17,11 +17,15 @@
 */
 
 #include "DBusInterface.h"
-#include "effect/effecthandler.h"
 
+#include <libinputactions/input/backends/InputBackend.h>
+#include <libinputactions/interfaces/OnScreenMessageManager.h>
 #include <libinputactions/triggers/StrokeTrigger.h>
 #include <libinputactions/variables/VariableManager.h>
 #include <libinputactions/variables/Variable.h>
+
+namespace libinputactions
+{
 
 static QString s_service = "org.inputactions";
 static QString s_path = "/";
@@ -40,8 +44,8 @@ DBusInterface::~DBusInterface()
 
 void DBusInterface::recordStroke(const QDBusMessage &message)
 {
-    KWin::effects->showOnScreenMessage("Input Actions is recording input. Perform a stroke gesture by moving your mouse or performing a touchpad swipe."
-                                       " Recording will end after 250 ms of inactivity.");
+    OnScreenMessageManager::instance()->showMessage("Input Actions is recording input. Perform a stroke gesture by moving your mouse or performing a touchpad "
+                                                    "swipe. Recording will end after 250 ms of inactivity.");
 
     message.setDelayedReply(true);
     m_reply = message.createReply();
@@ -61,7 +65,7 @@ void DBusInterface::recordStroke(const QDBusMessage &message)
         m_reply << QString("'%1'").arg(bytes.toBase64());
         m_bus.send(m_reply);
 
-        KWin::effects->hideOnScreenMessage();
+        OnScreenMessageManager::instance()->hideMessage();
     });
 }
 
@@ -76,4 +80,6 @@ QString DBusInterface::variables(const QString &filter)
         result.push_back(QString("%1: %2").arg(name, variable->operations()->toString()));
     }
     return result.join('\n');
+}
+
 }

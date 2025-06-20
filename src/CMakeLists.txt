@@ -1,7 +1,3 @@
-if (BUILD_KWIN_EFFECT)
-    add_subdirectory(kwin)
-endif()
-
 find_package(PkgConfig REQUIRED)
 find_package(yaml-cpp REQUIRED)
 
@@ -32,6 +28,7 @@ set(libinputactions_SRCS
     libinputactions/input/Keyboard.cpp
     libinputactions/interfaces/CursorShapeProvider.cpp
     libinputactions/interfaces/InputEmitter.cpp
+    libinputactions/interfaces/OnScreenMessageManager.cpp
     libinputactions/interfaces/PointerPositionGetter.cpp
     libinputactions/interfaces/PointerPositionSetter.cpp
     libinputactions/interfaces/SessionLock.cpp
@@ -46,14 +43,17 @@ set(libinputactions_SRCS
     libinputactions/variables/VariableManager.cpp
     libinputactions/variables/VariableOperations.cpp
     libinputactions/variables/Variable.cpp
+    libinputactions/Config.cpp
+    libinputactions/DBusInterface.cpp
     libinputactions/Expression.cpp
     libinputactions/globals.cpp
     libinputactions/Range.cpp
     libinputactions/Value.cpp
+    libinputactions/yaml_convert.h
 )
 
 add_library(libinputactions STATIC ${libinputactions_SRCS})
-target_link_libraries(libinputactions PRIVATE
+target_link_libraries(libinputactions PUBLIC
     Qt6::Core
     Qt6::DBus
     ${LIBEVDEV_LIBRARIES}
@@ -64,3 +64,10 @@ set_target_properties(libinputactions PROPERTIES PREFIX "")
 
 target_link_libraries(libinputactions PRIVATE yaml-cpp)
 target_compile_options(libinputactions PUBLIC -fexceptions -fPIC)
+
+if (BUILD_HYPRLAND_PLUGIN)
+    add_subdirectory(hyprland)
+endif()
+if (BUILD_KWIN_EFFECT)
+    add_subdirectory(kwin)
+endif()

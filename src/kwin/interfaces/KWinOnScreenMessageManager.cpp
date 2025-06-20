@@ -16,33 +16,16 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#pragma once
+#include "KWinOnScreenMessageManager.h"
 
-#include "effect/effect.h"
-#include "input/KWinInputBackend.h"
+#include "effect/effecthandler.h"
 
-#include <libinputactions/Config.h>
-#include <libinputactions/DBusInterface.h>
-
-class Effect : public KWin::Effect
+void KWinOnScreenMessageManager::showMessage(const QString &message)
 {
-public:
-    Effect();
-    ~Effect() override;
+    KWin::effects->showOnScreenMessage(message);
+}
 
-    static bool supported()
-    {
-        return true;
-    };
-    static bool enabledByDefault()
-    {
-        return false;
-    };
-
-    void reconfigure(ReconfigureFlags flags) override;
-
-private:
-    KWinInputBackend *m_backend;
-    libinputactions::Config m_config;
-    libinputactions::DBusInterface m_dbusInterface;
-};
+void KWinOnScreenMessageManager::hideMessage()
+{
+    KWin::effects->hideOnScreenMessage();
+}

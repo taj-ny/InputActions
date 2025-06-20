@@ -16,31 +16,19 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include "input/KWinInputBackend.h"
+#include "OnScreenMessageManager.h"
 
-#include <QDBusConnection>
-#include <QDBusMessage>
-#include <QObject>
-
-class DBusInterface : public QObject
+namespace libinputactions
 {
-    Q_OBJECT
 
-public:
-    /**
-     * Registers the interface.
-     */
-    DBusInterface();
-    /**
-     * Unregisters the interface.
-     */
-    ~DBusInterface() override;
+void OnScreenMessageManager::showMessage(const QString &message)
+{
+}
 
-public slots:
-    Q_NOREPLY void recordStroke(const QDBusMessage &message);
-    QString variables(const QString &filter = "");
+void OnScreenMessageManager::hideMessage()
+{
+}
 
-private:
-    QDBusConnection m_bus = QDBusConnection::sessionBus();
-    QDBusMessage m_reply;
-};
+INPUTACTIONS_SINGLETON(OnScreenMessageManager)
+
+}

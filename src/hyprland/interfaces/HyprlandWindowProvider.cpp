@@ -16,33 +16,24 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#pragma once
+#include "HyprlandWindowProvider.h"
+#include "HyprlandWindow.h"
 
-#include "effect/effect.h"
-#include "input/KWinInputBackend.h"
+#include <hyprland/src/Compositor.hpp>
+#include <hyprland/src/managers/PointerManager.hpp>
 
-#include <libinputactions/Config.h>
-#include <libinputactions/DBusInterface.h>
-
-class Effect : public KWin::Effect
+std::unique_ptr<libinputactions::Window> HyprlandWindowProvider::activeWindow()
 {
-public:
-    Effect();
-    ~Effect() override;
+    if (auto *window = g_pCompositor->m_lastWindow.lock().get()) {
+        return std::make_unique<HyprlandWindow>(window);
+    }
+    return {};
+}
 
-    static bool supported()
-    {
-        return true;
-    };
-    static bool enabledByDefault()
-    {
-        return false;
-    };
-
-    void reconfigure(ReconfigureFlags flags) override;
-
-private:
-    KWinInputBackend *m_backend;
-    libinputactions::Config m_config;
-    libinputactions::DBusInterface m_dbusInterface;
-};
+std::unique_ptr<libinputactions::Window> HyprlandWindowProvider::windowUnderPointer()
+{
+    if (auto *window = g_pCompositor->vectorToWindowUnified(g_pPointerManager->position(), 0).get()) {
+        return std::make_unique<HyprlandWindow>(window);
+    }
+    return {};
+}

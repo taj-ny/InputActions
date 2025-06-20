@@ -6,11 +6,12 @@ set(PROJECT_VERSION "0.7.0")
 set(QT_MIN_VERSION "6.6.0")
 set(QT_MAJOR_VERSION 6)
 
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
+set(CMAKE_CXX_EXTENSIONS ON)
 
 option(BUILD_KWIN_EFFECT "Build the KWin effect" ON)
+option(BUILD_HYPRLAND_PLUGIN "Build the Hyprland plugin" ON)
 option(BUILD_TESTS "Build tests" OFF)
 
 if(NOT CMAKE_BUILD_TYPE)
@@ -24,10 +25,9 @@ endif()
 find_package(ECM REQUIRED NO_MODULE)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${ECM_MODULE_PATH} ${ECM_KDE_MODULE_DIR})
 
-include(FeatureSummary)
 include(KDEInstallDirs)
 include(KDECMakeSettings)
-include(KDECompilerSettings NO_POLICY_SCOPE)
+# include(KDECompilerSettings NO_POLICY_SCOPE)
 
 find_package(Qt6 ${QT_MIN_VERSION} CONFIG REQUIRED COMPONENTS
     Core
@@ -40,5 +40,3 @@ add_subdirectory(src)
 if (BUILD_TESTS)
     add_subdirectory(tests)
 endif()
-
-feature_summary(WHAT ALL FATAL_ON_MISSING_REQUIRED_PACKAGES)

@@ -18,31 +18,11 @@
 
 #pragma once
 
-#include "effect/effect.h"
-#include "input/KWinInputBackend.h"
+#include <libinputactions/interfaces/PointerPositionGetter.h>
 
-#include <libinputactions/Config.h>
-#include <libinputactions/DBusInterface.h>
-
-class Effect : public KWin::Effect
+class HyprlandPointer : public libinputactions::PointerPositionGetter
 {
 public:
-    Effect();
-    ~Effect() override;
-
-    static bool supported()
-    {
-        return true;
-    };
-    static bool enabledByDefault()
-    {
-        return false;
-    };
-
-    void reconfigure(ReconfigureFlags flags) override;
-
-private:
-    KWinInputBackend *m_backend;
-    libinputactions::Config m_config;
-    libinputactions::DBusInterface m_dbusInterface;
+    std::optional<QPointF> globalPointerPosition() override;
+    std::optional<QPointF> screenPointerPosition() override;
 };
