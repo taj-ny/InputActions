@@ -17,6 +17,7 @@
 */
 
 #include "Plugin.h"
+#include "interfaces/HyprlandInputEmitter.h"
 
 Plugin::Plugin(void *handle)
     : m_handle(handle)
@@ -24,6 +25,7 @@ Plugin::Plugin(void *handle)
     , m_config(m_backend)
 {
     libinputactions::InputBackend::setInstance(std::unique_ptr<HyprlandInputBackend>(m_backend));
+    libinputactions::InputEmitter::setInstance(std::make_shared<HyprlandInputEmitter>());
 
     m_config.load();
 }

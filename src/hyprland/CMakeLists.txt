@@ -11,6 +11,7 @@ pkg_check_modules(deps REQUIRED IMPORTED_TARGET
 
 set(inputactions_SOURCES
     input/HyprlandInputBackend.cpp
+    interfaces/HyprlandInputEmitter.cpp
     main.cpp
     Plugin.cpp
 )
