@@ -16,24 +16,13 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include "HyprlandWindowProvider.h"
-#include "HyprlandWindow.h"
+#pragma once
 
-#include <hyprland/src/Compositor.hpp>
-#include <hyprland/src/managers/PointerManager.hpp>
+#include <libinputactions/interfaces/PointerPositionGetter.h>
 
-std::unique_ptr<libinputactions::Window> HyprlandWindowProvider::activeWindow()
+class HyprlandPointer : public libinputactions::PointerPositionGetter
 {
-    if (auto *window = g_pCompositor->m_lastWindow.lock().get()) {
-        return std::make_unique<HyprlandWindow>(window);
-    }
-    return {};
-}
-
-std::unique_ptr<libinputactions::Window> HyprlandWindowProvider::windowUnderPointer()
-{
-    if (auto *window = g_pCompositor->vectorToWindowUnified(g_pPointerManager->position(), 0).get()) {
-        return std::make_unique<HyprlandWindow>(window);
-    }
-    return {};
-}
+public:
+    std::optional<QPointF> globalPointerPosition() override;
+    std::optional<QPointF> screenPointerPosition() override;
+};

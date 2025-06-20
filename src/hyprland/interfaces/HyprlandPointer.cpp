@@ -16,24 +16,25 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include "HyprlandWindowProvider.h"
-#include "HyprlandWindow.h"
+#include "HyprlandPointer.h"
 
 #include <hyprland/src/Compositor.hpp>
+#include <hyprland/src/helpers/Monitor.hpp>
 #include <hyprland/src/managers/PointerManager.hpp>
+#undef HANDLE
 
-std::unique_ptr<libinputactions::Window> HyprlandWindowProvider::activeWindow()
+#include <QRectF>
+
+std::optional<QPointF> HyprlandPointer::globalPointerPosition()
 {
-    if (auto *window = g_pCompositor->m_lastWindow.lock().get()) {
-        return std::make_unique<HyprlandWindow>(window);
-    }
-    return {};
+    const auto position = g_pPointerManager->position();
+    return QPointF(position.x, position.y);
 }
 
-std::unique_ptr<libinputactions::Window> HyprlandWindowProvider::windowUnderPointer()
+std::optional<QPointF> HyprlandPointer::screenPointerPosition()
 {
-    if (auto *window = g_pCompositor->vectorToWindowUnified(g_pPointerManager->position(), 0).get()) {
-        return std::make_unique<HyprlandWindow>(window);
-    }
-    return {};
+    const auto monitor = g_pCompositor->getMonitorFromCursor();
+    const QRectF geometry(monitor->m_position.x, monitor->m_position.y, monitor->m_size.x, monitor->m_size.y);
+    const auto translatedPosition = globalPointerPosition().value() - geometry.topLeft();
+    return QPointF(translatedPosition.x() / geometry.width(), translatedPosition.y() / geometry.height());
 }
