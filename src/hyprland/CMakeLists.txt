@@ -13,6 +13,7 @@ pkg_check_modules(deps REQUIRED IMPORTED_TARGET
 set(inputactions_SOURCES
     input/HyprlandInputBackend.cpp
     interfaces/HyprlandInputEmitter.cpp
+    interfaces/HyprlandPointer.cpp
     interfaces/HyprlandWindow.cpp
     interfaces/HyprlandWindowProvider.cpp
     main.cpp

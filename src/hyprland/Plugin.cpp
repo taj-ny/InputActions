@@ -18,6 +18,7 @@
 
 #include "Plugin.h"
 #include "interfaces/HyprlandInputEmitter.h"
+#include "interfaces/HyprlandPointer.h"
 #include "interfaces/HyprlandWindowProvider.h"
 
 #include <hyprland/src/managers/eventLoop/EventLoopManager.hpp>
@@ -37,6 +38,7 @@ Plugin::Plugin(void *handle)
 {
     libinputactions::InputBackend::setInstance(std::unique_ptr<HyprlandInputBackend>(m_backend));
     libinputactions::InputEmitter::setInstance(std::make_shared<HyprlandInputEmitter>());
+    libinputactions::PointerPositionGetter::setInstance(std::make_shared<HyprlandPointer>());
     libinputactions::WindowProvider::setInstance(std::make_unique<HyprlandWindowProvider>());
 
     g_pEventLoopManager->addTimer(m_eventLoopTimer);
