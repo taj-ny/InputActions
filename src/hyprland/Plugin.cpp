@@ -16,33 +16,14 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#pragma once
+#include "Plugin.h"
 
-#include "DBusInterface.h"
-#include "effect/effect.h"
-#include "input/KWinInputBackend.h"
-
-#include <libinputactions/Config.h>
-
-class Effect : public KWin::Effect
+Plugin::Plugin(void *handle)
+    : m_handle(handle)
+    , m_backend(new HyprlandInputBackend(m_handle))
+    , m_config(m_backend)
 {
-public:
-    Effect();
-    ~Effect() override;
+    libinputactions::InputBackend::setInstance(std::unique_ptr<HyprlandInputBackend>(m_backend));
 
-    static bool supported()
-    {
-        return true;
-    };
-    static bool enabledByDefault()
-    {
-        return false;
-    };
-
-    void reconfigure(ReconfigureFlags flags) override;
-
-private:
-    KWinInputBackend *m_backend;
-    libinputactions::Config m_config;
-    DBusInterface m_dbusInterface;
-};
+    m_config.load();
+}

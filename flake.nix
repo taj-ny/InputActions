@@ -2,7 +2,7 @@
   description = "Custom touchpad and touchscreen shortcuts";
 
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    nixpkgs.url = "github:NixOS/nixpkgs/9e83b64f727c88a7711a2c463a7b16eedb69a84c";
     utils.url = "github:numtide/flake-utils";
   };
 
@@ -14,15 +14,13 @@
     };
   in rec {
     packages = rec {
-      default = pkgs.kdePackages.callPackage ./package.nix { };
+      default = pkgs.kdePackages.callPackage ./nix/package-kwin.nix { };
       inputactions-kwin = default;
-      debug = pkgs.kdePackages.callPackage ./package.nix {
-        debug = true;
-      };
+      inputactions-hyprland = pkgs.callPackage ./nix/package-hyprland.nix { };
     };
 
     devShells.default = pkgs.mkShell {
-      inputsFrom = [ packages.debug ];
+      inputsFrom = [ packages.inputactions-kwin packages.inputactions-hyprland ];
       packages = [ pkgs.gtest ];
     };
   });

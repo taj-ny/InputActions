@@ -18,31 +18,20 @@
 
 #pragma once
 
-#include "DBusInterface.h"
-#include "effect/effect.h"
-#include "input/KWinInputBackend.h"
+#include "input/HyprlandInputBackend.h"
 
 #include <libinputactions/Config.h>
 
-class Effect : public KWin::Effect
+#include <hyprland/src/plugins/HookSystem.hpp>
+#undef HANDLE
+
+class Plugin
 {
 public:
-    Effect();
-    ~Effect() override;
-
-    static bool supported()
-    {
-        return true;
-    };
-    static bool enabledByDefault()
-    {
-        return false;
-    };
-
-    void reconfigure(ReconfigureFlags flags) override;
+    Plugin(void *handle);
 
 private:
-    KWinInputBackend *m_backend;
+    void *m_handle;
+    HyprlandInputBackend *m_backend;
     libinputactions::Config m_config;
-    DBusInterface m_dbusInterface;
 };

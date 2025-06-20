@@ -18,31 +18,31 @@
 
 #pragma once
 
-#include "DBusInterface.h"
-#include "effect/effect.h"
-#include "input/KWinInputBackend.h"
+#include <QFileSystemWatcher>
+#include <QObject>
 
-#include <libinputactions/Config.h>
-
-class Effect : public KWin::Effect
+namespace libinputactions
 {
+
+class InputBackend;
+
+class Config : public QObject
+{
+    Q_OBJECT
+
 public:
-    Effect();
-    ~Effect() override;
+    Config(InputBackend *backend);
 
-    static bool supported()
-    {
-        return true;
-    };
-    static bool enabledByDefault()
-    {
-        return false;
-    };
-
-    void reconfigure(ReconfigureFlags flags) override;
+    void load();
 
 private:
-    KWinInputBackend *m_backend;
-    libinputactions::Config m_config;
-    DBusInterface m_dbusInterface;
+    void slotConfigDirectoryChanged();
+    void slotConfigFileChanged();
+
+    bool m_autoReload = true;
+    QFileSystemWatcher m_watcher;
+
+    InputBackend *m_backend;
 };
+
+}

@@ -18,31 +18,25 @@
 
 #pragma once
 
-#include "DBusInterface.h"
-#include "effect/effect.h"
-#include "input/KWinInputBackend.h"
+#include <libinputactions/input/backends/InputBackend.h>
 
-#include <libinputactions/Config.h>
+#include <hyprland/src/devices/IPointer.hpp>
+#include <hyprland/src/plugins/HookSystem.hpp>
+#include <hyprland/src/SharedDefs.hpp>
+#undef HANDLE
 
-class Effect : public KWin::Effect
+class HyprlandInputBackend : public libinputactions::InputBackend
 {
 public:
-    Effect();
-    ~Effect() override;
-
-    static bool supported()
-    {
-        return true;
-    };
-    static bool enabledByDefault()
-    {
-        return false;
-    };
-
-    void reconfigure(ReconfigureFlags flags) override;
+    HyprlandInputBackend(void *pluginHandle);
+    ~HyprlandInputBackend() = default;
 
 private:
-    KWinInputBackend *m_backend;
-    libinputactions::Config m_config;
-    DBusInterface m_dbusInterface;
+    bool swipeBegin(const uint32_t &fingers);
+    bool swipeUpdate(const Vector2D &delta);
+    bool swipeEnd(const bool &cancelled);
+
+    std::vector<SP<HOOK_CALLBACK_FN>> m_events;
+
+    libinputactions::InputDevice m_fakeTouchpad;
 };
