@@ -16,29 +16,34 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#pragma once
+#include "HyprlandWindow.h"
 
-#include "input/HyprlandInputBackend.h"
-
-#include <libinputactions/Config.h>
-#include <libinputactions/DBusInterface.h>
-
-#include <hyprland/src/plugins/HookSystem.hpp>
-#include <hyprland/src/managers/eventLoop/EventLoopTimer.hpp>
-#undef HANDLE
-
-class Plugin
+HyprlandWindow::HyprlandWindow(CWindow *window)
+    : m_window(window)
 {
-public:
-    Plugin(void *handle);
+}
 
-private:
-    void eventLoopTick();
+std::optional<QString> HyprlandWindow::id()
+{
+    return QString::fromStdString(std::format("{:x}", (uintptr_t)m_window));
+}
 
-    void *m_handle;
-    HyprlandInputBackend *m_backend;
-    libinputactions::Config m_config;
-    libinputactions::DBusInterface m_dbusInterface;
+std::optional<QRectF> HyprlandWindow::geometry()
+{
+    return QRectF(m_window->m_position.x, m_window->m_position.y, m_window->m_size.x, m_window->m_size.y);
+}
 
-    SP<CEventLoopTimer> m_eventLoopTimer;
-};
+std::optional<QString> HyprlandWindow::title()
+{
+    return QString::fromStdString(m_window->m_title);
+}
+
+std::optional<QString> HyprlandWindow::resourceClass()
+{
+    return QString::fromStdString(m_window->m_class);
+}
+
+std::optional<bool> HyprlandWindow::fullscreen()
+{
+    return m_window->isFullscreen();
+}

@@ -16,29 +16,18 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#pragma once
+#include "HyprlandWindowProvider.h"
+#include "HyprlandWindow.h"
 
-#include "input/HyprlandInputBackend.h"
+#include <hyprland/src/Compositor.hpp>
+#include <hyprland/src/managers/PointerManager.hpp>
 
-#include <libinputactions/Config.h>
-#include <libinputactions/DBusInterface.h>
-
-#include <hyprland/src/plugins/HookSystem.hpp>
-#include <hyprland/src/managers/eventLoop/EventLoopTimer.hpp>
-#undef HANDLE
-
-class Plugin
+std::unique_ptr<libinputactions::Window> HyprlandWindowProvider::activeWindow()
 {
-public:
-    Plugin(void *handle);
+    return std::make_unique<HyprlandWindow>(g_pCompositor->m_lastWindow.get());
+}
 
-private:
-    void eventLoopTick();
-
-    void *m_handle;
-    HyprlandInputBackend *m_backend;
-    libinputactions::Config m_config;
-    libinputactions::DBusInterface m_dbusInterface;
-
-    SP<CEventLoopTimer> m_eventLoopTimer;
-};
+std::unique_ptr<libinputactions::Window> HyprlandWindowProvider::windowUnderPointer()
+{
+    return std::make_unique<HyprlandWindow>(g_pCompositor->vectorToWindowUnified(g_pPointerManager->position(), 0).get());
+}

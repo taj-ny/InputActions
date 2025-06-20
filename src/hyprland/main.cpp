@@ -1,10 +1,16 @@
 #include <hyprland/src/plugins/PluginAPI.hpp>
 #undef HANDLE
 
+#include <QCoreApplication>
+
 #include "Plugin.h"
 
 inline void *PHANDLE = nullptr;
 inline std::unique_ptr<Plugin> plugin;
+
+// Required for event loop
+static int argc = 0;
+inline QCoreApplication app(argc, nullptr);
 
 APICALL EXPORT std::string PLUGIN_API_VERSION()
 {

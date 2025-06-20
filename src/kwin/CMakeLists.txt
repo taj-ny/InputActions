@@ -26,7 +26,6 @@ set(kwin_gestures_SOURCES
     interfaces/KWinSessionLock.cpp
     interfaces/KWinWindow.cpp
     interfaces/KWinWindowProvider.cpp
-    DBusInterface.cpp
     Effect.cpp
     globals.h
     main.cpp

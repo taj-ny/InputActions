@@ -18,14 +18,34 @@
 
 #include "Plugin.h"
 #include "interfaces/HyprlandInputEmitter.h"
+#include "interfaces/HyprlandWindowProvider.h"
+
+#include <hyprland/src/managers/eventLoop/EventLoopManager.hpp>
+#undef HANDLE
+
+#include <QCoreApplication>
+
+#include <chrono>
+
+static auto s_qtEventLoopTickInterval = std::chrono::milliseconds(static_cast<uint32_t>(1));
 
 Plugin::Plugin(void *handle)
     : m_handle(handle)
     , m_backend(new HyprlandInputBackend(m_handle))
     , m_config(m_backend)
+    , m_eventLoopTimer(makeShared<CEventLoopTimer>(s_qtEventLoopTickInterval, [this](SP<CEventLoopTimer> self, void* data) { eventLoopTick(); }, this))
 {
     libinputactions::InputBackend::setInstance(std::unique_ptr<HyprlandInputBackend>(m_backend));
     libinputactions::InputEmitter::setInstance(std::make_shared<HyprlandInputEmitter>());
+    libinputactions::WindowProvider::setInstance(std::make_unique<HyprlandWindowProvider>());
+
+    g_pEventLoopManager->addTimer(m_eventLoopTimer);
 
     m_config.load();
+}
+
+void Plugin::eventLoopTick()
+{
+    QCoreApplication::processEvents();
+    m_eventLoopTimer->updateTimeout(s_qtEventLoopTickInterval);
 }

@@ -18,27 +18,11 @@
 
 #pragma once
 
-#include "input/HyprlandInputBackend.h"
+#include <libinputactions/interfaces/WindowProvider.h>
 
-#include <libinputactions/Config.h>
-#include <libinputactions/DBusInterface.h>
-
-#include <hyprland/src/plugins/HookSystem.hpp>
-#include <hyprland/src/managers/eventLoop/EventLoopTimer.hpp>
-#undef HANDLE
-
-class Plugin
+class HyprlandWindowProvider : public libinputactions::WindowProvider
 {
 public:
-    Plugin(void *handle);
-
-private:
-    void eventLoopTick();
-
-    void *m_handle;
-    HyprlandInputBackend *m_backend;
-    libinputactions::Config m_config;
-    libinputactions::DBusInterface m_dbusInterface;
-
-    SP<CEventLoopTimer> m_eventLoopTimer;
+    std::unique_ptr<libinputactions::Window> activeWindow() override;
+    std::unique_ptr<libinputactions::Window> windowUnderPointer() override;
 };
