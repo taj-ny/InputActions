@@ -18,31 +18,27 @@
 
 #pragma once
 
-#include "effect/effect.h"
-#include "input/KWinInputBackend.h"
+#include <libinputactions/globals.h>
 
-#include <libinputactions/Config.h>
-#include <libinputactions/DBusInterface.h>
+#include <memory>
 
-class Effect : public KWin::Effect
+#include <QPointF>
+
+namespace libinputactions
 {
+
+class OnScreenMessageManager
+{
+    INPUTACTIONS_DECLARE_SINGLETON(OnScreenMessageManager)
+
 public:
-    Effect();
-    ~Effect() override;
+    virtual ~OnScreenMessageManager() = default;
 
-    static bool supported()
-    {
-        return true;
-    };
-    static bool enabledByDefault()
-    {
-        return false;
-    };
+    virtual void showMessage(const QString &message);
+    virtual void hideMessage();
 
-    void reconfigure(ReconfigureFlags flags) override;
-
-private:
-    KWinInputBackend *m_backend;
-    libinputactions::Config m_config;
-    libinputactions::DBusInterface m_dbusInterface;
+protected:
+    OnScreenMessageManager() = default;
 };
+
+}

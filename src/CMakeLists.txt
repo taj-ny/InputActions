@@ -28,6 +28,7 @@ set(libinputactions_SRCS
     libinputactions/input/Keyboard.cpp
     libinputactions/interfaces/CursorShapeProvider.cpp
     libinputactions/interfaces/InputEmitter.cpp
+    libinputactions/interfaces/OnScreenMessageManager.cpp
     libinputactions/interfaces/PointerPositionGetter.cpp
     libinputactions/interfaces/PointerPositionSetter.cpp
     libinputactions/interfaces/SessionLock.cpp
@@ -43,6 +44,7 @@ set(libinputactions_SRCS
     libinputactions/variables/VariableOperations.cpp
     libinputactions/variables/Variable.cpp
     libinputactions/Config.cpp
+    libinputactions/DBusInterface.cpp
     libinputactions/Expression.cpp
     libinputactions/globals.cpp
     libinputactions/Range.cpp

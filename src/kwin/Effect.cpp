@@ -20,6 +20,7 @@
 #include "input/KWinKeyboard.h"
 
 #include "interfaces/KWinInputEmitter.h"
+#include "interfaces/KWinOnScreenMessageManager.h"
 #include "interfaces/KWinPointer.h"
 #include "interfaces/KWinSessionLock.hpp"
 #include "interfaces/KWinWindowProvider.hpp"
@@ -40,6 +41,7 @@ Effect::Effect()
 
     libinputactions::CursorShapeProvider::setInstance(kwinPointer);
     libinputactions::InputEmitter::setInstance(std::make_shared<KWinInputEmitter>());
+    libinputactions::OnScreenMessageManager::setInstance(std::make_shared<KWinOnScreenMessageManager>());
     libinputactions::PointerPositionGetter::setInstance(kwinPointer);
     libinputactions::PointerPositionSetter::setInstance(kwinPointer);
     libinputactions::SessionLock::setInstance(std::make_shared<libinputactions::KWinSessionLock>());

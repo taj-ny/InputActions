@@ -16,33 +16,36 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#pragma once
+#include <QDBusConnection>
+#include <QDBusMessage>
+#include <QObject>
 
-#include "effect/effect.h"
-#include "input/KWinInputBackend.h"
-
-#include <libinputactions/Config.h>
-#include <libinputactions/DBusInterface.h>
-
-class Effect : public KWin::Effect
+namespace libinputactions
 {
+
+class DBusInterface : public QObject
+{
+    Q_OBJECT
+
 public:
-    Effect();
-    ~Effect() override;
+    /**
+     * Registers the interface.
+     */
+    DBusInterface();
 
-    static bool supported()
-    {
-        return true;
-    };
-    static bool enabledByDefault()
-    {
-        return false;
-    };
+    /**
+     * Unregisters the interface.
+     */
+    ~DBusInterface() override;
 
-    void reconfigure(ReconfigureFlags flags) override;
+public slots:
+    Q_NOREPLY void recordStroke(const QDBusMessage &message);
+
+    QString variables(const QString &filter = "");
 
 private:
-    KWinInputBackend *m_backend;
-    libinputactions::Config m_config;
-    libinputactions::DBusInterface m_dbusInterface;
+    QDBusConnection m_bus = QDBusConnection::sessionBus();
+    QDBusMessage m_reply;
 };
+
+}

@@ -21,6 +21,7 @@
 #include "input/HyprlandInputBackend.h"
 
 #include <libinputactions/Config.h>
+#include <libinputactions/DBusInterface.h>
 
 #include <hyprland/src/plugins/HookSystem.hpp>
 #undef HANDLE
@@ -34,4 +35,5 @@ private:
     void *m_handle;
     HyprlandInputBackend *m_backend;
     libinputactions::Config m_config;
+    libinputactions::DBusInterface m_dbusInterface;
 };
