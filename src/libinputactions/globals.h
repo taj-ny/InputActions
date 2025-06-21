@@ -3,7 +3,7 @@
 #include <QLoggingCategory>
 #include <QObject>
 
-#define INPUTACTIONS_DECLARE_SINGLETON(T)                  \
+#define INPUTACTIONS_DECLARE_SINGLETON(T)                     \
     public:                                                   \
         static T *instance();                                 \
         static void setInstance(std::shared_ptr<T> instance); \
@@ -11,7 +11,7 @@
     private:                                                  \
         static std::shared_ptr<T> s_instance;
 
-#define INPUTACTIONS_SINGLETON(T)                              \
+#define INPUTACTIONS_SINGLETON(T)                                 \
     T *T::instance()                                              \
     {                                                             \
         return s_instance.get();                                  \

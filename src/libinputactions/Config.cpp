@@ -46,8 +46,9 @@ Config::Config(InputBackend *backend)
     connect(&m_watcher, &QFileSystemWatcher::fileChanged, this, &Config::slotConfigFileChanged);
 }
 
-void Config::load()
+std::optional<QString> Config::load()
 {
+    std::optional<QString> error;
     if (!QFile::exists(s_initFile)) {
         QFile(s_initFile).open(QIODevice::WriteOnly);
         try {
@@ -74,13 +75,16 @@ void Config::load()
 
             m_backend->initialize();
         } catch (const YAML::Exception &e) {
-            qCritical(INPUTACTIONS).noquote() << QString("Failed to load configuration: %1 (line %2, column %3)")
-                    .arg(QString::fromStdString(e.msg), QString::number(e.mark.line), QString::number(e.mark.column));
+            const auto message = QString("Failed to load configuration: %1 (line %2, column %3)")
+                .arg(QString::fromStdString(e.msg), QString::number(e.mark.line), QString::number(e.mark.column));
+            qCritical(INPUTACTIONS) << message;
+            error = message;
         }
     } else {
         qCWarning(INPUTACTIONS) << "Configuration was not loaded automatically due to a crash.";
     }
     QFile::remove(s_initFile);
+    return error;
 }
 
 void Config::slotConfigDirectoryChanged()

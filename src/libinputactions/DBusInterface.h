@@ -23,6 +23,8 @@
 namespace libinputactions
 {
 
+class Config;
+
 class DBusInterface : public QObject
 {
     Q_OBJECT
@@ -31,7 +33,7 @@ public:
     /**
      * Registers the interface.
      */
-    DBusInterface();
+    DBusInterface(Config *config);
 
     /**
      * Unregisters the interface.
@@ -40,12 +42,13 @@ public:
 
 public slots:
     Q_NOREPLY void recordStroke(const QDBusMessage &message);
-
+    QString reloadConfig();
     QString variables(const QString &filter = "");
 
 private:
     QDBusConnection m_bus = QDBusConnection::sessionBus();
     QDBusMessage m_reply;
+    Config *m_config;
 };
 
 }

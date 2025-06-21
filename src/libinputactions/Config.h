@@ -33,7 +33,10 @@ class Config : public QObject
 public:
     Config(InputBackend *backend);
 
-    void load();
+    /**
+     * @return std::nullopt if loaded successfully, otherwise the error message.
+     */
+    std::optional<QString> load();
 
 private:
     void slotConfigDirectoryChanged();

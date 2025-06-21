@@ -34,6 +34,7 @@ Plugin::Plugin(void *handle)
     : m_handle(handle)
     , m_backend(new HyprlandInputBackend(this))
     , m_config(m_backend)
+    , m_dbusInterface(&m_config)
     , m_eventLoopTimer(makeShared<CEventLoopTimer>(s_qtEventLoopTickInterval, [this](SP<CEventLoopTimer> self, void* data) { eventLoopTick(); }, this))
 {
     libinputactions::InputBackend::setInstance(std::unique_ptr<HyprlandInputBackend>(m_backend));

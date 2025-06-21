@@ -36,6 +36,7 @@
 Effect::Effect()
     : m_backend(new KWinInputBackend)
     , m_config(m_backend)
+    , m_dbusInterface(&m_config)
 {
     auto kwinPointer = std::make_shared<KWinPointer>();
 

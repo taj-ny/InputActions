@@ -23,6 +23,7 @@
 #include <libinputactions/triggers/StrokeTrigger.h>
 #include <libinputactions/variables/VariableManager.h>
 #include <libinputactions/variables/Variable.h>
+#include <libinputactions/Config.h>
 
 namespace libinputactions
 {
@@ -30,7 +31,8 @@ namespace libinputactions
 static QString s_service = "org.inputactions";
 static QString s_path = "/";
 
-DBusInterface::DBusInterface()
+DBusInterface::DBusInterface(Config *config)
+    : m_config(config)
 {
     m_bus.registerService(s_service);
     m_bus.registerObject(s_path, this, QDBusConnection::ExportAllSlots);
@@ -67,6 +69,15 @@ void DBusInterface::recordStroke(const QDBusMessage &message)
 
         OnScreenMessageManager::instance()->hideMessage();
     });
+}
+
+QString DBusInterface::reloadConfig()
+{
+    const auto error = m_config->load();
+    if (!error.has_value()) {
+        return "success";
+    }
+    return error.value();
 }
 
 QString DBusInterface::variables(const QString &filter)
