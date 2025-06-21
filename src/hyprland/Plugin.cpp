@@ -32,7 +32,7 @@ static auto s_qtEventLoopTickInterval = std::chrono::milliseconds(static_cast<ui
 
 Plugin::Plugin(void *handle)
     : m_handle(handle)
-    , m_backend(new HyprlandInputBackend(m_handle))
+    , m_backend(new HyprlandInputBackend(this))
     , m_config(m_backend)
     , m_eventLoopTimer(makeShared<CEventLoopTimer>(s_qtEventLoopTickInterval, [this](SP<CEventLoopTimer> self, void* data) { eventLoopTick(); }, this))
 {
@@ -44,6 +44,11 @@ Plugin::Plugin(void *handle)
     g_pEventLoopManager->addTimer(m_eventLoopTimer);
 
     m_config.load();
+}
+
+void *Plugin::handle() const
+{
+    return m_handle;
 }
 
 void Plugin::eventLoopTick()

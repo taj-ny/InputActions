@@ -25,13 +25,19 @@
 #include <hyprland/src/SharedDefs.hpp>
 #undef HANDLE
 
+class Plugin;
+
 class HyprlandInputBackend : public libinputactions::InputBackend
 {
 public:
-    HyprlandInputBackend(void *pluginHandle);
+    HyprlandInputBackend(Plugin *plugin);
     ~HyprlandInputBackend() = default;
 
 private:
+    bool pinchBegin(const uint32_t &fingers);
+    bool pinchUpdate(const double &scale, const double &angleDelta);
+    bool pinchEnd(const bool &cancelled);
+
     bool swipeBegin(const uint32_t &fingers);
     bool swipeUpdate(const Vector2D &delta);
     bool swipeEnd(const bool &cancelled);
@@ -39,4 +45,16 @@ private:
     std::vector<SP<HOOK_CALLBACK_FN>> m_events;
 
     libinputactions::InputDevice m_fakeTouchpad;
+
+    uint32_t m_fingers{};
+    bool m_block{};
+    bool m_emittingBeginEvent{};
+
+    std::unique_ptr<CFunctionHook> m_pinchBeginHook;
+    std::unique_ptr<CFunctionHook> m_pinchUpdateHook;
+    std::unique_ptr<CFunctionHook> m_pinchEndHook;
+
+    friend void pinchBeginHook(void *thisPtr, uint32_t timeMs, uint32_t fingers);
+    friend void pinchUpdateHook(void *thisPtr, uint32_t timeMs, const Vector2D &delta, double scale, double rotation);
+    friend void pinchEndHook(void *thisPtr, uint32_t timeMs, bool cancelled);
 };

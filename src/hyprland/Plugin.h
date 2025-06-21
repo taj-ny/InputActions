@@ -29,8 +29,12 @@
 
 class Plugin
 {
+    INPUTACTIONS_DECLARE_SINGLETON(Plugin)
+
 public:
     Plugin(void *handle);
+
+    void *handle() const;
 
 private:
     void eventLoopTick();
