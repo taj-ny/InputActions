@@ -27,6 +27,9 @@
 
 class Plugin;
 
+/**
+ * Swipe gestures use the dynamic callback system. Pinch and hold gestures use function hooks.
+ */
 class HyprlandInputBackend : public libinputactions::InputBackend
 {
 public:
@@ -34,6 +37,9 @@ public:
     ~HyprlandInputBackend() = default;
 
 private:
+    bool holdBegin(const uint32_t &fingers);
+    bool holdEnd(const bool &cancelled);
+
     bool pinchBegin(const uint32_t &fingers);
     bool pinchUpdate(const double &scale, const double &angleDelta);
     bool pinchEnd(const bool &cancelled);
@@ -50,10 +56,14 @@ private:
     bool m_block{};
     bool m_emittingBeginEvent{};
 
+    std::unique_ptr<CFunctionHook> m_holdBeginHook;
+    std::unique_ptr<CFunctionHook> m_holdEndHook;
     std::unique_ptr<CFunctionHook> m_pinchBeginHook;
     std::unique_ptr<CFunctionHook> m_pinchUpdateHook;
     std::unique_ptr<CFunctionHook> m_pinchEndHook;
 
+    friend void holdBeginHook(void *thisPtr, uint32_t timeMs, uint32_t fingers);
+    friend void holdEndHook(void *thisPtr, uint32_t timeMs, bool cancelled);
     friend void pinchBeginHook(void *thisPtr, uint32_t timeMs, uint32_t fingers);
     friend void pinchUpdateHook(void *thisPtr, uint32_t timeMs, const Vector2D &delta, double scale, double rotation);
     friend void pinchEndHook(void *thisPtr, uint32_t timeMs, bool cancelled);

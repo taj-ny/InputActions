@@ -27,9 +27,27 @@
 
 using namespace libinputactions;
 
+typedef void (*holdBegin)(void *thisPtr, uint32_t timeMs, uint32_t fingers);
+typedef void (*holdEnd)(void *thisPtr, uint32_t timeMs, bool cancelled);
 typedef void (*pinchBegin)(void *thisPtr, uint32_t timeMs, uint32_t fingers);
 typedef void (*pinchUpdate)(void *thisPtr, uint32_t timeMs, const Vector2D &delta, double scale, double rotation);
 typedef void (*pinchEnd)(void *thisPtr, uint32_t timeMs, bool cancelled);
+
+void holdBeginHook(void *thisPtr, uint32_t timeMs, uint32_t fingers)
+{
+    auto *instance = static_cast<HyprlandInputBackend *>(InputBackend::instance());
+    if (!instance->holdBegin(fingers)) {
+        (*(holdBegin)instance->m_holdBeginHook->m_original)(thisPtr, timeMs, fingers);
+    }
+}
+
+void holdEndHook(void *thisPtr, uint32_t timeMs, bool cancelled)
+{
+    auto *instance = static_cast<HyprlandInputBackend *>(InputBackend::instance());
+    if (!instance->holdEnd(cancelled)) {
+        (*(holdEnd)instance->m_holdEndHook->m_original)(thisPtr, timeMs, cancelled);
+    }
+}
 
 void pinchBeginHook(void *thisPtr, uint32_t timeMs, uint32_t fingers)
 {
@@ -59,6 +77,10 @@ HyprlandInputBackend::HyprlandInputBackend(Plugin *plugin)
     : m_fakeTouchpad(InputDeviceType::Touchpad)
 {
     auto handle = plugin->handle();
+    m_holdBeginHook.reset(HyprlandAPI::createFunctionHook(handle, HyprlandAPI::findFunctionsByName(handle, "holdBegin")[0].address, (void *) &holdBeginHook));
+    m_holdBeginHook->hook();
+    m_holdEndHook.reset(HyprlandAPI::createFunctionHook(handle, HyprlandAPI::findFunctionsByName(handle, "holdEnd")[0].address, (void *) &holdEndHook));
+    m_holdEndHook->hook();
     m_pinchBeginHook.reset(HyprlandAPI::createFunctionHook(handle, HyprlandAPI::findFunctionsByName(handle, "pinchBegin")[0].address, (void *) &pinchBeginHook));
     m_pinchBeginHook->hook();
     m_pinchUpdateHook.reset(HyprlandAPI::createFunctionHook(handle, HyprlandAPI::findFunctionsByName(handle, "pinchUpdate")[0].address, (void *) &pinchUpdateHook));
@@ -75,6 +97,22 @@ HyprlandInputBackend::HyprlandInputBackend(Plugin *plugin)
     m_events.push_back(HyprlandAPI::registerCallbackDynamic(handle, "swipeEnd", [this](void *, SCallbackInfo &info, std::any event) {
         info.cancelled = swipeEnd(std::any_cast<IPointer::SSwipeEndEvent>(event).cancelled);
     }));
+}
+
+bool HyprlandInputBackend::holdBegin(const uint32_t &fingers)
+{
+    m_fingers = fingers;
+    const TouchpadGestureLifecyclePhaseEvent event(&m_fakeTouchpad, TouchpadGestureLifecyclePhase::Begin, TriggerType::Press, fingers);
+    m_block = handleEvent(&event);
+    return m_block;
+}
+
+bool HyprlandInputBackend::holdEnd(const bool &cancelled)
+{
+    const TouchpadGestureLifecyclePhaseEvent event(&m_fakeTouchpad, cancelled ? TouchpadGestureLifecyclePhase::Cancel : TouchpadGestureLifecyclePhase::End,
+        TriggerType::Press);
+    handleEvent(&event);
+    return m_block;
 }
 
 bool HyprlandInputBackend::pinchBegin(const uint32_t &fingers)
