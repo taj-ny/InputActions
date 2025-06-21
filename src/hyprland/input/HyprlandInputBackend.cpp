@@ -151,6 +151,8 @@ bool HyprlandInputBackend::swipeBegin(const uint32_t &fingers)
 {
     if (m_emittingBeginEvent) {
         return false;
+    } else if (m_isRecordingStroke) {
+        return true;
     }
 
     m_fingers = fingers;
@@ -161,6 +163,11 @@ bool HyprlandInputBackend::swipeBegin(const uint32_t &fingers)
 
 bool HyprlandInputBackend::swipeUpdate(const Vector2D &delta)
 {
+    if (m_isRecordingStroke) {
+        m_strokePoints.push_back(QPointF(delta.x, delta.y));
+        return true;
+    }
+
     const MotionEvent event(&m_fakeTouchpad, InputEventType::TouchpadSwipe, QPointF(delta.x, delta.y));
     const auto block = handleEvent(&event);
     if (m_block && !block) {
@@ -176,6 +183,11 @@ bool HyprlandInputBackend::swipeUpdate(const Vector2D &delta)
 
 bool HyprlandInputBackend::swipeEnd(const bool &cancelled)
 {
+    if (m_isRecordingStroke) {
+        finishStrokeRecording();
+        return true;
+    }
+
     const TouchpadGestureLifecyclePhaseEvent event(&m_fakeTouchpad, cancelled ? TouchpadGestureLifecyclePhase::Cancel : TouchpadGestureLifecyclePhase::End,
         TriggerType::StrokeSwipe);
     return handleEvent(&event);
