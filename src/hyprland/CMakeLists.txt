@@ -15,6 +15,7 @@ set(inputactions_SOURCES
     interfaces/HyprlandInputEmitter.cpp
     interfaces/HyprlandOnScreenMessageManager.cpp
     interfaces/HyprlandPointer.cpp
+    interfaces/HyprlandSessionLock.cpp
     interfaces/HyprlandWindow.cpp
     interfaces/HyprlandWindowProvider.cpp
     main.cpp

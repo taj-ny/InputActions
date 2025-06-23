@@ -20,6 +20,7 @@
 #include "interfaces/HyprlandInputEmitter.h"
 #include "interfaces/HyprlandOnScreenMessageManager.h"
 #include "interfaces/HyprlandPointer.h"
+#include "interfaces/HyprlandSessionLock.h"
 #include "interfaces/HyprlandWindowProvider.h"
 
 #include <hyprland/src/managers/eventLoop/EventLoopManager.hpp>
@@ -46,6 +47,7 @@ Plugin::Plugin(void *handle)
     InputEmitter::setInstance(std::make_shared<HyprlandInputEmitter>());
     OnScreenMessageManager::setInstance(std::make_shared<HyprlandOnScreenMessageManager>());
     PointerPositionGetter::setInstance(pointer);
+    SessionLock::setInstance(std::make_shared<HyprlandSessionLock>());
     WindowProvider::setInstance(std::make_unique<HyprlandWindowProvider>());
 
     g_pEventLoopManager->addTimer(m_eventLoopTimer);
@@ -60,6 +62,7 @@ Plugin::~Plugin()
     InputEmitter::setInstance(nullptr);
     OnScreenMessageManager::setInstance(nullptr);
     PointerPositionGetter::setInstance(nullptr);
+    SessionLock::setInstance(nullptr);
     WindowProvider::setInstance(nullptr);
 }
 
