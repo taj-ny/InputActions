@@ -27,6 +27,7 @@
 #include <libinputactions/handlers/MouseTriggerHandler.h>
 #include <libinputactions/handlers/TouchpadTriggerHandler.h>
 #include <libinputactions/input/InputEventHandler.h>
+#include <libinputactions/interfaces/CursorShapeProvider.h>
 #include <libinputactions/triggers/PressTrigger.h>
 #include <libinputactions/triggers/StrokeTrigger.h>
 #include <libinputactions/triggers/WheelTrigger.h>
@@ -1196,37 +1197,7 @@ ENUM_DECODER(On, "action event (on)", (std::unordered_map<QString, On> {
     {"end", On::End},
     {"end_cancel", On::EndCancel}
 }))
-ENUM_DECODER(CursorShape, "cursor shape", (std::unordered_map<QString, CursorShape> {
-    {"default", CursorShape::Default},
-    {"up_arrow", CursorShape::UpArrow},
-    {"crosshair", CursorShape::Crosshair},
-    {"wait", CursorShape::Wait},
-    {"text", CursorShape::Text},
-    {"ns_resize", CursorShape::NSResize},
-    {"ew_resize", CursorShape::EWResize},
-    {"nesw_resize", CursorShape::NESWResize},
-    {"nwse_resize", CursorShape::NWSEResize},
-    {"all_scroll", CursorShape::AllScroll},
-    {"row_resize", CursorShape::RowResize},
-    {"col_resize", CursorShape::ColResize},
-    {"pointer", CursorShape::Pointer},
-    {"not_allowed", CursorShape::NotAllowed},
-    {"grab", CursorShape::Grab},
-    {"grabbing", CursorShape::Grabbing},
-    {"help", CursorShape::Help},
-    {"progress", CursorShape::Progress},
-    {"move", CursorShape::Move},
-    {"copy", CursorShape::Copy},
-    {"alias", CursorShape::Alias},
-    {"ne_resize", CursorShape::NEResize},
-    {"n_resize", CursorShape::NResize},
-    {"nw_resize", CursorShape::NWResize},
-    {"e_resize", CursorShape::EResize},
-    {"w_resize", CursorShape::WResize},
-    {"se_resize", CursorShape::SEResize},
-    {"s_resize", CursorShape::SResize},
-    {"sw_resize", CursorShape::SWResize}
-}))
+ENUM_DECODER(CursorShape, "cursor shape", CURSOR_SHAPES)
 ENUM_DECODER(PinchDirection, "pinch direction", (std::unordered_map<QString, PinchDirection> {
     {"in", PinchDirection::In},
     {"out", PinchDirection::Out},

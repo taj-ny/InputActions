@@ -50,39 +50,6 @@ enum class ComparisonOperator
     Regex
 };
 
-enum class CursorShape : uint32_t
-{
-    Alias,
-    AllScroll,
-    ColResize,
-    Copy,
-    Crosshair,
-    Default,
-    EResize,
-    EWResize,
-    Grab,
-    Grabbing,
-    Help,
-    Move,
-    NEResize,
-    NESWResize,
-    NResize,
-    NSResize,
-    NWResize,
-    NWSEResize,
-    NotAllowed,
-    Pointer,
-    Progress,
-    RowResize,
-    SEResize,
-    SResize,
-    SWResize,
-    Text,
-    UpArrow,
-    WResize,
-    Wait
-};
-
 enum class TriggerSpeed
 {
     Any,

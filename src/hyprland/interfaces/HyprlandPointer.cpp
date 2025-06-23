@@ -20,10 +20,40 @@
 
 #include <hyprland/src/Compositor.hpp>
 #include <hyprland/src/helpers/Monitor.hpp>
+#include <hyprland/src/managers/input/InputManager.hpp>
 #include <hyprland/src/managers/PointerManager.hpp>
+#include <hyprland/src/plugins/HookSystem.hpp>
+#include <hyprland/src/plugins/PluginAPI.hpp>
 #undef HANDLE
 
 #include <QRectF>
+
+using namespace libinputactions;
+
+typedef void (*setCursorFromName)(void *thisPtr, const std::string &name);
+
+void setCursorFromNameHook(void *thisPtr, const std::string &name)
+{
+    auto *instance = dynamic_cast<HyprlandPointer *>(CursorShapeProvider::instance());
+    (*(setCursorFromName)instance->m_setCursorFromNameHook->m_original)(thisPtr, name);
+    instance->m_currentCursorShape = QString::fromStdString(name).replace('-', '_');
+}
+
+HyprlandPointer::HyprlandPointer(Plugin *plugin)
+{
+    auto *handle = plugin->handle();
+    m_setCursorFromNameHook = HyprlandAPI::createFunctionHook(handle, HyprlandAPI::findFunctionsByName(handle, "setCursorFromName")[0].address,
+        (void *)&setCursorFromNameHook);
+    m_setCursorFromNameHook->hook();
+}
+
+std::optional<CursorShape> HyprlandPointer::cursorShape()
+{
+    if (CURSOR_SHAPES.contains(m_currentCursorShape)) {
+        return CURSOR_SHAPES.at(m_currentCursorShape);
+    }
+    return {};
+}
 
 std::optional<QPointF> HyprlandPointer::globalPointerPosition()
 {

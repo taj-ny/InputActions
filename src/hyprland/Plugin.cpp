@@ -39,9 +39,11 @@ Plugin::Plugin(void *handle)
     , m_dbusInterface(&m_config)
     , m_eventLoopTimer(makeShared<CEventLoopTimer>(s_qtEventLoopTickInterval, [this](SP<CEventLoopTimer> self, void* data) { eventLoopTick(); }, this))
 {
+    auto pointer = std::make_shared<HyprlandPointer>(this);
+    CursorShapeProvider::setInstance(pointer);
     InputBackend::setInstance(m_backend);
     InputEmitter::setInstance(std::make_shared<HyprlandInputEmitter>());
-    PointerPositionGetter::setInstance(std::make_shared<HyprlandPointer>());
+    PointerPositionGetter::setInstance(pointer);
     WindowProvider::setInstance(std::make_unique<HyprlandWindowProvider>());
 
     g_pEventLoopManager->addTimer(m_eventLoopTimer);
@@ -51,6 +53,7 @@ Plugin::Plugin(void *handle)
 
 Plugin::~Plugin()
 {
+    CursorShapeProvider::setInstance(nullptr);
     InputBackend::setInstance(nullptr);
     InputEmitter::setInstance(nullptr);
     PointerPositionGetter::setInstance(nullptr);
