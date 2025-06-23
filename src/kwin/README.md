@@ -8,8 +8,7 @@ Minimum Plasma version: 6.1, mouse gestures require 6.3
 <details>
   <summary>Arch Linux (AUR)*</summary>
 
-  > [!NOTE]
-  > Always choose *cleanBuild* when reinstalling the package.
+  **Always choose *cleanBuild* when reinstalling the package.**
 
   https://aur.archlinux.org/packages/input-actions
   ```
