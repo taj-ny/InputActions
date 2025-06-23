@@ -29,16 +29,6 @@
 #endif
 #include "input_event.h"
 #include "input_event_spy.h"
-#include "wayland_server.h"
-
-#ifndef KWIN_6_2_OR_GREATER
-#define ENSURE_SESSION_UNLOCKED()                  \
-    if (KWin::waylandServer()->isScreenLocked()) { \
-        return false;                              \
-    }
-#else
-#define ENSURE_SESSION_UNLOCKED()
-#endif
 
 using namespace libinputactions;
 
@@ -75,67 +65,56 @@ void KWinInputBackend::reset()
 
 bool KWinInputBackend::holdGestureBegin(int fingerCount, std::chrono::microseconds time)
 {
-    ENSURE_SESSION_UNLOCKED();
     return touchpadHoldBegin(currentTouchpad(), fingerCount);
 }
 
 bool KWinInputBackend::holdGestureEnd(std::chrono::microseconds time)
 {
-    ENSURE_SESSION_UNLOCKED();
     return touchpadHoldEnd(currentTouchpad(), false);
 }
 
 bool KWinInputBackend::holdGestureCancelled(std::chrono::microseconds time)
 {
-    ENSURE_SESSION_UNLOCKED();
     return touchpadHoldEnd(currentTouchpad(), true);
 }
 
 bool KWinInputBackend::swipeGestureBegin(int fingerCount, std::chrono::microseconds time)
 {
-    ENSURE_SESSION_UNLOCKED();
     return touchpadSwipeBegin(currentTouchpad(), fingerCount);
 }
 
 bool KWinInputBackend::swipeGestureUpdate(const QPointF &delta, std::chrono::microseconds time)
 {
-    ENSURE_SESSION_UNLOCKED();
     return touchpadSwipeUpdate(currentTouchpad(), delta);
 }
 
 bool KWinInputBackend::swipeGestureEnd(std::chrono::microseconds time)
 {
-    ENSURE_SESSION_UNLOCKED();
     return touchpadSwipeEnd(currentTouchpad(), false);
 }
 
 bool KWinInputBackend::swipeGestureCancelled(std::chrono::microseconds time)
 {
-    ENSURE_SESSION_UNLOCKED();
     return touchpadSwipeEnd(currentTouchpad(), true);
 }
 
 bool KWinInputBackend::pinchGestureBegin(int fingerCount, std::chrono::microseconds time)
 {
-    ENSURE_SESSION_UNLOCKED();
     return touchpadPinchBegin(currentTouchpad(), fingerCount);
 }
 
 bool KWinInputBackend::pinchGestureUpdate(qreal scale, qreal angleDelta, const QPointF &delta, std::chrono::microseconds time)
 {
-    ENSURE_SESSION_UNLOCKED();
     return touchpadPinchUpdate(currentTouchpad(), scale, angleDelta);
 }
 
 bool KWinInputBackend::pinchGestureEnd(std::chrono::microseconds time)
 {
-    ENSURE_SESSION_UNLOCKED();
     return touchpadPinchEnd(currentTouchpad(), false);
 }
 
 bool KWinInputBackend::pinchGestureCancelled(std::chrono::microseconds time)
 {
-    ENSURE_SESSION_UNLOCKED();
     return touchpadPinchEnd(currentTouchpad(), true);
 }
 
@@ -172,8 +151,6 @@ bool KWinInputBackend::wheelEvent(KWin::WheelEvent *event)
     const auto orientation = event->orientation();
     const auto inverted = event->inverted();
 #endif
-
-    ENSURE_SESSION_UNLOCKED();
 
     auto delta = orientation == Qt::Orientation::Horizontal
         ? QPointF(eventDelta, 0)

@@ -18,7 +18,6 @@
 
 #include "LibevdevComplementaryInputBackend.h"
 
-#include <libinputactions/interfaces/SessionLock.h>
 #include <libinputactions/variables/VariableManager.h>
 
 #include <fcntl.h>
@@ -150,7 +149,7 @@ void LibevdevComplementaryInputBackend::deviceRemoved(const InputDevice *device)
 
 void LibevdevComplementaryInputBackend::poll()
 {
-    if (m_ignoreEvents || SessionLock::instance()->sessionLocked()) {
+    if (m_ignoreEvents) {
         return;
     }
 

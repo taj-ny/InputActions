@@ -20,8 +20,6 @@
 
 #include <hyprland/src/debug/HyprNotificationOverlay.hpp>
 
-using namespace libinputactions;
-
 void HyprlandOnScreenMessageManager::showMessage(const QString &message)
 {
     g_pHyprNotificationOverlay->addNotification(QString("[InputActions] %1").arg(message).toStdString().c_str(), ICONS_COLORS[1], 5000);

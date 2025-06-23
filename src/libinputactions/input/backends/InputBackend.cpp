@@ -19,6 +19,7 @@
 #include "InputBackend.h"
 
 #include <libinputactions/input/Keyboard.h>
+#include <libinputactions/interfaces/SessionLock.h>
 #include <libinputactions/triggers/StrokeTrigger.h>
 #include <libinputactions/variables/VariableManager.h>
 #include <libinputactions/variables/Variable.h>
@@ -85,7 +86,7 @@ void InputBackend::deviceRemoved(const InputDevice *device)
 
 bool InputBackend::handleEvent(const InputEvent *event)
 {
-    if (!event->sender()) {
+    if (!event->sender() || SessionLock::instance()->sessionLocked()) {
         return false;
     }
 

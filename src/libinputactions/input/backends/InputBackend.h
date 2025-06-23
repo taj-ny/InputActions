@@ -33,7 +33,7 @@ class Stroke;
  * Primary backends are responsible for managing (adding and removing) devices. Complementary backends are only allowed to set properties when a device is
  * being added.
  *
- * Backends must ignore events when the session is locked or when m_ignoreEvents is set to true.
+ * Backends must ignore events when m_ignoreEvents is set to true.
  *
  * To re-initialize the backend, call reset() and then initialize().
  * @see reset
