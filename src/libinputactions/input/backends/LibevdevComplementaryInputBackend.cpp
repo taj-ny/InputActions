@@ -75,12 +75,11 @@ void LibevdevComplementaryInputBackend::deviceAdded(InputDevice *device)
     if (!m_enabled) {
         return;
     }
+    qCDebug(INPUTACTIONS_BACKEND_LIBEVDEV).noquote().nospace() << "Device added (name: " << device->name() << ")";
 
     if (device->type() != InputDeviceType::Touchpad) {
         return;
     }
-
-    qCDebug(INPUTACTIONS_BACKEND_LIBEVDEV).noquote().nospace() << "Device added (name: " << device->name() << ")";
 
     std::unique_ptr<LibevdevDevice> libevdevDevice;
     if (!device->sysName().isEmpty()) {

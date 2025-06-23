@@ -137,7 +137,8 @@ void HyprlandInputBackend::reset()
 
 void HyprlandInputBackend::checkDeviceChanges()
 {
-    for (auto &device : g_pInputManager->m_hids) {
+    auto &devices = g_pInputManager->m_hids;
+    for (auto &device : devices) {
         bool present{};
         for (const auto &existingDevice : m_devices) {
             if (existingDevice.hyprlandDevice == device.get()) {
@@ -194,16 +195,17 @@ void HyprlandInputBackend::checkDeviceChanges()
         m_hyprlandDevices.push_back(device.get());
     }
 
-//    for (auto it = m_devices.begin(); it != m_devices.end();) {
-//        if (std::find_if(hyprlandDevices.begin(), hyprlandDevices.end(), [it](auto &hyprlandDevice) {
-//            return hyprlandDevice.get() == *it;
-//        }) == hyprlandDevices.end()) {
-//            removeDevice(findHyprlandDevice(*it));
-//            it = m_devices.erase(it);
-//            continue;
-//        }
-//        it++;
-//    }
+    for (auto it = m_devices.begin(); it != m_devices.end();) {
+        if (std::find_if(devices.begin(), devices.end(), [it](auto &device) {
+            return device.get() == it->hyprlandDevice;
+        }) == devices.end()) {
+            deviceRemoved(it->libinputactionsDevice.get());
+            std::remove(m_hyprlandDevices.begin(), m_hyprlandDevices.end(), it->hyprlandDevice);
+            it = m_devices.erase(it);
+            continue;
+        }
+        it++;
+    }
 }
 
 void HyprlandInputBackend::keyboardKey(SCallbackInfo &info, const std::any &data)
