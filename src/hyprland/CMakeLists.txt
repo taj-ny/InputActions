@@ -32,5 +32,6 @@ target_link_libraries(inputactions_hyprland PRIVATE
     rt
     PkgConfig::deps
 )
+set_target_properties(inputactions_hyprland PROPERTIES PREFIX "")
 
-install(TARGETS inputactions_hyprland DESTINATION "lib")
+install(TARGETS inputactions_hyprland)
