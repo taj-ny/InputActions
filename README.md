@@ -29,9 +29,8 @@ Supported environments: Hyprland, Plasma 6 Wayland
 - [And more](https://github.com/InputActions/docs/blob/HEAD/configuration.md)
 
 # Installation
-[Hyprland](src/hyprland)<br>
-[Plasma](src/kwin)
-
+[Hyprland](src/hyprland/README.md)<br>
+[Plasma](src/kwin/README.md)
 
 [Documentation](https://github.com/InputActions/docs/blob/HEAD/index.md)
 
