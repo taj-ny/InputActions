@@ -19,6 +19,7 @@
 #include "HyprlandInputEmitter.h"
 
 #include <libinputactions/input/backends/InputBackend.h>
+#include <libinputactions/input/Keyboard.h>
 
 #include <hyprland/src/managers/input/InputManager.hpp>
 #include <hyprland/src/managers/KeybindManager.hpp>
@@ -31,14 +32,34 @@ HyprlandInputEmitter::HyprlandInputEmitter()
     , m_pointer(makeShared<VirtualPointer>())
 {
     g_pInputManager->newKeyboard(m_keyboard);
-    g_pInputManager->m_pointers.push_back(m_pointer);
 }
 
 HyprlandInputEmitter::~HyprlandInputEmitter()
 {
     m_keyboard->events.destroy.emit();
-    auto &pointers = g_pInputManager->m_pointers;
-    pointers.erase(std::remove(pointers.begin(), pointers.end(), m_pointer), pointers.end());
+}
+
+void HyprlandInputEmitter::keyboardClearModifiers()
+{
+    libinputactions::InputBackend::instance()->setIgnoreEvents(true);
+    m_modifiers = 0;
+    const auto modifiers = libinputactions::Keyboard::instance()->modifiers();
+    for (auto &keyboard : g_pInputManager->m_keyboards) {
+        if (auto aqKeyboard = keyboard->aq()) {
+            for (const auto &[key, modifier] : libinputactions::MODIFIERS) {
+                if (modifiers & modifier) {
+                    aqKeyboard->events.key.emit(Aquamarine::IKeyboard::SKeyEvent{
+                        .key = key,
+                        .pressed = false
+                    });
+                }
+            }
+            aqKeyboard->events.modifiers.emit(Aquamarine::IKeyboard::SModifiersEvent{
+                .depressed = 0
+            });
+        }
+    }
+    libinputactions::InputBackend::instance()->setIgnoreEvents(false);
 }
 
 void HyprlandInputEmitter::keyboardKey(const uint32_t &key, const bool &state)

@@ -19,7 +19,6 @@ endif()
 
 set(kwin_gestures_SOURCES
     input/KWinInputBackend.cpp
-    input/KWinKeyboard.cpp
     interfaces/KWinInputEmitter.cpp
     interfaces/KWinOnScreenMessageManager.cpp
     interfaces/KWinPointer.cpp

@@ -34,6 +34,7 @@ class InputEmitter
 public:
     virtual ~InputEmitter() = default;
 
+    virtual void keyboardClearModifiers();
     /**
      * @param key <linux/input-event-codes.h>
      * @param state True - press, false - release

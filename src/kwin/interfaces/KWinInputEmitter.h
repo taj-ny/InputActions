@@ -57,6 +57,7 @@ public:
     KWinInputEmitter();
     ~KWinInputEmitter() override;
 
+    void keyboardClearModifiers() override;
     void keyboardKey(const uint32_t &key, const bool &state) override;
 
     void mouseButton(const uint32_t &button, const bool &state) override;

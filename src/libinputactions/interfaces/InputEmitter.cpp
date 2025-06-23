@@ -21,6 +21,10 @@
 namespace libinputactions
 {
 
+void InputEmitter::keyboardClearModifiers()
+{
+}
+
 void InputEmitter::keyboardKey(const uint32_t &key, const bool &state)
 {
 }

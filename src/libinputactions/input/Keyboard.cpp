@@ -25,8 +25,8 @@ namespace libinputactions
 void Keyboard::handleEvent(const KeyboardKeyEvent *event)
 {
     Qt::KeyboardModifier modifier{};
-    if (s_modifiers.contains(event->nativeKey())) {
-        modifier = s_modifiers.at(event->nativeKey());
+    if (MODIFIERS.contains(event->nativeKey())) {
+        modifier = MODIFIERS.at(event->nativeKey());
     }
     if (!modifier) {
         return;
@@ -42,10 +42,6 @@ void Keyboard::handleEvent(const KeyboardKeyEvent *event)
 const Qt::KeyboardModifiers &Keyboard::modifiers() const
 {
     return m_modifiers;
-}
-
-void Keyboard::clearModifiers()
-{
 }
 
 INPUTACTIONS_SINGLETON(Keyboard)

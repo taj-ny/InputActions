@@ -17,7 +17,6 @@
 */
 
 #include "Effect.h"
-#include "input/KWinKeyboard.h"
 
 #include "interfaces/KWinInputEmitter.h"
 #include "interfaces/KWinOnScreenMessageManager.h"
@@ -49,7 +48,6 @@ Effect::Effect()
     libinputactions::WindowProvider::setInstance(std::make_shared<KWinWindowProvider>());
 
     libinputactions::InputBackend::setInstance(std::unique_ptr<KWinInputBackend>(m_backend));
-    libinputactions::Keyboard::setInstance(std::make_unique<KWinKeyboard>());
 
     // This should be moved to libinputactions eventually
     auto *variableManager = libinputactions::VariableManager::instance();

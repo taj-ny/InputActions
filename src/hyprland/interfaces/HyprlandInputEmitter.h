@@ -46,8 +46,9 @@ class HyprlandInputEmitter : public libinputactions::InputEmitter
 {
 public:
     HyprlandInputEmitter();
-    ~HyprlandInputEmitter();
+    ~HyprlandInputEmitter() override;
 
+    void keyboardClearModifiers() override;
     void keyboardKey(const uint32_t &key, const bool &state) override;
 
     void mouseButton(const uint32_t &button, const bool &state) override;
@@ -57,7 +58,7 @@ public:
     void touchpadSwipeBegin(const uint8_t &fingers) override;
 
 private:
-    uint32_t m_modifiers;
+    uint32_t m_modifiers{};
     SP<Aquamarine::IKeyboard> m_keyboard;
     SP<IPointer> m_pointer;
 };

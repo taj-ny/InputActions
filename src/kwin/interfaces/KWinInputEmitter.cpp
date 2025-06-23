@@ -21,8 +21,10 @@
 #include "utils.h"
 
 #include <libinputactions/input/backends/InputBackend.h>
+#include <libinputactions/input/Keyboard.h>
 
 #include <kwin/input_event_spy.h>
+#include <kwin/workspace.h>
 
 KWinInputEmitter::KWinInputEmitter()
     : m_input(KWin::input())
@@ -35,6 +37,27 @@ KWinInputEmitter::~KWinInputEmitter()
 {
     if (KWin::input()) {
         m_input->removeInputDevice(m_device.get());
+    }
+}
+
+void KWinInputEmitter::keyboardClearModifiers()
+{
+    // Prevent modifier-only global shortcuts from being triggered. Clients will still see the event and may perform actions.
+    const auto globalShortcutsDisabled = KWin::workspace()->globalShortcutsDisabled();
+    if (!globalShortcutsDisabled) {
+        KWin::workspace()->disableGlobalShortcutsForClient(true);
+    }
+
+    auto emitter = InputEmitter::instance();
+    const auto modifiers = libinputactions::Keyboard::instance()->modifiers(); // This is not the real state, but it's fine in this case.
+    for (const auto &[key, modifier] : libinputactions::MODIFIERS) {
+        if (modifiers & modifier) {
+            emitter->keyboardKey(key, false);
+        }
+    }
+
+    if (!globalShortcutsDisabled) {
+        KWin::workspace()->disableGlobalShortcutsForClient(false);
     }
 }
 
