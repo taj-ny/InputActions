@@ -10,8 +10,8 @@ set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS ON)
 
-option(BUILD_KWIN_EFFECT "Build the KWin effect" ON)
-option(BUILD_HYPRLAND_PLUGIN "Build the Hyprland plugin" ON)
+option(INPUTACTIONS_BUILD_HYPRLAND "Build the Hyprland plugin" OFF)
+option(INPUTACTIONS_BUILD_KWIN "Build the KWin plugin" OFF)
 option(BUILD_TESTS "Build tests" OFF)
 
 if(NOT CMAKE_BUILD_TYPE)
@@ -27,7 +27,6 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${ECM_MODULE_PATH} ${ECM_KDE_MODULE_D
 
 include(KDEInstallDirs)
 include(KDECMakeSettings)
-# include(KDECompilerSettings NO_POLICY_SCOPE)
 
 find_package(Qt6 ${QT_MIN_VERSION} CONFIG REQUIRED COMPONENTS
     Core

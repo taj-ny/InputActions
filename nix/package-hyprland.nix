@@ -1,10 +1,10 @@
 {
-  lib,
   cmake,
   extra-cmake-modules,
   hyprland,
   hyprlandPlugins,
   kdePackages,
+  lib,
   libevdev,
   pkg-config,
   yaml-cpp,
@@ -31,8 +31,7 @@ hyprlandPlugins.mkHyprlandPlugin hyprland rec {
   ];
 
   cmakeFlags = [
-    "-DBUILD_KWIN_EFFECT=OFF"
-    "-DBUILD_HYPRLAND_PLUGIN=ON"
+    "-DINPUTACTIONS_BUILD_HYPRLAND=ON"
   ];
 
   meta = with lib; {
