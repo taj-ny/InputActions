@@ -1,6 +1,8 @@
 # InputActions (Hyprland)
 InputActions plugin for Hyprland. Build by setting ``INPUTACTIONS_BUILD_HYPRLAND=ON``.
 
+Touchpad hold and pinch gestures and the *cursor_shape* variable are currently only available on x86_64.
+
 # Installation
 ## Packages
 <details>
@@ -20,9 +22,11 @@ InputActions plugin for Hyprland. Build by setting ``INPUTACTIONS_BUILD_HYPRLAND
   ```
 
   ```nix
-  wayland.windowManager.hyprland.plugins = [
-    inputs.inputactions.packages.${pkgs.system}.inputactions-hyprland
-  };
+  {
+    wayland.windowManager.hyprland.plugins = [
+      inputs.inputactions.packages.${pkgs.system}.inputactions-hyprland
+    ];
+  }
   ```
 </details>
 
