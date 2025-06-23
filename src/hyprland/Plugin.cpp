@@ -23,7 +23,11 @@
 #include "interfaces/HyprlandSessionLock.h"
 #include "interfaces/HyprlandWindowProvider.h"
 
+#include <libinputactions/variables/VariableManager.h>
+
+#include <hyprland/src/helpers/Monitor.hpp>
 #include <hyprland/src/managers/eventLoop/EventLoopManager.hpp>
+#include <hyprland/src/Compositor.hpp>
 #undef HANDLE
 
 #include <QCoreApplication>
@@ -49,6 +53,14 @@ Plugin::Plugin(void *handle)
     PointerPositionGetter::setInstance(pointer);
     SessionLock::setInstance(std::make_shared<HyprlandSessionLock>());
     WindowProvider::setInstance(std::make_unique<HyprlandWindowProvider>());
+
+    // This should be moved to libinputactions eventually
+    auto *variableManager = libinputactions::VariableManager::instance();
+    variableManager->registerRemoteVariable<QString>("screen_name", [](auto &value) {
+        if (const auto monitor = g_pCompositor->getMonitorFromCursor()) {
+            value = QString::fromStdString(monitor->m_name);
+        }
+    });
 
     g_pEventLoopManager->addTimer(m_eventLoopTimer);
 
