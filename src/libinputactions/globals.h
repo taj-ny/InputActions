@@ -11,7 +11,7 @@
     private:                                                  \
         static std::shared_ptr<T> s_instance;
 
-#define INPUTACTIONS_SINGLETON(T)                                 \
+#define INPUTACTIONS_SINGLETON_IMPL(T, DEFAULT)                   \
     T *T::instance()                                              \
     {                                                             \
         return s_instance.get();                                  \
@@ -22,7 +22,10 @@
         s_instance = std::move(instance);                         \
     }                                                             \
                                                                   \
-    std::shared_ptr<T> T::s_instance = std::shared_ptr<T>(new T);
+    std::shared_ptr<T> T::s_instance = DEFAULT;
+
+#define INPUTACTIONS_SINGLETON(T) INPUTACTIONS_SINGLETON_IMPL(T, std::shared_ptr<T>(new T))
+#define INPUTACTIONS_SINGLETON_NODEFAULT(T) INPUTACTIONS_SINGLETON_IMPL(T, nullptr)
 
 Q_DECLARE_LOGGING_CATEGORY(INPUTACTIONS)
 

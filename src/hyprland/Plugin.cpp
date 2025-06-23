@@ -18,6 +18,7 @@
 
 #include "Plugin.h"
 #include "interfaces/HyprlandInputEmitter.h"
+#include "interfaces/HyprlandOnScreenMessageManager.h"
 #include "interfaces/HyprlandPointer.h"
 #include "interfaces/HyprlandWindowProvider.h"
 
@@ -43,6 +44,7 @@ Plugin::Plugin(void *handle)
     CursorShapeProvider::setInstance(pointer);
     InputBackend::setInstance(m_backend);
     InputEmitter::setInstance(std::make_shared<HyprlandInputEmitter>());
+    OnScreenMessageManager::setInstance(std::make_shared<HyprlandOnScreenMessageManager>());
     PointerPositionGetter::setInstance(pointer);
     WindowProvider::setInstance(std::make_unique<HyprlandWindowProvider>());
 
@@ -56,6 +58,7 @@ Plugin::~Plugin()
     CursorShapeProvider::setInstance(nullptr);
     InputBackend::setInstance(nullptr);
     InputEmitter::setInstance(nullptr);
+    OnScreenMessageManager::setInstance(nullptr);
     PointerPositionGetter::setInstance(nullptr);
     WindowProvider::setInstance(nullptr);
 }

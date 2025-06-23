@@ -16,32 +16,18 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#pragma once
+#include "HyprlandOnScreenMessageManager.h"
 
-#include "input/HyprlandInputBackend.h"
+#include <hyprland/src/debug/HyprNotificationOverlay.hpp>
 
-#include <libinputactions/Config.h>
-#include <libinputactions/DBusInterface.h>
+using namespace libinputactions;
 
-#include <hyprland/src/plugins/HookSystem.hpp>
-#include <hyprland/src/managers/eventLoop/EventLoopTimer.hpp>
-#undef HANDLE
-
-class Plugin
+void HyprlandOnScreenMessageManager::showMessage(const QString &message)
 {
-public:
-    Plugin(void *handle);
-    ~Plugin();
+    g_pHyprNotificationOverlay->addNotification(QString("[InputActions] %1").arg(message).toStdString().c_str(), ICONS_COLORS[1], 5000);
+}
 
-    void *handle() const;
-
-private:
-    void eventLoopTick();
-
-    void *m_handle;
-    std::shared_ptr<HyprlandInputBackend> m_backend;
-    libinputactions::Config m_config;
-    libinputactions::DBusInterface m_dbusInterface;
-
-    SP<CEventLoopTimer> m_eventLoopTimer;
-};
+void HyprlandOnScreenMessageManager::hideMessage()
+{
+    g_pHyprNotificationOverlay->dismissNotifications(1);
+}

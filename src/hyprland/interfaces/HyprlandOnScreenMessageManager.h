@@ -18,30 +18,11 @@
 
 #pragma once
 
-#include "input/HyprlandInputBackend.h"
+#include <libinputactions/interfaces/OnScreenMessageManager.h>
 
-#include <libinputactions/Config.h>
-#include <libinputactions/DBusInterface.h>
-
-#include <hyprland/src/plugins/HookSystem.hpp>
-#include <hyprland/src/managers/eventLoop/EventLoopTimer.hpp>
-#undef HANDLE
-
-class Plugin
+class HyprlandOnScreenMessageManager : public libinputactions::OnScreenMessageManager
 {
 public:
-    Plugin(void *handle);
-    ~Plugin();
-
-    void *handle() const;
-
-private:
-    void eventLoopTick();
-
-    void *m_handle;
-    std::shared_ptr<HyprlandInputBackend> m_backend;
-    libinputactions::Config m_config;
-    libinputactions::DBusInterface m_dbusInterface;
-
-    SP<CEventLoopTimer> m_eventLoopTimer;
+    void showMessage(const QString &message) override;
+    void hideMessage() override;
 };
