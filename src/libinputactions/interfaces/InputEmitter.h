@@ -47,6 +47,9 @@ public:
     virtual void mouseButton(const uint32_t &button, const bool &state);
     virtual void mouseMoveRelative(const QPointF &pos);
 
+    virtual void touchpadPinchBegin(const uint8_t &fingers);
+    virtual void touchpadSwipeBegin(const uint8_t &fingers);
+
 protected:
     InputEmitter() = default;
 };

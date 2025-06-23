@@ -33,6 +33,14 @@ void InputEmitter::mouseMoveRelative(const QPointF &pos)
 {
 }
 
+void InputEmitter::touchpadPinchBegin(const uint8_t &fingers)
+{
+}
+
+void InputEmitter::touchpadSwipeBegin(const uint8_t &fingers)
+{
+}
+
 INPUTACTIONS_SINGLETON(InputEmitter)
 
 }

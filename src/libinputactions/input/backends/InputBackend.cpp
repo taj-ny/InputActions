@@ -48,15 +48,6 @@ void InputBackend::poll()
 {
 }
 
-std::vector<InputDevice *> InputBackend::devices() const
-{
-    std::vector<InputDevice *> devices;
-    for (auto &device : m_devices) {
-        devices.push_back(device.get());
-    }
-    return devices;
-}
-
 void InputBackend::addCustomDeviceProperties(const QString &name, const InputDeviceProperties &properties)
 {
     m_customDeviceProperties[name] = properties;
@@ -75,50 +66,17 @@ void InputBackend::recordStroke(const std::function<void(const Stroke &stroke)> 
 void InputBackend::reset()
 {
     m_handlers.clear();
-    for (auto *device : devices()) {
-        removeDevice(device);
-    }
     m_customDeviceProperties.clear();
-}
-
-void InputBackend::addDevice(std::unique_ptr<InputDevice> device)
-{
-    auto *raw = device.get();
-    m_devices.push_back(std::move(device));
-    deviceAdded(raw);
-
-    for (const auto &[name, properties] : m_customDeviceProperties) {
-        if (name == raw->name()) {
-            raw->properties().apply(properties);
-            break;
-        }
-    }
-}
-
-void InputBackend::removeDevice(InputDevice *device)
-{
-    for (auto it = m_devices.begin(); it != m_devices.end(); it++) {
-        auto *raw = it->get();
-        if (raw == device) {
-            deviceRemoved(raw);
-            m_devices.erase(it);
-            break;
-        }
-    }
-}
-
-InputDevice *InputBackend::findDevice(const QString &name) const
-{
-    for (auto &device : m_devices) {
-        if (device->name() == name) {
-            return device.get();
-        }
-    }
-    return nullptr;
 }
 
 void InputBackend::deviceAdded(InputDevice *device)
 {
+    for (const auto &[name, properties] : m_customDeviceProperties) {
+        if (name == device->name()) {
+            device->properties().apply(properties);
+            break;
+        }
+    }
 }
 
 void InputBackend::deviceRemoved(const InputDevice *device)

@@ -18,7 +18,7 @@
 
 #pragma once
 
-#include <libinputactions/input/InputEmitter.h>
+#include <libinputactions/interfaces/InputEmitter.h>
 
 #include "core/inputdevice.h"
 #include "kwin/input.h"
@@ -62,8 +62,12 @@ public:
     void mouseButton(const uint32_t &button, const bool &state) override;
     void mouseMoveRelative(const QPointF &pos) override;
 
+    void touchpadPinchBegin(const uint8_t &fingers) override;
+    void touchpadSwipeBegin(const uint8_t &fingers) override;
+
     InputDevice *device() const;
 
 private:
+    KWin::InputRedirection *m_input;
     std::unique_ptr<InputDevice> m_device;
 };

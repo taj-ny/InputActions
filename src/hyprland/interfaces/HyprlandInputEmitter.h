@@ -20,17 +20,17 @@
 
 #include <libinputactions/interfaces/InputEmitter.h>
 
+#include <aquamarine/input/Input.hpp>
 #include <hyprland/src/devices/IKeyboard.hpp>
 #include <hyprland/src/devices/IPointer.hpp>
 #undef HANDLE
 
-class VirtualKeyboard : public IKeyboard
+class VirtualKeyboard : public Aquamarine::IKeyboard
 {
 public:
     VirtualKeyboard() = default;
 
-    bool isVirtual() override;
-    SP<Aquamarine::IKeyboard> aq() override;
+    const std::string &getName() override;
 };
 
 class VirtualPointer : public IPointer
@@ -53,8 +53,11 @@ public:
     void mouseButton(const uint32_t &button, const bool &state) override;
     void mouseMoveRelative(const QPointF &pos) override;
 
+    void touchpadPinchBegin(const uint8_t &fingers) override;
+    void touchpadSwipeBegin(const uint8_t &fingers) override;
+
 private:
     uint32_t m_modifiers;
-    SP<IKeyboard> m_keyboard;
+    SP<Aquamarine::IKeyboard> m_keyboard;
     SP<IPointer> m_pointer;
 };

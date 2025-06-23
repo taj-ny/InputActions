@@ -21,8 +21,8 @@
 #include "workspace.h"
 
 #include <libinputactions/input/backends/InputBackend.h>
-#include <libinputactions/input/InputEmitter.h>
 #include <libinputactions/input/Keyboard.h>
+#include <libinputactions/interfaces/InputEmitter.h>
 
 void KWinKeyboard::clearModifiers()
 {

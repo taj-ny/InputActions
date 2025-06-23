@@ -21,8 +21,8 @@ set(libinputactions_SRCS
     libinputactions/handlers/TriggerHandler.cpp
     libinputactions/input/backends/InputBackend.cpp
     libinputactions/input/backends/LibevdevComplementaryInputBackend.cpp
+    libinputactions/input/backends/LibinputCompositorInputBackend.cpp
     libinputactions/input/InputDevice.cpp
-    libinputactions/input/InputEmitter.cpp
     libinputactions/input/events.cpp
     libinputactions/input/InputEventHandler.cpp
     libinputactions/input/Keyboard.cpp

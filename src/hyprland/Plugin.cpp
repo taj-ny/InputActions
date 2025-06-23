@@ -28,23 +28,33 @@
 
 #include <chrono>
 
+using namespace libinputactions;
+
 static auto s_qtEventLoopTickInterval = std::chrono::milliseconds(static_cast<uint32_t>(1));
 
 Plugin::Plugin(void *handle)
     : m_handle(handle)
-    , m_backend(new HyprlandInputBackend(this))
-    , m_config(m_backend)
+    , m_backend(std::make_shared<HyprlandInputBackend>(this))
+    , m_config(m_backend.get())
     , m_dbusInterface(&m_config)
     , m_eventLoopTimer(makeShared<CEventLoopTimer>(s_qtEventLoopTickInterval, [this](SP<CEventLoopTimer> self, void* data) { eventLoopTick(); }, this))
 {
-    libinputactions::InputBackend::setInstance(std::unique_ptr<HyprlandInputBackend>(m_backend));
-    libinputactions::InputEmitter::setInstance(std::make_shared<HyprlandInputEmitter>());
-    libinputactions::PointerPositionGetter::setInstance(std::make_shared<HyprlandPointer>());
-    libinputactions::WindowProvider::setInstance(std::make_unique<HyprlandWindowProvider>());
+    InputBackend::setInstance(m_backend);
+    InputEmitter::setInstance(std::make_shared<HyprlandInputEmitter>());
+    PointerPositionGetter::setInstance(std::make_shared<HyprlandPointer>());
+    WindowProvider::setInstance(std::make_unique<HyprlandWindowProvider>());
 
     g_pEventLoopManager->addTimer(m_eventLoopTimer);
 
     m_config.load();
+}
+
+Plugin::~Plugin()
+{
+    InputBackend::setInstance(nullptr);
+    InputEmitter::setInstance(nullptr);
+    PointerPositionGetter::setInstance(nullptr);
+    WindowProvider::setInstance(nullptr);
 }
 
 void *Plugin::handle() const

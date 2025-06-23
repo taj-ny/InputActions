@@ -18,8 +18,8 @@
 
 #include "MouseTriggerHandler.h"
 
-#include <libinputactions/input/InputEmitter.h>
 #include <libinputactions/input/Keyboard.h>
+#include <libinputactions/interfaces/InputEmitter.h>
 #include <libinputactions/triggers/PressTrigger.h>
 #include <libinputactions/triggers/WheelTrigger.h>
 

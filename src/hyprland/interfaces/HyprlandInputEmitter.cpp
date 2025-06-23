@@ -18,71 +18,90 @@
 
 #include "HyprlandInputEmitter.h"
 
+#include <libinputactions/input/backends/InputBackend.h>
+
 #include <hyprland/src/managers/input/InputManager.hpp>
 #include <hyprland/src/managers/KeybindManager.hpp>
 #include <hyprland/src/managers/SeatManager.hpp>
-
-#include <hyprland/src/devices/Keyboard.hpp>
-#include <hyprland/src/devices/Mouse.hpp>
+#include <hyprland/src/protocols/PointerGestures.hpp>
+#undef HANDLE
 
 HyprlandInputEmitter::HyprlandInputEmitter()
-    : m_keyboard(SP<IKeyboard>(static_cast<IKeyboard *>(new VirtualKeyboard)))
-    , m_pointer(SP<IPointer>(static_cast<IPointer *>(new VirtualPointer)))
+    : m_keyboard(makeShared<VirtualKeyboard>())
+    , m_pointer(makeShared<VirtualPointer>())
 {
-    m_keyboard->setKeymap({});
-    g_pInputManager->m_keyboards.push_back(m_keyboard);
+    g_pInputManager->newKeyboard(m_keyboard);
+    g_pInputManager->m_pointers.push_back(m_pointer);
 }
 
 HyprlandInputEmitter::~HyprlandInputEmitter()
 {
-    auto &keyboards = g_pInputManager->m_keyboards;
-    keyboards.erase(std::remove(keyboards.begin(), keyboards.end(), m_keyboard), keyboards.end());
+    m_keyboard->events.destroy.emit();
+    auto &pointers = g_pInputManager->m_pointers;
+    pointers.erase(std::remove(pointers.begin(), pointers.end(), m_pointer), pointers.end());
 }
 
 void HyprlandInputEmitter::keyboardKey(const uint32_t &key, const bool &state)
 {
+    libinputactions::InputBackend::instance()->setIgnoreEvents(true);
     if (const auto modifier = g_pKeybindManager->keycodeToModifier(key + 8)) {
-        auto &modifiers = m_keyboard->m_modifiersState.depressed;
         if (state) {
-            modifiers |= modifier;
+            m_modifiers |= modifier;
         } else {
-            modifiers &= ~modifier;
+            m_modifiers &= ~modifier;
         }
-        m_keyboard->updateModifiers(modifiers, 0, 0, 0);
-        g_pInputManager->onKeyboardMod(m_keyboard);
-        m_keyboard->updateXkbStateWithKey(key + 8, state);
+        m_keyboard->events.modifiers.emit(Aquamarine::IKeyboard::SModifiersEvent{
+            .depressed = m_modifiers
+        });
     }
 
-    g_pInputManager->onKeyboardKey(IKeyboard::SKeyEvent{
-        .keycode = key,
-        .state = state ? WL_KEYBOARD_KEY_STATE_PRESSED : WL_KEYBOARD_KEY_STATE_RELEASED
-    }, m_keyboard);
+    m_keyboard->events.key.emit(Aquamarine::IKeyboard::SKeyEvent{
+        .key = key,
+        .pressed = state
+    });
+    libinputactions::InputBackend::instance()->setIgnoreEvents(false);
 }
 
 void HyprlandInputEmitter::mouseButton(const uint32_t &button, const bool &state)
 {
+    libinputactions::InputBackend::instance()->setIgnoreEvents(true);
     g_pInputManager->onMouseButton(IPointer::SButtonEvent{
         .button = button,
         .state = state ? WL_POINTER_BUTTON_STATE_PRESSED : WL_POINTER_BUTTON_STATE_RELEASED
     });
+    libinputactions::InputBackend::instance()->setIgnoreEvents(false);
 }
 
 void HyprlandInputEmitter::mouseMoveRelative(const QPointF &pos)
 {
+    libinputactions::InputBackend::instance()->setIgnoreEvents(true);
     g_pInputManager->onMouseMoved(IPointer::SMotionEvent{
         .delta = Vector2D(pos.x(), pos.y()),
         .device = m_pointer,
     });
+    libinputactions::InputBackend::instance()->setIgnoreEvents(false);
 }
 
-bool VirtualKeyboard::isVirtual()
+void HyprlandInputEmitter::touchpadPinchBegin(const uint8_t &fingers)
 {
-    return false;
+    libinputactions::InputBackend::instance()->setIgnoreEvents(true);
+    PROTO::pointerGestures->pinchBegin(0, fingers);
+    libinputactions::InputBackend::instance()->setIgnoreEvents(false);
 }
 
-SP<Aquamarine::IKeyboard> VirtualKeyboard::aq()
+void HyprlandInputEmitter::touchpadSwipeBegin(const uint8_t &fingers)
 {
-    return nullptr;
+    libinputactions::InputBackend::instance()->setIgnoreEvents(true);
+    g_pInputManager->onSwipeBegin(IPointer::SSwipeBeginEvent{
+        .fingers = fingers
+    });
+    libinputactions::InputBackend::instance()->setIgnoreEvents(false);
+}
+
+const std::string &VirtualKeyboard::getName()
+{
+    static const std::string name = "inputactions_keyboard";
+    return name;
 }
 
 bool VirtualPointer::isVirtual()

@@ -20,8 +20,13 @@
 
 #include "input.h"
 
-#include <libinputactions/input/backends/InputBackend.h>
-#include <libinputactions/input/backends/LibevdevComplementaryInputBackend.h>
+#include <libinputactions/input/backends/LibinputCompositorInputBackend.h>
+
+struct KWinInputDevice
+{
+    KWin::InputDevice *kwinDevice;
+    std::unique_ptr<libinputactions::InputDevice> libinputactionsDevice;
+};
 
 /**
  * Installed before GlobalShortcutFilter, which is responsible for handling touchpad gestures.
@@ -33,12 +38,14 @@
  * @returns All methods that process events should return @c true to stop further event processing, @c false to pass to
  * next filter.
  */
-class KWinInputBackend : public QObject, public libinputactions::LibevdevComplementaryInputBackend, public KWin::InputEventFilter
+class KWinInputBackend : public QObject, public libinputactions::LibinputCompositorInputBackend, public KWin::InputEventFilter
 {
 public:
     KWinInputBackend();
+    ~KWinInputBackend() override;
 
     void initialize() override;
+    void reset() override;
 
     bool holdGestureBegin(int fingerCount, std::chrono::microseconds time) override;
     bool holdGestureEnd(std::chrono::microseconds time) override;
@@ -65,15 +72,15 @@ public:
 #endif
 
 private:
-    void kwinDeviceAdded(const KWin::InputDevice *device);
-    void kwinDeviceRemoved(const KWin::InputDevice *device);
-    libinputactions::InputDevice *findKWinDevice(const KWin::InputDevice *device) const;
+    void kwinDeviceAdded(KWin::InputDevice *kwinDevice);
+    void kwinDeviceRemoved(const KWin::InputDevice *kwinDevice);
+    libinputactions::InputDevice *findInputActionsDevice(const KWin::InputDevice *kwinDevice);
     /**
      * @return The device that generated the last event.
      */
-    libinputactions::InputDevice *currentTouchpad() const;
+    libinputactions::InputDevice *currentTouchpad();
 
     bool isMouse(const KWin::InputDevice *device) const;
 
-    bool m_pinchGestureActive{};
+    std::vector<KWinInputDevice> m_devices;
 };

@@ -33,6 +33,7 @@ class Plugin
 
 public:
     Plugin(void *handle);
+    ~Plugin();
 
     void *handle() const;
 
@@ -40,7 +41,7 @@ private:
     void eventLoopTick();
 
     void *m_handle;
-    HyprlandInputBackend *m_backend;
+    std::shared_ptr<HyprlandInputBackend> m_backend;
     libinputactions::Config m_config;
     libinputactions::DBusInterface m_dbusInterface;
 

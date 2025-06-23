@@ -57,7 +57,6 @@ public:
      */
     virtual void poll();
 
-    std::vector<InputDevice *> devices() const;
     /**
      * @param properties Custom properties that will override the ones that were detected automatically.
      * @remark Custom properties will not be applied to devices that have already been added to the backend.
@@ -79,17 +78,10 @@ public:
      * Removes all event handlers, devices and custom properties. Backend must be initialized in order to be used again.
      * @see initialize
      */
-    void reset();
+    virtual void reset();
 
 protected:
     InputBackend();
-
-    void addDevice(std::unique_ptr<InputDevice> device);
-    void removeDevice(InputDevice *device);
-    /**
-     * @returns The device with the specified name or nullptr if not found.
-     */
-    InputDevice *findDevice(const QString &name) const;
 
     /**
      * Backends should add device properties in this method.
@@ -98,8 +90,8 @@ protected:
     virtual void deviceRemoved(const InputDevice *device);
 
     /**
-     * @param event Events with a nullptr sender will be ignored.
-     * @return Whether the event should be blocked.
+     * Events with a nullptr sender will be ignored.
+     * @returns Whether the event should be blocked.
      */
     bool handleEvent(const InputEvent *event);
 

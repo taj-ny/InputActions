@@ -18,7 +18,7 @@
 
 #pragma once
 
-#include <libinputactions/input/backends/InputBackend.h>
+#include <libinputactions/input/backends/LibinputCompositorInputBackend.h>
 
 #include <hyprland/src/devices/IPointer.hpp>
 #include <hyprland/src/plugins/HookSystem.hpp>
@@ -27,40 +27,71 @@
 
 class Plugin;
 
+struct HyprlandInputDevice
+{
+    IHID *hyprlandDevice;
+    std::unique_ptr<libinputactions::InputDevice> libinputactionsDevice;
+    std::vector<CHyprSignalListener> listeners;
+};
+
 /**
- * Swipe gestures use the dynamic callback system. Pinch and hold gestures use function hooks.
+ * Hold and pinch touchpad gestures require hooking, and therefore only work on x86_64.
  */
-class HyprlandInputBackend : public libinputactions::InputBackend
+class HyprlandInputBackend : public QObject, public libinputactions::LibinputCompositorInputBackend
 {
 public:
     HyprlandInputBackend(Plugin *plugin);
-    ~HyprlandInputBackend() = default;
+    ~HyprlandInputBackend() override;
+
+    void initialize() override;
+    void reset() override;
 
 private:
-    bool holdBegin(const uint32_t &fingers);
-    bool holdEnd(const bool &cancelled);
+    void checkDeviceChanges();
 
-    bool pinchBegin(const uint32_t &fingers);
-    bool pinchUpdate(const double &scale, const double &angleDelta);
-    bool pinchEnd(const bool &cancelled);
+    void keyboardKey(SCallbackInfo &info, const std::any &data);
 
-    bool swipeBegin(const uint32_t &fingers);
-    bool swipeUpdate(const Vector2D &delta);
-    bool swipeEnd(const bool &cancelled);
+    bool touchpadHoldBegin(const uint8_t &fingers);
+    bool touchpadHoldEnd(const bool &cancelled);
+
+    bool touchpadPinchBegin(const uint8_t &fingers);
+    bool touchpadPinchUpdate(const double &scale, const double &angleDelta);
+    bool touchpadPinchEnd(const bool &cancelled);
+
+    void touchpadSwipeBegin(SCallbackInfo &info, const std::any &data);
+    void touchpadSwipeUpdate(SCallbackInfo &info, const std::any &data);
+    void touchpadSwipeEnd(SCallbackInfo &info, const std::any &data);
+
+    void pointerAxis(SCallbackInfo &info, const std::any &data);
+    void pointerButton(SCallbackInfo &info, const std::any &data);
+    void pointerMotion(SCallbackInfo &info, const std::any &data);
+
+    HyprlandInputDevice *findDevice(IHID *hyprlandDevice);
+    libinputactions::InputDevice *findInputActionsDevice(IHID *hyprlandDevice);
 
     std::vector<SP<HOOK_CALLBACK_FN>> m_events;
 
-    libinputactions::InputDevice m_fakeTouchpad;
+    /**
+     * Used to detect device changes.
+     */
+    std::vector<IHID *> m_hyprlandDevices;
+    std::vector<HyprlandInputDevice> m_devices;
+    QTimer m_deviceChangeTimer;
 
-    uint32_t m_fingers{};
-    bool m_block{};
-    bool m_emittingBeginEvent{};
+    /**
+     * Mouse or touchpad.
+     */
+    libinputactions::InputDevice *m_currentPointingDevice{};
+    libinputactions::InputDevice *m_currentTouchpad{};
 
-    std::unique_ptr<CFunctionHook> m_holdBeginHook;
-    std::unique_ptr<CFunctionHook> m_holdEndHook;
-    std::unique_ptr<CFunctionHook> m_pinchBeginHook;
-    std::unique_ptr<CFunctionHook> m_pinchUpdateHook;
-    std::unique_ptr<CFunctionHook> m_pinchEndHook;
+    Vector2D m_previousPointerPosition;
+
+    // Unhooked by Hyprland on plugin unload
+    CFunctionHook *m_holdBeginHook;
+    CFunctionHook *m_holdEndHook;
+    CFunctionHook *m_pinchBeginHook;
+    CFunctionHook *m_pinchUpdateHook;
+    CFunctionHook *m_pinchEndHook;
 
     friend void holdBeginHook(void *thisPtr, uint32_t timeMs, uint32_t fingers);
     friend void holdEndHook(void *thisPtr, uint32_t timeMs, bool cancelled);
