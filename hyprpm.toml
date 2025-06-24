@@ -1,0 +1,9 @@
+[InputActions]
+name = "InputActions"
+authors = ["taj_ny"]
+output = "lib/inputactions_hyprland.so"
+build = [
+    "cmake . -DCMAKE_INSTALL_PREFIX=$PWD -DINPUTACTIONS_BUILD_HYPRLAND=ON",
+    "make -j$(nproc)",
+    "make install"
+]

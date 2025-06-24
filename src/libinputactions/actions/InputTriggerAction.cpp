@@ -17,7 +17,7 @@
 */
 
 #include <libinputactions/actions/InputTriggerAction.h>
-#include <libinputactions/input/InputEmitter.h>
+#include <libinputactions/interfaces/InputEmitter.h>
 #include <libinputactions/interfaces/PointerPositionSetter.h>
 
 namespace libinputactions

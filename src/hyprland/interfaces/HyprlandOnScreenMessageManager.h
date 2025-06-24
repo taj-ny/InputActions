@@ -18,37 +18,11 @@
 
 #pragma once
 
-#include <libinputactions/globals.h>
+#include <libinputactions/interfaces/OnScreenMessageManager.h>
 
-#include <memory>
-
-#include <QPointF>
-
-namespace libinputactions
+class HyprlandOnScreenMessageManager : public libinputactions::OnScreenMessageManager
 {
-
-class InputEmitter
-{
-    INPUTACTIONS_DECLARE_SINGLETON(InputEmitter)
-
 public:
-    virtual ~InputEmitter() = default;
-
-    /**
-     * @param key <linux/input-event-codes.h>
-     * @param state True - press, false - release
-     */
-    virtual void keyboardKey(const uint32_t &key, const bool &state) { };
-
-    /**
-     * @param button <linux/input-event-codes.h>
-     * @param state True - press, false - release
-     */
-    virtual void mouseButton(const uint32_t &button, const bool &state) { };
-    virtual void mouseMoveRelative(const QPointF &pos) { };
-
-protected:
-    InputEmitter() = default;
+    void showMessage(const QString &message) override;
+    void hideMessage() override;
 };
-
-}

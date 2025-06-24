@@ -16,16 +16,11 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include "KWinSessionLock.hpp"
+#include "KWinSessionLock.h"
 
 #include <kwin/wayland_server.h>
-
-namespace libinputactions
-{
 
 bool KWinSessionLock::sessionLocked()
 {
     return KWin::waylandServer()->isScreenLocked();
-}
-
 }

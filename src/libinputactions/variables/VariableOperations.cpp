@@ -19,6 +19,8 @@
 #include "VariableOperations.h"
 #include "Variable.h"
 
+#include <libinputactions/interfaces/CursorShapeProvider.h>
+
 #include <any>
 
 #include <QLoggingCategory>
@@ -181,6 +183,17 @@ template<>
 QString VariableOperations<qreal>::toString(const qreal &value)
 {
     return QString::number(value);
+}
+
+template<>
+QString VariableOperations<CursorShape>::toString(const CursorShape &value)
+{
+    for (const auto &[name, shape] : CURSOR_SHAPES) {
+        if (shape == value) {
+            return name;
+        }
+    }
+    return "<unknown>";
 }
 
 template<>

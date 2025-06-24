@@ -16,8 +16,8 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include "KWinWindowProvider.hpp"
-#include "KWinWindow.hpp"
+#include "KWinWindowProvider.h"
+#include "KWinWindow.h"
 
 #include "effect/effecthandler.h"
 #include "workspace.h"

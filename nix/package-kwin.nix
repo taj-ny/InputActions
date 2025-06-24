@@ -1,22 +1,23 @@
-{ lib
-, stdenv
-, cmake
-, extra-cmake-modules
-, kwin
-, wrapQtAppsHook
-, qttools
-, kglobalacceld
-, yaml-cpp
-, libevdev
-, pkg-config
-, debug ? false
+{
+  cmake,
+  extra-cmake-modules,
+  kglobalacceld,
+  kwin,
+  lib,
+  libevdev,
+  pkg-config,
+  qttools,
+  stdenv,
+  wrapQtAppsHook,
+  yaml-cpp,
+  ...
 }:
 
 stdenv.mkDerivation rec {
   pname = "inputactions-kwin";
   version = "0.7.0";
 
-  src = ./.;
+  src = ./..;
 
   nativeBuildInputs = [
     cmake
@@ -33,12 +34,12 @@ stdenv.mkDerivation rec {
     yaml-cpp
   ];
 
-  cmakeFlags = lib.optionals debug [
-    "-DCMAKE_BUILD_TYPE=DEBUG"
+  cmakeFlags = [
+    "-DINPUTACTIONS_BUILD_KWIN=ON"
   ];
 
   meta = with lib; {
-    description = "Custom touchpad gestures for Plasma 6";
+    description = "Custom mouse and touchpad gestures for Plasma 6 Wayland";
     license = licenses.gpl3;
     homepage = "https://github.com/taj-ny/InputActions";
   };

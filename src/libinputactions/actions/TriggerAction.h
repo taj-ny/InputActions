@@ -166,7 +166,7 @@ protected:
     /**
      * Executes the action without checking conditions.
      */
-    virtual void execute() { };
+    virtual void execute() {};
 
     // This is just a quick way to get directionless swipe gestures working
     QPointF m_currentDeltaPointMultiplied;

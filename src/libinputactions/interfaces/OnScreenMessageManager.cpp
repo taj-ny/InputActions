@@ -16,14 +16,19 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#pragma once
+#include "OnScreenMessageManager.h"
 
-#include <libinputactions/input/Keyboard.h>
-
-class KWinKeyboard : public libinputactions::Keyboard
+namespace libinputactions
 {
-public:
-    KWinKeyboard() = default;
 
-    void clearModifiers() override;
-};
+void OnScreenMessageManager::showMessage(const QString &message)
+{
+}
+
+void OnScreenMessageManager::hideMessage()
+{
+}
+
+INPUTACTIONS_SINGLETON(OnScreenMessageManager)
+
+}

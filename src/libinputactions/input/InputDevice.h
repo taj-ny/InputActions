@@ -80,6 +80,10 @@ private:
 class InputDevice
 {
 public:
+    /**
+     * @param name Full name of the device.
+     * @param sysName Name of the device in /dev/input.
+     */
     InputDevice(const InputDeviceType &type, const QString &name = {}, const QString &sysName = {});
 
     const InputDeviceType &type() const;

@@ -1,6 +1,6 @@
 /*
     Input Actions - Input handler that executes user-defined actions
-    Copyright (C) 2025 Marcin Woźniak
+    Copyright (C) 2024-2025 Marcin Woźniak
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -18,15 +18,26 @@
 
 #pragma once
 
-#include <libinputactions/interfaces/SessionLock.h>
+#include "Plugin.h"
 
-namespace libinputactions
-{
+#include <libinputactions/interfaces/CursorShapeProvider.h>
+#include <libinputactions/interfaces/PointerPositionGetter.h>
 
-class KWinSessionLock : public SessionLock
+#include <hyprland/src/plugins/HookSystem.hpp>
+
+class HyprlandPointer : public libinputactions::CursorShapeProvider, public libinputactions::PointerPositionGetter
 {
 public:
-    bool sessionLocked() override;
-};
+    HyprlandPointer(Plugin *plugin);
 
-}
+    std::optional<libinputactions::CursorShape> cursorShape() override;
+
+    std::optional<QPointF> globalPointerPosition() override;
+    std::optional<QPointF> screenPointerPosition() override;
+
+private:
+    CFunctionHook *m_setCursorFromNameHook;
+    QString m_currentCursorShape;
+
+    friend void setCursorFromNameHook(void *thisPtr, const std::string &name);
+};

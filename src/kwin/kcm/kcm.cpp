@@ -38,7 +38,7 @@ KWinGesturesKCM::KWinGesturesKCM(QObject *parent, const KPluginMetaData &data)
 
     QFile about(":/effects/inputactions_kwin/kcm/about.html");
     if (about.open(QIODevice::ReadOnly)) {
-        const auto html = about.readAll().replace("${version}", ABOUT_VERSION_STRING);
+        const auto html = about.readAll().replace("${version}", PROJECT_VERSION);
         ui.aboutText->setHtml(html);
     }
 
@@ -57,7 +57,6 @@ void KWinGesturesKCM::slotRecordStroke()
     auto call = interface.asyncCall("recordStroke");
     call.waitForFinished();
     ui.strokePoints->setText(call.reply().arguments().at(0).toString());
-
 }
 
 }

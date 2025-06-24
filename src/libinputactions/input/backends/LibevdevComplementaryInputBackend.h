@@ -31,8 +31,11 @@ namespace libinputactions
 
 struct LibevdevDevice
 {
-    libevdev *libevdevDevice;
-    int fd;
+    ~LibevdevDevice();
+
+    libevdev *libevdevPtr = nullptr;
+    int fd = -1;
+    QString name;
 
     /**
      * If device doesn't support MT type B protocol, only the first slot will be used.
@@ -54,7 +57,6 @@ class LibevdevComplementaryInputBackend : public virtual InputBackend
 {
 public:
     LibevdevComplementaryInputBackend();
-    ~LibevdevComplementaryInputBackend() override;
 
     void poll() override;
 
@@ -73,8 +75,10 @@ protected:
     void deviceRemoved(const InputDevice *device) override;
 
 private:
+    std::unique_ptr<LibevdevDevice> openDevice(const QString &sysName);
+
     bool m_enabled = true;
-    std::map<InputDevice *, LibevdevDevice> m_libevdevDevices;
+    std::map<InputDevice *, std::unique_ptr<LibevdevDevice>> m_libevdevDevices;
     QTimer m_inputTimer;
 };
 }

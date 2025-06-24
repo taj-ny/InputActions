@@ -1,5 +1,5 @@
 {
-  description = "Custom touchpad and touchscreen shortcuts";
+  description = "Custom mouse and touchpad gestures for Hyprland, Plasma 6 Wayland";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
@@ -14,15 +14,13 @@
     };
   in rec {
     packages = rec {
-      default = pkgs.kdePackages.callPackage ./package.nix { };
+      default = pkgs.kdePackages.callPackage ./nix/package-kwin.nix { };
       inputactions-kwin = default;
-      debug = pkgs.kdePackages.callPackage ./package.nix {
-        debug = true;
-      };
+      inputactions-hyprland = pkgs.callPackage ./nix/package-hyprland.nix { };
     };
 
     devShells.default = pkgs.mkShell {
-      inputsFrom = [ packages.debug ];
+      inputsFrom = [ packages.inputactions-kwin packages.inputactions-hyprland ];
       packages = [ pkgs.gtest ];
     };
   });

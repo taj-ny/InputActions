@@ -30,7 +30,7 @@
 namespace libinputactions
 {
 
-static std::map<uint32_t, Qt::KeyboardModifier> s_modifiers = {
+static std::map<uint32_t, Qt::KeyboardModifier> MODIFIERS = {
     {KEY_LEFTALT, Qt::KeyboardModifier::AltModifier},
     {KEY_LEFTCTRL, Qt::KeyboardModifier::ControlModifier},
     {KEY_LEFTMETA, Qt::KeyboardModifier::MetaModifier},
@@ -43,7 +43,6 @@ static std::map<uint32_t, Qt::KeyboardModifier> s_modifiers = {
 
 class KeyboardKeyEvent;
 
-// TODO move to interfaces
 class Keyboard
 {
     INPUTACTIONS_DECLARE_SINGLETON(Keyboard)
@@ -59,7 +58,6 @@ public:
      * update the modifier state to none. This allows gestures with keyboard modifier conditions to be used again.
      */
     const Qt::KeyboardModifiers &modifiers() const;
-    virtual void clearModifiers();
 
 protected:
     Keyboard() = default;

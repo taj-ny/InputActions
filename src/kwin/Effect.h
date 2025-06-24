@@ -18,11 +18,11 @@
 
 #pragma once
 
-#include "DBusInterface.h"
 #include "effect/effect.h"
 #include "input/KWinInputBackend.h"
 
-#include <QFileSystemWatcher>
+#include <libinputactions/Config.h>
+#include <libinputactions/DBusInterface.h>
 
 class Effect : public KWin::Effect
 {
@@ -41,13 +41,8 @@ public:
 
     void reconfigure(ReconfigureFlags flags) override;
 
-private slots:
-    void slotConfigFileChanged();
-    void slotConfigDirectoryChanged();
-
 private:
-    bool m_autoReload = true;
     KWinInputBackend *m_backend;
-    DBusInterface m_dbusInterface;
-    QFileSystemWatcher m_configFileWatcher;
+    libinputactions::Config m_config;
+    libinputactions::DBusInterface m_dbusInterface;
 };

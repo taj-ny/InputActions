@@ -19,13 +19,12 @@ endif()
 
 set(kwin_gestures_SOURCES
     input/KWinInputBackend.cpp
-    input/KWinKeyboard.cpp
     interfaces/KWinInputEmitter.cpp
+    interfaces/KWinOnScreenMessageManager.cpp
     interfaces/KWinPointer.cpp
     interfaces/KWinSessionLock.cpp
     interfaces/KWinWindow.cpp
     interfaces/KWinWindowProvider.cpp
-    DBusInterface.cpp
     Effect.cpp
     globals.h
     main.cpp
