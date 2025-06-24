@@ -36,7 +36,7 @@ public:
     void *handle() const;
 
 private:
-    void eventLoopTick();
+    void tick();
 
     void *m_handle;
     std::shared_ptr<HyprlandInputBackend> m_backend;

@@ -74,7 +74,6 @@ void LibevdevComplementaryInputBackend::deviceAdded(InputDevice *device)
     if (!m_enabled) {
         return;
     }
-    qCDebug(INPUTACTIONS_BACKEND_LIBEVDEV).noquote().nospace() << "Device added (name: " << device->name() << ")";
 
     if (device->type() != InputDeviceType::Touchpad) {
         return;
@@ -134,7 +133,7 @@ void LibevdevComplementaryInputBackend::deviceAdded(InputDevice *device)
 
 void LibevdevComplementaryInputBackend::deviceRemoved(const InputDevice *device)
 {
-    qCDebug(INPUTACTIONS_BACKEND_LIBEVDEV).noquote().nospace() << "Device removed (name: " << device->name() << ")";
+    InputBackend::deviceRemoved(device);
     for (auto it = m_libevdevDevices.begin(); it != m_libevdevDevices.end(); it++) {
         if (it->first == device) {
             m_libevdevDevices.erase(it);

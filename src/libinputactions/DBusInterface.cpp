@@ -46,14 +46,13 @@ DBusInterface::~DBusInterface()
 
 void DBusInterface::recordStroke(const QDBusMessage &message)
 {
-    OnScreenMessageManager::instance()->showMessage("Input Actions is recording input. Perform a stroke gesture by moving your mouse or performing a touchpad "
+    OnScreenMessageManager::instance()->showMessage(PROJECT_NAME " is recording input. Perform a stroke gesture by moving your mouse or performing a touchpad "
                                                     "swipe. Recording will end after 250 ms of inactivity.");
 
     message.setDelayedReply(true);
     m_reply = message.createReply();
 
-    auto backend = libinputactions::InputBackend::instance();
-    backend->recordStroke([this](const auto &stroke) {
+    InputBackend::instance()->recordStroke([this](const auto &stroke) {
         QByteArray bytes;
         const auto &points = stroke.points();
         for (size_t i = 0; i < points.size(); i++) {
@@ -74,17 +73,17 @@ void DBusInterface::recordStroke(const QDBusMessage &message)
 QString DBusInterface::reloadConfig()
 {
     const auto error = m_config->load();
-    if (!error.has_value()) {
-        return "success";
+    if (error) {
+        return error.value();
     }
-    return error.value();
+    return "success";
 }
 
 QString DBusInterface::variables(const QString &filter)
 {
     QStringList result;
     const QRegularExpression filterRegex(filter);
-    for (const auto &[name, variable] : libinputactions::VariableManager::instance()->variables()) {
+    for (const auto &[name, variable] : VariableManager::instance()->variables()) {
         if (!filterRegex.match(name).hasMatch()) {
             continue;
         }

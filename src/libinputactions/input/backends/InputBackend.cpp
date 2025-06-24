@@ -72,6 +72,7 @@ void InputBackend::reset()
 
 void InputBackend::deviceAdded(InputDevice *device)
 {
+    qCDebug(INPUTACTIONS).noquote().nospace() << "Device added (name: " << device->name() << ")";
     for (const auto &[name, properties] : m_customDeviceProperties) {
         if (name == device->name()) {
             device->properties().apply(properties);
@@ -82,6 +83,7 @@ void InputBackend::deviceAdded(InputDevice *device)
 
 void InputBackend::deviceRemoved(const InputDevice *device)
 {
+    qCDebug(INPUTACTIONS).noquote().nospace() << "Device removed (name: " << device->name() << ")";
 }
 
 bool InputBackend::handleEvent(const InputEvent *event)

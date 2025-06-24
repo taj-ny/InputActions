@@ -35,6 +35,9 @@ find_package(Qt6 ${QT_MIN_VERSION} CONFIG REQUIRED COMPONENTS
 
 add_compile_options(-Wno-unused-parameter) # This warning is stupid
 
+add_compile_definitions(PROJECT_NAME="InputActions")
+add_compile_definitions(PROJECT_VERSION="${PROJECT_VERSION}")
+
 add_subdirectory(src)
 if (BUILD_TESTS)
     add_subdirectory(tests)

@@ -22,7 +22,7 @@
 
 void HyprlandOnScreenMessageManager::showMessage(const QString &message)
 {
-    g_pHyprNotificationOverlay->addNotification(QString("[InputActions] %1").arg(message).toStdString().c_str(), ICONS_COLORS[1], 5000);
+    g_pHyprNotificationOverlay->addNotification(QString("[%1] %2").arg(PROJECT_NAME, message).toStdString().c_str(), ICONS_COLORS[1], 5000);
 }
 
 void HyprlandOnScreenMessageManager::hideMessage()

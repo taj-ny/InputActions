@@ -132,6 +132,7 @@ void HyprlandInputBackend::reset()
         deviceRemoved(device.libinputactionsDevice.get());
     }
     m_devices.clear();
+    m_hyprlandDevices.clear();
     LibinputCompositorInputBackend::reset();
 }
 
@@ -139,8 +140,8 @@ void HyprlandInputBackend::checkDeviceChanges()
 {
     auto &devices = g_pInputManager->m_hids;
     for (auto &device : devices) {
-        if (std::ranges::any_of(m_devices, [&device](const auto &existingDevice) {
-            return existingDevice.hyprlandDevice == device.get();
+        if (std::ranges::any_of(m_hyprlandDevices, [&device](const auto &existingDevice) {
+            return existingDevice == device.get();
         })) {
             continue;
         }
@@ -184,15 +185,15 @@ void HyprlandInputBackend::checkDeviceChanges()
             continue;
         }
 
-        newDevice.libinputactionsDevice = std::make_unique<libinputactions::InputDevice>(type, name);
+        newDevice.libinputactionsDevice = std::make_unique<InputDevice>(type, name);
         deviceAdded(newDevice.libinputactionsDevice.get());
         m_devices.push_back(std::move(newDevice));
         m_hyprlandDevices.push_back(device.get());
     }
 
     for (auto it = m_devices.begin(); it != m_devices.end();) {
-        if (std::ranges::any_of(devices, [it](auto &device) {
-            return device.get() == it->hyprlandDevice;
+        if (!std::ranges::any_of(m_hyprlandDevices, [it](const auto &device) {
+            return device == it->hyprlandDevice;
         })) {
             deviceRemoved(it->libinputactionsDevice.get());
             std::erase(m_hyprlandDevices, it->hyprlandDevice);
@@ -294,7 +295,7 @@ HyprlandInputDevice *HyprlandInputBackend::findDevice(IHID *hyprlandDevice)
     return {};
 }
 
-libinputactions::InputDevice *HyprlandInputBackend::findInputActionsDevice(IHID *hyprlandDevice)
+InputDevice *HyprlandInputBackend::findInputActionsDevice(IHID *hyprlandDevice)
 {
     if (auto *device = findDevice(hyprlandDevice)) {
         return device->libinputactionsDevice.get();

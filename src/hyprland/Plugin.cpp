@@ -36,14 +36,13 @@
 
 using namespace libinputactions;
 
-static auto s_qtEventLoopTickInterval = std::chrono::milliseconds(static_cast<uint32_t>(1));
+static const auto TICK_INTERVAL = std::chrono::milliseconds(static_cast<uint32_t>(1));
 
 Plugin::Plugin(void *handle)
     : m_handle(handle)
     , m_backend(std::make_shared<HyprlandInputBackend>(this))
     , m_config(m_backend.get())
     , m_dbusInterface(&m_config)
-    , m_eventLoopTimer(makeShared<CEventLoopTimer>(s_qtEventLoopTickInterval, [this](SP<CEventLoopTimer> self, void* data) { eventLoopTick(); }, this))
 {
     auto pointer = std::make_shared<HyprlandPointer>(this);
     CursorShapeProvider::setInstance(pointer);
@@ -62,6 +61,9 @@ Plugin::Plugin(void *handle)
         }
     });
 
+    m_eventLoopTimer = makeShared<CEventLoopTimer>(TICK_INTERVAL, [this](SP<CEventLoopTimer> self, void* data) {
+        tick();
+    }, this);
     g_pEventLoopManager->addTimer(m_eventLoopTimer);
 
     m_config.load();
@@ -83,8 +85,8 @@ void *Plugin::handle() const
     return m_handle;
 }
 
-void Plugin::eventLoopTick()
+void Plugin::tick()
 {
     QCoreApplication::processEvents();
-    m_eventLoopTimer->updateTimeout(s_qtEventLoopTickInterval);
+    m_eventLoopTimer->updateTimeout(TICK_INTERVAL);
 }

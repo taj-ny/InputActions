@@ -20,12 +20,12 @@ APICALL EXPORT PLUGIN_DESCRIPTION_INFO PLUGIN_INIT(void *handle)
 {
     const std::string hash = __hyprland_api_get_hash();
     if (hash != GIT_COMMIT_HASH) {
-        HyprlandAPI::addNotification(handle, "[InputActions] Mismatched headers! Can't proceed.", CHyprColor{1.0, 0.2, 0.2, 1.0}, 5000);
-        throw std::runtime_error("[InputActions] Version mismatch");
+        HyprlandAPI::addNotification(handle, "[" PROJECT_NAME "] Mismatched headers! Can't proceed.", CHyprColor{1.0, 0.2, 0.2, 1.0}, 5000);
+        throw std::runtime_error("[" PROJECT_NAME "] Version mismatch");
     }
 
     plugin = std::make_unique<Plugin>(handle);
-    return {"InputActions", "An amazing plugin that is going to change the world!", "Me", "1.0"};
+    return {PROJECT_NAME, "Custom mouse and touchpad gestures for Hyprland", "taj_ny", PROJECT_VERSION};
 }
 
 APICALL EXPORT void PLUGIN_EXIT()

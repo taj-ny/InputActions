@@ -21,5 +21,3 @@ target_link_libraries(inputactions_kwin_kcm
 )
 
 install(TARGETS inputactions_kwin_kcm DESTINATION ${KDE_INSTALL_PLUGINDIR}/kwin/effects/configs)
-
-add_compile_definitions(ABOUT_VERSION_STRING="${PROJECT_VERSION}")
