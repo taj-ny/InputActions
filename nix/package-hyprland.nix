@@ -35,7 +35,7 @@ hyprlandPlugins.mkHyprlandPlugin hyprland rec {
   ];
 
   meta = with lib; {
-    description = "Custom touchpad gestures for Plasma 6";
+    description = "Custom mouse and touchpad gestures for Hyprland";
     license = licenses.gpl3;
     homepage = "https://github.com/taj-ny/InputActions";
   };
