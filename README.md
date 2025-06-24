@@ -87,7 +87,7 @@ Supported environments: Plasma 6 Wayland
 </details>
 
 <details>
-  <summary>Fedora 40, 41</summary>
+  <summary>Fedora 40 - 42</summary>
   <br>
 
   ```
