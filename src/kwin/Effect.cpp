@@ -119,9 +119,12 @@ void Effect::reconfigure(ReconfigureFlags flags)
             for (auto &eventHandler : config.as<std::vector<std::unique_ptr<InputEventHandler>>>()) {
                 m_backend->addEventHandler(std::move(eventHandler));
             }
-            const auto &devicesNode = config["touchpad"]["devices"];
-            for (auto it = devicesNode.begin(); it != devicesNode.end(); it++) {
-                m_backend->addCustomDeviceProperties(it->first.as<QString>(), it->second.as<InputDeviceProperties>());
+            if (const auto &touchpadNode = config["touchpad"]) {
+                if (const auto &devicesNode = touchpadNode["devices"]) {
+                    for (auto it = devicesNode.begin(); it != devicesNode.end(); it++) {
+                        m_backend->addCustomDeviceProperties(it->first.as<QString>(), it->second.as<InputDeviceProperties>());
+                    }
+                }
             }
 
             auto *libevdev = static_cast<LibevdevComplementaryInputBackend *>(m_backend);
