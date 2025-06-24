@@ -21,8 +21,8 @@
 #include "interfaces/KWinInputEmitter.h"
 #include "interfaces/KWinOnScreenMessageManager.h"
 #include "interfaces/KWinPointer.h"
-#include "interfaces/KWinSessionLock.hpp"
-#include "interfaces/KWinWindowProvider.hpp"
+#include "interfaces/KWinSessionLock.h"
+#include "interfaces/KWinWindowProvider.h"
 
 #include <libinputactions/variables/VariableManager.h>
 
@@ -30,7 +30,6 @@
 #include "workspace.h"
 
 #include <QDir>
-
 
 Effect::Effect()
     : m_backend(new KWinInputBackend)
@@ -44,7 +43,7 @@ Effect::Effect()
     libinputactions::OnScreenMessageManager::setInstance(std::make_shared<KWinOnScreenMessageManager>());
     libinputactions::PointerPositionGetter::setInstance(kwinPointer);
     libinputactions::PointerPositionSetter::setInstance(kwinPointer);
-    libinputactions::SessionLock::setInstance(std::make_shared<libinputactions::KWinSessionLock>());
+    libinputactions::SessionLock::setInstance(std::make_shared<KWinSessionLock>());
     libinputactions::WindowProvider::setInstance(std::make_shared<KWinWindowProvider>());
 
     libinputactions::InputBackend::setInstance(std::unique_ptr<KWinInputBackend>(m_backend));

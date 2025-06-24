@@ -23,7 +23,7 @@
 namespace libinputactions
 {
 
-static const uint32_t s_strokeRecordingTimeout = 250;
+static const uint32_t STROKE_RECORD_TIMEOUT = 250;
 
 bool LibinputCompositorInputBackend::keyboardKey(InputDevice *sender, const uint32_t &key, const bool &state)
 {
@@ -82,7 +82,7 @@ bool LibinputCompositorInputBackend::pointerMotion(InputDevice *sender, const QP
 
     if (m_isRecordingStroke) {
         m_strokePoints.push_back(delta);
-        m_strokeRecordingTimeoutTimer.start(s_strokeRecordingTimeout);
+        m_strokeRecordingTimeoutTimer.start(STROKE_RECORD_TIMEOUT);
     } else {
         const MotionEvent motionEvent(sender, InputEventType::PointerMotion, delta);
         handleEvent(&motionEvent);
