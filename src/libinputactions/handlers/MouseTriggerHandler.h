@@ -106,7 +106,7 @@ private:
     bool m_hadTriggerSincePress = false;
 
     QList<quint32> m_blockedMouseButtons;
-    Qt::MouseButtons m_buttons{};
+    std::vector<Qt::MouseButton> m_buttons;
     bool m_unblockButtonsOnTimeout = true;
 };
 

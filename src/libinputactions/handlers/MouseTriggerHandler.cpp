@@ -23,6 +23,8 @@
 #include <libinputactions/triggers/PressTrigger.h>
 #include <libinputactions/triggers/WheelTrigger.h>
 
+#include <ranges>
+
 Q_LOGGING_CATEGORY(INPUTACTIONS_HANDLER_MOUSE, "inputactions.handler.mouse", QtWarningMsg)
 
 namespace libinputactions
@@ -79,7 +81,9 @@ bool MouseTriggerHandler::handleEvent(const PointerButtonEvent *event)
     if (state) {
         m_mouseMotionSinceButtonPress = 0;
         m_hadTriggerSincePress = false;
-        m_buttons |= button;
+        if (!std::ranges::contains(m_buttons, button)) {
+            m_buttons.push_back(button);
+        }
 
         cancelTriggers(TriggerType::All);
         m_activationEvent = createActivationEvent();
@@ -133,7 +137,7 @@ bool MouseTriggerHandler::handleEvent(const PointerButtonEvent *event)
             return true;
         }
     } else {
-        m_buttons &= ~button;
+        std::erase(m_buttons, button);
         endTriggers(TriggerType::All);
 
         // Prevent gesture skipping when clicking rapidly
@@ -231,7 +235,7 @@ bool MouseTriggerHandler::handleWheelEvent(const MotionEvent *event)
             continuous = true;
         }
     }
-    if (!continuous || (!m_buttons && !Keyboard::instance()->modifiers())) {
+    if (!continuous || (m_buttons.empty() && !Keyboard::instance()->modifiers())) {
         qCDebug(INPUTACTIONS_HANDLER_MOUSE, "Wheel trigger will end immediately");
         endTriggers(TriggerType::Wheel);
     }
@@ -267,10 +271,11 @@ bool MouseTriggerHandler::shouldBlockMouseButton(const Qt::MouseButton &button)
 {
     const auto event = createActivationEvent();
     // A partial match is required, not an exact one
-    event->mouseButtons = std::nullopt;
+    event->mouseButtons = {};
     for (const auto &trigger : triggers(TriggerType::All, event.get())) {
         const auto buttons = trigger->mouseButtons();
-        if (buttons && (*buttons & button)) {
+        if ((trigger->mouseButtonOrderMatters() && std::ranges::equal(m_buttons, buttons | std::views::take(m_buttons.size())))
+            || (!trigger->mouseButtonOrderMatters() && std::ranges::contains(buttons, button))) {
             qCDebug(INPUTACTIONS_HANDLER_MOUSE).noquote().nospace() << "Mouse button blocked (button: " << button << ", trigger: " << trigger->id() << ")";
             return true;
         }

@@ -45,8 +45,14 @@ void Trigger::setEndCondition(const std::shared_ptr<const Condition> &condition)
 
 bool Trigger::canActivate(const TriggerActivationEvent *event) const
 {
-    if (m_mouseButtons && event->mouseButtons && *m_mouseButtons != event->mouseButtons) {
-        return false;
+    if (!m_mouseButtons.empty() && !event->mouseButtons.empty()) {
+        if (m_mouseButtons.size() != event->mouseButtons.size()
+            || (m_mouseButtonOrderMatters && !std::ranges::equal(m_mouseButtons, event->mouseButtons))
+            || (!m_mouseButtonOrderMatters && !std::ranges::all_of(m_mouseButtons, [event](auto &button) {
+                return std::ranges::contains(event->mouseButtons, button);
+        }))) {
+            return false;
+        }
     }
 
     return !m_activationCondition || m_activationCondition.value()->satisfied();
@@ -188,14 +194,24 @@ void Trigger::setSetLastTrigger(const bool &value)
     m_setLastTrigger = value;
 }
 
-const std::optional<Qt::MouseButtons> &Trigger::mouseButtons() const
+const std::vector<Qt::MouseButton> &Trigger::mouseButtons() const
 {
     return m_mouseButtons;
 }
 
-void Trigger::setMouseButtons(const std::optional<Qt::MouseButtons> &buttons)
+void Trigger::setMouseButtons(const std::vector<Qt::MouseButton> &buttons)
 {
     m_mouseButtons = buttons;
+}
+
+const bool &Trigger::mouseButtonOrderMatters() const
+{
+    return m_mouseButtonOrderMatters;
+}
+
+void Trigger::setMouseButtonOrderMatters(const bool &value)
+{
+    m_mouseButtonOrderMatters = value;
 }
 
 const QString &Trigger::id() const
