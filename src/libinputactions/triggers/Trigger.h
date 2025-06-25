@@ -135,6 +135,11 @@ public:
      */
     void setClearModifiers(const bool &value);
 
+    /**
+     * @param value Whether to set last_trigger variables. Default: true
+     */
+    void setSetLastTrigger(const bool &value);
+
     const std::optional<Qt::MouseButtons> &mouseButtons() const;
     /**
      * Only applies to mouse triggers.
@@ -173,6 +178,7 @@ private:
     std::vector<std::unique_ptr<TriggerAction>> m_actions;
     bool m_started = false;
     std::optional<bool> m_clearModifiers;
+    bool m_setLastTrigger = true;
 
     std::optional<std::shared_ptr<const Condition>> m_activationCondition;
     std::optional<std::shared_ptr<const Condition>> m_endCondition;

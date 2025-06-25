@@ -978,6 +978,9 @@ struct convert<std::unique_ptr<Trigger>>
         if (const auto &clearModifiersNode = node["clear_modifiers"]) {
             trigger->setClearModifiers(clearModifiersNode.as<bool>());
         }
+        if (const auto &setLastTriggerNode = node["set_last_trigger"]) {
+            trigger->setSetLastTrigger(setLastTriggerNode.as<bool>());
+        }
 
         if (auto *motionTrigger = dynamic_cast<MotionTrigger *>(trigger.get())) {
             if (const auto &speedNode = node["speed"]) {

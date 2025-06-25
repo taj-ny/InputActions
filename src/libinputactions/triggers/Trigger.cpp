@@ -84,7 +84,9 @@ void Trigger::update(const TriggerUpdateEvent *event)
         }
     }
 
-    VariableManager::instance()->getVariable(BuiltinVariables::LastTriggerId)->set(m_id);
+    if (m_setLastTrigger) {
+        VariableManager::instance()->getVariable(BuiltinVariables::LastTriggerId)->set(m_id);
+    }
     updateActions(event);
 }
 
@@ -101,7 +103,9 @@ void Trigger::end()
     }
 
     qCDebug(INPUTACTIONS_TRIGGER).noquote() << QString("Trigger ended (id: %1)").arg(m_id);
-    VariableManager::instance()->getVariable(BuiltinVariables::LastTriggerId)->set(m_id);
+    if (m_setLastTrigger) {
+        VariableManager::instance()->getVariable(BuiltinVariables::LastTriggerId)->set(m_id);
+    }
     for (const auto &action : m_actions) {
         action->triggerEnded();
     }
@@ -177,6 +181,11 @@ void Trigger::setThreshold(const Range<qreal> &threshold)
 void Trigger::setClearModifiers(const bool &value)
 {
     m_clearModifiers = value;
+}
+
+void Trigger::setSetLastTrigger(const bool &value)
+{
+    m_setLastTrigger = value;
 }
 
 const std::optional<Qt::MouseButtons> &Trigger::mouseButtons() const
