@@ -84,10 +84,9 @@ public:
      */
     virtual bool canUpdate(const TriggerUpdateEvent *event) const;
     /**
-     * @returns Whether the trigger has been updated. False if threshold not reached.
      * @internal
      */
-    TEST_VIRTUAL bool update(const TriggerUpdateEvent *event);
+    TEST_VIRTUAL void update(const TriggerUpdateEvent *event);
 
     /**
      * Called by the trigger handler before ending a trigger. If true is returned, that trigger will be cancelled

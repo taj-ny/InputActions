@@ -20,6 +20,7 @@
 
 #include <libinputactions/actions/InputTriggerAction.h>
 #include <libinputactions/interfaces/InputEmitter.h>
+#include <libinputactions/variables/VariableManager.h>
 
 Q_LOGGING_CATEGORY(INPUTACTIONS_TRIGGER, "inputactions.trigger", QtWarningMsg)
 
@@ -56,7 +57,7 @@ bool Trigger::canUpdate(const TriggerUpdateEvent *) const
     return true;
 }
 
-bool Trigger::update(const TriggerUpdateEvent *event)
+void Trigger::update(const TriggerUpdateEvent *event)
 {
     m_absoluteAccumulatedDelta += std::abs(event->delta());
     m_withinThreshold = !m_threshold || m_threshold->contains(m_absoluteAccumulatedDelta);
@@ -64,7 +65,7 @@ bool Trigger::update(const TriggerUpdateEvent *event)
         qCDebug(INPUTACTIONS_TRIGGER).noquote()
             << QString("Threshold not reached (id: %1, current: %2, min: %3, max: %4")
                 .arg(m_id, QString::number(m_absoluteAccumulatedDelta), QString::number(m_threshold->min().value_or(-1)), QString::number(m_threshold->max().value_or(-1)));
-        return false;
+        return;
     }
 
     qCDebug(INPUTACTIONS_TRIGGER).noquote() << QString("Trigger updated (id: %1, delta: %2)").arg(m_id, QString::number(event->delta()));
@@ -83,8 +84,8 @@ bool Trigger::update(const TriggerUpdateEvent *event)
         }
     }
 
+    VariableManager::instance()->getVariable(BuiltinVariables::LastTriggerId)->set(m_id);
     updateActions(event);
-    return true;
 }
 
 bool Trigger::canEnd() const
@@ -100,6 +101,7 @@ void Trigger::end()
     }
 
     qCDebug(INPUTACTIONS_TRIGGER).noquote() << QString("Trigger ended (id: %1)").arg(m_id);
+    VariableManager::instance()->getVariable(BuiltinVariables::LastTriggerId)->set(m_id);
     for (const auto &action : m_actions) {
         action->triggerEnded();
     }

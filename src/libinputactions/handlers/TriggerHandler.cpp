@@ -18,9 +18,7 @@
 
 #include "TriggerHandler.h"
 
-#include <libinputactions/input/Keyboard.h>
 #include <libinputactions/interfaces/InputEmitter.h>
-#include <libinputactions/variables/VariableManager.h>
 
 Q_LOGGING_CATEGORY(INPUTACTIONS_HANDLER_TRIGGER, "inputactions.handler.trigger", QtWarningMsg)
 
@@ -140,9 +138,7 @@ bool TriggerHandler::updateTriggers(const std::map<TriggerType, const TriggerUpd
         }
 
         hasTriggers = true;
-        if (trigger->update(event)) {
-            VariableManager::instance()->getVariable(BuiltinVariables::LastTriggerId)->set(trigger->id());
-        }
+        trigger->update(event);
 
         if (!m_conflictsResolved && m_activeTriggers.size() > 1) {
             qCDebug(INPUTACTIONS_TRIGGER, "Cancelling conflicting triggers");
