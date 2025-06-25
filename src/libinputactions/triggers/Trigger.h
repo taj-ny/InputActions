@@ -84,9 +84,10 @@ public:
      */
     virtual bool canUpdate(const TriggerUpdateEvent *event) const;
     /**
+     * @returns Whether the trigger has been updated. False if threshold not reached.
      * @internal
      */
-    TEST_VIRTUAL void update(const TriggerUpdateEvent *event);
+    TEST_VIRTUAL bool update(const TriggerUpdateEvent *event);
 
     /**
      * Called by the trigger handler before ending a trigger. If true is returned, that trigger will be cancelled
@@ -143,11 +144,11 @@ public:
      */
     void setMouseButtons(const std::optional<Qt::MouseButtons> &buttons);
 
-    const QString &name() const;
+    const QString &id() const;
     /**
-     * @param name Shown in debug logs.
+     * @param name Must be unique.
      */
-    void setName(const QString &name);
+    void setId(const QString &value);
 
     const TriggerType &type() const;
     /**
@@ -168,7 +169,7 @@ protected:
 private:
     void reset();
 
-    QString m_name = "Unnamed gesture";
+    QString m_id;
     TriggerType m_type{0};
     std::vector<std::unique_ptr<TriggerAction>> m_actions;
     bool m_started = false;

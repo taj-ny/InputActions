@@ -271,7 +271,7 @@ bool MouseTriggerHandler::shouldBlockMouseButton(const Qt::MouseButton &button)
     for (const auto &trigger : triggers(TriggerType::All, event.get())) {
         const auto buttons = trigger->mouseButtons();
         if (buttons && (*buttons & button)) {
-            qCDebug(INPUTACTIONS_HANDLER_MOUSE).noquote().nospace() << "Mouse button blocked (button: " << button << ", trigger: " << trigger->name() << ")";
+            qCDebug(INPUTACTIONS_HANDLER_MOUSE).noquote().nospace() << "Mouse button blocked (button: " << button << ", trigger: " << trigger->id() << ")";
             return true;
         }
     }

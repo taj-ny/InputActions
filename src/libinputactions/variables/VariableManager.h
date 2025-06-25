@@ -66,6 +66,7 @@ public:
     inline static const VariableInfo<QString> DeviceName{QStringLiteral("device_name")};
     inline static const VariableInfo<qreal> Fingers{QStringLiteral("fingers")};
     inline static const VariableInfo<Qt::KeyboardModifiers> KeyboardModifiers{QStringLiteral("keyboard_modifiers")};
+    inline static const VariableInfo<QString> LastTriggerId{QStringLiteral("last_trigger_id")};
     inline static const VariableInfo<QPointF> ThumbPositionPercentage{QStringLiteral("thumb_position_percentage")};
     inline static const VariableInfo<bool> ThumbPresent{QStringLiteral("thumb_present")};
 };

@@ -56,25 +56,25 @@ bool Trigger::canUpdate(const TriggerUpdateEvent *) const
     return true;
 }
 
-void Trigger::update(const TriggerUpdateEvent *event)
+bool Trigger::update(const TriggerUpdateEvent *event)
 {
     m_absoluteAccumulatedDelta += std::abs(event->delta());
     m_withinThreshold = !m_threshold || m_threshold->contains(m_absoluteAccumulatedDelta);
     if (!m_withinThreshold) {
         qCDebug(INPUTACTIONS_TRIGGER).noquote()
-            << QString("Threshold not reached (name: %1, current: %2, min: %3, max: %4")
-                .arg(m_name, QString::number(m_absoluteAccumulatedDelta), QString::number(m_threshold->min().value_or(-1)), QString::number(m_threshold->max().value_or(-1)));
-        return;
+            << QString("Threshold not reached (id: %1, current: %2, min: %3, max: %4")
+                .arg(m_id, QString::number(m_absoluteAccumulatedDelta), QString::number(m_threshold->min().value_or(-1)), QString::number(m_threshold->max().value_or(-1)));
+        return false;
     }
 
-    qCDebug(INPUTACTIONS_TRIGGER).noquote() << QString("Trigger updated (name: %1, delta: %2)").arg(m_name, QString::number(event->delta()));
+    qCDebug(INPUTACTIONS_TRIGGER).noquote() << QString("Trigger updated (id: %1, delta: %2)").arg(m_id, QString::number(event->delta()));
 
     if (!m_started) {
-        qCDebug(INPUTACTIONS_TRIGGER).noquote() << QString("Trigger started (name: %1)").arg(m_name);
+        qCDebug(INPUTACTIONS_TRIGGER).noquote() << QString("Trigger started (id: %1)").arg(m_id);
         m_started = true;
 
         if (m_clearModifiers && *m_clearModifiers) {
-            qCDebug(INPUTACTIONS_TRIGGER).noquote() << QString("Clearing keyboard modifiers (trigger: %1)").arg(m_name);
+            qCDebug(INPUTACTIONS_TRIGGER).noquote() << QString("Clearing keyboard modifiers (trigger: %1)").arg(m_id);
             InputEmitter::instance()->keyboardClearModifiers();
         }
 
@@ -84,6 +84,7 @@ void Trigger::update(const TriggerUpdateEvent *event)
     }
 
     updateActions(event);
+    return true;
 }
 
 bool Trigger::canEnd() const
@@ -98,7 +99,7 @@ void Trigger::end()
         return;
     }
 
-    qCDebug(INPUTACTIONS_TRIGGER).noquote() << QString("Trigger ended (name: %1)").arg(m_name);
+    qCDebug(INPUTACTIONS_TRIGGER).noquote() << QString("Trigger ended (id: %1)").arg(m_id);
     for (const auto &action : m_actions) {
         action->triggerEnded();
     }
@@ -112,7 +113,7 @@ void Trigger::cancel()
         return;
     }
 
-    qCDebug(INPUTACTIONS_TRIGGER).noquote() << QString("Trigger cancelled (name: %1)").arg(m_name);
+    qCDebug(INPUTACTIONS_TRIGGER).noquote() << QString("Trigger cancelled (id: %1)").arg(m_id);
     for (const auto &action : m_actions) {
         action->triggerCancelled();
     }
@@ -186,14 +187,14 @@ void Trigger::setMouseButtons(const std::optional<Qt::MouseButtons> &buttons)
     m_mouseButtons = buttons;
 }
 
-const QString &Trigger::name() const
+const QString &Trigger::id() const
 {
-    return m_name;
+    return m_id;
 }
 
-void Trigger::setName(const QString &name)
+void Trigger::setId(const QString &value)
 {
-    m_name = name;
+    m_id = value;
 }
 
 const TriggerType &Trigger::type() const
