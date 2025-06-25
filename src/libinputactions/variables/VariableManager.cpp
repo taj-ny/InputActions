@@ -46,6 +46,7 @@ VariableManager::VariableManager()
     registerRemoteVariable<Qt::KeyboardModifiers>(BuiltinVariables::KeyboardModifiers.name(), [](auto &value) {
         value = Keyboard::instance()->modifiers();
     });
+    registerLocalVariable(BuiltinVariables::LastTriggerId);
     registerRemoteVariable<QPointF>("pointer_position_screen_percentage", [](auto &value) {
         value = PointerPositionGetter::instance()->screenPointerPosition();
     });

@@ -135,6 +135,11 @@ public:
      */
     void setClearModifiers(const bool &value);
 
+    /**
+     * @param value Whether to set last_trigger variables. Default: true
+     */
+    void setSetLastTrigger(const bool &value);
+
     const std::optional<Qt::MouseButtons> &mouseButtons() const;
     /**
      * Only applies to mouse triggers.
@@ -143,11 +148,11 @@ public:
      */
     void setMouseButtons(const std::optional<Qt::MouseButtons> &buttons);
 
-    const QString &name() const;
+    const QString &id() const;
     /**
-     * @param name Shown in debug logs.
+     * @param name Must be unique.
      */
-    void setName(const QString &name);
+    void setId(const QString &value);
 
     const TriggerType &type() const;
     /**
@@ -168,11 +173,12 @@ protected:
 private:
     void reset();
 
-    QString m_name = "Unnamed gesture";
+    QString m_id;
     TriggerType m_type{0};
     std::vector<std::unique_ptr<TriggerAction>> m_actions;
     bool m_started = false;
     std::optional<bool> m_clearModifiers;
+    bool m_setLastTrigger = true;
 
     std::optional<std::shared_ptr<const Condition>> m_activationCondition;
     std::optional<std::shared_ptr<const Condition>> m_endCondition;

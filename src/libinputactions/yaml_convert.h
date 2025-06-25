@@ -929,8 +929,8 @@ struct convert<std::unique_ptr<Trigger>>
 
         auto conditionGroup = std::make_shared<ConditionGroup>();
 
-        if (const auto &nameNode = node["name"]) {
-            trigger->setName(nameNode.as<QString>());
+        if (const auto &idNode = node["id"]) {
+            trigger->setId(idNode.as<QString>());
         }
         if (const auto &fingersNode = node["fingers"]) {
             auto range = fingersNode.as<Range<qreal>>();
@@ -977,6 +977,9 @@ struct convert<std::unique_ptr<Trigger>>
         }
         if (const auto &clearModifiersNode = node["clear_modifiers"]) {
             trigger->setClearModifiers(clearModifiersNode.as<bool>());
+        }
+        if (const auto &setLastTriggerNode = node["set_last_trigger"]) {
+            trigger->setSetLastTrigger(setLastTriggerNode.as<bool>());
         }
 
         if (auto *motionTrigger = dynamic_cast<MotionTrigger *>(trigger.get())) {

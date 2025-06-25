@@ -180,7 +180,7 @@ void MotionTriggerHandler::triggerActivating(const Trigger *trigger)
     TriggerHandler::triggerActivating(trigger);
     if (const auto motionTrigger = dynamic_cast<const MotionTrigger *>(trigger)) {
         if (!m_isDeterminingSpeed && motionTrigger->hasSpeed()) {
-            qCDebug(INPUTACTIONS_HANDLER_MOTION).noquote() << QString("Trigger has speed (name: %1)").arg(trigger->name());
+            qCDebug(INPUTACTIONS_HANDLER_MOTION).noquote() << QString("Trigger has speed (id: %1)").arg(trigger->id());
             m_isDeterminingSpeed = true;
         }
     }

@@ -18,7 +18,6 @@
 
 #include "TriggerHandler.h"
 
-#include <libinputactions/input/Keyboard.h>
 #include <libinputactions/interfaces/InputEmitter.h>
 
 Q_LOGGING_CATEGORY(INPUTACTIONS_HANDLER_TRIGGER, "inputactions.handler.trigger", QtWarningMsg)
@@ -98,7 +97,7 @@ bool TriggerHandler::activateTriggers(const TriggerTypes &types, const TriggerAc
     for (auto &trigger : triggers(types, event)) {
         triggerActivating(trigger);
         m_activeTriggers.push_back(trigger);
-        qCDebug(INPUTACTIONS_HANDLER_TRIGGER).noquote() << QString("Trigger activated (name: %1)").arg(trigger->name());
+        qCDebug(INPUTACTIONS_HANDLER_TRIGGER).noquote() << QString("Trigger activated (id: %1)").arg(trigger->id());
     }
     m_timedTriggerUpdateTimer.start();
 
@@ -231,7 +230,7 @@ bool TriggerHandler::cancelTriggers(const TriggerTypes &types)
 
 void TriggerHandler::cancelTriggers(Trigger *except)
 {
-    qCDebug(INPUTACTIONS_HANDLER_TRIGGER).noquote().nospace() << "Cancelling triggers (except: " << except->name() << ")";
+    qCDebug(INPUTACTIONS_HANDLER_TRIGGER).noquote().nospace() << "Cancelling triggers (except: " << except->id() << ")";
     for (auto it = m_activeTriggers.begin(); it != m_activeTriggers.end();) {
         auto gesture = *it;
         if (gesture != except) {
