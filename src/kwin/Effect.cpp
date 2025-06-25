@@ -48,8 +48,15 @@ Effect::Effect()
 
     libinputactions::InputBackend::setInstance(std::unique_ptr<KWinInputBackend>(m_backend));
 
-    // This should be moved to libinputactions eventually
+    // Some of this should be moved to libinputactions eventually
     auto *variableManager = libinputactions::VariableManager::instance();
+    variableManager->registerRemoteVariable<bool>("plasma_overview_active", [](auto &value) {
+        // Overview is a plugin and headers are not provided, I think the best way right now is to check for the presence of a QObject property, as the effect
+        // does fortunately have them.
+        if (const auto *effect = dynamic_cast<KWin::Effect *>(KWin::effects->activeFullScreenEffect())) {
+            value = effect->property("overviewGestureInProgress").isValid();
+        }
+    });
     variableManager->registerRemoteVariable<QString>("screen_name", [](auto &value) {
         if (const auto *output = KWin::workspace()->activeOutput()) {
             value = output->name();
