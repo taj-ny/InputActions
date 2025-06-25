@@ -55,6 +55,8 @@ Effect::Effect()
         // does fortunately have them.
         if (const auto *effect = dynamic_cast<KWin::Effect *>(KWin::effects->activeFullScreenEffect())) {
             value = effect->property("overviewGestureInProgress").isValid();
+        } else {
+            value = false;
         }
     });
     variableManager->registerRemoteVariable<QString>("screen_name", [](auto &value) {
