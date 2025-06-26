@@ -52,6 +52,11 @@ void TestTrigger::canActivate_data()
 
     QTest::newRow("17") << leftRight << rightLeft << true << false;
     QTest::newRow("18") << rightLeft << leftRight << true << false;
+
+    QTest::newRow("19") << none << unset << false << true;
+    QTest::newRow("20") << none << left << false << true;
+    QTest::newRow("21") << none << unset << true << true;
+    QTest::newRow("22") << none << left << true << true;
 }
 
 void TestTrigger::canActivate()
