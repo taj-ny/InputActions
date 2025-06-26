@@ -133,7 +133,7 @@ void HyprlandInputBackend::reset()
     }
     m_devices.clear();
     m_hyprlandDevices.clear();
-    LibinputCompositorInputBackend::reset();
+    LibinputIndirectInputBackend::reset();
 }
 
 void HyprlandInputBackend::checkDeviceChanges()
@@ -209,7 +209,7 @@ void HyprlandInputBackend::keyboardKey(SCallbackInfo &info, const std::any &data
     const auto map = std::any_cast<std::unordered_map<std::string, std::any>>(data);
     const auto event = std::any_cast<IKeyboard::SKeyEvent>(map.at("event"));
     const auto keyboard = std::any_cast<SP<IKeyboard>>(map.at("keyboard"));
-    info.cancelled = LibinputCompositorInputBackend::keyboardKey(findInputActionsDevice(keyboard.get()), event.keycode,
+    info.cancelled = LibinputIndirectInputBackend::keyboardKey(findInputActionsDevice(keyboard.get()), event.keycode,
         event.state == WL_KEYBOARD_KEY_STATE_PRESSED);
 }
 
@@ -224,13 +224,13 @@ void HyprlandInputBackend::pointerAxis(SCallbackInfo &info, const std::any &data
     if (event.relativeDirection == WL_POINTER_AXIS_RELATIVE_DIRECTION_INVERTED) {
         delta *= -1;
     }
-    info.cancelled = LibinputCompositorInputBackend::pointerAxis(m_currentPointingDevice, delta);
+    info.cancelled = LibinputIndirectInputBackend::pointerAxis(m_currentPointingDevice, delta);
 }
 
 void HyprlandInputBackend::pointerButton(SCallbackInfo &info, const std::any &data)
 {
     const auto event = std::any_cast<IPointer::SButtonEvent>(data);
-    info.cancelled = LibinputCompositorInputBackend::pointerButton(m_currentPointingDevice, scanCodeToMouseButton(event.button), event.button,
+    info.cancelled = LibinputIndirectInputBackend::pointerButton(m_currentPointingDevice, scanCodeToMouseButton(event.button), event.button,
         event.state == WL_POINTER_BUTTON_STATE_PRESSED);
 }
 
@@ -239,50 +239,50 @@ void HyprlandInputBackend::pointerMotion(SCallbackInfo &info, const std::any &da
     const auto pointerPosition = std::any_cast<const Vector2D>(data);
     const auto delta = pointerPosition - m_previousPointerPosition;
     m_previousPointerPosition = pointerPosition;
-    info.cancelled = LibinputCompositorInputBackend::pointerMotion(m_currentPointingDevice, QPointF(delta.x, delta.y));
+    info.cancelled = LibinputIndirectInputBackend::pointerMotion(m_currentPointingDevice, QPointF(delta.x, delta.y));
 }
 
 bool HyprlandInputBackend::touchpadHoldBegin(const uint8_t &fingers)
 {
-    return LibinputCompositorInputBackend::touchpadHoldBegin(m_currentTouchpad, fingers);
+    return LibinputIndirectInputBackend::touchpadHoldBegin(m_currentTouchpad, fingers);
 }
 
 bool HyprlandInputBackend::touchpadHoldEnd(const bool &cancelled)
 {
-    return LibinputCompositorInputBackend::touchpadHoldEnd(m_currentTouchpad, cancelled);
+    return LibinputIndirectInputBackend::touchpadHoldEnd(m_currentTouchpad, cancelled);
 }
 
 bool HyprlandInputBackend::touchpadPinchBegin(const uint8_t &fingers)
 {
-   return LibinputCompositorInputBackend::touchpadPinchBegin(m_currentTouchpad, fingers);
+   return LibinputIndirectInputBackend::touchpadPinchBegin(m_currentTouchpad, fingers);
 }
 
 bool HyprlandInputBackend::touchpadPinchUpdate(const double &scale, const double &angleDelta)
 {
-    return LibinputCompositorInputBackend::touchpadPinchUpdate(m_currentTouchpad, scale, angleDelta);
+    return LibinputIndirectInputBackend::touchpadPinchUpdate(m_currentTouchpad, scale, angleDelta);
 }
 
 bool HyprlandInputBackend::touchpadPinchEnd(const bool &cancelled)
 {
-    return LibinputCompositorInputBackend::touchpadPinchEnd(m_currentTouchpad, cancelled);
+    return LibinputIndirectInputBackend::touchpadPinchEnd(m_currentTouchpad, cancelled);
 }
 
 void HyprlandInputBackend::touchpadSwipeBegin(SCallbackInfo &info, const std::any &data)
 {
     const auto event = std::any_cast<IPointer::SSwipeBeginEvent>(data);
-    info.cancelled = LibinputCompositorInputBackend::touchpadSwipeBegin(m_currentTouchpad, event.fingers);
+    info.cancelled = LibinputIndirectInputBackend::touchpadSwipeBegin(m_currentTouchpad, event.fingers);
 }
 
 void HyprlandInputBackend::touchpadSwipeUpdate(SCallbackInfo &info, const std::any &data)
 {
     const auto event = std::any_cast<IPointer::SSwipeUpdateEvent>(data);
-    info.cancelled = LibinputCompositorInputBackend::touchpadSwipeUpdate(m_currentTouchpad, QPointF(event.delta.x, event.delta.y));
+    info.cancelled = LibinputIndirectInputBackend::touchpadSwipeUpdate(m_currentTouchpad, QPointF(event.delta.x, event.delta.y));
 }
 
 void HyprlandInputBackend::touchpadSwipeEnd(SCallbackInfo &info, const std::any &data)
 {
     const auto event = std::any_cast<IPointer::SSwipeEndEvent>(data);
-    info.cancelled = LibinputCompositorInputBackend::touchpadSwipeEnd(m_currentTouchpad, event.cancelled);
+    info.cancelled = LibinputIndirectInputBackend::touchpadSwipeEnd(m_currentTouchpad, event.cancelled);
 }
 
 HyprlandInputDevice *HyprlandInputBackend::findDevice(IHID *hyprlandDevice)

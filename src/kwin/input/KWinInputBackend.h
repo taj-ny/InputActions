@@ -20,7 +20,7 @@
 
 #include "input.h"
 
-#include <libinputactions/input/backends/LibinputCompositorInputBackend.h>
+#include <libinputactions/input/backends/LibinputIndirectInputBackend.h>
 
 struct KWinInputDevice
 {
@@ -38,7 +38,7 @@ struct KWinInputDevice
  * @returns All methods that process events should return @c true to stop further event processing, @c false to pass to
  * next filter.
  */
-class KWinInputBackend : public QObject, public libinputactions::LibinputCompositorInputBackend, public KWin::InputEventFilter
+class KWinInputBackend : public QObject, public libinputactions::LibinputIndirectInputBackend, public KWin::InputEventFilter
 {
 public:
     KWinInputBackend();
