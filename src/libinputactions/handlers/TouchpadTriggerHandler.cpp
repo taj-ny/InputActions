@@ -94,7 +94,10 @@ bool TouchpadTriggerHandler::handleEvent(const TouchpadGestureLifecyclePhaseEven
                     const auto triggers = event->triggers();
                     QObject::disconnect(&m_clickTimeoutTimer, nullptr, nullptr, nullptr);
                     QObject::connect(&m_clickTimeoutTimer, &QTimer::timeout, [triggers, this] {
-                        return activateTriggers(triggers);
+                        if (hasActiveTriggers(TriggerType::All & ~triggers)) {
+                            return;
+                        }
+                        activateTriggers(triggers);
                     });
                     m_clickTimeoutTimer.start(m_clickTimeout);
                     return true;
@@ -102,8 +105,10 @@ bool TouchpadTriggerHandler::handleEvent(const TouchpadGestureLifecyclePhaseEven
             }
             return activateTriggers(event->triggers());
         case TouchpadGestureLifecyclePhase::Cancel:
+            m_clickTimeoutTimer.stop();
             return cancelTriggers(event->triggers());
         case TouchpadGestureLifecyclePhase::End:
+            m_clickTimeoutTimer.stop();
             // Libinput ends hold gestures when the touchpad is clicked instead of cancelling
             if (m_clicked && event->triggers() == TriggerType::Press) {
                 return cancelTriggers(event->triggers());

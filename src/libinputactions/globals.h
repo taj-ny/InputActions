@@ -80,10 +80,6 @@ Q_ENUM_NS(TriggerType)
 Q_DECLARE_FLAGS(TriggerTypes, TriggerType)
 Q_DECLARE_OPERATORS_FOR_FLAGS(TriggerTypes)
 
-static inline TriggerTypes operator~(const TriggerTypes &value)
-{
-    return TriggerTypes(~static_cast<uint32_t>(value));
-}
 static inline TriggerType operator~(const TriggerType &value)
 {
     return TriggerType(~static_cast<uint32_t>(value));
