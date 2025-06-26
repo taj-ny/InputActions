@@ -151,7 +151,7 @@ void Config::initWatchers()
 void Config::readEvents()
 {
     auto first = true;
-    char buffer[4096];
+    char buffer[512];
     while (read(m_inotifyFd, &buffer, sizeof(buffer)) > 0) {
         if (first) {
             for (const auto &wd : m_inotifyWds) {
