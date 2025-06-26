@@ -153,16 +153,18 @@ void Config::readEvents()
     auto first = true;
     char buffer[512];
     while (read(m_inotifyFd, &buffer, sizeof(buffer)) > 0) {
-        if (first) {
-            for (const auto &wd : m_inotifyWds) {
-                inotify_rm_watch(m_inotifyFd, wd);
-            }
-            initWatchers();
+        if (!first) {
+            continue;
+        }
+        first = false;
 
-            if (m_autoReload) {
-                load();
-            }
-            first = false;
+        for (const auto &wd : m_inotifyWds) {
+            inotify_rm_watch(m_inotifyFd, wd);
+        }
+        initWatchers();
+
+        if (m_autoReload) {
+            load();
         }
     }
 }
