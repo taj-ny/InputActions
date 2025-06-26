@@ -21,38 +21,87 @@
 #include <libinputactions/input/backends/LibevdevComplementaryInputBackend.h>
 #include <libinputactions/yaml_convert.h>
 
+#include <QDir>
 #include <QFile>
 #include <QStandardPaths>
+
+#include <fcntl.h>
+#include <sys/inotify.h>
 
 namespace libinputactions
 {
 
-const static QString s_configFile = QStandardPaths::writableLocation(QStandardPaths::ConfigLocation) + "/kwingestures.yml";
+static const QDir INPUTACTIONS_DIR = QStandardPaths::writableLocation(QStandardPaths::ConfigLocation) + "/inputactions";
+static const QString CONFIG_PATH = INPUTACTIONS_DIR.path() + "/config.yaml";
+static const QString LEGACY_CONFIG_PATH = QStandardPaths::writableLocation(QStandardPaths::ConfigLocation) + "/kwingestures.yml";
 
 /**
  * Used to detect and prevent infinite compositor crash loops when loading the configuration.
  */
-const static QString s_initFile = QStandardPaths::writableLocation(QStandardPaths::TempLocation) + "/inputactions_init";
+const static QString CRASH_PREVENTION_FILE = QStandardPaths::writableLocation(QStandardPaths::TempLocation) + "/inputactions_init";
 
 Config::Config(InputBackend *backend)
     : m_backend(backend)
 {
-    if (!QFile::exists(s_configFile)) {
-        QFile(s_configFile).open(QIODevice::WriteOnly);
+    if (!INPUTACTIONS_DIR.exists()) {
+        INPUTACTIONS_DIR.mkpath(".");
     }
-    m_watcher.addPath(s_configFile);
-    m_watcher.addPath(QStandardPaths::writableLocation(QStandardPaths::ConfigLocation));
-    connect(&m_watcher, &QFileSystemWatcher::directoryChanged, this, &Config::slotConfigDirectoryChanged);
-    connect(&m_watcher, &QFileSystemWatcher::fileChanged, this, &Config::slotConfigFileChanged);
+    if (QFile::exists(LEGACY_CONFIG_PATH) && !QFile::exists(CONFIG_PATH)) {
+        QFile::copy(LEGACY_CONFIG_PATH, CONFIG_PATH);
+    }
+
+    // pair<path, create>
+    std::vector<std::pair<QString, bool>> candidates;
+#ifdef DEBUG
+    candidates.emplace_back(INPUTACTIONS_DIR.path() + "/config-debug.yaml", false);
+#endif
+    candidates.emplace_back(CONFIG_PATH, true);
+
+    for (const auto &candidate : candidates) {
+        const auto &path = candidate.first;
+        const auto &create = candidate.second;
+
+        if (QFile::exists(path)) {
+            m_path = path;
+            break;
+        } else if (create) {
+            QFile(path).open(QIODevice::WriteOnly);
+            m_path = path;
+            break;
+        }
+    }
+
+    m_inotifyFd = inotify_init();
+    if (m_inotifyFd == -1) {
+        qWarning(INPUTACTIONS, "Failed to initialize config watcher");
+        return;
+    }
+    if (fcntl(m_inotifyFd, F_SETFL, fcntl(m_inotifyFd, F_GETFL, 0) | O_NONBLOCK) < 0) {
+        qWarning(INPUTACTIONS, "Failed to initialize config watcher (fcntl failed)");
+        return;
+    }
+    initWatchers();
+
+    connect(&m_readEventsTimer, &QTimer::timeout, this, &Config::readEvents);
+    m_readEventsTimer.setInterval(500);
+    m_readEventsTimer.start();
 }
 
-std::optional<QString> Config::load()
+Config::~Config()
 {
+    if (m_inotifyFd != -1) {
+        close(m_inotifyFd);
+    }
+}
+
+std::optional<QString> Config::load(const bool &firstLoad)
+{
+    qCDebug(INPUTACTIONS, "Reloading config");
     std::optional<QString> error;
-    if (!QFile::exists(s_initFile)) {
-        QFile(s_initFile).open(QIODevice::WriteOnly);
+    if (!QFile::exists(CRASH_PREVENTION_FILE) || !firstLoad) {
+        QFile(CRASH_PREVENTION_FILE).open(QIODevice::WriteOnly);
         try {
-            const auto config = YAML::LoadFile(s_configFile.toStdString());
+            const auto config = YAML::LoadFile(m_path.toStdString());
             m_autoReload = config["autoreload"].as<bool>(true);
 
             m_backend->reset();
@@ -86,28 +135,37 @@ std::optional<QString> Config::load()
     } else {
         qCWarning(INPUTACTIONS) << "Configuration was not loaded automatically due to a crash.";
     }
-    QFile::remove(s_initFile);
+    QFile::remove(CRASH_PREVENTION_FILE);
     return error;
 }
 
-void Config::slotConfigDirectoryChanged()
+void Config::initWatchers()
 {
-    if (!m_watcher.files().contains(s_configFile) && QFile::exists(s_configFile)) {
-        m_watcher.addPath(s_configFile);
-        if (m_autoReload) {
-            load();
-        }
+    m_inotifyWds.push_back(inotify_add_watch(m_inotifyFd, QFileInfo(m_path).dir().path().toStdString().c_str(), IN_CREATE | IN_MODIFY)); // watch dir
+    m_inotifyWds.push_back(inotify_add_watch(m_inotifyFd, m_path.toStdString().c_str(), IN_MODIFY | IN_DONT_FOLLOW)); // watch file
+    if (!QFile(m_path).symLinkTarget().isEmpty()) {
+        m_inotifyWds.push_back(inotify_add_watch(m_inotifyFd, m_path.toStdString().c_str(), IN_MODIFY)); // watch file that link points to
     }
 }
 
-void Config::slotConfigFileChanged()
+void Config::readEvents()
 {
-    if (!m_watcher.files().contains(s_configFile)) {
-        m_watcher.addPath(s_configFile);
-    }
+    auto first = true;
+    char buffer[512];
+    while (read(m_inotifyFd, &buffer, sizeof(buffer)) > 0) {
+        if (!first) {
+            continue;
+        }
+        first = false;
 
-    if (m_autoReload) {
-        load();
+        for (const auto &wd : m_inotifyWds) {
+            inotify_rm_watch(m_inotifyFd, wd);
+        }
+        initWatchers();
+
+        if (m_autoReload) {
+            load();
+        }
     }
 }
 
