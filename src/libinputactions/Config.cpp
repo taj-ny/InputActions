@@ -104,14 +104,12 @@ std::optional<QString> Config::load(const bool &firstLoad)
             const auto config = YAML::LoadFile(m_path.toStdString());
             m_autoReload = config["autoreload"].as<bool>(true);
 
-            m_backend->reset();
-            for (auto &eventHandler : config.as<std::vector<std::unique_ptr<InputEventHandler>>>()) {
-                m_backend->addEventHandler(std::move(eventHandler));
-            }
+            auto eventHandlers = config.as<std::vector<std::unique_ptr<InputEventHandler>>>();
+            std::map<QString, InputDeviceProperties> customDeviceProperties;
             if (const auto &touchpadNode = config["touchpad"]) {
                 if (const auto &devicesNode = touchpadNode["devices"]) {
                     for (auto it = devicesNode.begin(); it != devicesNode.end(); it++) {
-                        m_backend->addCustomDeviceProperties(it->first.as<QString>(), it->second.as<InputDeviceProperties>());
+                        customDeviceProperties[it->first.as<QString>()] = it->second.as<InputDeviceProperties>();
                     }
                 }
             }
@@ -125,6 +123,13 @@ std::optional<QString> Config::load(const bool &firstLoad)
                 }
             }
 
+            m_backend->reset();
+            for (auto &eventHandler : eventHandlers) {
+                m_backend->addEventHandler(std::move(eventHandler));
+            }
+            for (auto &[device, properties] : customDeviceProperties) {
+                m_backend->addCustomDeviceProperties(device, properties);
+            }
             m_backend->initialize();
         } catch (const YAML::Exception &e) {
             const auto message = QString("Failed to load configuration: %1 (line %2, column %3)")
