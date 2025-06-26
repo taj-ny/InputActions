@@ -45,11 +45,11 @@ void Trigger::setEndCondition(const std::shared_ptr<const Condition> &condition)
 
 bool Trigger::canActivate(const TriggerActivationEvent *event) const
 {
-    if (!m_mouseButtons.empty() && !event->mouseButtons.empty()) {
-        if (m_mouseButtons.size() != event->mouseButtons.size()
-            || (m_mouseButtonOrderMatters && !std::ranges::equal(m_mouseButtons, event->mouseButtons))
+    if (!m_mouseButtons.empty() && event->mouseButtons.has_value()) {
+        if (m_mouseButtons.size() != event->mouseButtons->size()
+            || (m_mouseButtonOrderMatters && !std::ranges::equal(m_mouseButtons, event->mouseButtons.value()))
             || (!m_mouseButtonOrderMatters && !std::ranges::all_of(m_mouseButtons, [event](auto &button) {
-                return std::ranges::contains(event->mouseButtons, button);
+                return std::ranges::contains(event->mouseButtons.value(), button);
         }))) {
             return false;
         }

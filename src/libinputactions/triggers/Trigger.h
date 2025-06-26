@@ -36,7 +36,7 @@ namespace libinputactions
 class TriggerActivationEvent
 {
 public:
-    std::vector<Qt::MouseButton> mouseButtons;
+    std::optional<std::vector<Qt::MouseButton>> mouseButtons;
 };
 class TriggerUpdateEvent
 {

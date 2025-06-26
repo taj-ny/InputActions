@@ -20,54 +20,53 @@ void TestTrigger::init()
 
 void TestTrigger::canActivate_data()
 {
-    QTest::addColumn<Trigger *>("trigger");
-    QTest::addColumn<TriggerActivationEvent *>("event");
+    QTest::addColumn<std::optional<std::vector<Qt::MouseButton>>>("triggerButtons");
+    QTest::addColumn<std::optional<std::vector<Qt::MouseButton>>>("eventButtons");
+    QTest::addColumn<bool>("orderMatters");
     QTest::addColumn<bool>("result");
 
+    const auto unset = std::optional<std::vector<Qt::MouseButton>>();
+    const auto none = std::optional<std::vector<Qt::MouseButton>>(std::vector<Qt::MouseButton>());
+    const auto left = std::optional<std::vector<Qt::MouseButton>>{{Qt::MouseButton::LeftButton}};
+    const auto right = std::optional<std::vector<Qt::MouseButton>>{{Qt::MouseButton::RightButton}};
+    const auto leftRight = std::optional<std::vector<Qt::MouseButton>>{{Qt::MouseButton::LeftButton, Qt::MouseButton::RightButton}};
+    const auto rightLeft = std::optional<std::vector<Qt::MouseButton>>{{Qt::MouseButton::RightButton, Qt::MouseButton::LeftButton}};
 
-    auto trigger = new Trigger;
-    auto event = new TriggerActivationEvent;
-    QTest::newRow("nothing") << trigger << event << true;
-    trigger = new Trigger;
-    event = new TriggerActivationEvent;
-    trigger->setActivationCondition(std::make_shared<CallbackCondition>([]() { return false; }));
-    QTest::newRow("false condition") << trigger << event << false;
-    trigger = new Trigger;
-    event = new TriggerActivationEvent;
-    trigger->setActivationCondition(std::make_shared<CallbackCondition>([]() { return true; }));
-    QTest::newRow("true condition") << trigger << event << true;
+    QTest::newRow("1") << left << unset << false << true;
+    QTest::newRow("3") << left << left << false << true;
+    QTest::newRow("4") << right << left << false << false;
+    QTest::newRow("5") << left << right << false << false;
+    QTest::newRow("6") << leftRight << left << false << false;
+    QTest::newRow("7") << left << leftRight << false << false;
 
-    const auto mouseButton = Qt::MouseButton::LeftButton;
-    trigger = new Trigger;
-    event = new TriggerActivationEvent;
-    trigger->setMouseButtons(mouseButton);
-    event->mouseButtons = mouseButton;
-    QTest::newRow("mouse buttons, both, correct") << trigger << event << true;
-    trigger = new Trigger;
-    event = new TriggerActivationEvent;
-    trigger->setMouseButtons(mouseButton);
-    event->mouseButtons = Qt::MouseButton::RightButton;
-    QTest::newRow("mouse buttons, both, wrong") << trigger << event << false;
-    trigger = new Trigger;
-    event = new TriggerActivationEvent;
-    trigger->setMouseButtons(mouseButton);
-    QTest::newRow("mouse buttons, trigger only") << trigger << event << true;
-    trigger = new Trigger;
-    event = new TriggerActivationEvent;
-    event->mouseButtons = mouseButton;
-    QTest::newRow("mouse buttons, event only") << trigger << event << true;
+    QTest::newRow("8") << left << unset << true << true;
+    QTest::newRow("9") << left << left << true << true;
+    QTest::newRow("10") << right << left << true << false;
+    QTest::newRow("11") << left << right << true << false;
+    QTest::newRow("12") << leftRight << left << true << false;
+    QTest::newRow("13") << left << leftRight << true << false;
+
+    QTest::newRow("14") << leftRight << leftRight << false << true;
+    QTest::newRow("15") << leftRight << rightLeft << false << true;
+    QTest::newRow("16") << rightLeft << leftRight << false << true;
+
+    QTest::newRow("17") << leftRight << rightLeft << true << false;
+    QTest::newRow("18") << rightLeft << leftRight << true << false;
 }
 
 void TestTrigger::canActivate()
 {
-    QFETCH(Trigger *, trigger);
-    QFETCH(TriggerActivationEvent *, event);
+    QFETCH(std::optional<std::vector<Qt::MouseButton>>, triggerButtons);
+    QFETCH(std::optional<std::vector<Qt::MouseButton>>, eventButtons);
+    QFETCH(bool, orderMatters);
     QFETCH(bool, result);
 
-    QCOMPARE(trigger->canActivate(event), result);
-
-    delete trigger;
-    delete event;
+    auto trigger = std::make_unique<Trigger>();
+    auto event = std::make_unique<TriggerActivationEvent>();
+    trigger->setMouseButtons(triggerButtons.value());
+    trigger->setMouseButtonOrderMatters(orderMatters);
+    event->mouseButtons = eventButtons;
+    QCOMPARE(trigger->canActivate(event.get()), result);
 }
 
 void TestTrigger::update_data()
