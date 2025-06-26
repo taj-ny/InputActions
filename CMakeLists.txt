@@ -12,6 +12,7 @@ set(CMAKE_CXX_EXTENSIONS ON)
 
 option(INPUTACTIONS_BUILD_HYPRLAND "Build the Hyprland plugin" OFF)
 option(INPUTACTIONS_BUILD_KWIN "Build the KWin plugin" OFF)
+option(INPUTACTIONS_BUILD_STANDALONE "Build the standalone version" ON)
 option(BUILD_TESTS "Build tests" OFF)
 
 if(NOT CMAKE_BUILD_TYPE)
