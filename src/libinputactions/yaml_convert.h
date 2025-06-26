@@ -964,7 +964,10 @@ struct convert<std::unique_ptr<Trigger>>
             }
         }
         if (const auto &mouseButtonsNode = node["mouse_buttons"]) {
-            trigger->setMouseButtons(mouseButtonsNode.as<Qt::MouseButtons>());
+            trigger->setMouseButtons(mouseButtonsNode.as<std::vector<Qt::MouseButton>>());
+        }
+        if (const auto &mouseButtonsExactOrderNode = node["mouse_buttons_exact_order"]) {
+            trigger->setMouseButtonsExactOrder(mouseButtonsExactOrderNode.as<bool>());
         }
         if (const auto &conditionsNode = node["conditions"]) {
             conditionGroup->add(conditionsNode.as<std::shared_ptr<Condition>>());
@@ -1201,6 +1204,37 @@ ENUM_DECODER(On, "action event (on)", (std::unordered_map<QString, On> {
     {"end_cancel", On::EndCancel}
 }))
 ENUM_DECODER(CursorShape, "cursor shape", CURSOR_SHAPES)
+ENUM_DECODER(Qt::MouseButton, "mouse button", (std::unordered_map<QString, Qt::MouseButton> {
+    {"left", Qt::MouseButton::LeftButton},
+    {"middle", Qt::MouseButton::MiddleButton},
+    {"right", Qt::MouseButton::RightButton},
+    {"back", Qt::MouseButton::ExtraButton1},
+    {"forward", Qt::MouseButton::ExtraButton2},
+    {"extra1", Qt::MouseButton::ExtraButton1},
+    {"extra2", Qt::MouseButton::ExtraButton2},
+    {"extra3", Qt::MouseButton::ExtraButton3},
+    {"extra4", Qt::MouseButton::ExtraButton4},
+    {"extra5", Qt::MouseButton::ExtraButton5},
+    {"extra6", Qt::MouseButton::ExtraButton6},
+    {"extra7", Qt::MouseButton::ExtraButton7},
+    {"extra8", Qt::MouseButton::ExtraButton8},
+    {"extra9", Qt::MouseButton::ExtraButton9},
+    {"extra10", Qt::MouseButton::ExtraButton10},
+    {"extra11", Qt::MouseButton::ExtraButton11},
+    {"extra12", Qt::MouseButton::ExtraButton12},
+    {"extra13", Qt::MouseButton::ExtraButton13},
+    {"extra14", Qt::MouseButton::ExtraButton14},
+    {"extra15", Qt::MouseButton::ExtraButton15},
+    {"extra16", Qt::MouseButton::ExtraButton16},
+    {"extra17", Qt::MouseButton::ExtraButton17},
+    {"extra18", Qt::MouseButton::ExtraButton18},
+    {"extra19", Qt::MouseButton::ExtraButton19},
+    {"extra20", Qt::MouseButton::ExtraButton20},
+    {"extra21", Qt::MouseButton::ExtraButton21},
+    {"extra22", Qt::MouseButton::ExtraButton22},
+    {"extra23", Qt::MouseButton::ExtraButton23},
+    {"extra24", Qt::MouseButton::ExtraButton24}
+}))
 ENUM_DECODER(PinchDirection, "pinch direction", (std::unordered_map<QString, PinchDirection> {
     {"in", PinchDirection::In},
     {"out", PinchDirection::Out},
@@ -1231,37 +1265,6 @@ FLAGS_DECODER(Qt::KeyboardModifiers, "keyboard modifier", (std::unordered_map<QS
     {"ctrl", Qt::KeyboardModifier::ControlModifier},
     {"meta", Qt::KeyboardModifier::MetaModifier},
     {"shift", Qt::KeyboardModifier::ShiftModifier}
-}))
-FLAGS_DECODER(Qt::MouseButtons, "mouse button", (std::unordered_map<QString, Qt::MouseButton> {
-    {"left", Qt::MouseButton::LeftButton},
-    {"middle", Qt::MouseButton::MiddleButton},
-    {"right", Qt::MouseButton::RightButton},
-    {"back", Qt::MouseButton::ExtraButton1},
-    {"forward", Qt::MouseButton::ExtraButton2},
-    {"extra1", Qt::MouseButton::ExtraButton1},
-    {"extra2", Qt::MouseButton::ExtraButton2},
-    {"extra3", Qt::MouseButton::ExtraButton3},
-    {"extra4", Qt::MouseButton::ExtraButton4},
-    {"extra5", Qt::MouseButton::ExtraButton5},
-    {"extra6", Qt::MouseButton::ExtraButton6},
-    {"extra7", Qt::MouseButton::ExtraButton7},
-    {"extra8", Qt::MouseButton::ExtraButton8},
-    {"extra9", Qt::MouseButton::ExtraButton9},
-    {"extra10", Qt::MouseButton::ExtraButton10},
-    {"extra11", Qt::MouseButton::ExtraButton11},
-    {"extra12", Qt::MouseButton::ExtraButton12},
-    {"extra13", Qt::MouseButton::ExtraButton13},
-    {"extra14", Qt::MouseButton::ExtraButton14},
-    {"extra15", Qt::MouseButton::ExtraButton15},
-    {"extra16", Qt::MouseButton::ExtraButton16},
-    {"extra17", Qt::MouseButton::ExtraButton17},
-    {"extra18", Qt::MouseButton::ExtraButton18},
-    {"extra19", Qt::MouseButton::ExtraButton19},
-    {"extra20", Qt::MouseButton::ExtraButton20},
-    {"extra21", Qt::MouseButton::ExtraButton21},
-    {"extra22", Qt::MouseButton::ExtraButton22},
-    {"extra23", Qt::MouseButton::ExtraButton23},
-    {"extra24", Qt::MouseButton::ExtraButton24}
 }))
 
 template<>

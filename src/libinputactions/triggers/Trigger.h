@@ -36,7 +36,7 @@ namespace libinputactions
 class TriggerActivationEvent
 {
 public:
-    std::optional<Qt::MouseButtons> mouseButtons;
+    std::optional<std::vector<Qt::MouseButton>> mouseButtons;
 };
 class TriggerUpdateEvent
 {
@@ -140,13 +140,15 @@ public:
      */
     void setSetLastTrigger(const bool &value);
 
-    const std::optional<Qt::MouseButtons> &mouseButtons() const;
+    const std::vector<Qt::MouseButton> &mouseButtons() const;
     /**
      * Only applies to mouse triggers.
-     *
      * @param buttons Mouse buttons that must be pressed before and during the trigger.
      */
-    void setMouseButtons(const std::optional<Qt::MouseButtons> &buttons);
+    void setMouseButtons(const std::vector<Qt::MouseButton> &buttons);
+
+    const bool &mouseButtonsExactOrder() const;
+    void setMouseButtonsExactOrder(const bool &value);
 
     const QString &id() const;
     /**
@@ -183,7 +185,8 @@ private:
     std::optional<std::shared_ptr<const Condition>> m_activationCondition;
     std::optional<std::shared_ptr<const Condition>> m_endCondition;
 
-    std::optional<Qt::MouseButtons> m_mouseButtons;
+    std::vector<Qt::MouseButton> m_mouseButtons;
+    bool m_mouseButtonsExactOrder{};
 
     std::optional<Range<qreal>> m_threshold;
     bool m_withinThreshold = false;
