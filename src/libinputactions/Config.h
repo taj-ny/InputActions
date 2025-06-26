@@ -18,8 +18,8 @@
 
 #pragma once
 
-#include <QFileSystemWatcher>
 #include <QObject>
+#include <QTimer>
 
 namespace libinputactions
 {
@@ -32,18 +32,23 @@ class Config : public QObject
 
 public:
     Config(InputBackend *backend);
+    ~Config() override;
 
     /**
      * @return std::nullopt if loaded successfully, otherwise the error message.
      */
-    std::optional<QString> load();
+    std::optional<QString> load(const bool &firstLoad = false);
 
 private:
-    void slotConfigDirectoryChanged();
-    void slotConfigFileChanged();
+    void initWatchers();
+    void readEvents();
+
+    QString m_path;
+    int m_inotifyFd;
+    std::vector<int> m_inotifyWds;
+    QTimer m_readEventsTimer;
 
     bool m_autoReload = true;
-    QFileSystemWatcher m_watcher;
 
     InputBackend *m_backend;
 };

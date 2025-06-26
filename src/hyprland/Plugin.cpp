@@ -66,7 +66,7 @@ Plugin::Plugin(void *handle)
     }, this);
     g_pEventLoopManager->addTimer(m_eventLoopTimer);
 
-    m_config.load();
+    m_config.load(true);
 }
 
 Plugin::~Plugin()

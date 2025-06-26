@@ -71,7 +71,7 @@ Effect::Effect()
     KWin::input()->prependInputEventFilter(m_backend);
 #endif
 
-    reconfigure(ReconfigureAll);
+    m_config.load(true);
 }
 
 Effect::~Effect()
