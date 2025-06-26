@@ -147,8 +147,8 @@ public:
      */
     void setMouseButtons(const std::vector<Qt::MouseButton> &buttons);
 
-    const bool &mouseButtonOrderMatters() const;
-    void setMouseButtonOrderMatters(const bool &value);
+    const bool &mouseButtonsExactOrder() const;
+    void setMouseButtonsExactOrder(const bool &value);
 
     const QString &id() const;
     /**
@@ -186,7 +186,7 @@ private:
     std::optional<std::shared_ptr<const Condition>> m_endCondition;
 
     std::vector<Qt::MouseButton> m_mouseButtons;
-    bool m_mouseButtonOrderMatters{};
+    bool m_mouseButtonsExactOrder{};
 
     std::optional<Range<qreal>> m_threshold;
     bool m_withinThreshold = false;

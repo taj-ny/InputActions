@@ -274,8 +274,8 @@ bool MouseTriggerHandler::shouldBlockMouseButton(const Qt::MouseButton &button)
     event->mouseButtons = {};
     for (const auto &trigger : triggers(TriggerType::All, event.get())) {
         const auto buttons = trigger->mouseButtons();
-        if ((trigger->mouseButtonOrderMatters() && std::ranges::equal(m_buttons, buttons | std::views::take(m_buttons.size())))
-            || (!trigger->mouseButtonOrderMatters() && std::ranges::contains(buttons, button))) {
+        if ((trigger->mouseButtonsExactOrder() && std::ranges::equal(m_buttons, buttons | std::views::take(m_buttons.size())))
+            || (!trigger->mouseButtonsExactOrder() && std::ranges::contains(buttons, button))) {
             qCDebug(INPUTACTIONS_HANDLER_MOUSE).noquote().nospace() << "Mouse button blocked (button: " << button << ", trigger: " << trigger->id() << ")";
             return true;
         }

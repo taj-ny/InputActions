@@ -966,8 +966,8 @@ struct convert<std::unique_ptr<Trigger>>
         if (const auto &mouseButtonsNode = node["mouse_buttons"]) {
             trigger->setMouseButtons(mouseButtonsNode.as<std::vector<Qt::MouseButton>>());
         }
-        if (const auto &mouseButtonsNode = node["mouse_button_order_matters"]) {
-            trigger->setMouseButtonOrderMatters(mouseButtonsNode.as<bool>());
+        if (const auto &mouseButtonsExactOrderNode = node["mouse_buttons_exact_order"]) {
+            trigger->setMouseButtonsExactOrder(mouseButtonsExactOrderNode.as<bool>());
         }
         if (const auto &conditionsNode = node["conditions"]) {
             conditionGroup->add(conditionsNode.as<std::shared_ptr<Condition>>());

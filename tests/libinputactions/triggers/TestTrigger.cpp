@@ -64,7 +64,7 @@ void TestTrigger::canActivate()
     auto trigger = std::make_unique<Trigger>();
     auto event = std::make_unique<TriggerActivationEvent>();
     trigger->setMouseButtons(triggerButtons.value());
-    trigger->setMouseButtonOrderMatters(orderMatters);
+    trigger->setMouseButtonsExactOrder(orderMatters);
     event->mouseButtons = eventButtons;
     QCOMPARE(trigger->canActivate(event.get()), result);
 }
