@@ -16,10 +16,25 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include <print>
+#include "input/LibinputInputBackend.h"
+
+#include <libinputactions/Config.h>
+
+#include <QCoreApplication>
 
 int main()
 {
-    std::print("hi");
-    return 0;
+    static int argc = 0;
+    QCoreApplication app(argc, nullptr);
+
+    LibinputInputBackend backend;
+    libinputactions::Config config(&backend);
+    config.load(false);
+
+    backend.initialize();
+    while (true) {
+        QCoreApplication::processEvents();
+        backend.poll();
+        usleep(1000);
+    }
 }
