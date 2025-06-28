@@ -16,31 +16,14 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#pragma once
+#include "WaylandWindowProvider.h"
 
-#include <libinputactions/globals.h>
+#include "protocols/WlrForeignToplevelManagementV1.h"
 
-#include "Window.h"
-
-namespace libinputactions
+std::shared_ptr<libinputactions::Window> WaylandWindowProvider::activeWindow()
 {
-
-class WindowProvider
-{
-    INPUTACTIONS_DECLARE_SINGLETON(WindowProvider)
-
-public:
-    WindowProvider() = default;
-    virtual ~WindowProvider() = default;
-
-    /**
-     * @return The currently active window, or nullptr if not available.
-     */
-    virtual std::shared_ptr<Window> activeWindow();
-    /**
-     * @return The window under the pointer, or nullptr if not available.
-     */
-    virtual std::shared_ptr<Window> windowUnderPointer();
-};
-
+    if (WlrForeignToplevelManagementV1::instance()->supported()) {
+        return WlrForeignToplevelManagementV1::instance()->activeWindow();
+    }
+    return {};
 }

@@ -21,12 +21,12 @@
 namespace libinputactions
 {
 
-std::unique_ptr<Window> WindowProvider::activeWindow()
+std::shared_ptr<Window> WindowProvider::activeWindow()
 {
     return {};
 }
 
-std::unique_ptr<Window> WindowProvider::windowUnderPointer()
+std::shared_ptr<Window> WindowProvider::windowUnderPointer()
 {
     return {};
 }

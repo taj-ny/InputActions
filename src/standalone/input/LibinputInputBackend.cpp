@@ -60,6 +60,7 @@ void LibinputInputBackend::reset()
 
 void LibinputInputBackend::poll()
 {
+    LibevdevComplementaryInputBackend::poll();
     libinput_dispatch(m_libinput);
     libinput_event *event;
     while ((event = libinput_get_event(m_libinput))) {

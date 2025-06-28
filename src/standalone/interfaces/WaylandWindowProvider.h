@@ -18,29 +18,10 @@
 
 #pragma once
 
-#include <libinputactions/globals.h>
+#include <libinputactions/interfaces/WindowProvider.h>
 
-#include "Window.h"
-
-namespace libinputactions
+class WaylandWindowProvider : public libinputactions::WindowProvider
 {
-
-class WindowProvider
-{
-    INPUTACTIONS_DECLARE_SINGLETON(WindowProvider)
-
 public:
-    WindowProvider() = default;
-    virtual ~WindowProvider() = default;
-
-    /**
-     * @return The currently active window, or nullptr if not available.
-     */
-    virtual std::shared_ptr<Window> activeWindow();
-    /**
-     * @return The window under the pointer, or nullptr if not available.
-     */
-    virtual std::shared_ptr<Window> windowUnderPointer();
+    std::shared_ptr<libinputactions::Window> activeWindow() override;
 };
-
-}

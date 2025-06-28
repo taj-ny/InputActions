@@ -16,31 +16,29 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#pragma once
+#include <wayland-client.h>
 
-#include <libinputactions/globals.h>
+#include <QString>
 
-#include "Window.h"
+#define INPUTACTIONS_NOOP_2 [](auto, auto){}
+#define INPUTACTIONS_NOOP_3 [](auto, auto, auto){}
 
-namespace libinputactions
+class WaylandProtocol
 {
-
-class WindowProvider
-{
-    INPUTACTIONS_DECLARE_SINGLETON(WindowProvider)
-
 public:
-    WindowProvider() = default;
-    virtual ~WindowProvider() = default;
+    virtual ~WaylandProtocol() = default;
 
-    /**
-     * @return The currently active window, or nullptr if not available.
-     */
-    virtual std::shared_ptr<Window> activeWindow();
-    /**
-     * @return The window under the pointer, or nullptr if not available.
-     */
-    virtual std::shared_ptr<Window> windowUnderPointer();
+    void initialize(wl_registry *registry);
+    bool supported() const;
+
+protected:
+    WaylandProtocol(QString name);
+
+    virtual void bind(wl_registry *registry, uint32_t name) {};
+
+private:
+    QString m_name;
+    bool m_supported{};
+
+    static void handleGlobal(void *data, wl_registry *registry, uint32_t name, const char *interface, uint32_t version);
 };
-
-}

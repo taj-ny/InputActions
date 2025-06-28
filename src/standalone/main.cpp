@@ -19,6 +19,10 @@
 #include "input/LibinputInputBackend.h"
 
 #include <libinputactions/Config.h>
+#include <libinputactions/DBusInterface.h>
+
+#include "interfaces/WaylandWindowProvider.h"
+#include "protocols/WlrForeignToplevelManagementV1.h"
 
 #include <QCoreApplication>
 
@@ -29,10 +33,18 @@ int main()
 
     LibinputInputBackend backend;
     libinputactions::Config config(&backend);
+    libinputactions::DBusInterface dbusInterface(&config);
     config.load(false);
+
+    libinputactions::WindowProvider::setInstance(std::make_shared<WaylandWindowProvider>());
+
+    auto *display = wl_display_connect(nullptr);
+    auto *registry = wl_display_get_registry(display);
+    WlrForeignToplevelManagementV1::instance()->initialize(registry);
 
     backend.initialize();
     while (true) {
+        wl_display_roundtrip(display); // not sure if this is correct
         QCoreApplication::processEvents();
         backend.poll();
         usleep(1000);
