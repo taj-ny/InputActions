@@ -16,26 +16,28 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include "WaylandProtocol.h"
+#include "WaylandProtocolManager.h"
 
-#include <QLoggingCategory>
-
-WaylandProtocol::WaylandProtocol(QString name)
-    : m_name(std::move(name))
+WaylandProtocolManager::WaylandProtocolManager(wl_registry *registry)
 {
+    static const wl_registry_listener listener{
+        &WaylandProtocolManager::handleGlobal
+    };
+    wl_registry_add_listener(registry, &listener, this);
 }
 
-void WaylandProtocol::bind(wl_registry *registry, uint32_t name)
+void WaylandProtocolManager::addProtocol(WaylandProtocol *protocol)
 {
-    m_supported = true;
+    m_protocols.push_back(protocol);
 }
 
-const QString &WaylandProtocol::name() const
+void WaylandProtocolManager::handleGlobal(void *data, wl_registry *registry, uint32_t name, const char *interface, uint32_t version)
 {
-    return m_name;
-}
-
-bool WaylandProtocol::supported() const
-{
-    return m_supported;
+    auto *self = static_cast<WaylandProtocolManager *>(data);
+    for (auto *protocol : self->m_protocols) {
+        if (strcmp(interface, protocol->name().toStdString().c_str()) == 0) {
+            protocol->bind(registry, name);
+            return;
+        }
+    }
 }

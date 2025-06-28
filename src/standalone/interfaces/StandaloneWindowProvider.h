@@ -16,14 +16,12 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include "WaylandWindowProvider.h"
+#pragma once
 
-#include "protocols/WlrForeignToplevelManagementV1.h"
+#include <libinputactions/interfaces/WindowProvider.h>
 
-std::shared_ptr<libinputactions::Window> WaylandWindowProvider::activeWindow()
+class StandaloneWindowProvider : public libinputactions::WindowProvider
 {
-    if (WlrForeignToplevelManagementV1::instance()->supported()) {
-        return WlrForeignToplevelManagementV1::instance()->activeWindow();
-    }
-    return {};
-}
+public:
+    std::shared_ptr<libinputactions::Window> activeWindow() override;
+};

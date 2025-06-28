@@ -16,26 +16,20 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include "WaylandProtocol.h"
+#pragma once
 
-#include <QLoggingCategory>
+#include <libinputactions/interfaces/InputEmitter.h>
 
-WaylandProtocol::WaylandProtocol(QString name)
-    : m_name(std::move(name))
+#include "protocols/WlrVirtualPointerUnstableV1.h"
+
+class StandaloneInputEmitter : public libinputactions::InputEmitter
 {
-}
+public:
+    StandaloneInputEmitter();
 
-void WaylandProtocol::bind(wl_registry *registry, uint32_t name)
-{
-    m_supported = true;
-}
+    void mouseButton(const uint32_t &button, const bool &state) override;
+    void mouseMoveRelative(const QPointF &delta) override;
 
-const QString &WaylandProtocol::name() const
-{
-    return m_name;
-}
-
-bool WaylandProtocol::supported() const
-{
-    return m_supported;
-}
+private:
+    std::unique_ptr<WlrVirtualPointerUnstableV1Pointer> m_wlrVirtualPointerUnstableV1Pointer;
+};

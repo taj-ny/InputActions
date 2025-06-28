@@ -49,6 +49,7 @@ class WlrForeignToplevelManagementV1 : public WaylandProtocol
 
 public:
     WlrForeignToplevelManagementV1();
+    ~WlrForeignToplevelManagementV1();
 
     std::shared_ptr<WlrForeignToplevelManagementV1Window> activeWindow();
 
@@ -63,6 +64,7 @@ private:
     static void handleState(void *data, zwlr_foreign_toplevel_handle_v1 *handle, wl_array *state);
     static void handleClosed(void *data, zwlr_foreign_toplevel_handle_v1 *handle);
 
+    zwlr_foreign_toplevel_manager_v1 *m_manager{};
     std::vector<std::shared_ptr<WlrForeignToplevelManagementV1Window>> m_windows;
     std::shared_ptr<WlrForeignToplevelManagementV1Window> m_activeWindow;
 };

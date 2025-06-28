@@ -4,9 +4,12 @@ pkg_search_module(WAYLAND_CLIENT REQUIRED wayland-client)
 
 set(inputactions_SOURCES
     input/LibinputInputBackend.cpp
-    interfaces/WaylandWindowProvider.cpp
+    interfaces/StandaloneInputEmitter.cpp
+    interfaces/StandaloneWindowProvider.cpp
     protocols/WaylandProtocol.cpp
+    protocols/WaylandProtocolManager.cpp
     protocols/WlrForeignToplevelManagementV1.cpp
+    protocols/WlrVirtualPointerUnstableV1.cpp
     main.cpp
 )
 
@@ -35,5 +38,6 @@ endfunction()
 target_include_directories(inputactions_standalone PRIVATE ${CMAKE_SOURCE_DIR}/protocols)
 
 wayland_protocol(wlr-foreign-toplevel-management-unstable-v1)
+wayland_protocol(wlr-virtual-pointer-unstable-v1)
 
 install(TARGETS inputactions_standalone)

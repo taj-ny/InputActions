@@ -21,8 +21,11 @@
 #include <libinputactions/Config.h>
 #include <libinputactions/DBusInterface.h>
 
-#include "interfaces/WaylandWindowProvider.h"
+#include "interfaces/StandaloneInputEmitter.h"
+#include "interfaces/StandaloneWindowProvider.h"
 #include "protocols/WlrForeignToplevelManagementV1.h"
+#include "protocols/WlrVirtualPointerUnstableV1.h"
+#include "protocols/WaylandProtocolManager.h"
 
 #include <QCoreApplication>
 
@@ -36,11 +39,15 @@ int main()
     libinputactions::DBusInterface dbusInterface(&config);
     config.load(false);
 
-    libinputactions::WindowProvider::setInstance(std::make_shared<WaylandWindowProvider>());
-
     auto *display = wl_display_connect(nullptr);
     auto *registry = wl_display_get_registry(display);
-    WlrForeignToplevelManagementV1::instance()->initialize(registry);
+    WaylandProtocolManager protocolManager(registry);
+    protocolManager.addProtocol(WlrForeignToplevelManagementV1::instance());
+    protocolManager.addProtocol(WlrVirtualPointerUnstableV1::instance());
+    wl_display_roundtrip(display);
+
+    libinputactions::InputEmitter::setInstance(std::make_shared<StandaloneInputEmitter>());
+    libinputactions::WindowProvider::setInstance(std::make_shared<StandaloneWindowProvider>());
 
     backend.initialize();
     while (true) {

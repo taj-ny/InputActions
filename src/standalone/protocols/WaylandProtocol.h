@@ -16,6 +16,8 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+#pragma once
+
 #include <wayland-client.h>
 
 #include <QString>
@@ -28,17 +30,15 @@ class WaylandProtocol
 public:
     virtual ~WaylandProtocol() = default;
 
-    void initialize(wl_registry *registry);
+    virtual void bind(wl_registry *registry, uint32_t name);
+
+    const QString &name() const;
     bool supported() const;
 
 protected:
     WaylandProtocol(QString name);
 
-    virtual void bind(wl_registry *registry, uint32_t name) {};
-
 private:
     QString m_name;
     bool m_supported{};
-
-    static void handleGlobal(void *data, wl_registry *registry, uint32_t name, const char *interface, uint32_t version);
 };

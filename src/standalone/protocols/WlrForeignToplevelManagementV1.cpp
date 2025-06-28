@@ -23,6 +23,13 @@ WlrForeignToplevelManagementV1::WlrForeignToplevelManagementV1()
 {
 }
 
+WlrForeignToplevelManagementV1::~WlrForeignToplevelManagementV1()
+{
+    if (m_manager) {
+        zwlr_foreign_toplevel_manager_v1_destroy(m_manager);
+    }
+}
+
 std::shared_ptr<WlrForeignToplevelManagementV1Window> WlrForeignToplevelManagementV1::activeWindow()
 {
     return m_activeWindow;
@@ -30,12 +37,14 @@ std::shared_ptr<WlrForeignToplevelManagementV1Window> WlrForeignToplevelManageme
 
 void WlrForeignToplevelManagementV1::bind(wl_registry *registry, uint32_t name)
 {
+    WaylandProtocol::bind(registry, name);
+
     static const zwlr_foreign_toplevel_manager_v1_listener listener{
         &WlrForeignToplevelManagementV1::handleToplevel
     };
 
-    auto *manager = static_cast<zwlr_foreign_toplevel_manager_v1 *>(wl_registry_bind(registry, name, &zwlr_foreign_toplevel_manager_v1_interface, 3));
-    zwlr_foreign_toplevel_manager_v1_add_listener(manager, &listener, this);
+    m_manager = static_cast<zwlr_foreign_toplevel_manager_v1 *>(wl_registry_bind(registry, name, &zwlr_foreign_toplevel_manager_v1_interface, 3));
+    zwlr_foreign_toplevel_manager_v1_add_listener(m_manager, &listener, this);
 }
 
 void WlrForeignToplevelManagementV1::handleToplevel(void *data, zwlr_foreign_toplevel_manager_v1 *manager, zwlr_foreign_toplevel_handle_v1 *toplevel)
