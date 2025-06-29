@@ -10,9 +10,9 @@ Minimum Plasma version: 6.1, mouse gestures require 6.3
 
   **Always choose *cleanBuild* when reinstalling the package.**
 
-  https://aur.archlinux.org/packages/input-actions
+  https://aur.archlinux.org/packages/inputactions-kwin
   ```
-  yay -S input-actions
+  yay -S inputactions-kwin
   ```
 </details>
 <details>
