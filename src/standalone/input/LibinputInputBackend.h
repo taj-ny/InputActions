@@ -18,29 +18,35 @@
 
 #pragma once
 
-#include <libinputactions/globals.h>
+#include <libinputactions/input/backends/LibinputIndirectInputBackend.h>
 
-#include "Window.h"
+#include <libinput.h>
+#include <libudev.h>
 
-namespace libinputactions
+struct LibinputInputDevice
 {
-
-class WindowProvider
-{
-    INPUTACTIONS_DECLARE_SINGLETON(WindowProvider)
-
-public:
-    WindowProvider() = default;
-    virtual ~WindowProvider() = default;
-
-    /**
-     * @return The currently active window, or nullptr if not available.
-     */
-    virtual std::shared_ptr<Window> activeWindow();
-    /**
-     * @return The window under the pointer, or nullptr if not available.
-     */
-    virtual std::shared_ptr<Window> windowUnderPointer();
+    libinput_device *libinputDevice;
+    std::unique_ptr<libinputactions::InputDevice> libinputactionsDevice;
 };
 
-}
+class LibinputInputBackend : public libinputactions::LibinputIndirectInputBackend
+{
+public:
+    LibinputInputBackend();
+    ~LibinputInputBackend() override;
+
+    void initialize() override;
+    void reset() override;
+
+    void poll() override;
+
+private:
+    libinput_interface m_libinputInterface;
+    libinput *m_libinput{};
+    udev *m_udev{};
+
+    std::vector<LibinputInputDevice> m_devices;
+
+    static int openRestricted(const char *path, int flags, void *data);
+    static void close_restricted(int fd, void *data);
+};

@@ -23,6 +23,6 @@
 class HyprlandWindowProvider : public libinputactions::WindowProvider
 {
 public:
-    std::unique_ptr<libinputactions::Window> activeWindow() override;
-    std::unique_ptr<libinputactions::Window> windowUnderPointer() override;
+    std::shared_ptr<libinputactions::Window> activeWindow() override;
+    std::shared_ptr<libinputactions::Window> windowUnderPointer() override;
 };

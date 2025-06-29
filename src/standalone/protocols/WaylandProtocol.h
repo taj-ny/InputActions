@@ -18,29 +18,27 @@
 
 #pragma once
 
-#include <libinputactions/globals.h>
+#include <wayland-client.h>
 
-#include "Window.h"
+#include <QString>
 
-namespace libinputactions
+#define INPUTACTIONS_NOOP_2 [](auto, auto){}
+#define INPUTACTIONS_NOOP_3 [](auto, auto, auto){}
+
+class WaylandProtocol
 {
-
-class WindowProvider
-{
-    INPUTACTIONS_DECLARE_SINGLETON(WindowProvider)
-
 public:
-    WindowProvider() = default;
-    virtual ~WindowProvider() = default;
+    virtual ~WaylandProtocol() = default;
 
-    /**
-     * @return The currently active window, or nullptr if not available.
-     */
-    virtual std::shared_ptr<Window> activeWindow();
-    /**
-     * @return The window under the pointer, or nullptr if not available.
-     */
-    virtual std::shared_ptr<Window> windowUnderPointer();
+    virtual void bind(wl_registry *registry, uint32_t name);
+
+    const QString &name() const;
+    bool supported() const;
+
+protected:
+    WaylandProtocol(QString name);
+
+private:
+    QString m_name;
+    bool m_supported{};
 };
-
-}

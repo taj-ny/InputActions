@@ -18,7 +18,7 @@
 
 #pragma once
 
-#include <libinputactions/input/backends/LibinputCompositorInputBackend.h>
+#include <libinputactions/input/backends/LibinputIndirectInputBackend.h>
 
 #include <hyprland/src/devices/IPointer.hpp>
 #include <hyprland/src/plugins/HookSystem.hpp>
@@ -37,7 +37,7 @@ struct HyprlandInputDevice
 /**
  * Hold and pinch touchpad gestures require hooking, and therefore only work on x86_64.
  */
-class HyprlandInputBackend : public QObject, public libinputactions::LibinputCompositorInputBackend
+class HyprlandInputBackend : public QObject, public libinputactions::LibinputIndirectInputBackend
 {
 public:
     HyprlandInputBackend(Plugin *plugin);
