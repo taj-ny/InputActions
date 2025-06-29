@@ -1222,18 +1222,7 @@ ENUM_DECODER(Qt::MouseButton, "mouse button", (std::unordered_map<QString, Qt::M
     {"extra10", Qt::MouseButton::ExtraButton10},
     {"extra11", Qt::MouseButton::ExtraButton11},
     {"extra12", Qt::MouseButton::ExtraButton12},
-    {"extra13", Qt::MouseButton::ExtraButton13},
-    {"extra14", Qt::MouseButton::ExtraButton14},
-    {"extra15", Qt::MouseButton::ExtraButton15},
-    {"extra16", Qt::MouseButton::ExtraButton16},
-    {"extra17", Qt::MouseButton::ExtraButton17},
-    {"extra18", Qt::MouseButton::ExtraButton18},
-    {"extra19", Qt::MouseButton::ExtraButton19},
-    {"extra20", Qt::MouseButton::ExtraButton20},
-    {"extra21", Qt::MouseButton::ExtraButton21},
-    {"extra22", Qt::MouseButton::ExtraButton22},
-    {"extra23", Qt::MouseButton::ExtraButton23},
-    {"extra24", Qt::MouseButton::ExtraButton24}
+    {"extra13", Qt::MouseButton::ExtraButton13}
 }))
 ENUM_DECODER(PinchDirection, "pinch direction", (std::unordered_map<QString, PinchDirection> {
     {"in", PinchDirection::In},

@@ -10,7 +10,7 @@ Supported environments: Hyprland, Plasma 6 Wayland
   - Horizontal scrolling wheels are supported
   - Multiple mouse buttons can be specified (and all of them must be pressed in any order)
   - Mouse buttons can still be used for normal clicks and dragging, depending on gestures
-  - Supports left, middle, right and 24 extra mouse buttons
+  - Supports left, middle, right and 13 extra mouse buttons
 - Touchpad gestures: click, pinch, press, rotate, stroke, swipe
   - Supports 2-finger swipe and stroke gestures (requires edge scrolling to be disabled)
   - Click gestures (hard press) are only available on touchpads that do not have separate physical buttons below and instead act as one button
