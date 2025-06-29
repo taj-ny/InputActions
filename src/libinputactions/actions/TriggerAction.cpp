@@ -35,6 +35,10 @@ void TriggerAction::triggerStarted()
 
 void TriggerAction::triggerUpdated(const qreal &delta, const QPointF &deltaPointMultiplied)
 {
+    if (!delta) {
+        return;
+    }
+
     m_currentDeltaPointMultiplied = deltaPointMultiplied;
     if (std::signbit(m_accumulatedDelta) != std::signbit(delta)) {
         // Direction changed
