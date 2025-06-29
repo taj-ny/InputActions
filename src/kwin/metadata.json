@@ -6,10 +6,10 @@
             }
         ],
         "Category": "Tools",
-        "Description": "Customizable input handler",
+        "Description": "Custom mouse and touchpad gestures",
         "EnabledByDefault": false,
         "License": "GPL",
-        "Name": "Input Actions"
+        "Name": "InputActions"
     },
     "X-KDE-ConfigModule": "inputactions_kwin_kcm"
 }
