@@ -50,12 +50,14 @@ void LibinputInputBackend::reset()
         deviceRemoved(device.libinputactionsDevice.get());
         libinput_device_unref(device.libinputDevice);
     }
+    m_devices.clear();
     if (m_libinput) {
         libinput_unref(m_libinput);
     }
     if (m_udev) {
         udev_unref(m_udev);
     }
+    LibinputIndirectInputBackend::reset();
 }
 
 void LibinputInputBackend::poll()

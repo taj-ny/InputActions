@@ -18,24 +18,24 @@
 
 #pragma once
 
-#include <libinputactions/interfaces/InputEmitter.h>
+#include <libinputactions/globals.h>
 
-#include "protocols/VirtualKeyboardUnstableV1.h"
-#include "protocols/WlrVirtualPointerUnstableV1.h"
+#include "WaylandProtocol.h"
 
-class StandaloneInputEmitter : public libinputactions::InputEmitter
+#include <wayland-client-protocol.h>
+
+class WlSeat : public WaylandProtocol
 {
+    INPUTACTIONS_DECLARE_SINGLETON(WlSeat)
+
 public:
-    StandaloneInputEmitter();
+    WlSeat();
+    ~WlSeat() override;
 
-    void keyboardKey(const uint32_t &key, const bool &state) override;
+    wl_seat *seat();
 
-    void mouseButton(const uint32_t &button, const bool &state) override;
-    void mouseMoveRelative(const QPointF &delta) override;
+    void bind(wl_registry *registry, uint32_t name);
 
 private:
-    std::unique_ptr<VirtualKeyboardUnstableV1Keyboard> m_virtualKeyboardUnstableV1Keyboard;
-    std::unique_ptr<WlrVirtualPointerUnstableV1Pointer> m_wlrVirtualPointerUnstableV1Pointer;
-
-    Qt::KeyboardModifiers m_modifiers{};
+    wl_seat *m_seat{};
 };

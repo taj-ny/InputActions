@@ -2,14 +2,18 @@ pkg_search_module(LIBINPUT REQUIRED libinput)
 pkg_search_module(LIBUDEV REQUIRED libudev)
 pkg_search_module(WAYLAND_CLIENT REQUIRED wayland-client)
 
+find_package(XKB)
+
 set(inputactions_SOURCES
     input/LibinputInputBackend.cpp
     interfaces/StandaloneInputEmitter.cpp
     interfaces/StandaloneWindowProvider.cpp
+    protocols/VirtualKeyboardUnstableV1.cpp
     protocols/WaylandProtocol.cpp
     protocols/WaylandProtocolManager.cpp
     protocols/WlrForeignToplevelManagementV1.cpp
     protocols/WlrVirtualPointerUnstableV1.cpp
+    protocols/WlSeat.cpp
     main.cpp
 )
 
@@ -20,6 +24,7 @@ target_link_libraries(inputactions_standalone PRIVATE
     ${LIBINPUT_LIBRARIES}
     ${LIBUDEV_LIBRARIES}
     ${WAYLAND_CLIENT_LIBRARIES}
+    XKB::XKB
 )
 
 function(wayland_protocol name)
@@ -37,6 +42,7 @@ function(wayland_protocol name)
 endfunction()
 target_include_directories(inputactions_standalone PRIVATE ${CMAKE_SOURCE_DIR}/protocols)
 
+wayland_protocol(virtual-keyboard-unstable-v1)
 wayland_protocol(wlr-foreign-toplevel-management-unstable-v1)
 wayland_protocol(wlr-virtual-pointer-unstable-v1)
 

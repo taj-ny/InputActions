@@ -16,26 +16,28 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#pragma once
+#include "WlSeat.h"
 
-#include <libinputactions/interfaces/InputEmitter.h>
-
-#include "protocols/VirtualKeyboardUnstableV1.h"
-#include "protocols/WlrVirtualPointerUnstableV1.h"
-
-class StandaloneInputEmitter : public libinputactions::InputEmitter
+WlSeat::WlSeat()
+    : WaylandProtocol(wl_seat_interface.name)
 {
-public:
-    StandaloneInputEmitter();
+}
 
-    void keyboardKey(const uint32_t &key, const bool &state) override;
+WlSeat::~WlSeat()
+{
+    if (m_seat) {
+        wl_seat_destroy(m_seat);
+    }
+}
 
-    void mouseButton(const uint32_t &button, const bool &state) override;
-    void mouseMoveRelative(const QPointF &delta) override;
+wl_seat *WlSeat::seat()
+{
+    return m_seat;
+}
 
-private:
-    std::unique_ptr<VirtualKeyboardUnstableV1Keyboard> m_virtualKeyboardUnstableV1Keyboard;
-    std::unique_ptr<WlrVirtualPointerUnstableV1Pointer> m_wlrVirtualPointerUnstableV1Pointer;
+void WlSeat::bind(wl_registry *registry, uint32_t name)
+{
+    m_seat = static_cast<wl_seat *>(wl_registry_bind(registry, name, &wl_seat_interface, 9));
+}
 
-    Qt::KeyboardModifiers m_modifiers{};
-};
+INPUTACTIONS_SINGLETON(WlSeat)

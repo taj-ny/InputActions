@@ -23,14 +23,21 @@
 
 #include "interfaces/StandaloneInputEmitter.h"
 #include "interfaces/StandaloneWindowProvider.h"
+#include "protocols/VirtualKeyboardUnstableV1.h"
 #include "protocols/WlrForeignToplevelManagementV1.h"
 #include "protocols/WlrVirtualPointerUnstableV1.h"
 #include "protocols/WaylandProtocolManager.h"
+#include "protocols/WlSeat.h"
 
 #include <QCoreApplication>
 
+#include <print>
+
 int main()
 {
+    std::println(PROJECT_NAME " v" PROJECT_VERSION);
+    std::println();
+
     static int argc = 0;
     QCoreApplication app(argc, nullptr);
 
@@ -42,14 +49,15 @@ int main()
     auto *display = wl_display_connect(nullptr);
     auto *registry = wl_display_get_registry(display);
     WaylandProtocolManager protocolManager(registry);
+    protocolManager.addProtocol(VirtualKeyboardUnstableV1::instance());
     protocolManager.addProtocol(WlrForeignToplevelManagementV1::instance());
     protocolManager.addProtocol(WlrVirtualPointerUnstableV1::instance());
+    protocolManager.addProtocol(WlSeat::instance());
     wl_display_roundtrip(display);
 
     libinputactions::InputEmitter::setInstance(std::make_shared<StandaloneInputEmitter>());
     libinputactions::WindowProvider::setInstance(std::make_shared<StandaloneWindowProvider>());
 
-    backend.initialize();
     while (true) {
         wl_display_roundtrip(display); // not sure if this is correct
         QCoreApplication::processEvents();

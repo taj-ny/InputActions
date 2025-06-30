@@ -19,30 +19,53 @@
 #include "StandaloneInputEmitter.h"
 
 #include <libinputactions/input/backends/InputBackend.h>
+#include <libinputactions/input/Keyboard.h>
+
+using namespace libinputactions;
 
 StandaloneInputEmitter::StandaloneInputEmitter()
 {
+    if (VirtualKeyboardUnstableV1::instance()->supported()) {
+        m_virtualKeyboardUnstableV1Keyboard = VirtualKeyboardUnstableV1::instance()->createKeyboard();
+    }
     if (WlrVirtualPointerUnstableV1::instance()->supported()) {
         m_wlrVirtualPointerUnstableV1Pointer = WlrVirtualPointerUnstableV1::instance()->createPointer();
     }
 }
 
+void StandaloneInputEmitter::keyboardKey(const uint32_t &key, const bool &state)
+{
+    InputBackend::instance()->setIgnoreEvents(true);
+    if (m_virtualKeyboardUnstableV1Keyboard) {
+        if (MODIFIERS.contains(key)) {
+            if (state) {
+                m_modifiers |= MODIFIERS.at(key);
+            } else {
+                m_modifiers &= ~MODIFIERS.at(key);
+            }
+            m_virtualKeyboardUnstableV1Keyboard->modifiers(m_modifiers);
+        }
+        m_virtualKeyboardUnstableV1Keyboard->key(key, state);
+    }
+    InputBackend::instance()->setIgnoreEvents(false);
+}
+
 void StandaloneInputEmitter::mouseButton(const uint32_t &button, const bool &state)
 {
-    libinputactions::InputBackend::instance()->setIgnoreEvents(true);
+    InputBackend::instance()->setIgnoreEvents(true);
     if (m_wlrVirtualPointerUnstableV1Pointer) {
         m_wlrVirtualPointerUnstableV1Pointer->button(button, state);
         m_wlrVirtualPointerUnstableV1Pointer->frame();
     }
-    libinputactions::InputBackend::instance()->setIgnoreEvents(false);
+    InputBackend::instance()->setIgnoreEvents(false);
 }
 
 void StandaloneInputEmitter::mouseMoveRelative(const QPointF &delta)
 {
-    libinputactions::InputBackend::instance()->setIgnoreEvents(true);
+    InputBackend::instance()->setIgnoreEvents(true);
     if (m_wlrVirtualPointerUnstableV1Pointer) {
         m_wlrVirtualPointerUnstableV1Pointer->motion(delta);
         m_wlrVirtualPointerUnstableV1Pointer->frame();
     }
-    libinputactions::InputBackend::instance()->setIgnoreEvents(false);
+    InputBackend::instance()->setIgnoreEvents(false);
 }
