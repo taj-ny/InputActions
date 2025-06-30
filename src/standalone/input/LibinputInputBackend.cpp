@@ -84,7 +84,9 @@ void LibinputInputBackend::poll()
                 const QString sysName(libinput_device_get_sysname(libinputDevice));
                 InputDeviceType deviceType;
                 auto udevDevice = libinput_device_get_udev_device(libinputDevice);
-                if (udev_device_get_property_value(udevDevice, "ID_INPUT_TOUCHPAD")) {
+                if (udev_device_get_property_value(udevDevice, "ID_INPUT_KEYBOARD")) {
+                    deviceType = InputDeviceType::Keyboard;
+                } else if (udev_device_get_property_value(udevDevice, "ID_INPUT_TOUCHPAD")) {
                     deviceType = InputDeviceType::Touchpad;
                 }
 
@@ -152,6 +154,12 @@ void LibinputInputBackend::poll()
                         touchpadSwipeEnd(device->libinputactionsDevice.get(), cancelled);
                         break;
                 }
+                break;
+            }
+            case LIBINPUT_EVENT_KEYBOARD_KEY: {
+                auto *keyboardEvent = libinput_event_get_keyboard_event(event);
+                keyboardKey(device->libinputactionsDevice.get(), libinput_event_keyboard_get_key(keyboardEvent),
+                    libinput_event_keyboard_get_key_state(keyboardEvent) == LIBINPUT_KEY_STATE_PRESSED);
                 break;
             }
             case LIBINPUT_EVENT_POINTER_AXIS:
