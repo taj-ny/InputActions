@@ -10,6 +10,14 @@ set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS ON)
 
+# TODO Find a way to split this into multiple packages
+set(CPACK_PACKAGE_NAME "inputactions")
+set(CPACK_PACKAGING_INSTALL_PREFIX "/usr")
+set(CPACK_PACKAGE_FILE_NAME "inputactions")
+set(CPACK_PACKAGE_VERSION "${PROJECT_VERSION}")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Mouse and touchpad gestures for Hyprland, Plasma 6 Wayland")
+include(CPack)
+
 option(INPUTACTIONS_BUILD_HYPRLAND "Build the Hyprland plugin" OFF)
 option(INPUTACTIONS_BUILD_KWIN "Build the KWin plugin" OFF)
 option(BUILD_TESTS "Build tests" OFF)
