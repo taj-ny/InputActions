@@ -58,6 +58,7 @@ std::unique_ptr<LibevdevDevice> LibevdevComplementaryInputBackend::openDevice(co
                     << QString("Failed to open %1 (error %2)").arg(QString::fromStdString(path), QString::number(errno));
         return {};
     }
+    fcntl(device->fd, F_SETFD, FD_CLOEXEC);
 
     if (libevdev_new_from_fd(device->fd, &device->libevdevPtr) != 0) {
         device->libevdevPtr = nullptr;

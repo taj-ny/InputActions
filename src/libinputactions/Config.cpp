@@ -76,6 +76,7 @@ Config::Config(InputBackend *backend)
         qWarning(INPUTACTIONS, "Failed to initialize config watcher");
         return;
     }
+    fcntl(m_inotifyFd, F_SETFD, FD_CLOEXEC);
     if (fcntl(m_inotifyFd, F_SETFL, fcntl(m_inotifyFd, F_GETFL, 0) | O_NONBLOCK) < 0) {
         qWarning(INPUTACTIONS, "Failed to initialize config watcher (fcntl failed)");
         return;
