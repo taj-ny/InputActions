@@ -16,31 +16,26 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#pragma once
+#include "WaylandProtocol.h"
 
-#include <libinputactions/globals.h>
+#include <QLoggingCategory>
 
-#include "Window.h"
-
-namespace libinputactions
+WaylandProtocol::WaylandProtocol(QString name)
+    : m_name(std::move(name))
 {
+}
 
-class WindowProvider
+void WaylandProtocol::bind(wl_registry *registry, uint32_t name)
 {
-    INPUTACTIONS_DECLARE_SINGLETON(WindowProvider)
+    m_supported = true;
+}
 
-public:
-    WindowProvider() = default;
-    virtual ~WindowProvider() = default;
+const QString &WaylandProtocol::name() const
+{
+    return m_name;
+}
 
-    /**
-     * @return The currently active window, or nullptr if not available.
-     */
-    virtual std::shared_ptr<Window> activeWindow();
-    /**
-     * @return The window under the pointer, or nullptr if not available.
-     */
-    virtual std::shared_ptr<Window> windowUnderPointer();
-};
-
+bool WaylandProtocol::supported() const
+{
+    return m_supported;
 }

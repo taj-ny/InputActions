@@ -16,31 +16,28 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#pragma once
+#include "WlSeat.h"
 
-#include <libinputactions/globals.h>
-
-#include "Window.h"
-
-namespace libinputactions
+WlSeat::WlSeat()
+    : WaylandProtocol(wl_seat_interface.name)
 {
-
-class WindowProvider
-{
-    INPUTACTIONS_DECLARE_SINGLETON(WindowProvider)
-
-public:
-    WindowProvider() = default;
-    virtual ~WindowProvider() = default;
-
-    /**
-     * @return The currently active window, or nullptr if not available.
-     */
-    virtual std::shared_ptr<Window> activeWindow();
-    /**
-     * @return The window under the pointer, or nullptr if not available.
-     */
-    virtual std::shared_ptr<Window> windowUnderPointer();
-};
-
 }
+
+WlSeat::~WlSeat()
+{
+    if (m_seat) {
+        wl_seat_destroy(m_seat);
+    }
+}
+
+wl_seat *WlSeat::seat()
+{
+    return m_seat;
+}
+
+void WlSeat::bind(wl_registry *registry, uint32_t name)
+{
+    m_seat = static_cast<wl_seat *>(wl_registry_bind(registry, name, &wl_seat_interface, 9));
+}
+
+INPUTACTIONS_SINGLETON(WlSeat)

@@ -88,6 +88,7 @@ protected:
      */
     virtual void deviceAdded(InputDevice *device);
     virtual void deviceRemoved(const InputDevice *device);
+    bool isDeviceBlacklisted(const QString &name);
 
     /**
      * Events with a nullptr sender will be ignored.

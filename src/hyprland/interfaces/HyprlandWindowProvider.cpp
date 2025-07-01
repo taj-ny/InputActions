@@ -22,18 +22,18 @@
 #include <hyprland/src/Compositor.hpp>
 #include <hyprland/src/managers/PointerManager.hpp>
 
-std::unique_ptr<libinputactions::Window> HyprlandWindowProvider::activeWindow()
+std::shared_ptr<libinputactions::Window> HyprlandWindowProvider::activeWindow()
 {
     if (auto *window = g_pCompositor->m_lastWindow.lock().get()) {
-        return std::make_unique<HyprlandWindow>(window);
+        return std::make_shared<HyprlandWindow>(window);
     }
     return {};
 }
 
-std::unique_ptr<libinputactions::Window> HyprlandWindowProvider::windowUnderPointer()
+std::shared_ptr<libinputactions::Window> HyprlandWindowProvider::windowUnderPointer()
 {
     if (auto *window = g_pCompositor->vectorToWindowUnified(g_pPointerManager->position(), 0).get()) {
-        return std::make_unique<HyprlandWindow>(window);
+        return std::make_shared<HyprlandWindow>(window);
     }
     return {};
 }

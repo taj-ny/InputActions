@@ -21,7 +21,7 @@ set(libinputactions_SRCS
     libinputactions/handlers/TriggerHandler.cpp
     libinputactions/input/backends/InputBackend.cpp
     libinputactions/input/backends/LibevdevComplementaryInputBackend.cpp
-    libinputactions/input/backends/LibinputCompositorInputBackend.cpp
+    libinputactions/input/backends/LibinputIndirectInputBackend.cpp
     libinputactions/input/InputDevice.cpp
     libinputactions/input/events.cpp
     libinputactions/input/InputEventHandler.cpp
@@ -48,6 +48,7 @@ set(libinputactions_SRCS
     libinputactions/Expression.cpp
     libinputactions/globals.cpp
     libinputactions/Range.cpp
+    libinputactions/Resettable.h
     libinputactions/Value.cpp
     libinputactions/yaml_convert.h
 )
@@ -70,4 +71,7 @@ if (INPUTACTIONS_BUILD_HYPRLAND)
 endif()
 if (INPUTACTIONS_BUILD_KWIN)
     add_subdirectory(kwin)
+endif()
+if (INPUTACTIONS_BUILD_STANDALONE)
+    add_subdirectory(standalone)
 endif()

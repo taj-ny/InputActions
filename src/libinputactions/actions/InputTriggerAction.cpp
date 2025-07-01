@@ -56,6 +56,14 @@ void InputTriggerAction::execute()
 void InputTriggerAction::setSequence(const std::vector<InputAction> &sequence)
 {
     m_sequence = sequence;
+    for (const auto &element : sequence) {
+        for (const auto &key : element.keyboardPress) {
+            InputEmitter::instance()->keyboardRegisterKey(key);
+        }
+        for (const auto &key : element.keyboardRelease) {
+            InputEmitter::instance()->keyboardRegisterKey(key);
+        }
+    }
 }
 
 }

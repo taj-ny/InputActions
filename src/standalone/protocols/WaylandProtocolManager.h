@@ -18,29 +18,17 @@
 
 #pragma once
 
-#include <libinputactions/globals.h>
+#include "WaylandProtocol.h"
 
-#include "Window.h"
-
-namespace libinputactions
+class WaylandProtocolManager
 {
-
-class WindowProvider
-{
-    INPUTACTIONS_DECLARE_SINGLETON(WindowProvider)
-
 public:
-    WindowProvider() = default;
-    virtual ~WindowProvider() = default;
+    WaylandProtocolManager(wl_registry *registry);
 
-    /**
-     * @return The currently active window, or nullptr if not available.
-     */
-    virtual std::shared_ptr<Window> activeWindow();
-    /**
-     * @return The window under the pointer, or nullptr if not available.
-     */
-    virtual std::shared_ptr<Window> windowUnderPointer();
+    void addProtocol(WaylandProtocol *protocol);
+
+private:
+    static void handleGlobal(void *data, wl_registry *registry, uint32_t name, const char *interface, uint32_t version);
+
+    std::vector<WaylandProtocol *> m_protocols;
 };
-
-}

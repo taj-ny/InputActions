@@ -20,27 +20,22 @@
 
 #include <libinputactions/globals.h>
 
-#include "Window.h"
+#include "WaylandProtocol.h"
 
-namespace libinputactions
-{
+#include <wayland-client-protocol.h>
 
-class WindowProvider
+class WlSeat : public WaylandProtocol
 {
-    INPUTACTIONS_DECLARE_SINGLETON(WindowProvider)
+    INPUTACTIONS_DECLARE_SINGLETON(WlSeat)
 
 public:
-    WindowProvider() = default;
-    virtual ~WindowProvider() = default;
+    WlSeat();
+    ~WlSeat() override;
 
-    /**
-     * @return The currently active window, or nullptr if not available.
-     */
-    virtual std::shared_ptr<Window> activeWindow();
-    /**
-     * @return The window under the pointer, or nullptr if not available.
-     */
-    virtual std::shared_ptr<Window> windowUnderPointer();
+    wl_seat *seat();
+
+    void bind(wl_registry *registry, uint32_t name);
+
+private:
+    wl_seat *m_seat{};
 };
-
-}

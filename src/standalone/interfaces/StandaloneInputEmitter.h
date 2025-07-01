@@ -18,29 +18,24 @@
 
 #pragma once
 
-#include <libinputactions/globals.h>
+#include "EvdevInputEmitter.h"
 
-#include "Window.h"
+#include "protocols/VirtualKeyboardUnstableV1.h"
+#include "protocols/WlrVirtualPointerUnstableV1.h"
 
-namespace libinputactions
+class StandaloneInputEmitter : public EvdevInputEmitter
 {
-
-class WindowProvider
-{
-    INPUTACTIONS_DECLARE_SINGLETON(WindowProvider)
-
 public:
-    WindowProvider() = default;
-    virtual ~WindowProvider() = default;
+    StandaloneInputEmitter();
 
-    /**
-     * @return The currently active window, or nullptr if not available.
-     */
-    virtual std::shared_ptr<Window> activeWindow();
-    /**
-     * @return The window under the pointer, or nullptr if not available.
-     */
-    virtual std::shared_ptr<Window> windowUnderPointer();
+    void keyboardKey(const uint32_t &key, const bool &state) override;
+
+    void mouseButton(const uint32_t &button, const bool &state) override;
+    void mouseMoveRelative(const QPointF &delta) override;
+
+private:
+    std::unique_ptr<VirtualKeyboardUnstableV1Keyboard> m_virtualKeyboardUnstableV1Keyboard;
+    std::unique_ptr<WlrVirtualPointerUnstableV1Pointer> m_wlrVirtualPointerUnstableV1Pointer;
+
+    Qt::KeyboardModifiers m_modifiers{};
 };
-
-}
