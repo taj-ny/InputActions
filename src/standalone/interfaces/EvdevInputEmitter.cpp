@@ -72,7 +72,6 @@ void EvdevInputEmitter::keyboardClearModifiers()
     const auto modifiers = Keyboard::instance()->modifiers();
     for (const auto &[key, modifier] : MODIFIERS) {
         if (modifiers & modifier) {
-            qWarning("rel mod");
             keyboardKey(key, false);
         }
     }
