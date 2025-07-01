@@ -102,7 +102,7 @@ void TestTriggerAction::gestureUpdated_data()
     QTest::addColumn<int>("executions");
 
     ActionInterval interval{};
-    QTest::newRow("zeroes") << std::vector<qreal>{0, 0, 0} << interval << 3;
+    QTest::newRow("zeroes") << std::vector<qreal>{0, 0, 0} << interval << 0;
     interval.setValue(2);
     QTest::newRow("accumulation") << std::vector<qreal>{1, 1, 1, 1} << interval << 2;
     QTest::newRow("multiple executions") << std::vector<qreal>{4, 4} << interval << 4;
