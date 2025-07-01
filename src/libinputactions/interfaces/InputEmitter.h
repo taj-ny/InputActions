@@ -19,6 +19,7 @@
 #pragma once
 
 #include <libinputactions/globals.h>
+#include <libinputactions/Resettable.h>
 
 #include <memory>
 
@@ -27,12 +28,14 @@
 namespace libinputactions
 {
 
-class InputEmitter
+class InputEmitter : public Resettable
 {
     INPUTACTIONS_DECLARE_SINGLETON(InputEmitter)
 
 public:
     virtual ~InputEmitter() = default;
+
+    void reset() override;
 
     virtual void keyboardClearModifiers();
     /**
@@ -40,6 +43,12 @@ public:
      * @param state True - press, false - release
      */
     virtual void keyboardKey(const uint32_t &key, const bool &state);
+    /**
+     * The implementation may require that all keys that will be used must be registered before initialization.
+     * Modifier keys are added by default. InputTriggerAction will call this on construction.
+     * May be called multiple times with the same key.
+     */
+    void keyboardRegisterKey(const uint32_t &key);
 
     /**
      * @param button <linux/input-event-codes.h>
@@ -52,7 +61,9 @@ public:
     virtual void touchpadSwipeBegin(const uint8_t &fingers);
 
 protected:
-    InputEmitter() = default;
+    InputEmitter();
+
+    std::unordered_set<uint32_t> m_keyboardRequiredKeys;
 };
 
 }

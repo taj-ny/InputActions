@@ -18,24 +18,30 @@
 
 #pragma once
 
-#include "EvdevInputEmitter.h"
+#include <libinputactions/interfaces/InputEmitter.h>
 
-#include "protocols/VirtualKeyboardUnstableV1.h"
-#include "protocols/WlrVirtualPointerUnstableV1.h"
-
-class StandaloneInputEmitter : public EvdevInputEmitter
+class EvdevInputEmitter : public libinputactions::InputEmitter
 {
 public:
-    StandaloneInputEmitter();
+    ~EvdevInputEmitter() override;
 
+    void initialize() override;
+    void reset() final;
+
+    void keyboardClearModifiers() override;
     void keyboardKey(const uint32_t &key, const bool &state) override;
 
     void mouseButton(const uint32_t &button, const bool &state) override;
-    void mouseMoveRelative(const QPointF &delta) override;
+    void mouseMoveRelative(const QPointF &pos) override;
 
 private:
-    std::unique_ptr<VirtualKeyboardUnstableV1Keyboard> m_virtualKeyboardUnstableV1Keyboard;
-    std::unique_ptr<WlrVirtualPointerUnstableV1Pointer> m_wlrVirtualPointerUnstableV1Pointer;
+    /**
+     * Destroys the device, closes the fd and sets it to -1.
+     */
+    static void uinputDestroyDevice(int &fd);
+    static void uinputEmit(int fd, uint16_t type, uint16_t code, int32_t value = 0);
 
-    Qt::KeyboardModifiers m_modifiers{};
+    int m_keyboardFd = -1;
+    int m_mouseFd = -1;
+    QPointF m_mouseDelta;
 };

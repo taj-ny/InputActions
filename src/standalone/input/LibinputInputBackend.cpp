@@ -78,9 +78,11 @@ void LibinputInputBackend::poll()
 
         switch (type) {
             case LIBINPUT_EVENT_DEVICE_ADDED: {
-                libinput_device_ref(libinputDevice);
-
                 const QString name(libinput_device_get_name(libinputDevice));
+                if (isDeviceBlacklisted(name)) {
+                    break;
+                }
+
                 const QString sysName(libinput_device_get_sysname(libinputDevice));
                 InputDeviceType deviceType;
                 auto udevDevice = libinput_device_get_udev_device(libinputDevice);
@@ -88,8 +90,11 @@ void LibinputInputBackend::poll()
                     deviceType = InputDeviceType::Keyboard;
                 } else if (udev_device_get_property_value(udevDevice, "ID_INPUT_TOUCHPAD")) {
                     deviceType = InputDeviceType::Touchpad;
+                } else if (udev_device_get_property_value(udevDevice, "ID_INPUT_MOUSE")) {
+                    deviceType = InputDeviceType::Mouse;
                 }
 
+                libinput_device_ref(libinputDevice);
                 auto libinputactionsDevice = std::make_unique<InputDevice>(deviceType, name, sysName);
                 deviceAdded(libinputactionsDevice.get());
                 m_devices.push_back({

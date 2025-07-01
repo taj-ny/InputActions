@@ -6,6 +6,7 @@ find_package(XKB)
 
 set(inputactions_SOURCES
     input/LibinputInputBackend.cpp
+    interfaces/EvdevInputEmitter.cpp
     interfaces/StandaloneInputEmitter.cpp
     interfaces/StandaloneWindowProvider.cpp
     protocols/VirtualKeyboardUnstableV1.cpp

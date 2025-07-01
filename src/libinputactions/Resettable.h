@@ -16,26 +16,17 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#pragma once
+namespace libinputactions
+{
 
-#include "EvdevInputEmitter.h"
-
-#include "protocols/VirtualKeyboardUnstableV1.h"
-#include "protocols/WlrVirtualPointerUnstableV1.h"
-
-class StandaloneInputEmitter : public EvdevInputEmitter
+/**
+ * An object that can be reset and re-initialized later with possibly different parameters.
+ */
+class Resettable
 {
 public:
-    StandaloneInputEmitter();
-
-    void keyboardKey(const uint32_t &key, const bool &state) override;
-
-    void mouseButton(const uint32_t &button, const bool &state) override;
-    void mouseMoveRelative(const QPointF &delta) override;
-
-private:
-    std::unique_ptr<VirtualKeyboardUnstableV1Keyboard> m_virtualKeyboardUnstableV1Keyboard;
-    std::unique_ptr<WlrVirtualPointerUnstableV1Pointer> m_wlrVirtualPointerUnstableV1Pointer;
-
-    Qt::KeyboardModifiers m_modifiers{};
+    virtual void initialize() {};
+    virtual void reset() {};
 };
+
+}

@@ -48,6 +48,7 @@ set(libinputactions_SRCS
     libinputactions/Expression.cpp
     libinputactions/globals.cpp
     libinputactions/Range.cpp
+    libinputactions/Resettable.h
     libinputactions/Value.cpp
     libinputactions/yaml_convert.h
 )

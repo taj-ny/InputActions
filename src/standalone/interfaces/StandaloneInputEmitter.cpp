@@ -35,7 +35,6 @@ StandaloneInputEmitter::StandaloneInputEmitter()
 
 void StandaloneInputEmitter::keyboardKey(const uint32_t &key, const bool &state)
 {
-    InputBackend::instance()->setIgnoreEvents(true);
     if (m_virtualKeyboardUnstableV1Keyboard) {
         if (MODIFIERS.contains(key)) {
             if (state) {
@@ -46,26 +45,27 @@ void StandaloneInputEmitter::keyboardKey(const uint32_t &key, const bool &state)
             m_virtualKeyboardUnstableV1Keyboard->modifiers(m_modifiers);
         }
         m_virtualKeyboardUnstableV1Keyboard->key(key, state);
+    } else {
+        EvdevInputEmitter::keyboardKey(key, state);
     }
-    InputBackend::instance()->setIgnoreEvents(false);
 }
 
 void StandaloneInputEmitter::mouseButton(const uint32_t &button, const bool &state)
 {
-    InputBackend::instance()->setIgnoreEvents(true);
     if (m_wlrVirtualPointerUnstableV1Pointer) {
         m_wlrVirtualPointerUnstableV1Pointer->button(button, state);
         m_wlrVirtualPointerUnstableV1Pointer->frame();
+    } else {
+        EvdevInputEmitter::mouseButton(button, state);
     }
-    InputBackend::instance()->setIgnoreEvents(false);
 }
 
 void StandaloneInputEmitter::mouseMoveRelative(const QPointF &delta)
 {
-    InputBackend::instance()->setIgnoreEvents(true);
     if (m_wlrVirtualPointerUnstableV1Pointer) {
         m_wlrVirtualPointerUnstableV1Pointer->motion(delta);
         m_wlrVirtualPointerUnstableV1Pointer->frame();
+    } else {
+        EvdevInputEmitter::mouseMoveRelative(delta);
     }
-    InputBackend::instance()->setIgnoreEvents(false);
 }

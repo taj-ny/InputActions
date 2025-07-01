@@ -41,11 +41,6 @@ int main()
     static int argc = 0;
     QCoreApplication app(argc, nullptr);
 
-    LibinputInputBackend backend;
-    libinputactions::Config config(&backend);
-    libinputactions::DBusInterface dbusInterface(&config);
-    config.load(false);
-
     auto *display = wl_display_connect(nullptr);
     auto *registry = wl_display_get_registry(display);
     WaylandProtocolManager protocolManager(registry);
@@ -57,6 +52,11 @@ int main()
 
     libinputactions::InputEmitter::setInstance(std::make_shared<StandaloneInputEmitter>());
     libinputactions::WindowProvider::setInstance(std::make_shared<StandaloneWindowProvider>());
+
+    LibinputInputBackend backend;
+    libinputactions::Config config(&backend);
+    libinputactions::DBusInterface dbusInterface(&config);
+    config.load(false);
 
     while (true) {
         wl_display_roundtrip(display); // not sure if this is correct

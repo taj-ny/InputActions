@@ -19,6 +19,7 @@
 #include "Config.h"
 
 #include <libinputactions/input/backends/LibevdevComplementaryInputBackend.h>
+#include <libinputactions/interfaces/InputEmitter.h>
 #include <libinputactions/yaml_convert.h>
 
 #include <QDir>
@@ -124,12 +125,16 @@ std::optional<QString> Config::load(const bool &firstLoad)
             }
 
             m_backend->reset();
+            InputEmitter::instance()->reset();
+
             for (auto &eventHandler : eventHandlers) {
                 m_backend->addEventHandler(std::move(eventHandler));
             }
             for (auto &[device, properties] : customDeviceProperties) {
                 m_backend->addCustomDeviceProperties(device, properties);
             }
+
+            InputEmitter::instance()->initialize();
             m_backend->initialize();
         } catch (const YAML::Exception &e) {
             const auto message = QString("Failed to load configuration: %1 (line %2, column %3)")
