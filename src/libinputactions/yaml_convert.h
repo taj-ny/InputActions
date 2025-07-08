@@ -1263,29 +1263,33 @@ struct convert<std::vector<InputAction>>
     {
         for (const auto &device : node) {
             if (device["keyboard"].IsDefined()) {
-                for (auto &actionRaw : device["keyboard"].as<QStringList>()) {
-                    actionRaw = actionRaw.toUpper();
+                for (const auto &actionNode : device["keyboard"]) {
                     InputAction action;
-                    if (actionRaw.startsWith("+") || actionRaw.startsWith("-")) {
-                        const auto key = actionRaw.mid(1);
-                        if (!s_keyboard.contains(key)) {
-                            throw Exception(node.Mark(), ("Invalid keyboard key ('" + key + "')").toStdString());
-                        }
-
-                        if (actionRaw[0] == '+') {
-                            action.keyboardPress.push_back(s_keyboard.at(key));
-                        } else {
-                            action.keyboardRelease.push_back(s_keyboard.at(key));
-                        }
+                    if (actionNode.IsMap() && actionNode["text"].IsDefined()) {
+                        action.keyboardText = actionNode["text"].as<libinputactions::Value<QString>>();
                     } else {
-                        for (const auto &keyRaw : actionRaw.split("+")) {
-                            if (!s_keyboard.contains(keyRaw)) {
-                                throw Exception(node.Mark(), ("Invalid keyboard key ('" + keyRaw + "')").toStdString());
+                        const auto actionRaw = actionNode.as<QString>().toUpper();
+                        if (actionRaw.startsWith("+") || actionRaw.startsWith("-")) {
+                            const auto key = actionRaw.mid(1);
+                            if (!s_keyboard.contains(key)) {
+                                throw Exception(node.Mark(), ("Invalid keyboard key ('" + key + "')").toStdString());
                             }
 
-                            const auto key = s_keyboard.at(keyRaw);
-                            action.keyboardPress.push_back(key);
-                            action.keyboardRelease.insert(action.keyboardRelease.begin(), key);
+                            if (actionRaw[0] == '+') {
+                                action.keyboardPress.push_back(s_keyboard.at(key));
+                            } else {
+                                action.keyboardRelease.push_back(s_keyboard.at(key));
+                            }
+                        } else {
+                            for (const auto &keyRaw : actionRaw.split("+")) {
+                                if (!s_keyboard.contains(keyRaw)) {
+                                    throw Exception(node.Mark(), ("Invalid keyboard key ('" + keyRaw + "')").toStdString());
+                                }
+
+                                const auto key = s_keyboard.at(keyRaw);
+                                action.keyboardPress.push_back(key);
+                                action.keyboardRelease.insert(action.keyboardRelease.begin(), key);
+                            }
                         }
                     }
                     actions.push_back(action);

@@ -18,6 +18,8 @@
 
 #include "TriggerAction.h"
 
+#include <libinputactions/Value.h>
+
 #include <linux/input-event-codes.h>
 
 #include <map>
@@ -34,6 +36,7 @@ struct InputAction
 {
     std::vector<uint32_t> keyboardPress;
     std::vector<uint32_t> keyboardRelease;
+    Value<QString> keyboardText;
 
     std::vector<uint32_t> mousePress;
     std::vector<uint32_t> mouseRelease;
