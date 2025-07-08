@@ -35,6 +35,8 @@ public:
     Value(const T &value = {});
     Value(const std::function<T()> &getter);
     Value(const Expression<T> &expression);
+
+    static Value<T> command(const Value<QString> &command);
     static Value<T> variable(const QString &name);
 
     T get() const;
