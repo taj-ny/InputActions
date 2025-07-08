@@ -24,6 +24,11 @@
 #include <libinputactions/input/Keyboard.h>
 
 #include <kwin/input_event_spy.h>
+#include <kwin/wayland_server.h>
+#include <kwin/wayland/seat.h>
+#include <kwin/wayland/textinput_v1.h>
+#include <kwin/wayland/textinput_v2.h>
+#include <kwin/wayland/textinput_v3.h>
 #include <kwin/workspace.h>
 
 KWinInputEmitter::KWinInputEmitter()
@@ -66,6 +71,28 @@ void KWinInputEmitter::keyboardKey(const uint32_t &key, const bool &state)
     libinputactions::InputBackend::instance()->setIgnoreEvents(true);
     Q_EMIT m_device->keyChanged(key, state ? KeyboardKeyStatePressed : KeyboardKeyStateReleased, timestamp(), m_device.get());
     libinputactions::InputBackend::instance()->setIgnoreEvents(false);
+}
+
+void KWinInputEmitter::keyboardText(const QString &text)
+{
+    auto *seat = KWin::waylandServer()->seat();
+    auto *v1 = seat->textInputV1();
+    auto *v2 = seat->textInputV2();
+    auto *v3 = seat->textInputV3();
+
+    if (v3->isEnabled()) {
+        v3->sendPreEditString({}, 0, 0);
+        v3->commitString(text);
+        v3->done();
+    } else if (v2->isEnabled()) {
+        v2->commitString(text);
+        v2->setPreEditCursor(0);
+        v2->preEdit({}, {});
+    } else if (v1->isEnabled()) {
+        v1->commitString(text);
+        v1->setPreEditCursor(0);
+        v1->preEdit({}, {});
+    }
 }
 
 void KWinInputEmitter::mouseButton(const uint32_t &button, const bool &state)

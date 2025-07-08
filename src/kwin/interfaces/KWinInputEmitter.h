@@ -59,6 +59,7 @@ public:
 
     void keyboardClearModifiers() override;
     void keyboardKey(const uint32_t &key, const bool &state) override;
+    void keyboardText(const QString &text) override;
 
     void mouseButton(const uint32_t &button, const bool &state) override;
     void mouseMoveRelative(const QPointF &pos) override;

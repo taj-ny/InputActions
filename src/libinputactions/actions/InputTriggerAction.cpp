@@ -33,6 +33,10 @@ void InputTriggerAction::execute()
         for (const auto &key : action.keyboardRelease) {
             input->keyboardKey(key, false);
         }
+        const auto keyboardText = action.keyboardText.get();
+        if (!keyboardText.isEmpty()) {
+            input->keyboardText(keyboardText);
+        }
 
         for (const auto &button : action.mousePress) {
             input->mouseButton(button, true);

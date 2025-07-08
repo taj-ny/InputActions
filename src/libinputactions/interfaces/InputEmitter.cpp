@@ -25,6 +25,10 @@ void InputEmitter::keyboardClearModifiers()
 {
 }
 
+void InputEmitter::keyboardText(const QString &text)
+{
+}
+
 void InputEmitter::keyboardKey(const uint32_t &key, const bool &state)
 {
 }

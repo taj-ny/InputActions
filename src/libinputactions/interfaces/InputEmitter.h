@@ -40,6 +40,7 @@ public:
      * @param state True - press, false - release
      */
     virtual void keyboardKey(const uint32_t &key, const bool &state);
+    virtual void keyboardText(const QString &text);
 
     /**
      * @param button <linux/input-event-codes.h>
