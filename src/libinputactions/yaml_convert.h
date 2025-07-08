@@ -1416,12 +1416,18 @@ struct convert<libinputactions::Value<T>>
 {
     static bool decode(const Node &node, libinputactions::Value<T> &value)
     {
-        const auto raw = node.as<QString>();
-        // TODO Variable reference only
-        if (typeid(T) == typeid(QString)) { // String with possible variable references (too lazy to check)
-            value = libinputactions::Value<T>(Expression<QString>(raw));
+        if (node.IsMap()) {
+            if (const auto &commandNode = node["command"]) {
+                value = libinputactions::Value<T>::command(commandNode.as<libinputactions::Value<QString>>());
+            }
         } else {
-            value = libinputactions::Value<T>(node.as<T>());
+            const auto raw = node.as<QString>();
+            // TODO Variable reference only
+            if (typeid(T) == typeid(QString)) { // String with possible variable references (too lazy to check)
+                value = libinputactions::Value<T>(Expression<QString>(raw));
+            } else {
+                value = libinputactions::Value<T>(node.as<T>());
+            }
         }
         return true;
     }

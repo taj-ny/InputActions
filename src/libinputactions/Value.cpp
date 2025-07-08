@@ -21,8 +21,19 @@
 #include <libinputactions/globals.h>
 #include <libinputactions/variables/VariableManager.h>
 
+#include <QProcess>
+
 namespace libinputactions
 {
+
+template<typename T>
+T fromString(const QString &s);
+
+template<>
+QString fromString(const QString &s)
+{
+    return s;
+}
 
 template<typename T>
 Value<T>::Value(const T &value)
@@ -34,6 +45,19 @@ template<typename T>
 Value<T>::Value(const std::function<T()> &getter)
 {
     m_value = getter;
+}
+
+template<typename T>
+Value<T> Value<T>::command(const Value<QString> &command)
+{
+    return Value<T>([command] {
+        QProcess process;
+        process.setProgram("/bin/sh");
+        process.setArguments({"-c", command.get()});
+        process.start();
+        process.waitForFinished();
+        return fromString<T>(process.readAllStandardOutput());
+    });
 }
 
 template<typename T>
