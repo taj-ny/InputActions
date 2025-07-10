@@ -18,42 +18,37 @@
 
 #pragma once
 
-#include <libinputactions/globals.h>
-
-#include <memory>
-
 #include <QPointF>
+#include <memory>
 
 namespace libinputactions
 {
 
 class InputEmitter
 {
-    INPUTACTIONS_DECLARE_SINGLETON(InputEmitter)
-
 public:
+    InputEmitter() = default;
     virtual ~InputEmitter() = default;
 
-    virtual void keyboardClearModifiers();
+    virtual void keyboardClearModifiers() {};
     /**
      * @param key <linux/input-event-codes.h>
      * @param state True - press, false - release
      */
-    virtual void keyboardKey(const uint32_t &key, const bool &state);
-    virtual void keyboardText(const QString &text);
+    virtual void keyboardKey(uint32_t key, bool state) {};
+    virtual void keyboardText(const QString &text) {};
 
     /**
      * @param button <linux/input-event-codes.h>
      * @param state True - press, false - release
      */
-    virtual void mouseButton(const uint32_t &button, const bool &state);
-    virtual void mouseMoveRelative(const QPointF &pos);
+    virtual void mouseButton(uint32_t button, bool state) {};
+    virtual void mouseMoveRelative(const QPointF &pos) {};
 
-    virtual void touchpadPinchBegin(const uint8_t &fingers);
-    virtual void touchpadSwipeBegin(const uint8_t &fingers);
-
-protected:
-    InputEmitter() = default;
+    virtual void touchpadPinchBegin(uint8_t fingers) {};
+    virtual void touchpadSwipeBegin(uint8_t fingers) {};
 };
+
+inline std::shared_ptr<InputEmitter> g_inputEmitter;
 
 }

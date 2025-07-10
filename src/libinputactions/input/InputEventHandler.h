@@ -18,12 +18,10 @@
 
 #pragma once
 
+#include <QString>
 #include <libinputactions/handlers/TriggerHandler.h>
-
 #include <memory>
 #include <set>
-
-#include <QString>
 
 namespace libinputactions
 {

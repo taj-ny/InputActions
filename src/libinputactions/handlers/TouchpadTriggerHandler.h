@@ -42,7 +42,7 @@ public:
      * @param value The time for the user to perform a click once a press gesture had been detected by libinput. If the click is not performed, the press
      * gesture is activated.
      */
-    void setClickTimeout(const uint32_t &value);
+    void setClickTimeout(uint32_t value);
 
 private:
     bool handleEvent(const PointerButtonEvent *event);

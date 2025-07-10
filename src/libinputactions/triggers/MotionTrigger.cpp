@@ -32,7 +32,7 @@ bool MotionTrigger::hasSpeed() const
     return m_speed != TriggerSpeed::Any;
 }
 
-void MotionTrigger::setSpeed(const TriggerSpeed &speed)
+void MotionTrigger::setSpeed(TriggerSpeed speed)
 {
     m_speed = speed;
 }
@@ -50,7 +50,7 @@ const TriggerSpeed &MotionTriggerUpdateEvent::speed() const
     return m_speed;
 }
 
-void MotionTriggerUpdateEvent::setSpeed(const TriggerSpeed &speed)
+void MotionTriggerUpdateEvent::setSpeed(TriggerSpeed speed)
 {
     m_speed = speed;
 }

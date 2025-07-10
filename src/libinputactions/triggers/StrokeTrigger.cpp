@@ -34,7 +34,6 @@
 */
 
 #include "StrokeTrigger.h"
-
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
@@ -63,11 +62,9 @@ constexpr double stroke_infinity = 0.2;
 Stroke::Stroke(const std::vector<QPointF> &deltas)
 {
     for (auto &point : simplify(deltasToPath(deltas))) {
-        m_points.push_back(Point{
+        m_points.push_back({
             .x = point.x(),
             .y = point.y(),
-            .t = {},
-            .alpha = {}
         });
     }
     finish();
@@ -158,7 +155,7 @@ std::vector<QPointF> Stroke::deltasToPath(const std::vector<QPointF> &deltas)
     return result;
 }
 
-std::vector<QPointF> Stroke::simplify(const std::vector<QPointF> &points, const qreal &epsilon)
+std::vector<QPointF> Stroke::simplify(const std::vector<QPointF> &points, qreal epsilon)
 {
     std::vector<QPointF> result;
     ramerDouglasPeucker(points, epsilon, result);
@@ -207,12 +204,10 @@ void Stroke::ramerDouglasPeucker(const std::vector<QPointF> &points, qreal epsil
         // Build the result list
         out.assign(recResults1.begin(), recResults1.end() - 1);
         out.insert(out.end(), recResults2.begin(), recResults2.end());
-//        if(out.size()<2)
-//            throw runtime_error("Problem assembling output");
-    }
-    else
-    {
-        //Just return start and end points
+        //        if(out.size()<2)
+        //            throw runtime_error("Problem assembling output");
+    } else {
+        // Just return start and end points
         out.clear();
         out.push_back(points[0]);
         out.push_back(points[end]);
@@ -271,18 +266,8 @@ inline static double sqr(double x)
     return x * x;
 }
 
-void Stroke::step(const Stroke &other,
-          const int &N,
-          std::vector<qreal> &dist,
-          std::vector<int> &prevX,
-          std::vector<int> &prevY,
-          const int &x,
-          const int &y,
-          const qreal &tx,
-          const qreal &ty,
-          int *k,
-          const int &x2,
-          const int &y2) const
+void Stroke::step(const Stroke &other, int N, std::vector<qreal> &dist, std::vector<int> &prevX, std::vector<int> &prevY, int x, int y, qreal tx, qreal ty,
+                  int *k, int x2, int y2) const
 {
     double dtx = m_points[x2].t - tx;
     double dty = other.m_points[y2].t - ty;

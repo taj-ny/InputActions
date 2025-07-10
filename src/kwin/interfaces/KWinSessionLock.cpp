@@ -17,7 +17,6 @@
 */
 
 #include "KWinSessionLock.h"
-
 #include <kwin/wayland_server.h>
 
 bool KWinSessionLock::sessionLocked()

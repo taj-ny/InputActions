@@ -17,15 +17,15 @@
 */
 
 #include "HyprlandInputEmitter.h"
-
-#include <libinputactions/input/backends/InputBackend.h>
-#include <libinputactions/input/Keyboard.h>
-
-#include <hyprland/src/managers/input/InputManager.hpp>
 #include <hyprland/src/managers/KeybindManager.hpp>
 #include <hyprland/src/managers/SeatManager.hpp>
+#include <hyprland/src/managers/input/InputManager.hpp>
 #include <hyprland/src/protocols/PointerGestures.hpp>
+#include <libinputactions/input/Keyboard.h>
+#include <libinputactions/input/backends/InputBackend.h>
 #undef HANDLE
+
+using namespace libinputactions;
 
 HyprlandInputEmitter::HyprlandInputEmitter()
     : m_keyboard(makeShared<VirtualKeyboard>())
@@ -41,30 +41,30 @@ HyprlandInputEmitter::~HyprlandInputEmitter()
 
 void HyprlandInputEmitter::keyboardClearModifiers()
 {
-    libinputactions::InputBackend::instance()->setIgnoreEvents(true);
+    g_inputBackend->setIgnoreEvents(true);
     m_modifiers = 0;
-    const auto modifiers = libinputactions::Keyboard::instance()->modifiers();
+    const auto modifiers = g_keyboard->modifiers();
     for (auto &keyboard : g_pInputManager->m_keyboards) {
         if (auto aqKeyboard = keyboard->aq()) {
             for (const auto &[key, modifier] : libinputactions::MODIFIERS) {
                 if (modifiers & modifier) {
                     aqKeyboard->events.key.emit(Aquamarine::IKeyboard::SKeyEvent{
                         .key = key,
-                        .pressed = false
+                        .pressed = false,
                     });
                 }
             }
             aqKeyboard->events.modifiers.emit(Aquamarine::IKeyboard::SModifiersEvent{
-                .depressed = 0
+                .depressed = 0,
             });
         }
     }
-    libinputactions::InputBackend::instance()->setIgnoreEvents(false);
+    g_inputBackend->setIgnoreEvents(false);
 }
 
-void HyprlandInputEmitter::keyboardKey(const uint32_t &key, const bool &state)
+void HyprlandInputEmitter::keyboardKey(uint32_t key, bool state)
 {
-    libinputactions::InputBackend::instance()->setIgnoreEvents(true);
+    g_inputBackend->setIgnoreEvents(true);
     if (const auto modifier = g_pKeybindManager->keycodeToModifier(key + 8)) {
         if (state) {
             m_modifiers |= modifier;
@@ -72,51 +72,53 @@ void HyprlandInputEmitter::keyboardKey(const uint32_t &key, const bool &state)
             m_modifiers &= ~modifier;
         }
         m_keyboard->events.modifiers.emit(Aquamarine::IKeyboard::SModifiersEvent{
-            .depressed = m_modifiers
+            .depressed = m_modifiers,
         });
     }
 
     m_keyboard->events.key.emit(Aquamarine::IKeyboard::SKeyEvent{
         .key = key,
-        .pressed = state
+        .pressed = state,
     });
-    libinputactions::InputBackend::instance()->setIgnoreEvents(false);
+    g_inputBackend->setIgnoreEvents(false);
 }
 
-void HyprlandInputEmitter::mouseButton(const uint32_t &button, const bool &state)
+void HyprlandInputEmitter::mouseButton(uint32_t button, bool state)
 {
-    libinputactions::InputBackend::instance()->setIgnoreEvents(true);
+    g_inputBackend->setIgnoreEvents(true);
     g_pInputManager->onMouseButton(IPointer::SButtonEvent{
         .button = button,
-        .state = state ? WL_POINTER_BUTTON_STATE_PRESSED : WL_POINTER_BUTTON_STATE_RELEASED
+        .state = state ? WL_POINTER_BUTTON_STATE_PRESSED : WL_POINTER_BUTTON_STATE_RELEASED,
     });
-    libinputactions::InputBackend::instance()->setIgnoreEvents(false);
+    g_inputBackend->setIgnoreEvents(false);
 }
 
 void HyprlandInputEmitter::mouseMoveRelative(const QPointF &pos)
 {
-    libinputactions::InputBackend::instance()->setIgnoreEvents(true);
+    g_inputBackend->setIgnoreEvents(true);
+    const Vector2D delta(pos.x(), pos.y());
     g_pInputManager->onMouseMoved(IPointer::SMotionEvent{
-        .delta = Vector2D(pos.x(), pos.y()),
+        .delta = delta,
+        .unaccel = delta,
         .device = m_pointer,
     });
-    libinputactions::InputBackend::instance()->setIgnoreEvents(false);
+    g_inputBackend->setIgnoreEvents(false);
 }
 
-void HyprlandInputEmitter::touchpadPinchBegin(const uint8_t &fingers)
+void HyprlandInputEmitter::touchpadPinchBegin(uint8_t fingers)
 {
-    libinputactions::InputBackend::instance()->setIgnoreEvents(true);
+    g_inputBackend->setIgnoreEvents(true);
     PROTO::pointerGestures->pinchBegin(0, fingers);
-    libinputactions::InputBackend::instance()->setIgnoreEvents(false);
+    g_inputBackend->setIgnoreEvents(false);
 }
 
-void HyprlandInputEmitter::touchpadSwipeBegin(const uint8_t &fingers)
+void HyprlandInputEmitter::touchpadSwipeBegin(uint8_t fingers)
 {
-    libinputactions::InputBackend::instance()->setIgnoreEvents(true);
+    g_inputBackend->setIgnoreEvents(true);
     g_pInputManager->onSwipeBegin(IPointer::SSwipeBeginEvent{
-        .fingers = fingers
+        .fingers = fingers,
     });
-    libinputactions::InputBackend::instance()->setIgnoreEvents(false);
+    g_inputBackend->setIgnoreEvents(false);
 }
 
 const std::string &VirtualKeyboard::getName()

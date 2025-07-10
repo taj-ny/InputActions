@@ -44,6 +44,4 @@ const Qt::KeyboardModifiers &Keyboard::modifiers() const
     return m_modifiers;
 }
 
-INPUTACTIONS_SINGLETON(Keyboard)
-
 }

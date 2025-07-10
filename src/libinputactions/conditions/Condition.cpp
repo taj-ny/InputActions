@@ -26,7 +26,7 @@ bool Condition::satisfied() const
     return satisfiedInternal() == !m_negate;
 }
 
-void Condition::setNegate(const bool &value)
+void Condition::setNegate(bool value)
 {
     m_negate = value;
 }

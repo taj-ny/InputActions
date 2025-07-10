@@ -16,39 +16,26 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include "InputEmitter.h"
+#pragma once
+
+#include "Variable.h"
 
 namespace libinputactions
 {
 
-void InputEmitter::keyboardClearModifiers()
+/**
+ * A locally stored variable with instant access.
+ */
+class LocalVariable : public Variable
 {
-}
+public:
+    LocalVariable(std::type_index type);
 
-void InputEmitter::keyboardText(const QString &text)
-{
-}
+    std::any get() const override;
+    void set(std::any value) override;
 
-void InputEmitter::keyboardKey(const uint32_t &key, const bool &state)
-{
-}
-
-void InputEmitter::mouseButton(const uint32_t &button, const bool &state)
-{
-}
-
-void InputEmitter::mouseMoveRelative(const QPointF &pos)
-{
-}
-
-void InputEmitter::touchpadPinchBegin(const uint8_t &fingers)
-{
-}
-
-void InputEmitter::touchpadSwipeBegin(const uint8_t &fingers)
-{
-}
-
-INPUTACTIONS_SINGLETON(InputEmitter)
+private:
+    std::any m_value;
+};
 
 }

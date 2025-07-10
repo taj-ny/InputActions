@@ -21,10 +21,10 @@
 namespace libinputactions
 {
 
-InputDevice::InputDevice(const InputDeviceType &types, const QString &name, const QString &sysName)
-    : m_type(types)
-    , m_name(name)
-    , m_sysName(sysName)
+InputDevice::InputDevice(InputDeviceType type, QString name, QString sysName)
+    : m_type(type)
+    , m_name(std::move(name))
+    , m_sysName(std::move(sysName))
 {
 }
 
@@ -74,7 +74,7 @@ bool InputDeviceProperties::multiTouch() const
     return m_multiTouch.value_or(false);
 }
 
-void InputDeviceProperties::setMultiTouch(const bool &value)
+void InputDeviceProperties::setMultiTouch(bool value)
 {
     m_multiTouch = value;
 }
@@ -94,7 +94,7 @@ bool InputDeviceProperties::buttonPad() const
     return m_buttonPad.value_or(false);
 }
 
-void InputDeviceProperties::setButtonPad(const bool &value)
+void InputDeviceProperties::setButtonPad(bool value)
 {
     m_buttonPad = value;
 }

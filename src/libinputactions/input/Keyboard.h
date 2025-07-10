@@ -18,19 +18,15 @@
 
 #pragma once
 
-#include <libinputactions/globals.h>
-
+#include <QPointF>
+#include <linux/input-event-codes.h>
 #include <map>
 #include <memory>
-
-#include <QPointF>
-
-#include <linux/input-event-codes.h>
 
 namespace libinputactions
 {
 
-static std::map<uint32_t, Qt::KeyboardModifier> MODIFIERS = {
+static const std::map<uint32_t, Qt::KeyboardModifier> MODIFIERS{
     {KEY_LEFTALT, Qt::KeyboardModifier::AltModifier},
     {KEY_LEFTCTRL, Qt::KeyboardModifier::ControlModifier},
     {KEY_LEFTMETA, Qt::KeyboardModifier::MetaModifier},
@@ -45,9 +41,8 @@ class KeyboardKeyEvent;
 
 class Keyboard
 {
-    INPUTACTIONS_DECLARE_SINGLETON(Keyboard)
-
 public:
+    Keyboard() = default;
     virtual ~Keyboard() = default;
 
     void handleEvent(const KeyboardKeyEvent *event);
@@ -59,11 +54,10 @@ public:
      */
     const Qt::KeyboardModifiers &modifiers() const;
 
-protected:
-    Keyboard() = default;
-
 private:
     Qt::KeyboardModifiers m_modifiers{};
 };
+
+inline std::unique_ptr<Keyboard> g_keyboard;
 
 }

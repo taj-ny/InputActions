@@ -18,36 +18,33 @@
 
 #include "VariableCondition.h"
 #include "ConditionGroup.h"
-
-#include <libinputactions/variables/VariableManager.h>
-#include <libinputactions/variables/Variable.h>
-
 #include <QLoggingCategory>
 #include <QRegularExpression>
+#include <libinputactions/variables/Variable.h>
+#include <libinputactions/variables/VariableManager.h>
 
 Q_LOGGING_CATEGORY(INPUTACTIONS_CONDITION_VARIABLE, "inputactions.condition.variable", QtWarningMsg)
 
 namespace libinputactions
 {
 
-VariableCondition::VariableCondition(const QString &variableName, const std::vector<std::any> &values, const ComparisonOperator &comparisonOperator)
+VariableCondition::VariableCondition(const QString &variableName, const std::vector<std::any> &values, ComparisonOperator comparisonOperator)
     : m_variableName(variableName)
     , m_values(values)
     , m_comparisonOperator(comparisonOperator)
 {
 }
 
-VariableCondition::VariableCondition(const QString &variableName, const std::any &value, const ComparisonOperator &comparisonOperator)
+VariableCondition::VariableCondition(const QString &variableName, const std::any &value, ComparisonOperator comparisonOperator)
     : VariableCondition(variableName, std::vector<std::any>{value}, comparisonOperator)
 {
 }
 
 bool VariableCondition::satisfiedInternal() const
 {
-    const auto variable = VariableManager::instance()->getVariable(m_variableName);
+    const auto variable = g_variableManager->getVariable(m_variableName);
     if (!variable) {
-        qCWarning(INPUTACTIONS_CONDITION_VARIABLE).noquote() << QString("Failed to get variable %1, assuming the condition is satisfied.")
-            .arg(m_variableName);
+        qCWarning(INPUTACTIONS_CONDITION_VARIABLE).noquote() << QString("Failed to get variable %1, assuming the condition is satisfied.").arg(m_variableName);
         return true;
     }
     return variable->operations()->compare(m_values, m_comparisonOperator);

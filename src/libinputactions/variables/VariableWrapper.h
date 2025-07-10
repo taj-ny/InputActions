@@ -1,6 +1,6 @@
 /*
     Input Actions - Input handler that executes user-defined actions
-    Copyright (C) 2025 Marcin Woźniak
+    Copyright (C) 2024-2025 Marcin Woźniak
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -16,15 +16,42 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include "PointerPositionSetter.h"
+#pragma once
+
+#include "Variable.h"
 
 namespace libinputactions
 {
 
-void PointerPositionSetter::setGlobalPointerPosition(const QPointF &value)
+template<typename T>
+class VariableWrapper
 {
-}
+public:
+    VariableWrapper(Variable *variable)
+        : m_variable(variable)
+    {
+    }
 
-INPUTACTIONS_SINGLETON(PointerPositionSetter)
+    std::optional<T> get() const
+    {
+        const auto value = m_variable->get();
+        if (!value.has_value()) {
+            return {};
+        }
+        return std::any_cast<T>(value);
+    }
+
+    void set(const std::optional<T> &value)
+    {
+        if (!value.has_value()) {
+            m_variable->set({});
+            return;
+        }
+        m_variable->set(value.value());
+    }
+
+private:
+    Variable *m_variable;
+};
 
 }

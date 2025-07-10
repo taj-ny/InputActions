@@ -18,51 +18,36 @@
 
 #pragma once
 
-#include <libinputactions/globals.h>
-
+#include "LocalVariable.h"
+#include "RemoteVariable.h"
+#include "VariableWrapper.h"
+#include <QPointF>
+#include <QString>
 #include <map>
 #include <memory>
 
-#include <QPointF>
-#include <QString>
+Q_DECLARE_LOGGING_CATEGORY(INPUTACTIONS_VARIABLE_MANAGER)
 
 namespace libinputactions
 {
-
-class WindowProvider;
 
 const static uint8_t s_fingerVariableCount = 5;
 
 class Variable;
 
 template<typename T>
-class VariableInfo
+struct VariableInfo
 {
-public:
-    VariableInfo(const QString &name);
+    QString name;
 
-    const QString &name() const;
-
-private:
-    QString m_name;
+    operator QString() const
+    {
+        return name;
+    }
 };
 
-template<typename T>
-class VariableWrapper
+struct BuiltinVariables
 {
-public:
-    VariableWrapper(Variable *variable);
-
-    std::optional<T> get() const;
-    void set(const std::optional<T> &value);
-
-private:
-    Variable *m_variable;
-};
-
-class BuiltinVariables
-{
-public:
     inline static const VariableInfo<QString> DeviceName{QStringLiteral("device_name")};
     inline static const VariableInfo<qreal> Fingers{QStringLiteral("fingers")};
     inline static const VariableInfo<Qt::KeyboardModifiers> KeyboardModifiers{QStringLiteral("keyboard_modifiers")};
@@ -76,16 +61,34 @@ public:
  */
 class VariableManager
 {
-    INPUTACTIONS_DECLARE_SINGLETON(VariableManager)
-
 public:
+    VariableManager();
+    ~VariableManager();
+
     template<typename T>
-    std::optional<VariableWrapper<T>> getVariable(const VariableInfo<T> &name);
+    std::optional<VariableWrapper<T>> getVariable(const VariableInfo<T> &variable)
+    {
+        return getVariable<T>(variable.name);
+    }
+
     /**
      * @return A statically-typed wrapper for the specified variable, nullptr if not found or type doesn't match.
      */
     template<typename T>
-    std::optional<VariableWrapper<T>> getVariable(const QString &name);
+    std::optional<VariableWrapper<T>> getVariable(const QString &name)
+    {
+        auto *variable = getVariable(name);
+        if (!variable) {
+            return {};
+        } else if (variable->type() != typeid(T)) {
+            qCWarning(INPUTACTIONS_VARIABLE_MANAGER).noquote()
+                << QString("VariableManager::getVariable<T> called with the wrong type (variable: %1, type: %2").arg(variable->type().name(), typeid(T).name());
+            return {};
+        }
+
+        return VariableWrapper<T>(getVariable(name));
+    }
+
     /**
      * @return The variable with the specified name or nullptr if not found.
      */
@@ -93,18 +96,34 @@ public:
 
     void registerVariable(const QString &name, std::unique_ptr<Variable> variable);
     template<typename T>
-    void registerLocalVariable(const QString &name);
+    void registerLocalVariable(const QString &name)
+    {
+        registerVariable(name, std::make_unique<LocalVariable>(typeid(T)));
+    }
     template<typename T>
-    void registerLocalVariable(const VariableInfo<T> &variable);
+    void registerLocalVariable(const VariableInfo<T> &variable)
+    {
+        registerLocalVariable<T>(variable.name);
+    }
     template<typename T>
-    void registerRemoteVariable(const QString &name, const std::function<void(std::optional<T> &value)> getter);
+    void registerRemoteVariable(const QString &name, const std::function<void(std::optional<T> &value)> getter)
+    {
+        const std::function<void(std::any & value)> anyGetter = [getter](std::any &value) {
+            std::optional<T> optValue;
+            getter(optValue);
+            if (optValue.has_value()) {
+                value = optValue.value();
+            }
+        };
+        registerVariable(name, std::make_unique<RemoteVariable>(typeid(T), anyGetter));
+    }
 
     std::map<QString, const Variable *> variables() const;
 
 private:
-    VariableManager();
-
     std::map<QString, std::unique_ptr<Variable>> m_variables;
 };
+
+inline auto g_variableManager = std::make_shared<VariableManager>();
 
 }

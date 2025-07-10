@@ -17,12 +17,10 @@
 */
 
 #include "MouseTriggerHandler.h"
-
 #include <libinputactions/input/Keyboard.h>
 #include <libinputactions/interfaces/InputEmitter.h>
 #include <libinputactions/triggers/PressTrigger.h>
 #include <libinputactions/triggers/WheelTrigger.h>
-
 #include <ranges>
 
 Q_LOGGING_CATEGORY(INPUTACTIONS_HANDLER_MOUSE, "inputactions.handler.mouse", QtWarningMsg)
@@ -155,8 +153,8 @@ bool MouseTriggerHandler::handleEvent(const PointerButtonEvent *event)
         const auto block = m_blockedMouseButtons.contains(nativeButton);
         if (m_blockedMouseButtons.removeAll(nativeButton) && !m_hadTriggerSincePress) {
             qCDebug(INPUTACTIONS_HANDLER_MOUSE).nospace() << "Mouse button pressed and released (button: " << nativeButton << ")";
-            InputEmitter::instance()->mouseButton(nativeButton, true);
-            InputEmitter::instance()->mouseButton(nativeButton, false);
+            g_inputEmitter->mouseButton(nativeButton, true);
+            g_inputEmitter->mouseButton(nativeButton, false);
         }
         if (m_blockedMouseButtons.empty()) {
             m_hadTriggerSincePress = false;
@@ -235,7 +233,7 @@ bool MouseTriggerHandler::handleWheelEvent(const MotionEvent *event)
             continuous = true;
         }
     }
-    if (!continuous || (m_buttons.empty() && !Keyboard::instance()->modifiers())) {
+    if (!continuous || (m_buttons.empty() && !g_keyboard->modifiers())) {
         qCDebug(INPUTACTIONS_HANDLER_MOUSE, "Wheel trigger will end immediately");
         endTriggers(TriggerType::Wheel);
     }
@@ -244,12 +242,12 @@ bool MouseTriggerHandler::handleWheelEvent(const MotionEvent *event)
     return hasTriggers;
 }
 
-void MouseTriggerHandler::setMotionTimeout(const uint32_t &timeout)
+void MouseTriggerHandler::setMotionTimeout(uint32_t timeout)
 {
     m_motionTimeout = timeout;
 }
 
-void MouseTriggerHandler::setPressTimeout(const uint32_t &timeout)
+void MouseTriggerHandler::setPressTimeout(uint32_t timeout)
 {
     m_pressTimeout = timeout;
 }
@@ -267,7 +265,7 @@ std::unique_ptr<TriggerActivationEvent> MouseTriggerHandler::createActivationEve
     return event;
 }
 
-bool MouseTriggerHandler::shouldBlockMouseButton(const Qt::MouseButton &button)
+bool MouseTriggerHandler::shouldBlockMouseButton(Qt::MouseButton button)
 {
     const auto event = createActivationEvent();
     // A partial match is required, not an exact one
@@ -286,13 +284,13 @@ bool MouseTriggerHandler::shouldBlockMouseButton(const Qt::MouseButton &button)
 void MouseTriggerHandler::pressBlockedMouseButtons()
 {
     for (const auto &button : m_blockedMouseButtons) {
-        InputEmitter::instance()->mouseButton(button, true);
+        g_inputEmitter->mouseButton(button, true);
         qCDebug(INPUTACTIONS_HANDLER_MOUSE).nospace() << "Mouse button unblocked (button: " << button << ")";
     }
     m_blockedMouseButtons.clear();
 }
 
-void MouseTriggerHandler::setUnblockButtonsOnTimeout(const bool &unblock)
+void MouseTriggerHandler::setUnblockButtonsOnTimeout(bool unblock)
 {
     m_unblockButtonsOnTimeout = unblock;
 }

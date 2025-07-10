@@ -18,12 +18,11 @@
 
 #pragma once
 
+#include <QLoggingCategory>
+#include <QString>
 #include <libinputactions/actions/TriggerAction.h>
 #include <libinputactions/conditions/Condition.h>
 #include <libinputactions/globals.h>
-
-#include <QLoggingCategory>
-#include <QString>
 
 Q_DECLARE_LOGGING_CATEGORY(INPUTACTIONS_TRIGGER)
 
@@ -45,7 +44,7 @@ public:
     virtual ~TriggerUpdateEvent() = default;
 
     const qreal &delta() const;
-    void setDelta(const qreal &delta);
+    void setDelta(qreal delta);
 
 private:
     qreal m_delta = 0;
@@ -133,12 +132,12 @@ public:
      * @param value Whether keyboard modifiers should be cleared when this trigger starts. By default true if the
      * trigger has an input action, otherwise false.
      */
-    void setClearModifiers(const bool &value);
+    void setClearModifiers(bool value);
 
     /**
      * @param value Whether to set last_trigger variables. Default: true
      */
-    void setSetLastTrigger(const bool &value);
+    void setSetLastTrigger(bool value);
 
     const std::vector<Qt::MouseButton> &mouseButtons() const;
     /**
@@ -148,7 +147,7 @@ public:
     void setMouseButtons(const std::vector<Qt::MouseButton> &buttons);
 
     const bool &mouseButtonsExactOrder() const;
-    void setMouseButtonsExactOrder(const bool &value);
+    void setMouseButtonsExactOrder(bool value);
 
     const QString &id() const;
     /**
@@ -160,7 +159,7 @@ public:
     /**
      * Required.
      */
-    void setType(const TriggerType &type);
+    void setType(TriggerType type);
 
 protected:
     /**

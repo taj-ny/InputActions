@@ -17,13 +17,11 @@
 */
 
 #include "kcm.h"
-
 #include <KPluginFactory>
-
 #include <QClipboard>
-#include <QtDBus/QDBusInterface>
 #include <QFile>
 #include <QObject>
+#include <QtDBus/QDBusInterface>
 
 namespace KWin
 {

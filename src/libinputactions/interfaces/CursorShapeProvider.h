@@ -18,7 +18,8 @@
 
 #pragma once
 
-#include <libinputactions/globals.h>
+#include <QString>
+#include <map>
 
 namespace libinputactions
 {
@@ -107,13 +108,11 @@ static const std::map<QString, CursorShape> CURSOR_SHAPES = {
     {"up_arrow", CursorShape::UpArrow},
 
     // Aliases
-    {"left_ptr", CursorShape::Default}
+    {"left_ptr", CursorShape::Default},
 };
 
 class CursorShapeProvider
 {
-    INPUTACTIONS_DECLARE_SINGLETON(CursorShapeProvider)
-
 public:
     CursorShapeProvider() = default;
     virtual ~CursorShapeProvider() = default;
@@ -121,7 +120,12 @@ public:
     /**
      * @returns The current cursor shape, or std::nullopt if not available.
      */
-    virtual std::optional<CursorShape> cursorShape();
+    virtual std::optional<CursorShape> cursorShape()
+    {
+        return {};
+    };
 };
+
+inline std::shared_ptr<CursorShapeProvider> g_cursorShapeProvider;
 
 }

@@ -18,13 +18,11 @@
 
 #pragma once
 
-#include <libinputactions/input/backends/InputBackend.h>
-
-#include <libevdev-1.0/libevdev/libevdev.h>
-
-#include <map>
-
 #include <QTimer>
+#include <libevdev-1.0/libevdev/libevdev.h>
+#include <libinputactions/input/backends/InputBackend.h>
+#include <libinputactions/input/events.h>
+#include <map>
 
 namespace libinputactions
 {
@@ -63,12 +61,12 @@ public:
     /**
      * @param value How often to poll input events.
      */
-    void setPollingInterval(const uint32_t &value);
+    void setPollingInterval(uint32_t value);
 
     /**
      * Will take effect only if set before initialization.
      */
-    void setEnabled(const bool &value);
+    void setEnabled(bool value);
 
 protected:
     void deviceAdded(InputDevice *device) override;

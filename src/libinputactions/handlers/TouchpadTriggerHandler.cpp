@@ -17,7 +17,6 @@
 */
 
 #include "TouchpadTriggerHandler.h"
-
 #include <libinputactions/variables/VariableManager.h>
 
 namespace libinputactions
@@ -58,7 +57,7 @@ bool TouchpadTriggerHandler::handleEvent(const InputEvent *event)
     }
 }
 
-void TouchpadTriggerHandler::setClickTimeout(const uint32_t &value)
+void TouchpadTriggerHandler::setClickTimeout(uint32_t value)
 {
     m_clickTimeout = value;
 }
@@ -86,7 +85,7 @@ bool TouchpadTriggerHandler::handleEvent(const TouchpadGestureLifecyclePhaseEven
 {
     switch (event->phase()) {
         case TouchpadGestureLifecyclePhase::Begin:
-            VariableManager::instance()->getVariable(BuiltinVariables::Fingers)->set(event->fingers());
+            g_variableManager->getVariable(BuiltinVariables::Fingers)->set(event->fingers());
             {
                 // Delay press gesture activation if there is a click gesture
                 TriggerActivationEvent activationEvent;
@@ -128,17 +127,16 @@ bool TouchpadTriggerHandler::handleEvent(const TouchpadSlotEvent *event)
 {
     m_usesLibevdevBackend = true;
 
-    auto *manager = VariableManager::instance();
-    auto thumbPresent = manager->getVariable(BuiltinVariables::ThumbPresent);
-    auto thumbPosition = manager->getVariable(BuiltinVariables::ThumbPositionPercentage);
+    auto thumbPresent = g_variableManager->getVariable(BuiltinVariables::ThumbPresent);
+    auto thumbPosition = g_variableManager->getVariable(BuiltinVariables::ThumbPositionPercentage);
     bool hasThumb{};
 
     for (auto i = 0; i < std::min(static_cast<uint8_t>(event->fingerSlots().size()), s_fingerVariableCount); i++) {
         const auto &slot = event->fingerSlots()[i];
         const auto fingerVariableNumber = i + 1;
 
-        auto position = manager->getVariable<QPointF>(QString("finger_%1_position_percentage").arg(fingerVariableNumber));
-        auto pressure = manager->getVariable<qreal>(QString("finger_%1_pressure").arg(fingerVariableNumber));
+        auto position = g_variableManager->getVariable<QPointF>(QString("finger_%1_position_percentage").arg(fingerVariableNumber));
+        auto pressure = g_variableManager->getVariable<qreal>(QString("finger_%1_pressure").arg(fingerVariableNumber));
 
         if (!slot.active) {
             position->set({});
@@ -172,7 +170,7 @@ bool TouchpadTriggerHandler::handleScrollEvent(const MotionEvent *event)
 
     if (!m_scrollInProgress) {
         if (!m_usesLibevdevBackend) {
-            VariableManager::instance()->getVariable(BuiltinVariables::Fingers)->set(2);
+            g_variableManager->getVariable(BuiltinVariables::Fingers)->set(2);
         }
         m_scrollInProgress = true;
         activateTriggers(TriggerType::StrokeSwipe);

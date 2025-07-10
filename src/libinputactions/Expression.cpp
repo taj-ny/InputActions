@@ -17,12 +17,8 @@
 */
 
 #include "Expression.h"
-
-#include <libinputactions/globals.h>
-#include <libinputactions/variables/VariableManager.h>
-#include <libinputactions/variables/Variable.h>
-
 #include <QRegularExpression>
+#include <libinputactions/variables/VariableManager.h>
 
 namespace libinputactions
 {
@@ -33,7 +29,7 @@ Expression<T>::Expression(const QString &expression)
     m_expression = expression;
 
     static const QRegularExpression variableReferenceRegex("\\$([a-zA-Z0-9_])+");
-    const auto variables = VariableManager::instance()->variables();
+    const auto variables = g_variableManager->variables();
     auto it = variableReferenceRegex.globalMatch(m_expression);
     while (it.hasNext()) {
         const auto match = it.next();
@@ -54,7 +50,7 @@ QString Expression<QString>::evaluate() const
 
     QString result = m_expression;
     for (const auto &variable : m_variables) {
-        const auto value = VariableManager::instance()->getVariable(variable)->operations()->toString();
+        const auto value = g_variableManager->getVariable(variable)->operations()->toString();
         result = result.replace(QRegularExpression("\\$" + variable + "(?![a-zA-Z0-9_])"), value);
     }
     return result;

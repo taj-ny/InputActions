@@ -19,7 +19,6 @@
 #include "KWinInputBackend.h"
 #include "globals.h"
 #include "utils.h"
-
 #include <libinputactions/input/events.h>
 #include <libinputactions/interfaces/InputEmitter.h>
 #include <libinputactions/triggers/StrokeTrigger.h>
@@ -40,11 +39,20 @@ KWinInputBackend::KWinInputBackend()
     auto *input = KWin::input();
     connect(input, &KWin::InputRedirection::deviceAdded, this, &KWinInputBackend::kwinDeviceAdded);
     connect(input, &KWin::InputRedirection::deviceRemoved, this, &KWinInputBackend::kwinDeviceRemoved);
+
+#ifdef KWIN_6_2_OR_GREATER
+    KWin::input()->installInputEventFilter(this);
+#else
+    KWin::input()->prependInputEventFilter(this);
+#endif
 }
 
 KWinInputBackend::~KWinInputBackend()
 {
     reset();
+    if (auto *input = KWin::input()) {
+        input->uninstallInputEventFilter(this);
+    }
 }
 
 void KWinInputBackend::initialize()
@@ -126,8 +134,10 @@ bool KWinInputBackend::pointerMotion(KWin::PointerMotionEvent *event)
 
 bool KWinInputBackend::pointerButton(KWin::PointerButtonEvent *event)
 {
-    return LibinputCompositorInputBackend::pointerButton(findInputActionsDevice(event->device), event->button, event->nativeButton,
-        event->state == PointerButtonStatePressed);
+    return LibinputCompositorInputBackend::pointerButton(findInputActionsDevice(event->device),
+                                                         event->button,
+                                                         event->nativeButton,
+                                                         event->state == PointerButtonStatePressed);
 }
 
 bool KWinInputBackend::keyboardKey(KWin::KeyboardKeyEvent *event)
@@ -152,9 +162,7 @@ bool KWinInputBackend::wheelEvent(KWin::WheelEvent *event)
     const auto inverted = event->inverted();
 #endif
 
-    auto delta = orientation == Qt::Orientation::Horizontal
-        ? QPointF(eventDelta, 0)
-        : QPointF(0, eventDelta);
+    auto delta = orientation == Qt::Orientation::Horizontal ? QPointF(eventDelta, 0) : QPointF(0, eventDelta);
     if (inverted) {
         delta *= -1;
     }
@@ -176,7 +184,7 @@ void KWinInputBackend::kwinDeviceAdded(KWin::InputDevice *kwinDevice)
 
     KWinInputDevice device{
         .kwinDevice = kwinDevice,
-        .libinputactionsDevice = std::make_unique<libinputactions::InputDevice>(type, kwinDevice->name(), kwinDevice->property("sysName").toString())
+        .libinputactionsDevice = std::make_unique<libinputactions::InputDevice>(type, kwinDevice->name(), kwinDevice->property("sysName").toString()),
     };
     deviceAdded(device.libinputactionsDevice.get());
     m_devices.push_back(std::move(device));

@@ -28,8 +28,8 @@ class Range
 {
 public:
     Range() = default;
-    Range(const T &minmax);
-    Range(const std::optional<T> &min, const std::optional<T> &max);
+    Range(T minmax);
+    Range(std::optional<T> min, std::optional<T> max);
 
     bool contains(const T &value) const;
 

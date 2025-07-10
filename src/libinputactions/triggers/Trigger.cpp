@@ -17,7 +17,6 @@
 */
 
 #include "Trigger.h"
-
 #include <libinputactions/actions/InputTriggerAction.h>
 #include <libinputactions/interfaces/InputEmitter.h>
 #include <libinputactions/variables/VariableManager.h>
@@ -49,8 +48,8 @@ bool Trigger::canActivate(const TriggerActivationEvent *event) const
         if (m_mouseButtons.size() != event->mouseButtons->size()
             || (m_mouseButtonsExactOrder && !std::ranges::equal(m_mouseButtons, event->mouseButtons.value()))
             || (!m_mouseButtonsExactOrder && !std::ranges::all_of(m_mouseButtons, [event](auto &button) {
-                return std::ranges::contains(event->mouseButtons.value(), button);
-        }))) {
+                   return std::ranges::contains(event->mouseButtons.value(), button);
+               }))) {
             return false;
         }
     }
@@ -68,9 +67,11 @@ void Trigger::update(const TriggerUpdateEvent *event)
     m_absoluteAccumulatedDelta += std::abs(event->delta());
     m_withinThreshold = !m_threshold || m_threshold->contains(m_absoluteAccumulatedDelta);
     if (!m_withinThreshold) {
-        qCDebug(INPUTACTIONS_TRIGGER).noquote()
-            << QString("Threshold not reached (id: %1, current: %2, min: %3, max: %4")
-                .arg(m_id, QString::number(m_absoluteAccumulatedDelta), QString::number(m_threshold->min().value_or(-1)), QString::number(m_threshold->max().value_or(-1)));
+        qCDebug(INPUTACTIONS_TRIGGER).noquote() << QString("Threshold not reached (id: %1, current: %2, min: %3, max: %4")
+                                                       .arg(m_id,
+                                                            QString::number(m_absoluteAccumulatedDelta),
+                                                            QString::number(m_threshold->min().value_or(-1)),
+                                                            QString::number(m_threshold->max().value_or(-1)));
         return;
     }
 
@@ -82,7 +83,7 @@ void Trigger::update(const TriggerUpdateEvent *event)
 
         if (m_clearModifiers && *m_clearModifiers) {
             qCDebug(INPUTACTIONS_TRIGGER).noquote() << QString("Clearing keyboard modifiers (trigger: %1)").arg(m_id);
-            InputEmitter::instance()->keyboardClearModifiers();
+            g_inputEmitter->keyboardClearModifiers();
         }
 
         for (const auto &action : m_actions) {
@@ -91,7 +92,7 @@ void Trigger::update(const TriggerUpdateEvent *event)
     }
 
     if (m_setLastTrigger) {
-        VariableManager::instance()->getVariable(BuiltinVariables::LastTriggerId)->set(m_id);
+        g_variableManager->getVariable(BuiltinVariables::LastTriggerId)->set(m_id);
     }
     updateActions(event);
 }
@@ -110,7 +111,7 @@ void Trigger::end()
 
     qCDebug(INPUTACTIONS_TRIGGER).noquote() << QString("Trigger ended (id: %1)").arg(m_id);
     if (m_setLastTrigger) {
-        VariableManager::instance()->getVariable(BuiltinVariables::LastTriggerId)->set(m_id);
+        g_variableManager->getVariable(BuiltinVariables::LastTriggerId)->set(m_id);
     }
     for (const auto &action : m_actions) {
         action->triggerEnded();
@@ -184,12 +185,12 @@ void Trigger::setThreshold(const Range<qreal> &threshold)
     m_threshold = threshold;
 }
 
-void Trigger::setClearModifiers(const bool &value)
+void Trigger::setClearModifiers(bool value)
 {
     m_clearModifiers = value;
 }
 
-void Trigger::setSetLastTrigger(const bool &value)
+void Trigger::setSetLastTrigger(bool value)
 {
     m_setLastTrigger = value;
 }
@@ -209,7 +210,7 @@ const bool &Trigger::mouseButtonsExactOrder() const
     return m_mouseButtonsExactOrder;
 }
 
-void Trigger::setMouseButtonsExactOrder(const bool &value)
+void Trigger::setMouseButtonsExactOrder(bool value)
 {
     m_mouseButtonsExactOrder = value;
 }
@@ -229,7 +230,7 @@ const TriggerType &Trigger::type() const
     return m_type;
 }
 
-void Trigger::setType(const TriggerType &type)
+void Trigger::setType(TriggerType type)
 {
     m_type = type;
 }
@@ -246,7 +247,7 @@ const qreal &TriggerUpdateEvent::delta() const
     return m_delta;
 }
 
-void TriggerUpdateEvent::setDelta(const qreal &delta)
+void TriggerUpdateEvent::setDelta(qreal delta)
 {
     m_delta = delta;
 }

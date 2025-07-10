@@ -17,14 +17,11 @@
 */
 
 #include "LibevdevComplementaryInputBackend.h"
-
-#include <libinputactions/variables/VariableManager.h>
-
-#include <fcntl.h>
-
 #include <QDir>
 #include <QLoggingCategory>
 #include <QObject>
+#include <fcntl.h>
+#include <libinputactions/variables/VariableManager.h>
 
 namespace libinputactions
 {
@@ -35,7 +32,9 @@ LibevdevComplementaryInputBackend::LibevdevComplementaryInputBackend()
 {
     m_inputTimer.setTimerType(Qt::TimerType::PreciseTimer);
     m_inputTimer.setInterval(100);
-    QObject::connect(&m_inputTimer, &QTimer::timeout, [this] { poll(); });
+    QObject::connect(&m_inputTimer, &QTimer::timeout, [this] {
+        poll();
+    });
 }
 
 LibevdevDevice::~LibevdevDevice()
@@ -54,8 +53,7 @@ std::unique_ptr<LibevdevDevice> LibevdevComplementaryInputBackend::openDevice(co
     const auto path = QString("/dev/input/%1").arg(sysName).toStdString();
     device->fd = open(path.c_str(), O_RDONLY | O_NONBLOCK);
     if (device->fd == -1) {
-        qCDebug(INPUTACTIONS_BACKEND_LIBEVDEV).noquote()
-                    << QString("Failed to open %1 (error %2)").arg(QString::fromStdString(path), QString::number(errno));
+        qCDebug(INPUTACTIONS_BACKEND_LIBEVDEV).noquote() << QString("Failed to open %1 (error %2)").arg(QString::fromStdString(path), QString::number(errno));
         return {};
     }
     fcntl(device->fd, F_SETFD, FD_CLOEXEC);
@@ -178,9 +176,9 @@ void LibevdevComplementaryInputBackend::poll()
                             {BTN_TOOL_DOUBLETAP, 2},
                             {BTN_TOOL_TRIPLETAP, 3},
                             {BTN_TOOL_QUADTAP, 4},
-                            {BTN_TOOL_QUINTTAP, 5}
+                            {BTN_TOOL_QUINTTAP, 5},
                         };
-                        VariableManager::instance()->getVariable(BuiltinVariables::Fingers)->set(fingerCountCodes.at(libevdevDevice->currentFingerCode));
+                        g_variableManager->getVariable(BuiltinVariables::Fingers)->set(fingerCountCodes.at(libevdevDevice->currentFingerCode));
                     }
                     continue;
                 case EV_KEY:
@@ -245,12 +243,12 @@ void LibevdevComplementaryInputBackend::poll()
     }
 }
 
-void LibevdevComplementaryInputBackend::setPollingInterval(const uint32_t &value)
+void LibevdevComplementaryInputBackend::setPollingInterval(uint32_t value)
 {
     m_inputTimer.setInterval(value);
 }
 
-void LibevdevComplementaryInputBackend::setEnabled(const bool &value)
+void LibevdevComplementaryInputBackend::setEnabled(bool value)
 {
     m_enabled = value;
 }

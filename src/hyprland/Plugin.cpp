@@ -17,21 +17,20 @@
 */
 
 #include "Plugin.h"
+#include "input/HyprlandInputBackend.h"
 #include "interfaces/HyprlandInputEmitter.h"
 #include "interfaces/HyprlandOnScreenMessageManager.h"
 #include "interfaces/HyprlandPointer.h"
 #include "interfaces/HyprlandSessionLock.h"
 #include "interfaces/HyprlandWindowProvider.h"
-
-#include <libinputactions/variables/VariableManager.h>
-
+#include <hyprland/src/Compositor.hpp>
 #include <hyprland/src/helpers/Monitor.hpp>
 #include <hyprland/src/managers/eventLoop/EventLoopManager.hpp>
-#include <hyprland/src/Compositor.hpp>
+#include <libinputactions/Config.h>
+#include <libinputactions/variables/VariableManager.h>
 #undef HANDLE
 
 #include <QCoreApplication>
-
 #include <chrono>
 
 using namespace libinputactions;
@@ -39,50 +38,32 @@ using namespace libinputactions;
 static const auto TICK_INTERVAL = std::chrono::milliseconds(static_cast<uint32_t>(1));
 
 Plugin::Plugin(void *handle)
-    : m_handle(handle)
-    , m_backend(std::make_shared<HyprlandInputBackend>(this))
-    , m_config(m_backend.get())
-    , m_dbusInterface(&m_config)
+    : InputActions(std::make_unique<HyprlandInputBackend>(handle))
 {
-    auto pointer = std::make_shared<HyprlandPointer>(this);
-    CursorShapeProvider::setInstance(pointer);
-    InputBackend::setInstance(m_backend);
-    InputEmitter::setInstance(std::make_shared<HyprlandInputEmitter>());
-    OnScreenMessageManager::setInstance(std::make_shared<HyprlandOnScreenMessageManager>());
-    PointerPositionGetter::setInstance(pointer);
-    SessionLock::setInstance(std::make_shared<HyprlandSessionLock>());
-    WindowProvider::setInstance(std::make_unique<HyprlandWindowProvider>());
+    auto pointer = std::make_shared<HyprlandPointer>(handle);
+    g_cursorShapeProvider = pointer;
+    g_inputEmitter = std::make_shared<HyprlandInputEmitter>();
+    g_onScreenMessageManager = std::make_shared<HyprlandOnScreenMessageManager>();
+    g_pointerPositionGetter = pointer;
+    g_sessionLock = std::make_shared<HyprlandSessionLock>();
+    g_windowProvider = std::make_shared<HyprlandWindowProvider>();
 
     // This should be moved to libinputactions eventually
-    auto *variableManager = libinputactions::VariableManager::instance();
-    variableManager->registerRemoteVariable<QString>("screen_name", [](auto &value) {
+    g_variableManager->registerRemoteVariable<QString>("screen_name", [](auto &value) {
         if (const auto monitor = g_pCompositor->getMonitorFromCursor()) {
             value = QString::fromStdString(monitor->m_name);
         }
     });
 
-    m_eventLoopTimer = makeShared<CEventLoopTimer>(TICK_INTERVAL, [this](SP<CEventLoopTimer> self, void* data) {
-        tick();
-    }, this);
+    m_eventLoopTimer = makeShared<CEventLoopTimer>(
+        TICK_INTERVAL,
+        [this](SP<CEventLoopTimer> self, void *data) {
+            tick();
+        },
+        this);
     g_pEventLoopManager->addTimer(m_eventLoopTimer);
 
-    m_config.load(true);
-}
-
-Plugin::~Plugin()
-{
-    CursorShapeProvider::setInstance(nullptr);
-    InputBackend::setInstance(nullptr);
-    InputEmitter::setInstance(nullptr);
-    OnScreenMessageManager::setInstance(nullptr);
-    PointerPositionGetter::setInstance(nullptr);
-    SessionLock::setInstance(nullptr);
-    WindowProvider::setInstance(nullptr);
-}
-
-void *Plugin::handle() const
-{
-    return m_handle;
+    g_config->load(true);
 }
 
 void Plugin::tick()

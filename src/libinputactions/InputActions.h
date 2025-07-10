@@ -16,19 +16,24 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include "OnScreenMessageManager.h"
+#pragma once
+
+#include "DBusInterface.h"
+#include <memory>
 
 namespace libinputactions
 {
 
-void OnScreenMessageManager::showMessage(const QString &message)
-{
-}
+class InputBackend;
 
-void OnScreenMessageManager::hideMessage()
+class InputActions
 {
-}
+protected:
+    InputActions(std::unique_ptr<InputBackend> inputBackend);
+    virtual ~InputActions();
 
-INPUTACTIONS_SINGLETON(OnScreenMessageManager)
+private:
+    DBusInterface m_dbusInterface;
+};
 
 }

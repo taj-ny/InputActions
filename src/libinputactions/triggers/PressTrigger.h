@@ -34,7 +34,7 @@ public:
      * @param instant Whether the trigger should be activated immediately, preventing normal clicks from being
      * performed.
      */
-    void setInstant(const bool &instant);
+    void setInstant(bool instant);
 
 private:
     bool m_instant = false;

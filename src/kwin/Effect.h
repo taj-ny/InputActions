@@ -19,16 +19,14 @@
 #pragma once
 
 #include "effect/effect.h"
-#include "input/KWinInputBackend.h"
+#include <libinputactions/InputActions.h>
 
-#include <libinputactions/Config.h>
-#include <libinputactions/DBusInterface.h>
-
-class Effect : public KWin::Effect
+class Effect
+    : public KWin::Effect
+    , public libinputactions::InputActions
 {
 public:
     Effect();
-    ~Effect() override;
 
     static bool supported()
     {
@@ -40,9 +38,4 @@ public:
     };
 
     void reconfigure(ReconfigureFlags flags) override;
-
-private:
-    KWinInputBackend *m_backend;
-    libinputactions::Config m_config;
-    libinputactions::DBusInterface m_dbusInterface;
 };

@@ -18,11 +18,10 @@
 
 #pragma once
 
-#include <libinputactions/interfaces/InputEmitter.h>
-
 #include "core/inputdevice.h"
-#include "kwin/input.h"
 #include "input.h"
+#include "kwin/input.h"
+#include <libinputactions/interfaces/InputEmitter.h>
 
 namespace libinputactions
 {
@@ -58,14 +57,14 @@ public:
     ~KWinInputEmitter() override;
 
     void keyboardClearModifiers() override;
-    void keyboardKey(const uint32_t &key, const bool &state) override;
+    void keyboardKey(uint32_t key, bool state) override;
     void keyboardText(const QString &text) override;
 
-    void mouseButton(const uint32_t &button, const bool &state) override;
+    void mouseButton(uint32_t button, bool state) override;
     void mouseMoveRelative(const QPointF &pos) override;
 
-    void touchpadPinchBegin(const uint8_t &fingers) override;
-    void touchpadSwipeBegin(const uint8_t &fingers) override;
+    void touchpadPinchBegin(uint8_t fingers) override;
+    void touchpadSwipeBegin(uint8_t fingers) override;
 
     InputDevice *device() const;
 

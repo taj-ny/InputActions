@@ -17,8 +17,8 @@
 */
 
 #include "core/inputdevice.h"
-#include "kwin/input.h"
 #include "input.h"
+#include "kwin/input.h"
 
 #ifdef KWIN_6_3_OR_GREATER
 typedef KWin::KeyboardKeyState KeyboardKeyState;

@@ -31,7 +31,7 @@ public:
     // Speed should be in a TriggerBeginEvent, but that's not a thing, and adding it would complicate everything.
     // Not worth it for a single property.
     const TriggerSpeed &speed() const;
-    void setSpeed(const TriggerSpeed &speed);
+    void setSpeed(TriggerSpeed speed);
 
     const QPointF &deltaMultiplied() const;
     void setDeltaMultiplied(const QPointF &delta);
@@ -61,7 +61,7 @@ public:
      * Ignored unless set.
      * @param speed Speed the gesture must be performed at.
      */
-    void setSpeed(const TriggerSpeed &speed);
+    void setSpeed(TriggerSpeed speed);
 
 protected:
     void updateActions(const TriggerUpdateEvent *event) override;

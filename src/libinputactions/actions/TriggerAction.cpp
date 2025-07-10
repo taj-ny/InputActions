@@ -33,7 +33,7 @@ void TriggerAction::triggerStarted()
     reset();
 }
 
-void TriggerAction::triggerUpdated(const qreal &delta, const QPointF &deltaPointMultiplied)
+void TriggerAction::triggerUpdated(qreal delta, const QPointF &deltaPointMultiplied)
 {
     if (!delta) {
         return;
@@ -103,8 +103,7 @@ void TriggerAction::tryExecute()
 
 bool TriggerAction::canExecute() const
 {
-    return (!m_condition || m_condition.value()->satisfied())
-        && (!m_threshold || m_threshold->contains(m_absoluteAccumulatedDelta));
+    return (!m_condition || m_condition.value()->satisfied()) && (!m_threshold || m_threshold->contains(m_absoluteAccumulatedDelta));
 }
 
 void TriggerAction::reset()
@@ -148,12 +147,12 @@ void TriggerAction::setThreshold(const Range<qreal> &threshold)
     m_threshold = threshold;
 }
 
-void TriggerAction::setOn(const libinputactions::On &on)
+void TriggerAction::setOn(On on)
 {
     m_on = on;
 }
 
-bool ActionInterval::matches(const qreal &value) const
+bool ActionInterval::matches(qreal value) const
 {
     if (m_direction == IntervalDirection::Any) {
         return true;
@@ -167,7 +166,7 @@ const qreal &ActionInterval::value() const
     return m_value;
 }
 
-void ActionInterval::setValue(const qreal &value)
+void ActionInterval::setValue(qreal value)
 {
     m_value = value;
 }

@@ -19,7 +19,6 @@
 #pragma once
 
 #include "ui_kcm.h"
-
 #include <KCModule>
 
 namespace KWin

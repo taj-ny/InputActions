@@ -18,6 +18,7 @@ set(inputactions_SOURCES
     interfaces/HyprlandSessionLock.cpp
     interfaces/HyprlandWindow.cpp
     interfaces/HyprlandWindowProvider.cpp
+    utils/HyprlandFunctionHook.cpp
     main.cpp
     Plugin.cpp
 )

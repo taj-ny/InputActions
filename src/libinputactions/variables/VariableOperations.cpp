@@ -18,14 +18,11 @@
 
 #include "VariableOperations.h"
 #include "Variable.h"
-
-#include <libinputactions/interfaces/CursorShapeProvider.h>
-
-#include <any>
-
 #include <QLoggingCategory>
 #include <QPointF>
 #include <QRegularExpression>
+#include <any>
+#include <libinputactions/interfaces/CursorShapeProvider.h>
 
 Q_LOGGING_CATEGORY(INPUTACTIONS_VARIABLE_OPERATIONS, "inputactions.variable.operations")
 
@@ -37,7 +34,7 @@ VariableOperationsBase::VariableOperationsBase(Variable *variable)
 {
 }
 
-bool VariableOperationsBase::compare(const std::vector<std::any> &right, const ComparisonOperator &comparisonOperator) const
+bool VariableOperationsBase::compare(const std::vector<std::any> &right, ComparisonOperator comparisonOperator) const
 {
     const auto left = m_variable->get();
     if (!left.has_value()) {
@@ -59,7 +56,7 @@ bool VariableOperationsBase::compare(const std::vector<std::any> &right, const C
     }
 }
 
-bool VariableOperationsBase::compare(const std::any &left, const std::any &right, const ComparisonOperator &comparisonOperator) const
+bool VariableOperationsBase::compare(const std::any &left, const std::any &right, ComparisonOperator comparisonOperator) const
 {
     return false;
 }
@@ -104,18 +101,18 @@ VariableOperations<T>::VariableOperations(Variable *variable)
 }
 
 template<typename T>
-bool VariableOperations<T>::compare(const std::any &left, const std::any &right, const ComparisonOperator &comparisonOperator) const
+bool VariableOperations<T>::compare(const std::any &left, const std::any &right, ComparisonOperator comparisonOperator) const
 {
     if (left.type() != typeid(T) || right.type() != typeid(T)) {
-        qCWarning(INPUTACTIONS_VARIABLE_OPERATIONS).noquote() << "Attempted illegal variable comparison (left: "
-            << left.type().name() << ", right: " << right.type().name() << ", expected: " << typeid(T).name();
+        qCWarning(INPUTACTIONS_VARIABLE_OPERATIONS).noquote() << "Attempted illegal variable comparison (left: " << left.type().name()
+                                                              << ", right: " << right.type().name() << ", expected: " << typeid(T).name();
         return false;
     }
     return compare(std::any_cast<T>(left), std::any_cast<T>(right), comparisonOperator);
 }
 
 template<>
-bool VariableOperations<qreal>::compare(const qreal &left, const qreal &right, const ComparisonOperator &comparisonOperator)
+bool VariableOperations<qreal>::compare(const qreal &left, const qreal &right, ComparisonOperator comparisonOperator)
 {
     switch (comparisonOperator) {
         case ComparisonOperator::EqualTo:
@@ -135,31 +132,31 @@ bool VariableOperations<qreal>::compare(const qreal &left, const qreal &right, c
     }
 }
 
-#define VARIABLEOPERATIONS_COMPARE_QFLAGS(type)                                                                                                       \
-    template<>                                                                                                                                        \
-    bool VariableOperations<QFlags<type>>::compare(const QFlags<type> &left, const QFlags<type> &right, const ComparisonOperator &comparisonOperator) \
-    {                                                                                                                                                 \
-        switch (comparisonOperator) {                                                                                                                 \
-            case ComparisonOperator::EqualTo:                                                                                                         \
-                return left == right;                                                                                                                 \
-            case ComparisonOperator::Contains:                                                                                                        \
-                return (left & right) == right;                                                                                                       \
-            default:                                                                                                                                  \
-                return false;                                                                                                                         \
-        }                                                                                                                                             \
+#define VARIABLEOPERATIONS_COMPARE_QFLAGS(type)                                                                                                \
+    template<>                                                                                                                                 \
+    bool VariableOperations<QFlags<type>>::compare(const QFlags<type> &left, const QFlags<type> &right, ComparisonOperator comparisonOperator) \
+    {                                                                                                                                          \
+        switch (comparisonOperator) {                                                                                                          \
+            case ComparisonOperator::EqualTo:                                                                                                  \
+                return left == right;                                                                                                          \
+            case ComparisonOperator::Contains:                                                                                                 \
+                return (left & right) == right;                                                                                                \
+            default:                                                                                                                           \
+                return false;                                                                                                                  \
+        }                                                                                                                                      \
     }
 
 VARIABLEOPERATIONS_COMPARE_QFLAGS(Qt::KeyboardModifier)
 
 template<>
-bool VariableOperations<QPointF>::compare(const QPointF &left, const QPointF &right, const ComparisonOperator &comparisonOperator)
+bool VariableOperations<QPointF>::compare(const QPointF &left, const QPointF &right, ComparisonOperator comparisonOperator)
 {
     return VariableOperations<qreal>::compare(left.x(), right.x(), comparisonOperator)
         && VariableOperations<qreal>::compare(left.y(), right.y(), comparisonOperator);
 }
 
 template<>
-bool VariableOperations<QString>::compare(const QString &left, const QString &right, const ComparisonOperator &comparisonOperator)
+bool VariableOperations<QString>::compare(const QString &left, const QString &right, ComparisonOperator comparisonOperator)
 {
     switch (comparisonOperator) {
         case ComparisonOperator::Contains:
@@ -218,7 +215,7 @@ QString VariableOperations<T>::toString(const std::any &value) const
 }
 
 template<typename T>
-bool VariableOperations<T>::compare(const T &left, const T &right, const ComparisonOperator &comparisonOperator)
+bool VariableOperations<T>::compare(const T &left, const T &right, ComparisonOperator comparisonOperator)
 {
     switch (comparisonOperator) {
         case ComparisonOperator::EqualTo:

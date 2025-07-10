@@ -53,7 +53,7 @@ public:
     DirectionalMotionTriggerUpdateEvent() = default;
 
     const TriggerDirection &direction() const;
-    void setDirection(const TriggerDirection &direction);
+    void setDirection(TriggerDirection direction);
 
 private:
     TriggerDirection m_direction = UINT32_MAX;
@@ -74,7 +74,7 @@ public:
      */
     bool canUpdate(const TriggerUpdateEvent *event) const override;
 
-    void setDirection(const TriggerDirection &direction);
+    void setDirection(TriggerDirection direction);
 
 protected:
     void updateActions(const TriggerUpdateEvent *event) override;

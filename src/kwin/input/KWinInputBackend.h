@@ -19,7 +19,6 @@
 #pragma once
 
 #include "input.h"
-
 #include <libinputactions/input/backends/LibinputCompositorInputBackend.h>
 
 struct KWinInputDevice
@@ -38,14 +37,17 @@ struct KWinInputDevice
  * @returns All methods that process events should return @c true to stop further event processing, @c false to pass to
  * next filter.
  */
-class KWinInputBackend : public QObject, public libinputactions::LibinputCompositorInputBackend, public KWin::InputEventFilter
+class KWinInputBackend
+    : public QObject
+    , public libinputactions::LibinputCompositorInputBackend
+    , public KWin::InputEventFilter
 {
 public:
     KWinInputBackend();
     ~KWinInputBackend() override;
 
     void initialize() override;
-    void reset() override;
+    void reset() final;
 
     bool holdGestureBegin(int fingerCount, std::chrono::microseconds time) override;
     bool holdGestureEnd(std::chrono::microseconds time) override;

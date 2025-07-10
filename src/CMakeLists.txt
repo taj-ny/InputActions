@@ -26,13 +26,13 @@ set(libinputactions_SRCS
     libinputactions/input/events.cpp
     libinputactions/input/InputEventHandler.cpp
     libinputactions/input/Keyboard.cpp
-    libinputactions/interfaces/CursorShapeProvider.cpp
-    libinputactions/interfaces/InputEmitter.cpp
-    libinputactions/interfaces/OnScreenMessageManager.cpp
-    libinputactions/interfaces/PointerPositionGetter.cpp
-    libinputactions/interfaces/PointerPositionSetter.cpp
-    libinputactions/interfaces/SessionLock.cpp
-    libinputactions/interfaces/Window.cpp
+    libinputactions/interfaces/CursorShapeProvider.h
+    libinputactions/interfaces/InputEmitter.h
+    libinputactions/interfaces/OnScreenMessageManager.h
+    libinputactions/interfaces/PointerPositionGetter.h
+    libinputactions/interfaces/PointerPositionSetter.h
+    libinputactions/interfaces/SessionLock.h
+    libinputactions/interfaces/Window.h
     libinputactions/interfaces/WindowProvider.cpp
     libinputactions/triggers/DirectionalMotionTrigger.cpp
     libinputactions/triggers/MotionTrigger.cpp
@@ -40,13 +40,17 @@ set(libinputactions_SRCS
     libinputactions/triggers/StrokeTrigger.cpp
     libinputactions/triggers/Trigger.cpp
     libinputactions/triggers/WheelTrigger.cpp
+    libinputactions/variables/LocalVariable.cpp
+    libinputactions/variables/RemoteVariable.cpp
     libinputactions/variables/VariableManager.cpp
     libinputactions/variables/VariableOperations.cpp
     libinputactions/variables/Variable.cpp
+    libinputactions/variables/VariableWrapper.h
     libinputactions/Config.cpp
     libinputactions/DBusInterface.cpp
     libinputactions/Expression.cpp
     libinputactions/globals.cpp
+    libinputactions/InputActions.cpp
     libinputactions/Range.cpp
     libinputactions/Value.cpp
     libinputactions/yaml_convert.h

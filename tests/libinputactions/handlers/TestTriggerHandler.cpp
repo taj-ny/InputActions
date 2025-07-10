@@ -110,7 +110,7 @@ void TestTriggerHandler::keyboardKey()
     QVERIFY(Mock::VerifyAndClearExpectations(m_handler.get()));
 }
 
-MockTrigger *TestTriggerHandler::makeTrigger(const TriggerType &type, const bool &activatable)
+MockTrigger *TestTriggerHandler::makeTrigger(TriggerType type, bool activatable)
 {
     auto *trigger = new MockTrigger;
     trigger->setType(type);

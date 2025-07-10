@@ -17,7 +17,6 @@
 */
 
 #include "KWinOnScreenMessageManager.h"
-
 #include "effect/effecthandler.h"
 
 void KWinOnScreenMessageManager::showMessage(const QString &message)

@@ -18,7 +18,6 @@
 
 #include "KWinWindowProvider.h"
 #include "KWinWindow.h"
-
 #include "effect/effecthandler.h"
 #include "workspace.h"
 

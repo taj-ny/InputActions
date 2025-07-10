@@ -15,7 +15,8 @@ namespace KWin
 /**
  * ContentHint allows to modify the behavior of the text input.
  */
-enum class TextInputContentHint {
+enum class TextInputContentHint
+{
     /**
      * no special behaviour
      */
@@ -70,7 +71,8 @@ Q_DECLARE_FLAGS(TextInputContentHints, TextInputContentHint)
  * This allows an input method to show special purpose input panels with
  * extra characters or to disallow some characters.
  */
-enum class TextInputContentPurpose {
+enum class TextInputContentPurpose
+{
     /**
      * default input, allowing all characters
      */
@@ -129,7 +131,8 @@ enum class TextInputContentPurpose {
     Pin,
 };
 
-enum class TextInputChangeCause {
+enum class TextInputChangeCause
+{
     /**
      * Change caused by input method
      */
@@ -147,4 +150,3 @@ Q_DECLARE_METATYPE(KWin::TextInputContentHints)
 Q_DECLARE_OPERATORS_FOR_FLAGS(KWin::TextInputContentHints)
 Q_DECLARE_METATYPE(KWin::TextInputContentPurpose)
 Q_DECLARE_METATYPE(KWin::TextInputChangeCause)
-

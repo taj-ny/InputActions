@@ -39,11 +39,12 @@
 namespace libinputactions
 {
 
-struct Point {
+struct Point
+{
     qreal x;
     qreal y;
-    qreal t;
-    qreal alpha;
+    qreal t{};
+    qreal alpha{};
 };
 
 class Stroke
@@ -61,18 +62,8 @@ public:
 private:
     void finish();
 
-    void step(const Stroke &other,
-              const int &N,
-              std::vector<qreal> &dist,
-              std::vector<int> &prevX,
-              std::vector<int> &prevY,
-              const int &x,
-              const int &y,
-              const qreal &tx,
-              const qreal &ty,
-              int *k,
-              const int &x2,
-              const int &y2) const;
+    void step(const Stroke &other, int N, std::vector<qreal> &dist, std::vector<int> &prevX, std::vector<int> &prevY, int x, int y, qreal tx, qreal ty, int *k,
+              int x2, int y2) const;
 
     /**
      * Converts the specified list of deltas to a path that starts at (0,0).
@@ -82,7 +73,7 @@ private:
     /**
      * Simplifies the specified path using the Ramer-Douglas–Peucker algorithm.
      */
-    static std::vector<QPointF> simplify(const std::vector<QPointF> &points, const qreal &epsilon = 10);
+    static std::vector<QPointF> simplify(const std::vector<QPointF> &points, qreal epsilon = 10);
 
     static qreal perpendicularDistance(const QPointF &point, const QPointF &lineStart, const QPointF &lineEnd);
     static void ramerDouglasPeucker(const std::vector<QPointF> &points, qreal epsilon, std::vector<QPointF> &out);

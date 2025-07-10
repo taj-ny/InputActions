@@ -17,7 +17,6 @@
 */
 
 #include "CommandTriggerAction.h"
-
 #include <thread>
 
 namespace libinputactions

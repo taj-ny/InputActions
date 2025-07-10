@@ -17,15 +17,12 @@
 */
 
 #include "Config.h"
-
-#include <libinputactions/input/backends/LibevdevComplementaryInputBackend.h>
-#include <libinputactions/yaml_convert.h>
-
 #include <QDir>
 #include <QFile>
 #include <QStandardPaths>
-
 #include <fcntl.h>
+#include <libinputactions/input/backends/LibevdevComplementaryInputBackend.h>
+#include <libinputactions/yaml_convert.h>
 #include <sys/inotify.h>
 
 namespace libinputactions
@@ -40,8 +37,7 @@ static const QString LEGACY_CONFIG_PATH = QStandardPaths::writableLocation(QStan
  */
 const static QString CRASH_PREVENTION_FILE = QStandardPaths::writableLocation(QStandardPaths::TempLocation) + "/inputactions_init";
 
-Config::Config(InputBackend *backend)
-    : m_backend(backend)
+Config::Config()
 {
     if (!INPUTACTIONS_DIR.exists()) {
         INPUTACTIONS_DIR.mkpath(".");
@@ -95,7 +91,7 @@ Config::~Config()
     }
 }
 
-std::optional<QString> Config::load(const bool &firstLoad)
+std::optional<QString> Config::load(bool firstLoad)
 {
     qCDebug(INPUTACTIONS, "Reloading config");
     std::optional<QString> error;
@@ -115,7 +111,7 @@ std::optional<QString> Config::load(const bool &firstLoad)
                 }
             }
 
-            if (auto *libevdev = dynamic_cast<LibevdevComplementaryInputBackend *>(m_backend)) {
+            if (auto *libevdev = dynamic_cast<LibevdevComplementaryInputBackend *>(g_inputBackend.get())) {
                 if (const auto &pollingIntervalNode = config["__libevdev_polling_interval"]) {
                     libevdev->setPollingInterval(pollingIntervalNode.as<uint32_t>());
                 }
@@ -124,17 +120,17 @@ std::optional<QString> Config::load(const bool &firstLoad)
                 }
             }
 
-            m_backend->reset();
+            g_inputBackend->reset();
             for (auto &eventHandler : eventHandlers) {
-                m_backend->addEventHandler(std::move(eventHandler));
+                g_inputBackend->addEventHandler(std::move(eventHandler));
             }
             for (auto &[device, properties] : customDeviceProperties) {
-                m_backend->addCustomDeviceProperties(device, properties);
+                g_inputBackend->addCustomDeviceProperties(device, properties);
             }
-            m_backend->initialize();
+            g_inputBackend->initialize();
         } catch (const YAML::Exception &e) {
             const auto message = QString("Failed to load configuration: %1 (line %2, column %3)")
-                .arg(QString::fromStdString(e.msg), QString::number(e.mark.line), QString::number(e.mark.column));
+                                     .arg(QString::fromStdString(e.msg), QString::number(e.mark.line), QString::number(e.mark.column));
             qCritical(INPUTACTIONS) << message;
             error = message;
         }

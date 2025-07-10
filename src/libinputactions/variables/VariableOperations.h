@@ -18,11 +18,9 @@
 
 #pragma once
 
-#include <libinputactions/globals.h>
-
 #include <QString>
-
 #include <any>
+#include <libinputactions/globals.h>
 
 namespace libinputactions
 {
@@ -42,7 +40,7 @@ public:
      * @param right Must contain exactly 2 values if operator is Between. Must contain at least 1 value if operator is OneOf. All other operators require
      * exactly 1 value.
      */
-    bool compare(const std::vector<std::any> &right, const ComparisonOperator &comparisonOperator) const;
+    bool compare(const std::vector<std::any> &right, ComparisonOperator comparisonOperator) const;
     /**
      * @return A string representation of the variable's value or an empty string if not supported.
      */
@@ -56,7 +54,7 @@ protected:
     /**
      * The operators NotEqualTo, OneOf and Between are not handled here.
      */
-    virtual bool compare(const std::any &left, const std::any &right, const ComparisonOperator &comparisonOperator) const;
+    virtual bool compare(const std::any &left, const std::any &right, ComparisonOperator comparisonOperator) const;
     virtual QString toString(const std::any &value) const;
 
 private:
@@ -70,11 +68,11 @@ public:
     VariableOperations(Variable *variable);
 
 public:
-    static bool compare(const T &left, const T &right, const ComparisonOperator &comparisonOperator);
+    static bool compare(const T &left, const T &right, ComparisonOperator comparisonOperator);
     static QString toString(const T &value);
 
 protected:
-    bool compare(const std::any &left, const std::any &right, const ComparisonOperator &comparisonOperator) const override;
+    bool compare(const std::any &left, const std::any &right, ComparisonOperator comparisonOperator) const override;
     QString toString(const std::any &value) const override;
 };
 
