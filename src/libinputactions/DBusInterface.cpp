@@ -17,13 +17,13 @@
 */
 
 #include "DBusInterface.h"
-
+#include <QRegularExpression>
+#include <libinputactions/Config.h>
 #include <libinputactions/input/backends/InputBackend.h>
 #include <libinputactions/interfaces/OnScreenMessageManager.h>
 #include <libinputactions/triggers/StrokeTrigger.h>
-#include <libinputactions/variables/VariableManager.h>
 #include <libinputactions/variables/Variable.h>
-#include <libinputactions/Config.h>
+#include <libinputactions/variables/VariableManager.h>
 
 namespace libinputactions
 {
@@ -31,8 +31,8 @@ namespace libinputactions
 static QString s_service = "org.inputactions";
 static QString s_path = "/";
 
-DBusInterface::DBusInterface(Config *config)
-    : m_config(config)
+DBusInterface::DBusInterface()
+    : m_bus(QDBusConnection::sessionBus())
 {
     m_bus.registerService(s_service);
     m_bus.registerObject(s_path, this, QDBusConnection::ExportAllSlots);
@@ -46,13 +46,13 @@ DBusInterface::~DBusInterface()
 
 void DBusInterface::recordStroke(const QDBusMessage &message)
 {
-    OnScreenMessageManager::instance()->showMessage(PROJECT_NAME " is recording input. Perform a stroke gesture by moving your mouse or performing a touchpad "
-                                                    "swipe. Recording will end after 250 ms of inactivity.");
+    g_onScreenMessageManager->showMessage(PROJECT_NAME " is recording input. Perform a stroke gesture by moving your mouse or performing a touchpad "
+                                                       "swipe. Recording will end after 250 ms of inactivity.");
 
     message.setDelayedReply(true);
     m_reply = message.createReply();
 
-    InputBackend::instance()->recordStroke([this](const auto &stroke) {
+    g_inputBackend->recordStroke([this](const auto &stroke) {
         QByteArray bytes;
         const auto &points = stroke.points();
         for (size_t i = 0; i < points.size(); i++) {
@@ -66,24 +66,24 @@ void DBusInterface::recordStroke(const QDBusMessage &message)
         m_reply << QString("'%1'").arg(bytes.toBase64());
         m_bus.send(m_reply);
 
-        OnScreenMessageManager::instance()->hideMessage();
+        g_onScreenMessageManager->hideMessage();
     });
 }
 
 QString DBusInterface::reloadConfig()
 {
-    const auto error = m_config->load();
+    const auto error = g_config->load();
     if (error) {
         return error.value();
     }
     return "success";
 }
 
-QString DBusInterface::variables(const QString &filter)
+QString DBusInterface::variables(QString filter)
 {
     QStringList result;
     const QRegularExpression filterRegex(filter);
-    for (const auto &[name, variable] : VariableManager::instance()->variables()) {
+    for (const auto &[name, variable] : g_variableManager->variables()) {
         if (!filterRegex.match(name).hasMatch()) {
             continue;
         }

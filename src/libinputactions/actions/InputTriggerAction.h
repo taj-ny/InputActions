@@ -17,14 +17,8 @@
 */
 
 #include "TriggerAction.h"
-
-#include <libinputactions/Value.h>
-
-#include <linux/input-event-codes.h>
-
-#include <map>
-
 #include <QString>
+#include <libinputactions/Value.h>
 
 namespace libinputactions
 {

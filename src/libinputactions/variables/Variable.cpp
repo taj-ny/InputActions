@@ -21,8 +21,8 @@
 namespace libinputactions
 {
 
-Variable::Variable(const std::type_index &type)
-    : m_type(type)
+Variable::Variable(std::type_index type)
+    : m_type(std::move(type))
     , m_operations(VariableOperationsBase::create(this))
 {
 }
@@ -32,46 +32,9 @@ const std::type_index &Variable::type() const
     return m_type;
 }
 
-std::any Variable::get() const
-{
-    return {};
-}
-
-void Variable::set(const std::any &value)
-{
-}
-
 const VariableOperationsBase *Variable::operations() const
 {
     return m_operations.get();
-}
-
-LocalVariable::LocalVariable(const std::type_index &type)
-    : Variable(type)
-{
-}
-
-std::any LocalVariable::get() const
-{
-    return m_value;
-}
-
-void LocalVariable::set(const std::any &value)
-{
-    m_value = value;
-}
-
-RemoteVariable::RemoteVariable(const std::type_index &type, const std::function<void(std::any &value)> &getter)
-    : Variable(type)
-    , m_getter(getter)
-{
-}
-
-std::any RemoteVariable::get() const
-{
-    std::any value;
-    m_getter(value);
-    return value;
 }
 
 }

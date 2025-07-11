@@ -17,11 +17,9 @@
 */
 
 #include "Value.h"
-
+#include <QProcess>
 #include <libinputactions/globals.h>
 #include <libinputactions/variables/VariableManager.h>
-
-#include <QProcess>
 
 namespace libinputactions
 {
@@ -36,21 +34,21 @@ QString fromString(const QString &s)
 }
 
 template<typename T>
-Value<T>::Value(const T &value)
+Value<T>::Value(T value)
+    : m_value(std::move(value))
 {
-    m_value = value;
 }
 
 template<typename T>
-Value<T>::Value(const std::function<T()> &getter)
+Value<T>::Value(std::function<T()> getter)
+    : m_value(std::move(getter))
 {
-    m_value = getter;
 }
 
 template<typename T>
-Value<T> Value<T>::command(const Value<QString> &command)
+Value<T> Value<T>::command(Value<QString> command)
 {
-    return Value<T>([command] {
+    return Value<T>([command = std::move(command)]() {
         QProcess process;
         process.setProgram("/bin/sh");
         process.setArguments({"-c", command.get()});
@@ -61,17 +59,17 @@ Value<T> Value<T>::command(const Value<QString> &command)
 }
 
 template<typename T>
-Value<T> Value<T>::variable(const QString &name)
+Value<T> Value<T>::variable(QString name)
 {
-    return Value<T>([name] {
-        return VariableManager::instance()->getVariable<T>(name)->get().value();
+    return Value<T>([name = std::move(name)]() {
+        return g_variableManager->getVariable<T>(name)->get().value();
     });
 }
 
 template<typename T>
-Value<T>::Value(const Expression<T> &expression)
+Value<T>::Value(Expression<T> expression)
 {
-    m_value = [expression] {
+    m_value = [expression = std::move(expression)] {
         return expression.evaluate();
     };
 }
@@ -79,6 +77,7 @@ Value<T>::Value(const Expression<T> &expression)
 template<typename T>
 T Value<T>::get() const
 {
+    // clang-format off
     return std::visit(overloads {
         [](const T &value) -> T {
             return value;
@@ -87,6 +86,7 @@ T Value<T>::get() const
             return getter();
         }
     }, m_value);
+    // clang-format on
 }
 
 template class Value<QString>;

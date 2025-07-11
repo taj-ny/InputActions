@@ -27,7 +27,7 @@ public:
     virtual ~Condition() = default;
 
     bool satisfied() const;
-    void setNegate(const bool &value);
+    void setNegate(bool value);
 
 private:
     virtual bool satisfiedInternal() const;

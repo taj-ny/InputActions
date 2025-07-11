@@ -25,34 +25,33 @@ namespace libinputactions
 
 void InputTriggerAction::execute()
 {
-    const auto input = InputEmitter::instance();
     for (const auto &action : m_sequence) {
         for (const auto &key : action.keyboardPress) {
-            input->keyboardKey(key, true);
+            g_inputEmitter->keyboardKey(key, true);
         }
         for (const auto &key : action.keyboardRelease) {
-            input->keyboardKey(key, false);
+            g_inputEmitter->keyboardKey(key, false);
         }
         const auto keyboardText = action.keyboardText.get();
         if (!keyboardText.isEmpty()) {
-            input->keyboardText(keyboardText);
+            g_inputEmitter->keyboardText(keyboardText);
         }
 
         for (const auto &button : action.mousePress) {
-            input->mouseButton(button, true);
+            g_inputEmitter->mouseButton(button, true);
         }
         for (const auto &button : action.mouseRelease) {
-            input->mouseButton(button, false);
+            g_inputEmitter->mouseButton(button, false);
         }
 
         if (!action.mouseMoveAbsolute.isNull()) {
-            PointerPositionSetter::instance()->setGlobalPointerPosition(action.mouseMoveAbsolute);
+            g_pointerPositionSetter->setGlobalPointerPosition(action.mouseMoveAbsolute);
         }
         if (!action.mouseMoveRelative.isNull()) {
-            input->mouseMoveRelative(action.mouseMoveRelative);
+            g_inputEmitter->mouseMoveRelative(action.mouseMoveRelative);
         }
         if (action.mouseMoveRelativeByDelta) {
-            input->mouseMoveRelative(m_currentDeltaPointMultiplied);
+            g_inputEmitter->mouseMoveRelative(m_currentDeltaPointMultiplied);
         }
     }
 }

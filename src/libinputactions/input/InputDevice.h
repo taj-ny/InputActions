@@ -18,12 +18,10 @@
 
 #pragma once
 
-#include <libinputactions/Range.h>
-
-#include <optional>
-
 #include <QRegularExpression>
 #include <QSizeF>
+#include <libinputactions/Range.h>
+#include <optional>
 
 namespace libinputactions
 {
@@ -51,7 +49,7 @@ public:
      * Do not set in custom properties unless for testing purposes.
      * @internal
      */
-    void setMultiTouch(const bool &value);
+    void setMultiTouch(bool value);
 
     QSizeF size() const;
     /**
@@ -64,7 +62,7 @@ public:
     /**
      * @param value Overrides whether INPUT_PROP_BUTTONPAD is present.
      */
-    void setButtonPad(const bool &value);
+    void setButtonPad(bool value);
 
     Range<uint32_t> thumbPressureRange() const;
     void setThumbPressureRange(const Range<uint32_t> &value);
@@ -84,7 +82,7 @@ public:
      * @param name Full name of the device.
      * @param sysName Name of the device in /dev/input.
      */
-    InputDevice(const InputDeviceType &type, const QString &name = {}, const QString &sysName = {});
+    InputDevice(InputDeviceType type, QString name = {}, QString sysName = {});
 
     const InputDeviceType &type() const;
     const QString &name() const;

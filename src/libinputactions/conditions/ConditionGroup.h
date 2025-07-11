@@ -19,7 +19,6 @@
 #pragma once
 
 #include <libinputactions/conditions/Condition.h>
-
 #include <memory>
 #include <vector>
 
@@ -40,7 +39,7 @@ enum class ConditionGroupMode
 class ConditionGroup : public Condition
 {
 public:
-    explicit ConditionGroup(const ConditionGroupMode &mode = ConditionGroupMode::All);
+    ConditionGroup(ConditionGroupMode mode = ConditionGroupMode::All);
 
     void add(const std::shared_ptr<const Condition> &condition);
 

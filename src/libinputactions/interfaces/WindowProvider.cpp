@@ -17,9 +17,13 @@
 */
 
 #include "WindowProvider.h"
+#include "Window.h"
 
 namespace libinputactions
 {
+
+WindowProvider::WindowProvider() = default;
+WindowProvider::~WindowProvider() = default;
 
 std::unique_ptr<Window> WindowProvider::activeWindow()
 {
@@ -30,7 +34,5 @@ std::unique_ptr<Window> WindowProvider::windowUnderPointer()
 {
     return {};
 }
-
-INPUTACTIONS_SINGLETON(WindowProvider)
 
 }

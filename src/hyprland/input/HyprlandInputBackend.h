@@ -18,14 +18,17 @@
 
 #pragma once
 
-#include <libinputactions/input/backends/LibinputCompositorInputBackend.h>
-
+#include "utils/HyprlandFunctionHook.h"
+#include <hyprland/src/SharedDefs.hpp>
 #include <hyprland/src/devices/IPointer.hpp>
 #include <hyprland/src/plugins/HookSystem.hpp>
-#include <hyprland/src/SharedDefs.hpp>
 #undef HANDLE
+#include <libinputactions/input/backends/LibinputCompositorInputBackend.h>
 
-class Plugin;
+namespace libinputactions
+{
+class InputDevice;
+}
 
 struct HyprlandInputDevice
 {
@@ -37,10 +40,12 @@ struct HyprlandInputDevice
 /**
  * Hold and pinch touchpad gestures require hooking, and therefore only work on x86_64.
  */
-class HyprlandInputBackend : public QObject, public libinputactions::LibinputCompositorInputBackend
+class HyprlandInputBackend
+    : public QObject
+    , public libinputactions::LibinputCompositorInputBackend
 {
 public:
-    HyprlandInputBackend(Plugin *plugin);
+    HyprlandInputBackend(void *handle);
     ~HyprlandInputBackend() override;
 
     void initialize() override;
@@ -51,12 +56,12 @@ private:
 
     void keyboardKey(SCallbackInfo &info, const std::any &data);
 
-    bool touchpadHoldBegin(const uint8_t &fingers);
-    bool touchpadHoldEnd(const bool &cancelled);
+    static void holdBeginHook(void *thisPtr, uint32_t timeMs, uint32_t fingers);
+    static void holdEndHook(void *thisPtr, uint32_t timeMs, bool cancelled);
 
-    bool touchpadPinchBegin(const uint8_t &fingers);
-    bool touchpadPinchUpdate(const double &scale, const double &angleDelta);
-    bool touchpadPinchEnd(const bool &cancelled);
+    static void pinchBeginHook(void *thisPtr, uint32_t timeMs, uint32_t fingers);
+    static void pinchUpdateHook(void *thisPtr, uint32_t timeMs, const Vector2D &delta, double scale, double rotation);
+    static void pinchEndHook(void *thisPtr, uint32_t timeMs, bool cancelled);
 
     void touchpadSwipeBegin(SCallbackInfo &info, const std::any &data);
     void touchpadSwipeUpdate(SCallbackInfo &info, const std::any &data);
@@ -86,16 +91,9 @@ private:
 
     Vector2D m_previousPointerPosition;
 
-    // Unhooked by Hyprland on plugin unload
-    CFunctionHook *m_holdBeginHook;
-    CFunctionHook *m_holdEndHook;
-    CFunctionHook *m_pinchBeginHook;
-    CFunctionHook *m_pinchUpdateHook;
-    CFunctionHook *m_pinchEndHook;
-
-    friend void holdBeginHook(void *thisPtr, uint32_t timeMs, uint32_t fingers);
-    friend void holdEndHook(void *thisPtr, uint32_t timeMs, bool cancelled);
-    friend void pinchBeginHook(void *thisPtr, uint32_t timeMs, uint32_t fingers);
-    friend void pinchUpdateHook(void *thisPtr, uint32_t timeMs, const Vector2D &delta, double scale, double rotation);
-    friend void pinchEndHook(void *thisPtr, uint32_t timeMs, bool cancelled);
+    HyprlandFunctionHook m_holdBeginHook;
+    HyprlandFunctionHook m_holdEndHook;
+    HyprlandFunctionHook m_pinchBeginHook;
+    HyprlandFunctionHook m_pinchUpdateHook;
+    HyprlandFunctionHook m_pinchEndHook;
 };

@@ -17,40 +17,34 @@
 */
 
 #include "Effect.h"
-
+#include "effect/effecthandler.h"
+#include "input/KWinInputBackend.h"
 #include "interfaces/KWinInputEmitter.h"
 #include "interfaces/KWinOnScreenMessageManager.h"
 #include "interfaces/KWinPointer.h"
 #include "interfaces/KWinSessionLock.h"
 #include "interfaces/KWinWindowProvider.h"
-
+#include "workspace.h"
+#include <QDir>
+#include <libinputactions/Config.h>
 #include <libinputactions/variables/VariableManager.h>
 
-#include "effect/effecthandler.h"
-#include "workspace.h"
-
-#include <QDir>
+using namespace libinputactions;
 
 Effect::Effect()
-    : m_backend(new KWinInputBackend)
-    , m_config(m_backend)
-    , m_dbusInterface(&m_config)
+    : InputActions(std::make_unique<KWinInputBackend>())
 {
-    auto kwinPointer = std::make_shared<KWinPointer>();
-
-    libinputactions::CursorShapeProvider::setInstance(kwinPointer);
-    libinputactions::InputEmitter::setInstance(std::make_shared<KWinInputEmitter>());
-    libinputactions::OnScreenMessageManager::setInstance(std::make_shared<KWinOnScreenMessageManager>());
-    libinputactions::PointerPositionGetter::setInstance(kwinPointer);
-    libinputactions::PointerPositionSetter::setInstance(kwinPointer);
-    libinputactions::SessionLock::setInstance(std::make_shared<KWinSessionLock>());
-    libinputactions::WindowProvider::setInstance(std::make_shared<KWinWindowProvider>());
-
-    libinputactions::InputBackend::setInstance(std::unique_ptr<KWinInputBackend>(m_backend));
+    auto pointer = std::make_shared<KWinPointer>();
+    g_cursorShapeProvider = pointer;
+    g_inputEmitter = std::make_shared<KWinInputEmitter>();
+    g_onScreenMessageManager = std::make_shared<KWinOnScreenMessageManager>();
+    g_pointerPositionGetter = pointer;
+    g_pointerPositionSetter = pointer;
+    g_sessionLock = std::make_shared<KWinSessionLock>();
+    g_windowProvider = std::make_shared<KWinWindowProvider>();
 
     // Some of this should be moved to libinputactions eventually
-    auto *variableManager = libinputactions::VariableManager::instance();
-    variableManager->registerRemoteVariable<bool>("plasma_overview_active", [](auto &value) {
+    g_variableManager->registerRemoteVariable<bool>("plasma_overview_active", [](auto &value) {
         // Overview is a plugin and headers are not provided, I think the best way right now is to check for the presence of a QObject property, as the effect
         // does fortunately have them.
         if (const auto *effect = dynamic_cast<KWin::Effect *>(KWin::effects->activeFullScreenEffect())) {
@@ -59,29 +53,16 @@ Effect::Effect()
             value = false;
         }
     });
-    variableManager->registerRemoteVariable<QString>("screen_name", [](auto &value) {
+    g_variableManager->registerRemoteVariable<QString>("screen_name", [](auto &value) {
         if (const auto *output = KWin::workspace()->activeOutput()) {
             value = output->name();
         }
     });
 
-#ifdef KWIN_6_2_OR_GREATER
-    KWin::input()->installInputEventFilter(m_backend);
-#else
-    KWin::input()->prependInputEventFilter(m_backend);
-#endif
-
-    m_config.load(true);
-}
-
-Effect::~Effect()
-{
-    if (KWin::input()) {
-        KWin::input()->uninstallInputEventFilter(m_backend);
-    }
+    g_config->load(true);
 }
 
 void Effect::reconfigure(ReconfigureFlags flags)
 {
-    m_config.load();
+    g_config->load();
 }

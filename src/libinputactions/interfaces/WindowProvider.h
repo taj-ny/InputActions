@@ -18,20 +18,18 @@
 
 #pragma once
 
-#include <libinputactions/globals.h>
-
-#include "Window.h"
+#include <memory>
 
 namespace libinputactions
 {
 
+class Window;
+
 class WindowProvider
 {
-    INPUTACTIONS_DECLARE_SINGLETON(WindowProvider)
-
 public:
-    WindowProvider() = default;
-    virtual ~WindowProvider() = default;
+    WindowProvider();
+    virtual ~WindowProvider();
 
     /**
      * @return The currently active window, or nullptr if not available.
@@ -42,5 +40,7 @@ public:
      */
     virtual std::unique_ptr<Window> windowUnderPointer();
 };
+
+inline std::shared_ptr<WindowProvider> g_windowProvider;
 
 }

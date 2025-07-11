@@ -24,20 +24,18 @@
 namespace libinputactions
 {
 
-class InputBackend;
-
 class Config : public QObject
 {
     Q_OBJECT
 
 public:
-    Config(InputBackend *backend);
+    Config();
     ~Config() override;
 
     /**
      * @return std::nullopt if loaded successfully, otherwise the error message.
      */
-    std::optional<QString> load(const bool &firstLoad = false);
+    std::optional<QString> load(bool firstLoad = false);
 
 private:
     void initWatchers();
@@ -49,8 +47,8 @@ private:
     QTimer m_readEventsTimer;
 
     bool m_autoReload = true;
-
-    InputBackend *m_backend;
 };
+
+inline std::unique_ptr<Config> g_config;
 
 }

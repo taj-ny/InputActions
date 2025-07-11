@@ -18,6 +18,11 @@
 
 #pragma once
 
+#include "yaml-cpp/yaml.h"
+#include <QRegularExpression>
+#include <QVector>
+#include <libinputactions/Expression.cpp>
+#include <libinputactions/Value.h>
 #include <libinputactions/actions/CommandTriggerAction.h>
 #include <libinputactions/actions/InputTriggerAction.h>
 #include <libinputactions/actions/OneTriggerActionGroup.h>
@@ -31,17 +36,9 @@
 #include <libinputactions/triggers/PressTrigger.h>
 #include <libinputactions/triggers/StrokeTrigger.h>
 #include <libinputactions/triggers/WheelTrigger.h>
-#include <libinputactions/variables/VariableManager.h>
 #include <libinputactions/variables/Variable.h>
-#include <libinputactions/Expression.cpp>
-#include <libinputactions/Value.h>
-
-#include <QRegularExpression>
-#include <QVector>
-
+#include <libinputactions/variables/VariableManager.h>
 #include <unordered_set>
-
-#include "yaml-cpp/yaml.h"
 
 // Keep s_keyboard and s_mouse at the top, the documentation links to them.
 
@@ -656,7 +653,7 @@ struct convert<std::shared_ptr<VariableCondition>>
         const auto secondSpace = raw.indexOf(' ', firstSpace + 1);
 
         const auto variableName = raw.left(firstSpace);
-        const auto variable = VariableManager::instance()->getVariable(variableName);
+        const auto variable = g_variableManager->getVariable(variableName);
         if (!variable) {
             throw Exception(node.Mark(), QString("Variable '%1' does not exist.").arg(variableName).toStdString());
         }
@@ -725,7 +722,7 @@ struct convert<std::shared_ptr<Condition>>
             }
             if (groupMode) {
                 auto group = std::make_shared<ConditionGroup>(*groupMode);
-                for (const auto &child: groupChildren) {
+                for (const auto &child : groupChildren) {
                     group->add(child.as<std::shared_ptr<Condition>>());
                 }
                 condition = group;
@@ -738,10 +735,8 @@ struct convert<std::shared_ptr<Condition>>
                 if (const auto &windowClassNode = node["window_class"]) {
                     const auto value = windowClassNode.as<QString>();
                     auto classGroup = std::make_shared<ConditionGroup>(ConditionGroupMode::Any);
-                    classGroup->add(std::make_shared<VariableCondition>("window_class", value,
-                        ComparisonOperator::Regex));
-                    classGroup->add(std::make_shared<VariableCondition>("window_name", value,
-                        ComparisonOperator::Regex));
+                    classGroup->add(std::make_shared<VariableCondition>("window_class", value, ComparisonOperator::Regex));
+                    classGroup->add(std::make_shared<VariableCondition>("window_name", value, ComparisonOperator::Regex));
                     classGroup->setNegate(negate.contains("window_class"));
                     group->add(classGroup);
                 }
@@ -935,11 +930,11 @@ struct convert<std::unique_ptr<Trigger>>
         if (const auto &fingersNode = node["fingers"]) {
             auto range = fingersNode.as<Range<qreal>>();
             if (!range.max()) {
-                conditionGroup->add(std::make_shared<VariableCondition>(BuiltinVariables::Fingers.name(),
-                    range.min().value(), ComparisonOperator::EqualTo));
+                conditionGroup->add(std::make_shared<VariableCondition>(BuiltinVariables::Fingers, range.min().value(), ComparisonOperator::EqualTo));
             } else {
-                conditionGroup->add(std::make_shared<VariableCondition>(BuiltinVariables::Fingers.name(),
-                    std::vector<std::any>{range.min().value(), range.max().value()}, ComparisonOperator::Between));
+                conditionGroup->add(std::make_shared<VariableCondition>(BuiltinVariables::Fingers,
+                                                                        std::vector<std::any>{range.min().value(), range.max().value()},
+                                                                        ComparisonOperator::Between));
             }
         }
         if (const auto &thresholdNode = node["threshold"]) {
@@ -959,8 +954,7 @@ struct convert<std::unique_ptr<Trigger>>
             }
 
             if (modifiers) {
-                conditionGroup->add(std::make_shared<VariableCondition>(BuiltinVariables::KeyboardModifiers.name(),
-                    modifiers.value(), ComparisonOperator::EqualTo));
+                conditionGroup->add(std::make_shared<VariableCondition>(BuiltinVariables::KeyboardModifiers, modifiers.value(), ComparisonOperator::EqualTo));
             }
         }
         if (const auto &mouseButtonsNode = node["mouse_buttons"]) {
@@ -1118,7 +1112,6 @@ static void decodeMultiTouchMotionTriggerHandler(const Node &node, TriggerHandle
             multiTouchMotionHandler->setSpeedThreshold(TriggerType::Rotate, thresholdNode.as<qreal>());
         }
     }
-
 }
 
 template<>
@@ -1164,97 +1157,104 @@ struct convert<std::unique_ptr<TouchpadTriggerHandler>>
     }
 };
 
-#define ENUM_DECODER(type, error, map)                                                                                 \
-    template<>                                                                                                         \
-    struct convert<type>                                                                                               \
-    {                                                                                                                  \
-        static bool decode(const Node &node, type &value)                                                              \
-        {                                                                                                              \
-            const auto raw = node.as<QString>();                                                                       \
-            if (!map.contains(raw)) {                                                                                  \
-                throw Exception(node.Mark(), QString("Invalid %1 ('%2')").arg(error, raw).toStdString());              \
-            }                                                                                                          \
-            value = map.at(raw);                                                                                       \
-            return true;                                                                                               \
-        }                                                                                                              \
+#define ENUM_DECODER(type, error, map)                                                                    \
+    template<>                                                                                            \
+    struct convert<type>                                                                                  \
+    {                                                                                                     \
+        static bool decode(const Node &node, type &value)                                                 \
+        {                                                                                                 \
+            const auto raw = node.as<QString>();                                                          \
+            if (!map.contains(raw)) {                                                                     \
+                throw Exception(node.Mark(), QString("Invalid %1 ('%2')").arg(error, raw).toStdString()); \
+            }                                                                                             \
+            value = map.at(raw);                                                                          \
+            return true;                                                                                  \
+        }                                                                                                 \
     };
 
-#define FLAGS_DECODER(type, error, map)                                                                                \
-    template<>                                                                                                         \
-    struct convert<type>                                                                                               \
-    {                                                                                                                  \
-        static bool decode(const Node &node, type &values)                                                             \
-        {                                                                                                              \
-            values = {0};                                                                                              \
-            for (const auto &raw : node.as<QStringList>()) {                                                           \
-                if (!map.contains(raw)) {                                                                              \
-                    throw Exception(node.Mark(), QString("Invalid %1 ('%2')").arg(error, raw).toStdString());          \
-                }                                                                                                      \
-                values |= map.at(raw);                                                                                 \
-            }                                                                                                          \
-            return true;                                                                                               \
-        }                                                                                                              \
+#define FLAGS_DECODER(type, error, map)                                                                       \
+    template<>                                                                                                \
+    struct convert<type>                                                                                      \
+    {                                                                                                         \
+        static bool decode(const Node &node, type &values)                                                    \
+        {                                                                                                     \
+            values = {0};                                                                                     \
+            for (const auto &raw : node.as<QStringList>()) {                                                  \
+                if (!map.contains(raw)) {                                                                     \
+                    throw Exception(node.Mark(), QString("Invalid %1 ('%2')").arg(error, raw).toStdString()); \
+                }                                                                                             \
+                values |= map.at(raw);                                                                        \
+            }                                                                                                 \
+            return true;                                                                                      \
+        }                                                                                                     \
     };
 
-ENUM_DECODER(On, "action event (on)", (std::unordered_map<QString, On> {
-    {"begin", On::Begin},
-    {"update", On::Update},
-    {"cancel", On::Cancel},
-    {"end", On::End},
-    {"end_cancel", On::EndCancel}
-}))
+ENUM_DECODER(On, "action event (on)",
+             (std::unordered_map<QString, On>{
+                 {"begin", On::Begin},
+                 {"update", On::Update},
+                 {"cancel", On::Cancel},
+                 {"end", On::End},
+                 {"end_cancel", On::EndCancel},
+             }))
 ENUM_DECODER(CursorShape, "cursor shape", CURSOR_SHAPES)
-ENUM_DECODER(Qt::MouseButton, "mouse button", (std::unordered_map<QString, Qt::MouseButton> {
-    {"left", Qt::MouseButton::LeftButton},
-    {"middle", Qt::MouseButton::MiddleButton},
-    {"right", Qt::MouseButton::RightButton},
-    {"back", Qt::MouseButton::ExtraButton1},
-    {"forward", Qt::MouseButton::ExtraButton2},
-    {"extra1", Qt::MouseButton::ExtraButton1},
-    {"extra2", Qt::MouseButton::ExtraButton2},
-    {"extra3", Qt::MouseButton::ExtraButton3},
-    {"extra4", Qt::MouseButton::ExtraButton4},
-    {"extra5", Qt::MouseButton::ExtraButton5},
-    {"extra6", Qt::MouseButton::ExtraButton6},
-    {"extra7", Qt::MouseButton::ExtraButton7},
-    {"extra8", Qt::MouseButton::ExtraButton8},
-    {"extra9", Qt::MouseButton::ExtraButton9},
-    {"extra10", Qt::MouseButton::ExtraButton10},
-    {"extra11", Qt::MouseButton::ExtraButton11},
-    {"extra12", Qt::MouseButton::ExtraButton12},
-    {"extra13", Qt::MouseButton::ExtraButton13}
-}))
-ENUM_DECODER(PinchDirection, "pinch direction", (std::unordered_map<QString, PinchDirection> {
-    {"in", PinchDirection::In},
-    {"out", PinchDirection::Out},
-    {"any", PinchDirection::Any}
-}))
-ENUM_DECODER(RotateDirection, "rotate direction", (std::unordered_map<QString, RotateDirection> {
-    {"clockwise", RotateDirection::Clockwise},
-    {"counterclockwise", RotateDirection::Counterclockwise},
-    {"any", RotateDirection::Any}
-}))
-ENUM_DECODER(SwipeDirection, "swipe direction", (std::unordered_map<QString, SwipeDirection> {
-    {"left", SwipeDirection::Left},
-    {"right", SwipeDirection::Right},
-    {"up", SwipeDirection::Up},
-    {"down", SwipeDirection::Down},
-    {"up_down", SwipeDirection::UpDown},
-    {"left_right", SwipeDirection::LeftRight},
-    {"any", SwipeDirection::Any}
-}))
-ENUM_DECODER(TriggerSpeed, "trigger speed", (std::unordered_map<QString, TriggerSpeed> {
-    {"fast", TriggerSpeed::Fast},
-    {"slow", TriggerSpeed::Slow},
-    {"any", TriggerSpeed::Any}
-}))
+ENUM_DECODER(Qt::MouseButton, "mouse button",
+             (std::unordered_map<QString, Qt::MouseButton>{
+                 {"left", Qt::MouseButton::LeftButton},
+                 {"middle", Qt::MouseButton::MiddleButton},
+                 {"right", Qt::MouseButton::RightButton},
+                 {"back", Qt::MouseButton::ExtraButton1},
+                 {"forward", Qt::MouseButton::ExtraButton2},
+                 {"extra1", Qt::MouseButton::ExtraButton1},
+                 {"extra2", Qt::MouseButton::ExtraButton2},
+                 {"extra3", Qt::MouseButton::ExtraButton3},
+                 {"extra4", Qt::MouseButton::ExtraButton4},
+                 {"extra5", Qt::MouseButton::ExtraButton5},
+                 {"extra6", Qt::MouseButton::ExtraButton6},
+                 {"extra7", Qt::MouseButton::ExtraButton7},
+                 {"extra8", Qt::MouseButton::ExtraButton8},
+                 {"extra9", Qt::MouseButton::ExtraButton9},
+                 {"extra10", Qt::MouseButton::ExtraButton10},
+                 {"extra11", Qt::MouseButton::ExtraButton11},
+                 {"extra12", Qt::MouseButton::ExtraButton12},
+                 {"extra13", Qt::MouseButton::ExtraButton13},
+             }))
+ENUM_DECODER(PinchDirection, "pinch direction",
+             (std::unordered_map<QString, PinchDirection>{
+                 {"in", PinchDirection::In},
+                 {"out", PinchDirection::Out},
+                 {"any", PinchDirection::Any},
+             }))
+ENUM_DECODER(RotateDirection, "rotate direction",
+             (std::unordered_map<QString, RotateDirection>{
+                 {"clockwise", RotateDirection::Clockwise},
+                 {"counterclockwise", RotateDirection::Counterclockwise},
+                 {"any", RotateDirection::Any},
+             }))
+ENUM_DECODER(SwipeDirection, "swipe direction",
+             (std::unordered_map<QString, SwipeDirection>{
+                 {"left", SwipeDirection::Left},
+                 {"right", SwipeDirection::Right},
+                 {"up", SwipeDirection::Up},
+                 {"down", SwipeDirection::Down},
+                 {"up_down", SwipeDirection::UpDown},
+                 {"left_right", SwipeDirection::LeftRight},
+                 {"any", SwipeDirection::Any},
+             }))
+ENUM_DECODER(TriggerSpeed, "trigger speed",
+             (std::unordered_map<QString, TriggerSpeed>{
+                 {"fast", TriggerSpeed::Fast},
+                 {"slow", TriggerSpeed::Slow},
+                 {"any", TriggerSpeed::Any},
+             }))
 
-FLAGS_DECODER(Qt::KeyboardModifiers, "keyboard modifier", (std::unordered_map<QString, Qt::KeyboardModifier> {
-    {"alt", Qt::KeyboardModifier::AltModifier},
-    {"ctrl", Qt::KeyboardModifier::ControlModifier},
-    {"meta", Qt::KeyboardModifier::MetaModifier},
-    {"shift", Qt::KeyboardModifier::ShiftModifier}
-}))
+FLAGS_DECODER(Qt::KeyboardModifiers, "keyboard modifier",
+              (std::unordered_map<QString, Qt::KeyboardModifier>{
+                  {"alt", Qt::KeyboardModifier::AltModifier},
+                  {"ctrl", Qt::KeyboardModifier::ControlModifier},
+                  {"meta", Qt::KeyboardModifier::MetaModifier},
+                  {"shift", Qt::KeyboardModifier::ShiftModifier},
+              }))
 
 template<>
 struct convert<std::vector<InputAction>>
@@ -1448,7 +1448,7 @@ struct convert<Stroke>
                 .x = bytes[i] / 100.0,
                 .y = bytes[i + 1] / 100.0,
                 .t = bytes[i + 2] / 100.0,
-                .alpha = bytes[i + 3] / 100.0
+                .alpha = bytes[i + 3] / 100.0,
             });
         }
         stroke = Stroke(points);

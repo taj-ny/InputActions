@@ -18,14 +18,12 @@
 
 #pragma once
 
-#include <libinputactions/conditions/Condition.h>
-#include <libinputactions/Range.h>
-
-#include <memory>
-
 #include <QLoggingCategory>
 #include <QPointF>
 #include <QString>
+#include <libinputactions/Range.h>
+#include <libinputactions/conditions/Condition.h>
+#include <memory>
 
 Q_DECLARE_LOGGING_CATEGORY(INPUTACTIONS_ACTION)
 
@@ -35,7 +33,8 @@ namespace libinputactions
 /**
  * The point of the trigger's lifecycle at which the action should be executed.
  */
-enum class On {
+enum class On
+{
     Begin,
     Cancel,
     End,
@@ -68,14 +67,14 @@ public:
     /**
      * @return Whether the specified delta matches the interval's direction.
      */
-    bool matches(const qreal &delta) const;
+    bool matches(qreal delta) const;
 
     const qreal &value() const;
     /**
      * @param value Will be converted to an absolute value. 0 means execute exactly once per input event, direction
      * still applies. Default is 0.
      */
-    void setValue(const qreal &value);
+    void setValue(qreal value);
 
     /**
      * @param direction Default is Any.
@@ -104,7 +103,7 @@ public:
      * Called by the trigger.
      * @internal
      */
-    TEST_VIRTUAL void triggerUpdated(const qreal &delta, const QPointF &deltaPointMultiplied);
+    TEST_VIRTUAL void triggerUpdated(qreal delta, const QPointF &deltaPointMultiplied);
     /**
      * Called by the trigger.
      * @internal
@@ -146,7 +145,7 @@ public:
     /**
      * @param on The point of the trigger's lifecycle at which the action should be executed.
      */
-    void setOn(const On &on);
+    void setOn(On on);
 
     /**
      * @param interval How often and when an update action should repeat.

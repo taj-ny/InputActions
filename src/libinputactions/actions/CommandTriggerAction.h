@@ -19,10 +19,8 @@
 #pragma once
 
 #include "TriggerAction.h"
-
-#include <libinputactions/Value.h>
-
 #include <QString>
+#include <libinputactions/Value.h>
 
 namespace libinputactions
 {

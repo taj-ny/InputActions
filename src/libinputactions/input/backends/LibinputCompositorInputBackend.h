@@ -16,6 +16,7 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+#include <QPointF>
 #include <libinputactions/input/backends/LibevdevComplementaryInputBackend.h>
 
 namespace libinputactions
@@ -33,7 +34,7 @@ protected:
      * @param sender The event will be ignored if nullptr.
      * @returns Whether to block the event.
      */
-    bool keyboardKey(InputDevice *sender, const uint32_t &key, const bool &state);
+    bool keyboardKey(InputDevice *sender, uint32_t key, bool state);
 
     /**
      * Handles mouse wheel and touchpad scroll.
@@ -46,7 +47,7 @@ protected:
      * @param sender The event will be ignored if nullptr.
      * @returns Whether to block the event.
      */
-    bool pointerButton(InputDevice *sender, const Qt::MouseButton &button, const quint32 &nativeButton, const bool &state);
+    bool pointerButton(InputDevice *sender, Qt::MouseButton button, uint32_t nativeButton, bool state);
     /**
      * @param sender The event will be ignored if nullptr.
      * @returns Whether to block the event.
@@ -57,36 +58,36 @@ protected:
      * @param sender The event will be ignored if nullptr.
      * @returns Whether to block the event.
      */
-    bool touchpadHoldBegin(InputDevice *sender, const uint8_t &fingers);
+    bool touchpadHoldBegin(InputDevice *sender, uint8_t fingers);
     /**
      * @param sender The event will be ignored if nullptr.
      * @returns Whether to block the event.
      */
-    bool touchpadHoldEnd(InputDevice *sender, const bool &cancelled);
+    bool touchpadHoldEnd(InputDevice *sender, bool cancelled);
 
     /**
      * @param sender The event will be ignored if nullptr.
      * @returns Whether to block the event.
      */
-    bool touchpadPinchBegin(InputDevice *sender, const uint8_t &fingers);
+    bool touchpadPinchBegin(InputDevice *sender, uint8_t fingers);
     /**
      * If the previous event (begin or update) was blocked but this one will not be, a pinch begin event will be emitted to allow the compositor/client to
      * handle the gesture.
      * @param sender The event will be ignored if nullptr.
      * @returns Whether to block the event.
      */
-    bool touchpadPinchUpdate(InputDevice *sender, const qreal &scale, const qreal &angleDelta);
+    bool touchpadPinchUpdate(InputDevice *sender, qreal scale, qreal angleDelta);
     /**
      * @param sender The event will be ignored if nullptr.
      * @returns Whether to block the event.
      */
-    bool touchpadPinchEnd(InputDevice *sender, const bool &cancelled);
+    bool touchpadPinchEnd(InputDevice *sender, bool cancelled);
 
     /**
      * @param sender The event will be ignored if nullptr.
      * @returns Whether to block the event.
      */
-    bool touchpadSwipeBegin(InputDevice *sender, const uint8_t &fingers);
+    bool touchpadSwipeBegin(InputDevice *sender, uint8_t fingers);
     /**
      * If the previous event (begin or update) was blocked but this one will not be, a swipe begin event will be emitted to allow the compositor/client to
      * handle the gesture.
@@ -98,9 +99,9 @@ protected:
      * @param sender The event will be ignored if nullptr.
      * @returns Whether to block the event.
      */
-    bool touchpadSwipeEnd(InputDevice *sender, const bool &cancelled);
+    bool touchpadSwipeEnd(InputDevice *sender, bool cancelled);
 
-    Qt::MouseButton scanCodeToMouseButton(const uint32_t &scanCode) const;
+    Qt::MouseButton scanCodeToMouseButton(uint32_t scanCode) const;
 
 private:
     uint32_t m_fingers{};

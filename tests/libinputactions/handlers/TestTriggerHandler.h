@@ -27,7 +27,7 @@ private slots:
     void keyboardKey();
 
 private:
-    MockTrigger *makeTrigger(const TriggerType &type, const bool &activatable);
+    MockTrigger *makeTrigger(TriggerType type, bool activatable);
 
     std::unique_ptr<MockTriggerHandler> m_handler;
 };

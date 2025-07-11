@@ -7,7 +7,7 @@
 namespace libinputactions
 {
 
-std::shared_ptr<Condition> makeCondition(const bool &result)
+std::shared_ptr<Condition> makeCondition(bool result)
 {
     return std::make_shared<CallbackCondition>([result]() { return result; });
 }

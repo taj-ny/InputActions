@@ -46,18 +46,18 @@ public:
      * as well) before attempting to activate press triggers. For pointer motion there is a small threshold to prevent
      * accidental activations.
      */
-    void setMotionTimeout(const uint32_t &timeout);
+    void setMotionTimeout(uint32_t timeout);
     /**
      * The amount of time in milliseconds the handler will wait for all mouse buttons to be pressed before activating
      * press triggers.
      */
-    void setPressTimeout(const uint32_t &timeout);
+    void setPressTimeout(uint32_t timeout);
 
     /**
      * @param unblock Whether blocked mouse buttons should be pressed immediately on timeout. If false, they will be
      * pressed and instantly released on button release.
      */
-    void setUnblockButtonsOnTimeout(const bool &unblock);
+    void setUnblockButtonsOnTimeout(bool unblock);
 
 protected:
     void triggerActivating(const Trigger *trigger) override;
@@ -78,7 +78,7 @@ private:
      * checking activatibility. If a trigger has multiple buttons, all of them will be blocked, even if only one was
      * pressed.
      */
-    bool shouldBlockMouseButton(const Qt::MouseButton &button);
+    bool shouldBlockMouseButton(Qt::MouseButton button);
     /**
      * Presses all currently blocked mouse buttons without releasing them.
      */
@@ -105,7 +105,7 @@ private:
      */
     bool m_hadTriggerSincePress = false;
 
-    QList<quint32> m_blockedMouseButtons;
+    QList<uint32_t> m_blockedMouseButtons;
     std::vector<Qt::MouseButton> m_buttons;
     bool m_unblockButtonsOnTimeout = true;
 };

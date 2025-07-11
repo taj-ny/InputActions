@@ -20,7 +20,7 @@
 
 #include <libinputactions/interfaces/Window.h>
 
-#include <hyprland/src/desktop/Window.hpp>
+class CWindow;
 
 class HyprlandWindow : public libinputactions::Window
 {

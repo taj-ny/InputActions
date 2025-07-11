@@ -1,6 +1,6 @@
 /*
     Input Actions - Input handler that executes user-defined actions
-    Copyright (C) 2025 Marcin Woźniak
+    Copyright (C) 2024-2025 Marcin Woźniak
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -16,16 +16,24 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include "SessionLock.h"
+#include "LocalVariable.h"
 
 namespace libinputactions
 {
 
-bool SessionLock::sessionLocked()
+LocalVariable::LocalVariable(std::type_index type)
+    : Variable(std::move(type))
 {
-    return false;
 }
 
-INPUTACTIONS_SINGLETON(SessionLock)
+std::any LocalVariable::get() const
+{
+    return m_value;
+}
+
+void LocalVariable::set(std::any value)
+{
+    m_value = std::move(value);
+}
 
 }

@@ -31,7 +31,7 @@ const bool &PressTrigger::instant() const
     return m_instant;
 }
 
-void PressTrigger::setInstant(const bool &instant)
+void PressTrigger::setInstant(bool instant)
 {
     m_instant = instant;
 }

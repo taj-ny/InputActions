@@ -19,11 +19,9 @@
 #pragma once
 
 #include "Expression.h"
-
+#include <QString>
 #include <functional>
 #include <variant>
-
-#include <QString>
 
 namespace libinputactions
 {
@@ -32,12 +30,12 @@ template<typename T>
 class Value
 {
 public:
-    Value(const T &value = {});
-    Value(const std::function<T()> &getter);
-    Value(const Expression<T> &expression);
+    Value(T value = {});
+    Value(std::function<T()> getter);
+    Value(Expression<T> expression);
 
-    static Value<T> command(const Value<QString> &command);
-    static Value<T> variable(const QString &name);
+    static Value<T> command(Value<QString> command);
+    static Value<T> variable(QString name);
 
     T get() const;
 

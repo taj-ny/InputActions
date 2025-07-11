@@ -1,6 +1,6 @@
 /*
     Input Actions - Input handler that executes user-defined actions
-    Copyright (C) 2025 Marcin Woźniak
+    Copyright (C) 2024-2025 Marcin Woźniak
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -16,16 +16,28 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include "CursorShapeProvider.h"
+#pragma once
+
+#include "Variable.h"
 
 namespace libinputactions
 {
 
-std::optional<CursorShape> CursorShapeProvider::cursorShape()
+/**
+ * A variable whose value is calculated or fetched on demand. Variables with slow access are currently not supported.
+ */
+class RemoteVariable : public Variable
 {
-    return {};
-}
+public:
+    /**
+     * @param getter Must always return the same type as the variable or empty.
+     */
+    RemoteVariable(std::type_index type, std::function<void(std::any &value)> getter);
 
-INPUTACTIONS_SINGLETON(CursorShapeProvider)
+    std::any get() const override;
+
+private:
+    std::function<void(std::any &value)> m_getter;
+};
 
 }

@@ -18,22 +18,21 @@
 
 #pragma once
 
-#include <libinputactions/globals.h>
-
 #include <QPointF>
+#include <memory>
 
 namespace libinputactions
 {
 
 class PointerPositionSetter
 {
-    INPUTACTIONS_DECLARE_SINGLETON(PointerPositionSetter)
-
 public:
     PointerPositionSetter() = default;
     virtual ~PointerPositionSetter() = default;
 
-    virtual void setGlobalPointerPosition(const QPointF &value);
+    virtual void setGlobalPointerPosition(const QPointF &value) {};
 };
+
+inline std::shared_ptr<PointerPositionSetter> g_pointerPositionSetter;
 
 }

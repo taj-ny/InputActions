@@ -17,7 +17,6 @@
 */
 
 #include "LibinputCompositorInputBackend.h"
-
 #include <libinputactions/interfaces/InputEmitter.h>
 
 namespace libinputactions
@@ -25,7 +24,7 @@ namespace libinputactions
 
 static const uint32_t STROKE_RECORD_TIMEOUT = 250;
 
-bool LibinputCompositorInputBackend::keyboardKey(InputDevice *sender, const uint32_t &key, const bool &state)
+bool LibinputCompositorInputBackend::keyboardKey(InputDevice *sender, uint32_t key, bool state)
 {
     if (m_ignoreEvents || !sender) {
         return false;
@@ -61,7 +60,7 @@ bool LibinputCompositorInputBackend::pointerAxis(InputDevice *sender, const QPoi
     return handleEvent(&scrollEvent);
 }
 
-bool LibinputCompositorInputBackend::pointerButton(InputDevice *sender, const Qt::MouseButton &button, const quint32 &nativeButton, const bool &state)
+bool LibinputCompositorInputBackend::pointerButton(InputDevice *sender, Qt::MouseButton button, uint32_t nativeButton, bool state)
 {
     if (m_ignoreEvents || !sender) {
         return false;
@@ -90,7 +89,7 @@ bool LibinputCompositorInputBackend::pointerMotion(InputDevice *sender, const QP
     return false;
 }
 
-bool LibinputCompositorInputBackend::touchpadHoldBegin(InputDevice *sender, const uint8_t &fingers)
+bool LibinputCompositorInputBackend::touchpadHoldBegin(InputDevice *sender, uint8_t fingers)
 {
     if (m_ignoreEvents || !sender) {
         return false;
@@ -103,20 +102,21 @@ bool LibinputCompositorInputBackend::touchpadHoldBegin(InputDevice *sender, cons
     return m_block;
 }
 
-bool LibinputCompositorInputBackend::touchpadHoldEnd(InputDevice *sender, const bool &cancelled)
+bool LibinputCompositorInputBackend::touchpadHoldEnd(InputDevice *sender, bool cancelled)
 {
     if (m_ignoreEvents || !sender) {
         return false;
     }
 
     LibevdevComplementaryInputBackend::poll(); // Update clicked state
-    const TouchpadGestureLifecyclePhaseEvent event(sender, cancelled ? TouchpadGestureLifecyclePhase::Cancel : TouchpadGestureLifecyclePhase::End,
-        TriggerType::Press);
+    const TouchpadGestureLifecyclePhaseEvent event(sender,
+                                                   cancelled ? TouchpadGestureLifecyclePhase::Cancel : TouchpadGestureLifecyclePhase::End,
+                                                   TriggerType::Press);
     handleEvent(&event);
     return m_block;
 }
 
-bool LibinputCompositorInputBackend::touchpadPinchBegin(InputDevice *sender, const uint8_t &fingers)
+bool LibinputCompositorInputBackend::touchpadPinchBegin(InputDevice *sender, uint8_t fingers)
 {
     if (m_ignoreEvents || !sender) {
         return false;
@@ -129,7 +129,7 @@ bool LibinputCompositorInputBackend::touchpadPinchBegin(InputDevice *sender, con
     return m_block;
 }
 
-bool LibinputCompositorInputBackend::touchpadPinchUpdate(InputDevice *sender, const qreal &scale, const qreal &angleDelta)
+bool LibinputCompositorInputBackend::touchpadPinchUpdate(InputDevice *sender, qreal scale, qreal angleDelta)
 {
     if (m_ignoreEvents || !sender) {
         return false;
@@ -139,24 +139,25 @@ bool LibinputCompositorInputBackend::touchpadPinchUpdate(InputDevice *sender, co
     const auto block = handleEvent(&event);
     if (m_block && !block) {
         // Allow the compositor/client to handle the gesture
-        InputEmitter::instance()->touchpadPinchBegin(m_fingers);
+        g_inputEmitter->touchpadPinchBegin(m_fingers);
     }
     m_block = block;
     return block;
 }
 
-bool LibinputCompositorInputBackend::touchpadPinchEnd(InputDevice *sender, const bool &cancelled)
+bool LibinputCompositorInputBackend::touchpadPinchEnd(InputDevice *sender, bool cancelled)
 {
     if (m_ignoreEvents || !sender) {
         return false;
     }
 
-    const TouchpadGestureLifecyclePhaseEvent event(sender, cancelled ? TouchpadGestureLifecyclePhase::Cancel : TouchpadGestureLifecyclePhase::End,
-        TriggerType::PinchRotate);
+    const TouchpadGestureLifecyclePhaseEvent event(sender,
+                                                   cancelled ? TouchpadGestureLifecyclePhase::Cancel : TouchpadGestureLifecyclePhase::End,
+                                                   TriggerType::PinchRotate);
     return handleEvent(&event);
 }
 
-bool LibinputCompositorInputBackend::touchpadSwipeBegin(InputDevice *sender, const uint8_t &fingers)
+bool LibinputCompositorInputBackend::touchpadSwipeBegin(InputDevice *sender, uint8_t fingers)
 {
     if (m_ignoreEvents || !sender) {
         return false;
@@ -186,13 +187,13 @@ bool LibinputCompositorInputBackend::touchpadSwipeUpdate(InputDevice *sender, co
     const auto block = handleEvent(&event);
     if (m_block && !block) {
         // Allow the compositor/client to handle the gesture
-        InputEmitter::instance()->touchpadSwipeBegin(m_fingers);
+        g_inputEmitter->touchpadSwipeBegin(m_fingers);
     }
     m_block = block;
     return block;
 }
 
-bool LibinputCompositorInputBackend::touchpadSwipeEnd(InputDevice *sender, const bool &cancelled)
+bool LibinputCompositorInputBackend::touchpadSwipeEnd(InputDevice *sender, bool cancelled)
 {
     if (m_ignoreEvents || !sender) {
         return false;
@@ -203,12 +204,13 @@ bool LibinputCompositorInputBackend::touchpadSwipeEnd(InputDevice *sender, const
         return true;
     }
 
-    const TouchpadGestureLifecyclePhaseEvent event(sender, cancelled ? TouchpadGestureLifecyclePhase::Cancel : TouchpadGestureLifecyclePhase::End,
-        TriggerType::StrokeSwipe);
+    const TouchpadGestureLifecyclePhaseEvent event(sender,
+                                                   cancelled ? TouchpadGestureLifecyclePhase::Cancel : TouchpadGestureLifecyclePhase::End,
+                                                   TriggerType::StrokeSwipe);
     return handleEvent(&event);
 }
 
-Qt::MouseButton LibinputCompositorInputBackend::scanCodeToMouseButton(const uint32_t &scanCode) const
+Qt::MouseButton LibinputCompositorInputBackend::scanCodeToMouseButton(uint32_t scanCode) const
 {
     static const std::map<uint32_t, Qt::MouseButton> buttons = {
         {BTN_LEFT, Qt::LeftButton},

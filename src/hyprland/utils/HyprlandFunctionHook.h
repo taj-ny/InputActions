@@ -16,44 +16,21 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include "Window.h"
+#pragma once
 
-namespace libinputactions
+#include <string>
+
+class CFunctionHook;
+
+class HyprlandFunctionHook
 {
+public:
+    HyprlandFunctionHook(CFunctionHook *hook = nullptr);
+    HyprlandFunctionHook(void *handle, const std::string &sourceName, void *destination, size_t sourceIndex = 0);
+    ~HyprlandFunctionHook();
 
-std::optional<QString> Window::id()
-{
-    return {};
-}
+    CFunctionHook *operator->();
 
-std::optional<QRectF> Window::geometry()
-{
-    return {};
-}
-
-std::optional<QString> Window::title()
-{
-    return {};
-}
-
-std::optional<QString> Window::resourceClass()
-{
-    return {};
-}
-
-std::optional<QString> Window::resourceName()
-{
-    return {};
-}
-
-std::optional<bool> Window::fullscreen()
-{
-    return {};
-}
-
-std::optional<bool> Window::maximized()
-{
-    return {};
-}
-
-}
+private:
+    CFunctionHook *m_hook;
+};

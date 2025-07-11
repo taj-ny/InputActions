@@ -17,7 +17,6 @@
 */
 
 #include "HyprlandOnScreenMessageManager.h"
-
 #include <hyprland/src/debug/HyprNotificationOverlay.hpp>
 
 void HyprlandOnScreenMessageManager::showMessage(const QString &message)

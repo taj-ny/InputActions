@@ -1,6 +1,6 @@
 /*
     Input Actions - Input handler that executes user-defined actions
-    Copyright (C) 2025 Marcin Woźniak
+    Copyright (C) 2024-2025 Marcin Woźniak
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -16,21 +16,22 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include "PointerPositionGetter.h"
+#include "RemoteVariable.h"
 
 namespace libinputactions
 {
 
-std::optional<QPointF> PointerPositionGetter::globalPointerPosition()
+RemoteVariable::RemoteVariable(std::type_index type, std::function<void(std::any &value)> getter)
+    : Variable(std::move(type))
+    , m_getter(std::move(getter))
 {
-    return {};
 }
 
-std::optional<QPointF> PointerPositionGetter::screenPointerPosition()
+std::any RemoteVariable::get() const
 {
-    return {};
+    std::any value;
+    m_getter(value);
+    return value;
 }
-
-INPUTACTIONS_SINGLETON(PointerPositionGetter)
 
 }

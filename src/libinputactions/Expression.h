@@ -18,9 +18,8 @@
 
 #pragma once
 
-#include <set>
-
 #include <QString>
+#include <set>
 
 namespace libinputactions
 {

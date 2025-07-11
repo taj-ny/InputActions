@@ -19,7 +19,6 @@
 #pragma once
 
 #include "Condition.h"
-
 #include <functional>
 
 namespace libinputactions
