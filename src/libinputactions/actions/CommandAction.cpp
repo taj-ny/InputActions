@@ -16,23 +16,25 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#pragma once
+#include "CommandAction.h"
 
-#include "TriggerActionGroup.h"
+#include <thread>
 
 namespace libinputactions
 {
 
-/**
- * Executes only one action in order as added.
- */
-class OneTriggerActionGroup : public TriggerActionGroup
+CommandAction::CommandAction(Value<QString> command)
+    : m_command(std::move(command))
 {
-public:
-    OneTriggerActionGroup() = default;
+}
 
-protected:
-    void execute() override;
-};
+void CommandAction::execute() const
+{
+    std::thread thread([this]() {
+        const auto command = m_command.get().toStdString();
+        std::ignore = std::system(command.c_str());
+    });
+    thread.detach();
+}
 
 }

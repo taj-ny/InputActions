@@ -16,24 +16,37 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include "CommandTriggerAction.h"
-#include <thread>
+#include "ActionExecutor.h"
+#include "Action.h"
 
 namespace libinputactions
 {
 
-CommandTriggerAction::CommandTriggerAction(const Value<QString> &command)
-    : m_command(command)
+ActionExecutor::ActionExecutor()
 {
+    m_sharedActionThreadPool.setMaxThreadCount(1);
 }
 
-void CommandTriggerAction::execute()
+void ActionExecutor::execute(const std::shared_ptr<Action> &action, ActionThread thread)
 {
-    std::thread thread([this]() {
-        const auto command = m_command.get().toStdString();
-        std::ignore = std::system(command.c_str());
-    });
-    thread.detach();
+    const auto execute = [action = action]() { // copy in case config gets reloaded while actions are scheduled
+        action->execute();
+    };
+    switch (thread) {
+        case ActionThread::Auto:
+            if (action->async() || m_sharedActionThreadPool.activeThreadCount()) {
+                m_sharedActionThreadPool.start(execute);
+                break;
+            }
+            Q_FALLTHROUGH();
+        case ActionThread::Current:
+            execute();
+            break;
+        case ActionThread::Own:
+            m_ownActionThreadPool.start(execute);
+            break;
+    }
+
 }
 
 }

@@ -16,12 +16,21 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+#include "ActionExecutor.h"
+#include "InputAction.h"
 #include "TriggerAction.h"
 
 Q_LOGGING_CATEGORY(INPUTACTIONS_ACTION, "inputactions.action", QtWarningMsg)
 
 namespace libinputactions
 {
+
+TriggerAction::TriggerAction(std::shared_ptr<Action> action)
+    : m_action(std::move(action))
+{
+}
+
+TriggerAction::~TriggerAction() = default;
 
 void TriggerAction::triggerStarted()
 {
@@ -39,7 +48,9 @@ void TriggerAction::triggerUpdated(qreal delta, const QPointF &deltaPointMultipl
         return;
     }
 
-    m_currentDeltaPointMultiplied = deltaPointMultiplied;
+    if (auto *inputAction = dynamic_cast<InputAction *>(m_action.get())) {
+        inputAction->m_deltaMultiplied = deltaPointMultiplied;
+    }
     if (std::signbit(m_accumulatedDelta) != std::signbit(delta)) {
         // Direction changed
         m_accumulatedDelta = delta;
@@ -97,24 +108,19 @@ void TriggerAction::tryExecute()
     }
 
     qCDebug(INPUTACTIONS_ACTION).noquote() << QString("Action executed (name: %1)").arg(m_name);
-    execute();
+    g_actionExecutor->execute(m_action);
     m_executed = true;
 }
 
 bool TriggerAction::canExecute() const
 {
-    return (!m_condition || m_condition.value()->satisfied()) && (!m_threshold || m_threshold->contains(m_absoluteAccumulatedDelta));
+    return (!m_action->m_condition || m_action->m_condition->satisfied()) && (!m_threshold || m_threshold->contains(m_absoluteAccumulatedDelta));
 }
 
 void TriggerAction::reset()
 {
     m_accumulatedDelta = 0;
     m_absoluteAccumulatedDelta = 0;
-}
-
-void TriggerAction::setCondition(const std::shared_ptr<const Condition> &condition)
-{
-    m_condition = condition;
 }
 
 const bool &TriggerAction::executed() const
@@ -150,6 +156,11 @@ void TriggerAction::setThreshold(const Range<qreal> &threshold)
 void TriggerAction::setOn(On on)
 {
     m_on = on;
+}
+
+const Action *TriggerAction::action() const
+{
+    return m_action.get();
 }
 
 bool ActionInterval::matches(qreal value) const

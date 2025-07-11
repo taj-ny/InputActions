@@ -18,23 +18,24 @@
 
 #pragma once
 
-#include "TriggerAction.h"
+#include "Action.h"
+#include <libinputactions/Value.h>
 
 namespace libinputactions
 {
 
 /**
- * Action groups control how actions are executed. Individual actions are not informed of trigger lifecycle events.
+ * Executes a command in a separate thread (neither main nor action).
  */
-class TriggerActionGroup : public TriggerAction
+class CommandAction : public Action
 {
 public:
-    void add(std::unique_ptr<TriggerAction> action);
+    CommandAction(Value<QString> command);
 
-protected:
-    TriggerActionGroup() = default;
+    virtual void execute() const override;
 
-    std::vector<std::unique_ptr<TriggerAction>> m_actions;
+private:
+    Value<QString> m_command;
 };
 
 }

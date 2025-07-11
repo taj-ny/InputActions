@@ -16,44 +16,24 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include "TriggerAction.h"
+#pragma once
+
+#include "Action.h"
 #include <QString>
-#include <libinputactions/Value.h>
 
 namespace libinputactions
 {
 
-/**
- * Input actions are performed in order as defined in the struct.
- */
-struct InputAction
-{
-    std::vector<uint32_t> keyboardPress;
-    std::vector<uint32_t> keyboardRelease;
-    Value<QString> keyboardText;
-
-    std::vector<uint32_t> mousePress;
-    std::vector<uint32_t> mouseRelease;
-
-    QPointF mouseMoveAbsolute;
-    QPointF mouseMoveRelative;
-    bool mouseMoveRelativeByDelta = false;
-};
-
-/**
- * Sends input.
- *
- * @remark Requires Input::handleKeyEvent, Input::mouseButton, Input::mouseMoveAbsolute and Input::mouseMoveRelative to be
- * implemented.
- */
-class InputTriggerAction : public TriggerAction
+class PlasmaGlobalShortcutAction : public Action
 {
 public:
-    void execute() override;
-    void setSequence(const std::vector<InputAction> &sequence);
+    PlasmaGlobalShortcutAction(QString component, QString shortcut);
+
+    void execute() const override;
 
 private:
-    std::vector<InputAction> m_sequence;
+    QString m_component;
+    QString m_shortcut;
 };
 
 }

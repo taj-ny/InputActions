@@ -18,25 +18,38 @@
 
 #pragma once
 
-#include "TriggerAction.h"
-#include <QString>
+#include "Action.h"
+#include <vector>
 
 namespace libinputactions
 {
 
 /**
- * Invokes a Plasma global shortcut through DBus.
+ * Executes actions from the specified list in a specific way.
  */
-class PlasmaGlobalShortcutTriggerAction : public TriggerAction
+class ActionGroup : public Action
 {
 public:
-    void execute() override;
-    void setComponent(const QString &component);
-    void setShortcut(const QString &shortcut);
+    enum class ExecutionMode
+    {
+        /**
+         * Executes all conditions that satisfy their condition.
+         */
+        All,
+        /**
+         * Executes the first action that satisfied its condition.
+         */
+        First,
+    };
+
+    ActionGroup(std::vector<std::shared_ptr<Action>> actions, ExecutionMode mode = ExecutionMode::All);
+
+    void execute() const override;
+    bool async() const override;
 
 private:
-    QString m_path;
-    QString m_shortcut;
+    std::vector<std::shared_ptr<Action>> m_actions;
+    ExecutionMode m_mode;
 };
 
 }

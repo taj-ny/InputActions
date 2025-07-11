@@ -28,12 +28,21 @@ class InputBackend;
 
 class InputActions
 {
+public:
+    /**
+     * Runs the specified function on the main thread. If the current thread is the main thread, the function is executed immediately.
+     */
+    void runOnMainThread(std::function<void()> &&function, bool block = true) const;
+
 protected:
     InputActions(std::unique_ptr<InputBackend> inputBackend);
     virtual ~InputActions();
 
 private:
+    QThread *m_mainThread;
     DBusInterface m_dbusInterface;
 };
+
+inline InputActions *g_inputActions;
 
 }

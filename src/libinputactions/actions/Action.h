@@ -16,19 +16,33 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include "OneTriggerActionGroup.h"
+#pragma once
+
+#include <memory>
 
 namespace libinputactions
 {
 
-void OneTriggerActionGroup::execute()
+class Condition;
+
+class Action
 {
-    for (auto &action : m_actions) {
-        if (action->canExecute()) {
-            action->tryExecute();
-            break;
-        }
-    }
-}
+public:
+    Action();
+    virtual ~Action();
+
+    /**
+     * Do not call directly, use ActionExecutor instead. This method is not guaranteed to be called from the main thread. Implementations should use
+     * InputActions::runOnMainThread to schedule code to run on the main thread.
+     */
+    virtual void execute() const = 0;
+    /**
+     * Whether the action should be executed asynchronously. A value of false does not guarantee that the action will be executed synchronously.
+     * @see ActionExecutor::execute
+     */
+    virtual bool async() const;
+
+    std::shared_ptr<const Condition> m_condition;
+};
 
 }
