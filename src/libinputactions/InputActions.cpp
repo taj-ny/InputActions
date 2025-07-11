@@ -11,7 +11,7 @@
 #include "interfaces/SessionLock.h"
 #include "interfaces/WindowProvider.h"
 #include "variables/VariableManager.h"
-#include <QAbstractEventDispatcherV2>
+#include <QAbstractEventDispatcher>
 
 namespace libinputactions
 {
@@ -58,7 +58,7 @@ void InputActions::runOnMainThread(std::function<void()> &&function, bool block)
     if (QThread::isMainThread()) {
         function();
     } else {
-        QMetaObject::invokeMethod(QAbstractEventDispatcherV2::instance(m_mainThread), function, block ? Qt::BlockingQueuedConnection : Qt::QueuedConnection);
+        QMetaObject::invokeMethod(QAbstractEventDispatcher::instance(m_mainThread), function, block ? Qt::BlockingQueuedConnection : Qt::QueuedConnection);
     }
 }
 
