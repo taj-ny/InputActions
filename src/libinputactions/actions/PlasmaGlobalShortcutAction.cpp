@@ -16,24 +16,22 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include "CommandTriggerAction.h"
-#include <thread>
+#include "PlasmaGlobalShortcutAction.h"
+#include <QDBusInterface>
 
 namespace libinputactions
 {
 
-CommandTriggerAction::CommandTriggerAction(const Value<QString> &command)
-    : m_command(command)
+PlasmaGlobalShortcutAction::PlasmaGlobalShortcutAction(QString component, QString shortcut)
+    : m_component(std::move(component))
+    , m_shortcut(std::move(shortcut))
 {
 }
 
-void CommandTriggerAction::execute()
+void PlasmaGlobalShortcutAction::execute() const
 {
-    std::thread thread([this]() {
-        const auto command = m_command.get().toStdString();
-        std::ignore = std::system(command.c_str());
-    });
-    thread.detach();
+    QDBusInterface interface("org.kde.kglobalaccel", "/component/" + m_component, "org.kde.kglobalaccel.Component");
+    interface.call("invokeShortcut", m_shortcut);
 }
 
 }

@@ -16,44 +16,47 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include "TriggerAction.h"
-#include <QString>
+#pragma once
+
+#include "Action.h"
+#include <QPointF>
 #include <libinputactions/Value.h>
 
 namespace libinputactions
 {
 
-/**
- * Input actions are performed in order as defined in the struct.
- */
-struct InputAction
-{
-    std::vector<uint32_t> keyboardPress;
-    std::vector<uint32_t> keyboardRelease;
-    Value<QString> keyboardText;
-
-    std::vector<uint32_t> mousePress;
-    std::vector<uint32_t> mouseRelease;
-
-    QPointF mouseMoveAbsolute;
-    QPointF mouseMoveRelative;
-    bool mouseMoveRelativeByDelta = false;
-};
-
-/**
- * Sends input.
- *
- * @remark Requires Input::handleKeyEvent, Input::mouseButton, Input::mouseMoveAbsolute and Input::mouseMoveRelative to be
- * implemented.
- */
-class InputTriggerAction : public TriggerAction
+class InputAction : public Action
 {
 public:
-    void execute() override;
-    void setSequence(const std::vector<InputAction> &sequence);
+    /**
+     * Input actions are performed in order as defined in the struct.
+     */
+    struct Item
+    {
+        std::vector<uint32_t> keyboardPress;
+        std::vector<uint32_t> keyboardRelease;
+        Value<QString> keyboardText;
+
+        std::vector<uint32_t> mousePress;
+        std::vector<uint32_t> mouseRelease;
+
+        QPointF mouseMoveAbsolute;
+        QPointF mouseMoveRelative;
+        bool mouseMoveRelativeByDelta{};
+    };
+
+    InputAction(std::vector<Item> sequence);
+
+    void execute() const override;
+    bool async() const override;
+
+    /**
+     * Temporary hack, do not set outside of TriggerAction.
+     */
+    QPointF m_deltaMultiplied;
 
 private:
-    std::vector<InputAction> m_sequence;
+    std::vector<Item> m_sequence;
 };
 
 }

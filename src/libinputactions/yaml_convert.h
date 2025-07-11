@@ -23,10 +23,11 @@
 #include <QVector>
 #include <libinputactions/Expression.cpp>
 #include <libinputactions/Value.h>
-#include <libinputactions/actions/CommandTriggerAction.h>
-#include <libinputactions/actions/InputTriggerAction.h>
-#include <libinputactions/actions/OneTriggerActionGroup.h>
-#include <libinputactions/actions/PlasmaGlobalShortcutTriggerAction.h>
+#include <libinputactions/actions/ActionGroup.h>
+#include <libinputactions/actions/CommandAction.h>
+#include <libinputactions/actions/InputAction.h>
+#include <libinputactions/actions/PlasmaGlobalShortcutAction.h>
+#include <libinputactions/actions/TriggerAction.h>
 #include <libinputactions/conditions/ConditionGroup.h>
 #include <libinputactions/conditions/VariableCondition.h>
 #include <libinputactions/handlers/MouseTriggerHandler.h>
@@ -993,40 +994,15 @@ struct convert<std::unique_ptr<Trigger>>
 template<>
 struct convert<std::unique_ptr<TriggerAction>>
 {
-    static bool decode(const Node &node, std::unique_ptr<TriggerAction> &action)
+    static bool decode(const Node &node, std::unique_ptr<TriggerAction> &value)
     {
-        if (node["command"].IsDefined()) {
-            action = std::make_unique<CommandTriggerAction>(node["command"].as<libinputactions::Value<QString>>());
-        } else if (node["input"].IsDefined()) {
-            auto inputAction = new InputTriggerAction;
-            inputAction->setSequence(node["input"].as<std::vector<InputAction>>());
-            action.reset(inputAction);
-        } else if (node["plasma_shortcut"].IsDefined()) {
-            auto plasmaShortcutAction = new PlasmaGlobalShortcutTriggerAction;
-            const auto split = node["plasma_shortcut"].as<QString>().split(",");
-            if (split.length() != 2) {
-                throw Exception(node.Mark(), "Invalid Plasma shortcut format");
-            }
-
-            plasmaShortcutAction->setComponent(split[0]);
-            plasmaShortcutAction->setShortcut(split[1]);
-            action.reset(plasmaShortcutAction);
-        } else if (node["one"].IsDefined()) {
-            auto oneActionGroup = new OneTriggerActionGroup;
-            for (const auto &actionNode : node["one"]) {
-                oneActionGroup->add(actionNode.as<std::unique_ptr<TriggerAction>>());
-            }
-            action.reset(oneActionGroup);
-        } else {
-            throw Exception(node.Mark(), "Action has no valid action property");
-        }
-
-        action->setName(node["name"].as<QString>(action->name()));
+        value = std::make_unique<TriggerAction>(node.as<std::shared_ptr<Action>>());
+        value->setName(node["name"].as<QString>(value->name()));
 
         Range<qreal> threshold;
         if (const auto &thresholdNode = node["threshold"]) {
             threshold = thresholdNode.as<Range<qreal>>();
-            action->setThreshold(threshold);
+            value->setThreshold(threshold);
         }
 
         const auto on = node["on"].as<On>(On::End);
@@ -1034,10 +1010,36 @@ struct convert<std::unique_ptr<TriggerAction>>
             throw Exception(node.Mark(), "Begin actions can't have thresholds");
         }
 
-        action->setOn(on);
-        action->setRepeatInterval(node["interval"].as<ActionInterval>(ActionInterval()));
+        value->setOn(on);
+        value->setRepeatInterval(node["interval"].as<ActionInterval>(ActionInterval()));
+
+        return true;
+    }
+};
+
+template<>
+struct convert<std::shared_ptr<Action>>
+{
+    static bool decode(const Node &node, std::shared_ptr<Action> &value)
+    {
+        if (const auto &commandNode = node["command"]) {
+            value = std::make_shared<CommandAction>(commandNode.as<libinputactions::Value<QString>>());
+        } else if (const auto &inputNode = node["input"]) {
+            value = std::make_shared<InputAction>(inputNode.as<std::vector<InputAction::Item>>());
+        } else if (const auto &plasmaShortcutNode = node["plasma_shortcut"]) {
+            const auto split = plasmaShortcutNode.as<QString>().split(",");
+            if (split.length() != 2) {
+                throw Exception(node.Mark(), "Invalid Plasma shortcut format");
+            }
+            value = std::make_shared<PlasmaGlobalShortcutAction>(split[0], split[1]);
+        } else if (const auto &oneNode = node["one"]) {
+            value = std::make_shared<ActionGroup>(oneNode.as<std::vector<std::shared_ptr<Action>>>(), ActionGroup::ExecutionMode::First);
+        } else {
+            throw Exception(node.Mark(), "Action has no valid action property");
+        }
+
         if (const auto &conditionsNode = node["conditions"]) {
-            action->setCondition(conditionsNode.as<std::shared_ptr<Condition>>());
+            value->m_condition = conditionsNode.as<std::shared_ptr<Condition>>();
         }
 
         return true;
@@ -1257,16 +1259,16 @@ FLAGS_DECODER(Qt::KeyboardModifiers, "keyboard modifier",
               }))
 
 template<>
-struct convert<std::vector<InputAction>>
+struct convert<std::vector<InputAction::Item>>
 {
-    static bool decode(const Node &node, std::vector<InputAction> &actions)
+    static bool decode(const Node &node, std::vector<InputAction::Item> &value)
     {
         for (const auto &device : node) {
             if (device["keyboard"].IsDefined()) {
                 for (const auto &actionNode : device["keyboard"]) {
-                    InputAction action;
+                    InputAction::Item item;
                     if (actionNode.IsMap() && actionNode["text"].IsDefined()) {
-                        action.keyboardText = actionNode["text"].as<libinputactions::Value<QString>>();
+                        item.keyboardText = actionNode["text"].as<libinputactions::Value<QString>>();
                     } else {
                         const auto actionRaw = actionNode.as<QString>().toUpper();
                         if (actionRaw.startsWith("+") || actionRaw.startsWith("-")) {
@@ -1276,9 +1278,9 @@ struct convert<std::vector<InputAction>>
                             }
 
                             if (actionRaw[0] == '+') {
-                                action.keyboardPress.push_back(s_keyboard.at(key));
+                                item.keyboardPress.push_back(s_keyboard.at(key));
                             } else {
-                                action.keyboardRelease.push_back(s_keyboard.at(key));
+                                item.keyboardRelease.push_back(s_keyboard.at(key));
                             }
                         } else {
                             for (const auto &keyRaw : actionRaw.split("+")) {
@@ -1287,17 +1289,17 @@ struct convert<std::vector<InputAction>>
                                 }
 
                                 const auto key = s_keyboard.at(keyRaw);
-                                action.keyboardPress.push_back(key);
-                                action.keyboardRelease.insert(action.keyboardRelease.begin(), key);
+                                item.keyboardPress.push_back(key);
+                                item.keyboardRelease.insert(item.keyboardRelease.begin(), key);
                             }
                         }
                     }
-                    actions.push_back(action);
+                    value.push_back(item);
                 }
             } else if (device["mouse"].IsDefined()) {
                 for (auto &actionRaw : device["mouse"].as<QStringList>()) {
                     actionRaw = actionRaw.toUpper();
-                    InputAction action;
+                    InputAction::Item item;
                     if (actionRaw.startsWith("+") || actionRaw.startsWith("-")) {
                         const auto button = actionRaw.mid(1);
                         if (!s_mouse.contains(button)) {
@@ -1305,18 +1307,18 @@ struct convert<std::vector<InputAction>>
                         }
 
                         if (actionRaw[0] == '+') {
-                            action.mousePress.push_back(s_mouse.at(button));
+                            item.mousePress.push_back(s_mouse.at(button));
                         } else {
-                            action.mouseRelease.push_back(s_mouse.at(button));
+                            item.mouseRelease.push_back(s_mouse.at(button));
                         }
                     } else if (actionRaw.startsWith("MOVE_BY_DELTA")) {
-                        action.mouseMoveRelativeByDelta = true;
+                        item.mouseMoveRelativeByDelta = true;
                     } else if (actionRaw.startsWith("MOVE_BY")) {
                         const auto split = actionRaw.split(" ");
-                        action.mouseMoveRelative = QPointF(split[1].toFloat(), split[2].toFloat());
+                        item.mouseMoveRelative = QPointF(split[1].toFloat(), split[2].toFloat());
                     } else if (actionRaw.startsWith("MOVE_TO")) {
                         const auto split = actionRaw.split(" ");
-                        action.mouseMoveAbsolute = QPointF(split[1].toFloat(), split[2].toFloat());
+                        item.mouseMoveAbsolute = QPointF(split[1].toFloat(), split[2].toFloat());
                     } else {
                         for (const auto &buttonRaw : actionRaw.split("+")) {
                             if (!s_mouse.contains(buttonRaw)) {
@@ -1324,11 +1326,11 @@ struct convert<std::vector<InputAction>>
                             }
 
                             const auto button = s_mouse.at(buttonRaw);
-                            action.mousePress.push_back(button);
-                            action.mouseRelease.insert(action.mouseRelease.begin(), button);
+                            item.mousePress.push_back(button);
+                            item.mouseRelease.insert(item.mouseRelease.begin(), button);
                         }
                     }
-                    actions.push_back(action);
+                    value.push_back(item);
                 }
             }
         }

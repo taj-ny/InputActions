@@ -18,21 +18,38 @@
 
 #pragma once
 
-#include "TriggerActionGroup.h"
+#include "Action.h"
+#include <vector>
 
 namespace libinputactions
 {
 
 /**
- * Executes only one action in order as added.
+ * Executes actions from the specified list in a specific way.
  */
-class OneTriggerActionGroup : public TriggerActionGroup
+class ActionGroup : public Action
 {
 public:
-    OneTriggerActionGroup() = default;
+    enum class ExecutionMode
+    {
+        /**
+         * Executes all conditions that satisfy their condition.
+         */
+        All,
+        /**
+         * Executes the first action that satisfied its condition.
+         */
+        First,
+    };
 
-protected:
-    void execute() override;
+    ActionGroup(std::vector<std::shared_ptr<Action>> actions, ExecutionMode mode = ExecutionMode::All);
+
+    void execute() const override;
+    bool async() const override;
+
+private:
+    std::vector<std::shared_ptr<Action>> m_actions;
+    ExecutionMode m_mode;
 };
 
 }

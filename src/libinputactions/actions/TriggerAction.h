@@ -30,6 +30,8 @@ Q_DECLARE_LOGGING_CATEGORY(INPUTACTIONS_ACTION)
 namespace libinputactions
 {
 
+class Action;
+
 /**
  * The point of the trigger's lifecycle at which the action should be executed.
  */
@@ -92,7 +94,8 @@ private:
 class TriggerAction
 {
 public:
-    virtual ~TriggerAction() = default;
+    TriggerAction(std::shared_ptr<Action> data);
+    virtual ~TriggerAction();
 
     /**
      * Called by the trigger.
@@ -129,12 +132,6 @@ public:
      */
     TEST_VIRTUAL bool canExecute() const;
 
-    /**
-     * @param condition Must be satisfied in order for the action to be executed. To add multiple conditions, use a
-     * condition group.
-     */
-    void setCondition(const std::shared_ptr<const Condition> &condition);
-
     const QString &name() const;
     /**
      * @param name Used in debug logs.
@@ -159,16 +156,7 @@ public:
      */
     void setThreshold(const Range<qreal> &threshold);
 
-protected:
-    TriggerAction() = default;
-
-    /**
-     * Executes the action without checking conditions.
-     */
-    virtual void execute() {};
-
-    // This is just a quick way to get directionless swipe gestures working
-    QPointF m_currentDeltaPointMultiplied;
+    const Action *action() const;
 
 private:
     /**
@@ -180,7 +168,7 @@ private:
     On m_on = On::End;
     ActionInterval m_interval;
     std::optional<Range<qreal>> m_threshold;
-    std::optional<std::shared_ptr<const Condition>> m_condition;
+    std::shared_ptr<Action> m_action;
     bool m_executed{};
 
     /**

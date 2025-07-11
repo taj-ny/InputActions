@@ -18,23 +18,31 @@
 
 #pragma once
 
-#include "TriggerAction.h"
+#include <memory>
 
 namespace libinputactions
 {
 
-/**
- * Action groups control how actions are executed. Individual actions are not informed of trigger lifecycle events.
- */
-class TriggerActionGroup : public TriggerAction
+class Condition;
+
+class Action
 {
 public:
-    void add(std::unique_ptr<TriggerAction> action);
+    Action();
+    virtual ~Action();
 
-protected:
-    TriggerActionGroup() = default;
+    /**
+     * Do not call directly, use ActionExecutor instead. This method is not guaranteed to be called from the main thread. Implementations should use
+     * InputActions::runOnMainThread to schedule code to run on the main thread.
+     */
+    virtual void execute() const = 0;
+    /**
+     * Whether the action should be executed asynchronously. A value of false does not guarantee that the action will be executed synchronously.
+     * @see ActionExecutor::execute
+     */
+    virtual bool async() const;
 
-    std::vector<std::unique_ptr<TriggerAction>> m_actions;
+    std::shared_ptr<const Condition> m_condition;
 };
 
 }

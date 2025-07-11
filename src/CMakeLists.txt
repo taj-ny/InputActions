@@ -4,12 +4,13 @@ find_package(yaml-cpp REQUIRED)
 pkg_search_module(LIBEVDEV REQUIRED libevdev)
 
 set(libinputactions_SRCS
-    libinputactions/actions/CommandTriggerAction.cpp
-    libinputactions/actions/InputTriggerAction.cpp
-    libinputactions/actions/OneTriggerActionGroup.cpp
-    libinputactions/actions/PlasmaGlobalShortcutTriggerAction.cpp
+    libinputactions/actions/Action.cpp
+    libinputactions/actions/ActionExecutor.cpp
+    libinputactions/actions/ActionGroup.cpp
+    libinputactions/actions/CommandAction.cpp
+    libinputactions/actions/InputAction.cpp
+    libinputactions/actions/PlasmaGlobalShortcutAction.cpp
     libinputactions/actions/TriggerAction.cpp
-    libinputactions/actions/TriggerActionGroup.cpp
     libinputactions/conditions/CallbackCondition.cpp
     libinputactions/conditions/Condition.cpp
     libinputactions/conditions/ConditionGroup.cpp

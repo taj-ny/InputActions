@@ -16,27 +16,17 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#pragma once
-
-#include "TriggerAction.h"
-#include <QString>
-#include <libinputactions/Value.h>
+#include "Action.h"
 
 namespace libinputactions
 {
 
-/**
- * Runs a command.
- */
-class CommandTriggerAction : public TriggerAction
+Action::Action() = default;
+Action::~Action() = default;
+
+bool Action::async() const
 {
-public:
-    explicit CommandTriggerAction(const Value<QString> &command);
-
-    void execute() override;
-
-private:
-    Value<QString> m_command;
-};
+    return false;
+}
 
 }

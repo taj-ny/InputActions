@@ -17,7 +17,7 @@
 */
 
 #include "Trigger.h"
-#include <libinputactions/actions/InputTriggerAction.h>
+#include <libinputactions/actions/InputAction.h>
 #include <libinputactions/interfaces/InputEmitter.h>
 #include <libinputactions/variables/VariableManager.h>
 
@@ -157,7 +157,7 @@ bool Trigger::overridesOtherTriggersOnUpdate()
 
 void Trigger::actionAdded(TriggerAction *action)
 {
-    if (dynamic_cast<InputTriggerAction *>(action)) {
+    if (dynamic_cast<const InputAction *>(action->action())) {
         if (!m_clearModifiers) {
             m_clearModifiers = true;
         }

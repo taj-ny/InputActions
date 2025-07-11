@@ -16,14 +16,24 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include "TriggerActionGroup.h"
+#pragma once
+
+#include "Action.h"
+#include <QString>
 
 namespace libinputactions
 {
 
-void TriggerActionGroup::add(std::unique_ptr<TriggerAction> action)
+class PlasmaGlobalShortcutAction : public Action
 {
-    m_actions.push_back(std::move(action));
-}
+public:
+    PlasmaGlobalShortcutAction(QString component, QString shortcut);
+
+    void execute() const override;
+
+private:
+    QString m_component;
+    QString m_shortcut;
+};
 
 }
