@@ -18,9 +18,9 @@
 
 #include "InputAction.h"
 #include "InputActions.h"
+#include <QThread>
 #include <libinputactions/interfaces/InputEmitter.h>
 #include <libinputactions/interfaces/PointerPositionSetter.h>
-#include <QThread>
 
 namespace libinputactions
 {
@@ -34,34 +34,36 @@ void InputAction::execute() const
 {
     for (const auto &item : m_sequence) {
         const auto keyboardText = item.keyboardText.get();
-        g_inputActions->runOnMainThread([this, item, keyboardText]() {
-            for (const auto &key : item.keyboardPress) {
-                g_inputEmitter->keyboardKey(key, true);
-            }
-            for (const auto &key : item.keyboardRelease) {
-                g_inputEmitter->keyboardKey(key, false);
-            }
-            if (!keyboardText.isEmpty()) {
-                g_inputEmitter->keyboardText(keyboardText);
-            }
+        g_inputActions->runOnMainThread(
+            [this, item, keyboardText]() {
+                for (const auto &key : item.keyboardPress) {
+                    g_inputEmitter->keyboardKey(key, true);
+                }
+                for (const auto &key : item.keyboardRelease) {
+                    g_inputEmitter->keyboardKey(key, false);
+                }
+                if (!keyboardText.isEmpty()) {
+                    g_inputEmitter->keyboardText(keyboardText);
+                }
 
-            for (const auto &button : item.mousePress) {
-                g_inputEmitter->mouseButton(button, true);
-            }
-            for (const auto &button : item.mouseRelease) {
-                g_inputEmitter->mouseButton(button, false);
-            }
+                for (const auto &button : item.mousePress) {
+                    g_inputEmitter->mouseButton(button, true);
+                }
+                for (const auto &button : item.mouseRelease) {
+                    g_inputEmitter->mouseButton(button, false);
+                }
 
-            if (!item.mouseMoveAbsolute.isNull()) {
-                g_pointerPositionSetter->setGlobalPointerPosition(item.mouseMoveAbsolute);
-            }
-            if (!item.mouseMoveRelative.isNull()) {
-                g_inputEmitter->mouseMoveRelative(item.mouseMoveRelative);
-            }
-            if (item.mouseMoveRelativeByDelta) {
-                g_inputEmitter->mouseMoveRelative(m_deltaMultiplied);
-            }
-        }, false);
+                if (!item.mouseMoveAbsolute.isNull()) {
+                    g_pointerPositionSetter->setGlobalPointerPosition(item.mouseMoveAbsolute);
+                }
+                if (!item.mouseMoveRelative.isNull()) {
+                    g_inputEmitter->mouseMoveRelative(item.mouseMoveRelative);
+                }
+                if (item.mouseMoveRelativeByDelta) {
+                    g_inputEmitter->mouseMoveRelative(m_deltaMultiplied);
+                }
+            },
+            false);
     }
 }
 

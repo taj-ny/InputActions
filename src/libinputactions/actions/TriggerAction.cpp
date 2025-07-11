@@ -16,9 +16,9 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+#include "TriggerAction.h"
 #include "ActionExecutor.h"
 #include "InputAction.h"
-#include "TriggerAction.h"
 
 Q_LOGGING_CATEGORY(INPUTACTIONS_ACTION, "inputactions.action", QtWarningMsg)
 

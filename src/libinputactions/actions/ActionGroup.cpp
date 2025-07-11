@@ -16,8 +16,8 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include "ActionExecutor.h"
 #include "ActionGroup.h"
+#include "ActionExecutor.h"
 #include "InputActions.h"
 #include <libinputactions/conditions/Condition.h>
 

@@ -1,6 +1,5 @@
 #include "InputActions.h"
 #include "Config.h"
-#include <QAbstractEventDispatcherV2>
 #include "actions/ActionExecutor.h"
 #include "input/Keyboard.h"
 #include "input/backends/InputBackend.h"
@@ -12,6 +11,7 @@
 #include "interfaces/SessionLock.h"
 #include "interfaces/WindowProvider.h"
 #include "variables/VariableManager.h"
+#include <QAbstractEventDispatcherV2>
 
 namespace libinputactions
 {

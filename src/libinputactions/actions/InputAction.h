@@ -19,8 +19,8 @@
 #pragma once
 
 #include "Action.h"
-#include <libinputactions/Value.h>
 #include <QPointF>
+#include <libinputactions/Value.h>
 
 namespace libinputactions
 {

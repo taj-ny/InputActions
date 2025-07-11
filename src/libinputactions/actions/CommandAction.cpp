@@ -17,7 +17,6 @@
 */
 
 #include "CommandAction.h"
-
 #include <thread>
 
 namespace libinputactions

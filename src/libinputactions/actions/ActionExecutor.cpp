@@ -46,7 +46,6 @@ void ActionExecutor::execute(const std::shared_ptr<Action> &action, ActionThread
             m_ownActionThreadPool.start(execute);
             break;
     }
-
 }
 
 }

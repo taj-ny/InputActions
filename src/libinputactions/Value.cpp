@@ -16,8 +16,8 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include "InputActions.h"
 #include "Value.h"
+#include "InputActions.h"
 #include <QProcess>
 #include <libinputactions/globals.h>
 #include <libinputactions/variables/VariableManager.h>
@@ -62,22 +62,27 @@ Value<T>::Value(Expression<T> expression)
 template<typename T>
 Value<T> Value<T>::command(Value<QString> command)
 {
-    return Value<T>([command = std::move(command)]() {
-        QProcess process;
-        process.setProgram("/bin/sh");
-        process.setArguments({"-c", command.get()});
-        process.start();
-        process.waitForFinished();
-        return fromString<T>(process.readAllStandardOutput());
-    }, ValueSource::Command);
+    return Value<T>(
+        [command = std::move(command)]() {
+            QProcess process;
+            process.setProgram("/bin/sh");
+            process.setArguments({"-c", command.get()});
+            process.start();
+            process.waitForFinished();
+            return fromString<T>(process.readAllStandardOutput());
+        },
+        ValueSource::Command);
 }
 
 template<typename T>
 Value<T> Value<T>::variable(QString name)
 {
-    return Value<T>([name] {
-        return g_variableManager->getVariable<T>(name)->get().value();
-    }, ValueSource::Variable, false);
+    return Value<T>(
+        [name] {
+            return g_variableManager->getVariable<T>(name)->get().value();
+        },
+        ValueSource::Variable,
+        false);
 }
 
 template<typename T>
