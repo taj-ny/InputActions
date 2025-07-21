@@ -81,7 +81,7 @@ void HyprlandInputBackend::initialize()
 
 void HyprlandInputBackend::reset()
 {
-    for (auto &device : m_devices) {
+    for (const auto &device : m_devices) {
         deviceRemoved(device.libinputactionsDevice.get());
     }
     m_devices.clear();
@@ -149,8 +149,8 @@ void HyprlandInputBackend::checkDeviceChanges()
     }
 
     for (auto it = m_devices.begin(); it != m_devices.end();) {
-        if (!std::ranges::any_of(m_hyprlandDevices, [it](const auto &device) {
-                return device == it->hyprlandDevice;
+        if (!std::ranges::any_of(devices, [it](const auto &device) {
+                return device.get() == it->hyprlandDevice;
             })) {
             deviceRemoved(it->libinputactionsDevice.get());
             std::erase(m_hyprlandDevices, it->hyprlandDevice);
