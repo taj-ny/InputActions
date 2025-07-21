@@ -17,10 +17,13 @@
 */
 
 #include "HyprlandInputEmitter.h"
+#include <hyprland/src/Compositor.hpp>
+#include <hyprland/src/helpers/WLClasses.hpp>
 #include <hyprland/src/managers/KeybindManager.hpp>
 #include <hyprland/src/managers/SeatManager.hpp>
 #include <hyprland/src/managers/input/InputManager.hpp>
 #include <hyprland/src/protocols/PointerGestures.hpp>
+#include <hyprland/src/protocols/core/Compositor.hpp>
 #include <libinputactions/input/Keyboard.h>
 #include <libinputactions/input/backends/InputBackend.h>
 #undef HANDLE
@@ -32,6 +35,9 @@ HyprlandInputEmitter::HyprlandInputEmitter()
     , m_pointer(makeShared<VirtualPointer>())
 {
     g_pInputManager->newKeyboard(m_keyboard);
+
+    // FIXME: Text input list is private, inputs added before the plugin is loaded will not work
+    m_listeners.push_back(PROTO::textInputV3->m_events.newTextInput.listen(std::bind(&HyprlandInputEmitter::onNewTextInputV3, this, std::placeholders::_1)));
 }
 
 HyprlandInputEmitter::~HyprlandInputEmitter()
@@ -83,6 +89,23 @@ void HyprlandInputEmitter::keyboardKey(uint32_t key, bool state)
     g_inputBackend->setIgnoreEvents(false);
 }
 
+void HyprlandInputEmitter::keyboardText(const QString &text)
+{
+    if (!g_pCompositor->m_lastFocus) {
+        return;
+    }
+
+    const auto *client = g_pCompositor->m_lastFocus->client();
+    for (const auto &[v3, _] : m_v3TextInputs) {
+        if (v3->client() == client && v3->good()) {
+            v3->preeditString({}, 0, 0);
+            v3->commitString(text.toStdString());
+            v3->sendDone();
+            return;
+        }
+    }
+}
+
 void HyprlandInputEmitter::mouseButton(uint32_t button, bool state)
 {
     g_inputBackend->setIgnoreEvents(true);
@@ -119,6 +142,15 @@ void HyprlandInputEmitter::touchpadSwipeBegin(uint8_t fingers)
         .fingers = fingers,
     });
     g_inputBackend->setIgnoreEvents(false);
+}
+
+void HyprlandInputEmitter::onNewTextInputV3(const WP<CTextInputV3> &textInput)
+{
+    m_v3TextInputs.emplace_back(textInput, textInput->m_events.destroy.listen([this, textInput]() {
+        std::erase_if(m_v3TextInputs, [textInput](const auto &input) {
+            return input.first == textInput;
+        });
+    }));
 }
 
 const std::string &VirtualKeyboard::getName()
