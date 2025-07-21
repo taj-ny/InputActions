@@ -81,11 +81,10 @@ void HyprlandInputBackend::initialize()
 
 void HyprlandInputBackend::reset()
 {
-    for (auto &device : m_devices) {
-        deviceRemoved(device.libinputactionsDevice.get());
+    for (const auto &device : m_devices) {
+        deviceRemoved(device);
     }
     m_devices.clear();
-    m_hyprlandDevices.clear();
     LibinputCompositorInputBackend::reset();
 }
 
@@ -116,22 +115,27 @@ void HyprlandInputBackend::checkDeviceChanges()
             // input device it will have the previous one of the same type.
             auto &events = pointer->m_pointerEvents;
             if (pointer->m_isTouchpad) {
-                for (auto *hyprlandSignal : {&events.axis, &events.button, &events.motion, &events.holdBegin, &events.pinchBegin, &events.swipeBegin}) {
-                    newDevice.listeners.push_back(hyprlandSignal->registerListener([this, device](const std::any &) {
-                        if (auto *foundDevice = findDevice(device.get())) {
-                            m_currentPointingDevice = foundDevice->libinputactionsDevice.get();
-                            m_currentTouchpad = m_currentPointingDevice;
-                        }
-                    }));
-                }
+                const auto listener = [this, device](const auto &) {
+                    if (auto *foundDevice = findDevice(device.get())) {
+                        m_currentPointingDevice = foundDevice->libinputactionsDevice.get();
+                        m_currentTouchpad = m_currentPointingDevice;
+                    }
+                };
+                newDevice.listeners.push_back(events.axis.registerListener(listener));
+                newDevice.listeners.push_back(events.button.registerListener(listener));
+                newDevice.listeners.push_back(events.motion.registerListener(listener));
+                newDevice.listeners.push_back(events.holdBegin.registerListener(listener));
+                newDevice.listeners.push_back(events.pinchBegin.registerListener(listener));
+                newDevice.listeners.push_back(events.swipeBegin.registerListener(listener));
             } else {
-                for (auto *hyprlandSignal : {&events.axis, &events.button, &events.motion}) {
-                    newDevice.listeners.push_back(hyprlandSignal->registerListener([this, device](const std::any &) {
-                        if (auto *foundDevice = findDevice(device.get())) {
-                            m_currentPointingDevice = foundDevice->libinputactionsDevice.get();
-                        }
-                    }));
-                }
+                const auto listener = [this, device](const auto &) {
+                    if (auto *foundDevice = findDevice(device.get())) {
+                        m_currentPointingDevice = foundDevice->libinputactionsDevice.get();
+                    }
+                };
+                newDevice.listeners.push_back(events.axis.registerListener(listener));
+                newDevice.listeners.push_back(events.button.registerListener(listener));
+                newDevice.listeners.push_back(events.motion.registerListener(listener));
             }
         } else {
             continue;
@@ -144,16 +148,27 @@ void HyprlandInputBackend::checkDeviceChanges()
     }
 
     for (auto it = m_devices.begin(); it != m_devices.end();) {
-        if (!std::ranges::any_of(m_hyprlandDevices, [it](const auto &device) {
-                return device == it->hyprlandDevice;
+        if (!std::ranges::any_of(devices, [it](const auto &device) {
+                return device.get() == it->hyprlandDevice;
             })) {
-            deviceRemoved(it->libinputactionsDevice.get());
-            std::erase(m_hyprlandDevices, it->hyprlandDevice);
+            deviceRemoved(*it);
             it = m_devices.erase(it);
             continue;
         }
         it++;
     }
+}
+
+void HyprlandInputBackend::deviceRemoved(const HyprlandInputDevice &device)
+{
+    if (m_currentPointingDevice == device.libinputactionsDevice.get()) {
+        m_currentPointingDevice = nullptr;
+    }
+    if (m_currentTouchpad == device.libinputactionsDevice.get()) {
+        m_currentTouchpad = nullptr;
+    }
+    std::erase(m_hyprlandDevices, device.hyprlandDevice);
+    LibinputCompositorInputBackend::deviceRemoved(device.libinputactionsDevice.get());
 }
 
 void HyprlandInputBackend::keyboardKey(SCallbackInfo &info, const std::any &data)
