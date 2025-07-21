@@ -55,7 +55,7 @@ InputActions::~InputActions()
 
 void InputActions::runOnMainThread(std::function<void()> &&function, bool block) const
 {
-    if (QThread::isMainThread()) {
+    if (QThread::currentThread() == m_mainThread) { // QThread::isMainThread requires Qt 6.8
         function();
     } else {
         QMetaObject::invokeMethod(QAbstractEventDispatcher::instance(m_mainThread), function, block ? Qt::BlockingQueuedConnection : Qt::QueuedConnection);
