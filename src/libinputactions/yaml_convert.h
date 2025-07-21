@@ -1006,7 +1006,11 @@ struct convert<std::shared_ptr<Action>>
         if (const auto &commandNode = node["command"]) {
             value = std::make_shared<CommandAction>(commandNode.as<libinputactions::Value<QString>>());
         } else if (const auto &inputNode = node["input"]) {
-            value = std::make_shared<InputAction>(inputNode.as<std::vector<InputAction::Item>>());
+            auto action = std::make_shared<InputAction>(inputNode.as<std::vector<InputAction::Item>>());
+            if (const auto &delayNode = node["delay"]) {
+                action->m_delay = delayNode.as<std::chrono::milliseconds>();
+            }
+            value = action;
         } else if (const auto &plasmaShortcutNode = node["plasma_shortcut"]) {
             const auto split = plasmaShortcutNode.as<QString>().split(",");
             if (split.length() != 2) {
@@ -1250,9 +1254,10 @@ struct convert<std::vector<InputAction::Item>>
         for (const auto &device : node) {
             if (device["keyboard"].IsDefined()) {
                 for (const auto &actionNode : device["keyboard"]) {
-                    InputAction::Item item;
                     if (actionNode.IsMap() && actionNode["text"].IsDefined()) {
-                        item.keyboardText = actionNode["text"].as<libinputactions::Value<QString>>();
+                        value.push_back({
+                            .keyboardText = actionNode["text"].as<libinputactions::Value<QString>>(),
+                        });
                     } else {
                         const auto actionRaw = actionNode.as<QString>().toUpper();
                         if (actionRaw.startsWith("+") || actionRaw.startsWith("-")) {
@@ -1262,28 +1267,40 @@ struct convert<std::vector<InputAction::Item>>
                             }
 
                             if (actionRaw[0] == '+') {
-                                item.keyboardPress.push_back(s_keyboard.at(key));
+                                value.push_back({
+                                    .keyboardPress = s_keyboard.at(key),
+                                });
                             } else {
-                                item.keyboardRelease.push_back(s_keyboard.at(key));
+                                value.push_back({
+                                    .keyboardRelease = s_keyboard.at(key),
+                                });
                             }
                         } else {
+                            std::vector<uint32_t> keys;
                             for (const auto &keyRaw : actionRaw.split("+")) {
                                 if (!s_keyboard.contains(keyRaw)) {
                                     throw Exception(node.Mark(), ("Invalid keyboard key ('" + keyRaw + "')").toStdString());
                                 }
+                                keys.push_back(s_keyboard.at(keyRaw));
+                            }
 
-                                const auto key = s_keyboard.at(keyRaw);
-                                item.keyboardPress.push_back(key);
-                                item.keyboardRelease.insert(item.keyboardRelease.begin(), key);
+                            for (const auto key : keys) {
+                                value.push_back({
+                                    .keyboardPress = key,
+                                });
+                            }
+                            std::reverse(keys.begin(), keys.end());
+                            for (const auto key : keys) {
+                                value.push_back({
+                                    .keyboardRelease = key,
+                                });
                             }
                         }
                     }
-                    value.push_back(item);
                 }
             } else if (device["mouse"].IsDefined()) {
                 for (auto &actionRaw : device["mouse"].as<QStringList>()) {
                     actionRaw = actionRaw.toUpper();
-                    InputAction::Item item;
                     if (actionRaw.startsWith("+") || actionRaw.startsWith("-")) {
                         const auto button = actionRaw.mid(1);
                         if (!s_mouse.contains(button)) {
@@ -1291,30 +1308,49 @@ struct convert<std::vector<InputAction::Item>>
                         }
 
                         if (actionRaw[0] == '+') {
-                            item.mousePress.push_back(s_mouse.at(button));
+                            value.push_back({
+                                .mousePress = s_mouse.at(button),
+                            });
                         } else {
-                            item.mouseRelease.push_back(s_mouse.at(button));
+                            value.push_back({
+                                .mouseRelease = s_mouse.at(button),
+                            });
                         }
                     } else if (actionRaw.startsWith("MOVE_BY_DELTA")) {
-                        item.mouseMoveRelativeByDelta = true;
+                        value.push_back({
+                            .mouseMoveRelativeByDelta = true,
+                        });
                     } else if (actionRaw.startsWith("MOVE_BY")) {
                         const auto split = actionRaw.split(" ");
-                        item.mouseMoveRelative = QPointF(split[1].toFloat(), split[2].toFloat());
+                        value.push_back({
+                            .mouseMoveRelative = QPointF(split[1].toFloat(), split[2].toFloat()),
+                        });
                     } else if (actionRaw.startsWith("MOVE_TO")) {
                         const auto split = actionRaw.split(" ");
-                        item.mouseMoveAbsolute = QPointF(split[1].toFloat(), split[2].toFloat());
+                        value.push_back({
+                            .mouseMoveAbsolute = QPointF(split[1].toFloat(), split[2].toFloat()),
+                        });
                     } else {
+                        std::vector<uint32_t> buttons;
                         for (const auto &buttonRaw : actionRaw.split("+")) {
                             if (!s_mouse.contains(buttonRaw)) {
                                 throw Exception(node.Mark(), ("Invalid mouse button ('" + buttonRaw + "')").toStdString());
                             }
+                            buttons.push_back(s_mouse.at(buttonRaw));
+                        }
 
-                            const auto button = s_mouse.at(buttonRaw);
-                            item.mousePress.push_back(button);
-                            item.mouseRelease.insert(item.mouseRelease.begin(), button);
+                        for (const auto button : buttons) {
+                            value.push_back({
+                                .mousePress = button,
+                            });
+                        }
+                        std::reverse(buttons.begin(), buttons.end());
+                        for (const auto button : buttons) {
+                            value.push_back({
+                                .mouseRelease = button,
+                            });
                         }
                     }
-                    value.push_back(item);
                 }
             }
         }
@@ -1439,6 +1475,16 @@ struct convert<Stroke>
         }
         stroke = Stroke(points);
 
+        return true;
+    }
+};
+
+template<>
+struct convert<std::chrono::milliseconds>
+{
+    static bool decode(const Node &node, std::chrono::milliseconds &value)
+    {
+        value = std::chrono::milliseconds(node.as<uint64_t>());
         return true;
     }
 };
