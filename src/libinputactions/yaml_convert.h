@@ -587,7 +587,7 @@ static const Node asSequence(const Node &node)
 {
     Node result(NodeType::Sequence);
     if (node.IsSequence()) {
-        for (const auto &child: node) {
+        for (const auto &child : node) {
             result.push_back(child);
         }
     } else {
@@ -623,7 +623,7 @@ static bool isEnum(const std::type_index &type)
 template<typename T>
 struct convert<Range<T>>
 {
-    static bool decode(const Node &node, Range <T> &range)
+    static bool decode(const Node &node, Range<T> &range)
     {
         const auto rangeRaw = node.as<QString>().replace(" ", "");
         if (rangeRaw.contains("-")) {
@@ -660,16 +660,16 @@ struct convert<std::shared_ptr<VariableCondition>>
         }
 
         static const std::unordered_map<QString, ComparisonOperator> operators = {
-            {"==",       ComparisonOperator::EqualTo},
-            {"!=",       ComparisonOperator::NotEqualTo},
-            {">",        ComparisonOperator::GreaterThan},
-            {">=",       ComparisonOperator::GreaterThanOrEqual},
-            {"<",        ComparisonOperator::LessThan},
-            {"<=",       ComparisonOperator::LessThanOrEqual},
+            {"==", ComparisonOperator::EqualTo},
+            {"!=", ComparisonOperator::NotEqualTo},
+            {">", ComparisonOperator::GreaterThan},
+            {">=", ComparisonOperator::GreaterThanOrEqual},
+            {"<", ComparisonOperator::LessThan},
+            {"<=", ComparisonOperator::LessThanOrEqual},
             {"contains", ComparisonOperator::Contains},
-            {"between",  ComparisonOperator::Between},
-            {"matches",  ComparisonOperator::Regex},
-            {"one_of",   ComparisonOperator::OneOf},
+            {"between", ComparisonOperator::Between},
+            {"matches", ComparisonOperator::Regex},
+            {"one_of", ComparisonOperator::OneOf},
         };
         const auto operatorRaw = raw.mid(firstSpace + 1, secondSpace - firstSpace - 1);
         if (!operators.contains(operatorRaw)) {
@@ -682,7 +682,7 @@ struct convert<std::shared_ptr<VariableCondition>>
         std::vector<std::any> right;
 
         if (!isEnum(variable->type()) && rightNode.IsSequence()) {
-            for (const auto &child: rightNode) {
+            for (const auto &child : rightNode) {
                 right.push_back(asAny(child, variable->type()));
             }
         } else if (rightRaw.contains(';')) {
@@ -723,7 +723,7 @@ struct convert<std::shared_ptr<Condition>>
             }
             if (groupMode) {
                 auto group = std::make_shared<ConditionGroup>(*groupMode);
-                for (const auto &child: groupChildren) {
+                for (const auto &child : groupChildren) {
                     group->add(child.as<std::shared_ptr<Condition>>());
                 }
                 condition = group;
@@ -761,7 +761,7 @@ struct convert<std::shared_ptr<Condition>>
         // Not in any group
         if (node.IsSequence()) {
             auto group = std::make_shared<ConditionGroup>(isLegacy(node[0]) ? ConditionGroupMode::Any : ConditionGroupMode::All);
-            for (const auto &child: node) {
+            for (const auto &child : node) {
                 group->add(child.as<std::shared_ptr<Condition>>());
             }
             condition = group;
@@ -791,7 +791,7 @@ struct convert<std::set<T>>
 {
     static bool decode(const Node &node, std::set<T> &set)
     {
-        for (const auto &child: node) {
+        for (const auto &child : node) {
             set.insert(child.as<T>());
         }
         return true;
@@ -827,12 +827,12 @@ struct convert<std::vector<std::unique_ptr<InputEventHandler>>>
     static bool decode(const Node &node, std::vector<std::unique_ptr<InputEventHandler>> &handlers)
     {
         if (const auto &mouseNode = node["mouse"]) {
-            for (const auto &mouseHandler: asSequence(mouseNode)) {
+            for (const auto &mouseHandler : asSequence(mouseNode)) {
                 handlers.push_back(decodeHandler<MouseTriggerHandler>(mouseHandler));
             }
         }
         if (const auto &touchpadNode = node["touchpad"]) {
-            for (const auto &touchpadHandler: asSequence(touchpadNode)) {
+            for (const auto &touchpadHandler : asSequence(touchpadNode)) {
                 handlers.push_back(decodeHandler<TouchpadTriggerHandler>(touchpadHandler));
             }
         }
@@ -845,10 +845,10 @@ struct convert<std::vector<std::unique_ptr<Trigger>>>
 {
     static bool decode(const Node &node, std::vector<std::unique_ptr<Trigger>> &triggers)
     {
-        for (const auto &triggerNode: node) {
+        for (const auto &triggerNode : node) {
             if (const auto &subTriggersNode = triggerNode["gestures"]) {
                 // Trigger group
-                for (const auto &subTriggerNode: subTriggersNode) {
+                for (const auto &subTriggerNode : subTriggersNode) {
                     // Trigger group
                     auto clonedNode = Clone(subTriggerNode);
                     for (auto it = triggerNode.begin(); it != triggerNode.end(); it++) {
@@ -870,7 +870,7 @@ struct convert<std::vector<std::unique_ptr<Trigger>>>
 
                     Node list;
                     list.push_back(clonedNode);
-                    for (auto &trigger: list.as<std::vector<std::unique_ptr<Trigger>>>()) {
+                    for (auto &trigger : list.as<std::vector<std::unique_ptr<Trigger>>>()) {
                         triggers.push_back(std::move(trigger));
                     }
                 }
@@ -956,7 +956,7 @@ struct convert<std::unique_ptr<Trigger>>
         if (const auto &endConditionsNode = node["end_conditions"]) {
             trigger->setEndCondition(endConditionsNode.as<std::shared_ptr<Condition>>());
         }
-        for (const auto &actionNode: node["actions"]) {
+        for (const auto &actionNode : node["actions"]) {
             trigger->addAction(actionNode.as<std::unique_ptr<TriggerAction>>());
         }
         if (const auto &clearModifiersNode = node["clear_modifiers"]) {
@@ -980,7 +980,8 @@ struct convert<std::unique_ptr<Trigger>>
 template<>
 struct convert<std::unique_ptr<TriggerAction>>
 {
-    static bool decode(const Node &node, std::unique_ptr<TriggerAction> &value) {
+    static bool decode(const Node &node, std::unique_ptr<TriggerAction> &value)
+    {
         value = std::make_unique<TriggerAction>(node.as<std::shared_ptr<Action>>());
 
         if (const auto &thresholdNode = node["threshold"]) {

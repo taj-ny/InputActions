@@ -60,8 +60,8 @@ void TriggerAction::triggerUpdated(qreal delta, const QPointF &deltaPointMultipl
         m_accumulatedDelta += delta;
         m_absoluteAccumulatedDelta += std::abs(delta);
     }
-    qCDebug(INPUTACTIONS_ACTION()).noquote() << QString("Action updated (id: %1, accumulatedDelta: %2)").arg(m_action->m_id,
-                                                                                                             QString::number(m_accumulatedDelta));
+    qCDebug(INPUTACTIONS_ACTION()).noquote()
+        << QString("Action updated (id: %1, accumulatedDelta: %2)").arg(m_action->m_id, QString::number(m_accumulatedDelta));
 
     if (m_on != On::Update) {
         return;
