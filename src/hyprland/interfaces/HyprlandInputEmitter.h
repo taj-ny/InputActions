@@ -21,6 +21,7 @@
 #include <aquamarine/input/Input.hpp>
 #include <hyprland/src/devices/IKeyboard.hpp>
 #include <hyprland/src/devices/IPointer.hpp>
+#include <hyprland/src/protocols/TextInputV3.hpp>
 #include <libinputactions/interfaces/InputEmitter.h>
 
 class VirtualKeyboard : public Aquamarine::IKeyboard
@@ -48,6 +49,7 @@ public:
 
     void keyboardClearModifiers() override;
     void keyboardKey(uint32_t key, bool state) override;
+    void keyboardText(const QString &text) override;
 
     void mouseButton(uint32_t button, bool state) override;
     void mouseMoveRelative(const QPointF &pos) override;
@@ -56,7 +58,12 @@ public:
     void touchpadSwipeBegin(uint8_t fingers) override;
 
 private:
+    void onNewTextInputV3(const WP<CTextInputV3> &textInput);
+
     uint32_t m_modifiers{};
     SP<Aquamarine::IKeyboard> m_keyboard;
     SP<IPointer> m_pointer;
+
+    std::vector<std::pair<WP<CTextInputV3>, CHyprSignalListener>> m_v3TextInputs;
+    std::vector<CHyprSignalListener> m_listeners;
 };
