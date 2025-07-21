@@ -18,25 +18,27 @@
 
 #pragma once
 
-#include "TriggerAction.h"
-#include <QString>
+#include "Action.h"
+#include <libinputactions/Value.h>
 
 namespace libinputactions
 {
 
 /**
- * Invokes a Plasma global shortcut through DBus.
+ * Executes a command in a separate thread (neither main nor action).
  */
-class PlasmaGlobalShortcutTriggerAction : public TriggerAction
+class CommandAction : public Action
 {
 public:
-    void execute() override;
-    void setComponent(const QString &component);
-    void setShortcut(const QString &shortcut);
+    CommandAction(Value<QString> command);
+
+    bool async() const override;
+
+protected:
+    void executeImpl() override;
 
 private:
-    QString m_path;
-    QString m_shortcut;
+    Value<QString> m_command;
 };
 
 }

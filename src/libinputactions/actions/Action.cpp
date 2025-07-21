@@ -16,25 +16,36 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#pragma once
-
-#include "TriggerAction.h"
+#include "Action.h"
+#include <libinputactions/conditions/Condition.h>
+#include <libinputactions/globals.h>
 
 namespace libinputactions
 {
 
-/**
- * Action groups control how actions are executed. Individual actions are not informed of trigger lifecycle events.
- */
-class TriggerActionGroup : public TriggerAction
+Action::Action() = default;
+Action::~Action() = default;
+
+bool Action::canExecute() const
 {
-public:
-    void add(std::unique_ptr<TriggerAction> action);
+    return !m_condition || m_condition->satisfied();
+}
 
-protected:
-    TriggerActionGroup() = default;
+void Action::execute()
+{
+    qCDebug(INPUTACTIONS) << QString("Executing action \"%1\"").arg(m_id);
+    executeImpl();
+    m_executions++;
+}
 
-    std::vector<std::unique_ptr<TriggerAction>> m_actions;
-};
+bool Action::async() const
+{
+    return false;
+}
+
+void Action::reset()
+{
+    m_executions = 0;
+}
 
 }

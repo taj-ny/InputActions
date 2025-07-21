@@ -18,25 +18,47 @@
 
 #pragma once
 
-#include "TriggerAction.h"
-#include <QString>
+#include "Action.h"
+#include <QPointF>
 #include <libinputactions/Value.h>
 
 namespace libinputactions
 {
 
-/**
- * Runs a command.
- */
-class CommandTriggerAction : public TriggerAction
+class InputAction : public Action
 {
 public:
-    explicit CommandTriggerAction(const Value<QString> &command);
+    /**
+     * Input actions are performed in order as defined in the struct.
+     */
+    struct Item
+    {
+        std::vector<uint32_t> keyboardPress;
+        std::vector<uint32_t> keyboardRelease;
+        Value<QString> keyboardText;
 
-    void execute() override;
+        std::vector<uint32_t> mousePress;
+        std::vector<uint32_t> mouseRelease;
+
+        QPointF mouseMoveAbsolute;
+        QPointF mouseMoveRelative;
+        bool mouseMoveRelativeByDelta{};
+    };
+
+    InputAction(std::vector<Item> sequence);
+
+    bool async() const override;
+
+    /**
+     * Temporary hack, do not set outside of TriggerAction.
+     */
+    QPointF m_deltaMultiplied;
+
+protected:
+    void executeImpl() override;
 
 private:
-    Value<QString> m_command;
+    std::vector<Item> m_sequence;
 };
 
 }

@@ -17,7 +17,7 @@
 */
 
 #include "Trigger.h"
-#include <libinputactions/actions/InputTriggerAction.h>
+#include <libinputactions/actions/InputAction.h>
 #include <libinputactions/interfaces/InputEmitter.h>
 #include <libinputactions/variables/VariableManager.h>
 
@@ -25,6 +25,11 @@ Q_LOGGING_CATEGORY(INPUTACTIONS_TRIGGER, "inputactions.trigger", QtWarningMsg)
 
 namespace libinputactions
 {
+
+Trigger::Trigger(TriggerType type)
+    : m_type(type)
+{
+}
 
 void Trigger::addAction(std::unique_ptr<TriggerAction> action)
 {
@@ -64,7 +69,7 @@ bool Trigger::canUpdate(const TriggerUpdateEvent *) const
 
 void Trigger::update(const TriggerUpdateEvent *event)
 {
-    m_absoluteAccumulatedDelta += std::abs(event->delta());
+    m_absoluteAccumulatedDelta += std::abs(event->m_delta);
     m_withinThreshold = !m_threshold || m_threshold->contains(m_absoluteAccumulatedDelta);
     if (!m_withinThreshold) {
         qCDebug(INPUTACTIONS_TRIGGER).noquote() << QString("Threshold not reached (id: %1, current: %2, min: %3, max: %4")
@@ -75,7 +80,7 @@ void Trigger::update(const TriggerUpdateEvent *event)
         return;
     }
 
-    qCDebug(INPUTACTIONS_TRIGGER).noquote() << QString("Trigger updated (id: %1, delta: %2)").arg(m_id, QString::number(event->delta()));
+    qCDebug(INPUTACTIONS_TRIGGER).noquote() << QString("Trigger updated (id: %1, delta: %2)").arg(m_id, QString::number(event->m_delta));
 
     if (!m_started) {
         qCDebug(INPUTACTIONS_TRIGGER).noquote() << QString("Trigger started (id: %1)").arg(m_id);
@@ -139,8 +144,8 @@ bool Trigger::overridesOtherTriggersOnEnd()
         return false;
     }
 
-    return std::any_of(m_actions.begin(), m_actions.end(), [](const auto &action) {
-        return (action->on() == On::End || action->on() == On::EndCancel) && action->canExecute();
+    return std::ranges::any_of(m_actions, [](const auto &action) {
+        return (action->m_on == On::End || action->m_on == On::EndCancel) && action->canExecute();
     });
 }
 
@@ -150,14 +155,14 @@ bool Trigger::overridesOtherTriggersOnUpdate()
         return false;
     }
 
-    return std::any_of(m_actions.begin(), m_actions.end(), [](const auto &action) {
-        return action->executed() || (action->on() == On::Update && action->canExecute());
+    return std::ranges::any_of(m_actions, [](const auto &action) {
+        return action->action()->m_executions || (action->m_on == On::Update && action->canExecute());
     });
 }
 
 void Trigger::actionAdded(TriggerAction *action)
 {
-    if (dynamic_cast<InputTriggerAction *>(action)) {
+    if (dynamic_cast<const InputAction *>(action->action())) {
         if (!m_clearModifiers) {
             m_clearModifiers = true;
         }
@@ -176,7 +181,7 @@ const std::vector<TriggerAction *> Trigger::actions()
 void Trigger::updateActions(const TriggerUpdateEvent *event)
 {
     for (const auto &action : m_actions) {
-        action->triggerUpdated(event->delta(), {});
+        action->triggerUpdated(event->m_delta, {});
     }
 }
 
@@ -230,26 +235,11 @@ const TriggerType &Trigger::type() const
     return m_type;
 }
 
-void Trigger::setType(TriggerType type)
-{
-    m_type = type;
-}
-
 void Trigger::reset()
 {
     m_started = false;
     m_absoluteAccumulatedDelta = 0;
     m_withinThreshold = false;
-}
-
-const qreal &TriggerUpdateEvent::delta() const
-{
-    return m_delta;
-}
-
-void TriggerUpdateEvent::setDelta(qreal delta)
-{
-    m_delta = delta;
 }
 
 }

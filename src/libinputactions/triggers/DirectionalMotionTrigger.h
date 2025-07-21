@@ -52,10 +52,6 @@ class DirectionalMotionTriggerUpdateEvent : public MotionTriggerUpdateEvent
 public:
     DirectionalMotionTriggerUpdateEvent() = default;
 
-    const TriggerDirection &direction() const;
-    void setDirection(TriggerDirection direction);
-
-private:
     TriggerDirection m_direction = UINT32_MAX;
 };
 
@@ -65,7 +61,7 @@ private:
 class DirectionalMotionTrigger : public MotionTrigger
 {
 public:
-    DirectionalMotionTrigger() = default;
+    DirectionalMotionTrigger(TriggerType type, TriggerDirection direction);
 
     /**
      * @return Whether the direction matches.
@@ -74,13 +70,11 @@ public:
      */
     bool canUpdate(const TriggerUpdateEvent *event) const override;
 
-    void setDirection(TriggerDirection direction);
-
 protected:
     void updateActions(const TriggerUpdateEvent *event) override;
 
 private:
-    TriggerDirection m_direction = 0;
+    TriggerDirection m_direction;
 };
 
 }

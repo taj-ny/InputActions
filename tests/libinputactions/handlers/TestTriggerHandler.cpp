@@ -57,6 +57,7 @@ void TestTriggerHandler::activateTriggers_cancelsAllTriggers()
     EXPECT_CALL(*m_handler, cancelTriggers(static_cast<TriggerTypes>(TriggerType::All)))
         .Times(Exactly(3));
 
+    auto trigger = std::make_unique<Trigger>(TriggerType::Swipe);
     m_handler->activateTriggers(TriggerType::Swipe);
     m_handler->activateTriggers(TriggerType::Swipe | TriggerType::Press);
     m_handler->activateTriggers(TriggerType::All);
@@ -112,8 +113,7 @@ void TestTriggerHandler::keyboardKey()
 
 MockTrigger *TestTriggerHandler::makeTrigger(TriggerType type, bool activatable)
 {
-    auto *trigger = new MockTrigger;
-    trigger->setType(type);
+    auto *trigger = new MockTrigger(type);
     ON_CALL(*trigger, canActivate(_))
         .WillByDefault(Return(activatable));
     return trigger;

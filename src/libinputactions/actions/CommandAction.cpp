@@ -16,18 +16,23 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include "CommandTriggerAction.h"
+#include "CommandAction.h"
 #include <thread>
 
 namespace libinputactions
 {
 
-CommandTriggerAction::CommandTriggerAction(const Value<QString> &command)
-    : m_command(command)
+CommandAction::CommandAction(Value<QString> command)
+    : m_command(std::move(command))
 {
 }
 
-void CommandTriggerAction::execute()
+bool CommandAction::async() const
+{
+    return m_command.expensive();
+}
+
+void CommandAction::executeImpl()
 {
     std::thread thread([this]() {
         const auto command = m_command.get().toStdString();

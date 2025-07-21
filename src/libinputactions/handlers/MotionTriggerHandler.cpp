@@ -117,16 +117,16 @@ bool MotionTriggerHandler::handleMotion(const QPointF &delta)
                 Q_UNREACHABLE();
         }
 
-        swipeEvent.setDelta(swipeAxis == Axis::Vertical ? delta.y() : delta.x());
-        swipeEvent.setDirection(static_cast<TriggerDirection>(direction));
-        swipeEvent.setDeltaMultiplied(delta * m_swipeDeltaMultiplier);
-        swipeEvent.setSpeed(speed);
+        swipeEvent.m_delta = swipeAxis == Axis::Vertical ? delta.y() : delta.x();
+        swipeEvent.m_direction = static_cast<TriggerDirection>(direction);
+        swipeEvent.m_deltaMultiplied = delta * m_swipeDeltaMultiplier;
+        swipeEvent.m_speed = speed;
         events[TriggerType::Swipe] = &swipeEvent;
     }
 
     if (hasStroke) {
-        strokeEvent.setDelta(deltaHypot);
-        strokeEvent.setSpeed(speed);
+        strokeEvent.m_delta = deltaHypot;
+        strokeEvent.m_speed = speed;
         events[TriggerType::Stroke] = &strokeEvent;
     }
 

@@ -37,10 +37,22 @@ public:
     static Value<T> command(Value<QString> command);
     static Value<T> variable(QString name);
 
+    /**
+     * Safe to call from other threads, will dispatch to main and block if required.
+     */
     T get() const;
+    /**
+     * Whether evaluating the value may be expensive.
+     */
+    bool expensive() const;
 
 private:
     std::variant<T, std::function<T()>> m_value;
+    /**
+     * Whether the value can only be evaluated on the main thread.
+     */
+    bool m_mainThreadOnly{};
+    bool m_expensive{};
 };
 
 }

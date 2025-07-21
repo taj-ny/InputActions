@@ -16,18 +16,35 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include "OneTriggerActionGroup.h"
+#include "ActionExecutor.h"
+#include "Action.h"
 
 namespace libinputactions
 {
 
-void OneTriggerActionGroup::execute()
+ActionExecutor::ActionExecutor()
 {
-    for (auto &action : m_actions) {
-        if (action->canExecute()) {
-            action->tryExecute();
+    m_sharedActionThreadPool.setMaxThreadCount(1);
+}
+
+void ActionExecutor::execute(const std::shared_ptr<Action> &action, ActionThread thread)
+{
+    const auto execute = [action = action]() { // copy action in case config gets reloaded while actions are scheduled
+        action->execute();
+    };
+    switch (thread) {
+        case ActionThread::Auto:
+            if (action->async() || m_sharedActionThreadPool.activeThreadCount()) {
+                m_sharedActionThreadPool.start(execute);
+                break;
+            }
+            [[fallthrough]];
+        case ActionThread::Current:
+            execute();
             break;
-        }
+        case ActionThread::Own:
+            m_ownActionThreadPool.start(execute);
+            break;
     }
 }
 

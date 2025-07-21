@@ -1,12 +1,8 @@
 #include "TestDirectionalMotionTrigger.h"
+#include <libinputactions/triggers/DirectionalMotionTrigger.h>
 
 namespace libinputactions
 {
-
-void TestDirectionalMotionTrigger::init()
-{
-    m_motionTrigger = std::make_unique<DirectionalMotionTrigger>();
-}
 
 void TestDirectionalMotionTrigger::canUpdate_data()
 {
@@ -80,16 +76,16 @@ void TestDirectionalMotionTrigger::canUpdate()
     QFETCH(std::vector<uint32_t>, valid);
     QFETCH(std::vector<uint32_t>, invalid);
 
-    m_motionTrigger->setDirection(direction);
+    auto trigger = std::make_unique<DirectionalMotionTrigger>(TriggerType::None, direction);
     for (const auto &validDirection : valid) {
         DirectionalMotionTriggerUpdateEvent event;
-        event.setDirection(validDirection);
-        QVERIFY(m_motionTrigger->canUpdate(&event));
+        event.m_direction = validDirection;
+        QVERIFY(trigger->canUpdate(&event));
     }
     for (const auto &invalidDirection : invalid) {
         DirectionalMotionTriggerUpdateEvent event;
-        event.setDirection(invalidDirection);
-        QVERIFY(!m_motionTrigger->canUpdate(&event));
+        event.m_direction = invalidDirection;
+        QVERIFY(!trigger->canUpdate(&event));
     }
 }
 

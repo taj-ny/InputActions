@@ -1,7 +1,5 @@
 #pragma once
 
-#include "mocks/MockTriggerAction.h"
-
 #include <QTest>
 
 namespace libinputactions

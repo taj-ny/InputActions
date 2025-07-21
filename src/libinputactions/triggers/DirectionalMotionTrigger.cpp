@@ -21,6 +21,12 @@
 namespace libinputactions
 {
 
+DirectionalMotionTrigger::DirectionalMotionTrigger(TriggerType type, TriggerDirection direction)
+    : MotionTrigger(type)
+    , m_direction(direction)
+{
+}
+
 bool DirectionalMotionTrigger::canUpdate(const TriggerUpdateEvent *event) const
 {
     if (!MotionTrigger::canUpdate(event)) {
@@ -28,12 +34,7 @@ bool DirectionalMotionTrigger::canUpdate(const TriggerUpdateEvent *event) const
     }
 
     const auto *castedEvent = dynamic_cast<const DirectionalMotionTriggerUpdateEvent *>(event);
-    return m_direction & castedEvent->direction();
-}
-
-void DirectionalMotionTrigger::setDirection(TriggerDirection direction)
-{
-    m_direction = direction;
+    return m_direction & castedEvent->m_direction;
 }
 
 void DirectionalMotionTrigger::updateActions(const TriggerUpdateEvent *event)
@@ -47,24 +48,14 @@ void DirectionalMotionTrigger::updateActions(const TriggerUpdateEvent *event)
         static_cast<TriggerDirection>(SwipeDirection::Left),
         static_cast<TriggerDirection>(SwipeDirection::Up),
     };
-    auto delta = castedEvent->delta();
+    auto delta = castedEvent->m_delta;
     if ((m_direction & (m_direction - 1)) == 0 && std::find(negativeDirections.begin(), negativeDirections.end(), m_direction) != negativeDirections.end()) {
         delta *= -1;
     }
 
     for (auto &action : actions()) {
-        action->triggerUpdated(delta, castedEvent->deltaMultiplied());
+        action->triggerUpdated(delta, castedEvent->m_deltaMultiplied);
     }
-}
-
-const TriggerDirection &DirectionalMotionTriggerUpdateEvent::direction() const
-{
-    return m_direction;
-}
-
-void DirectionalMotionTriggerUpdateEvent::setDirection(TriggerDirection direction)
-{
-    m_direction = direction;
 }
 
 }

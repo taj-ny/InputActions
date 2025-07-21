@@ -30,13 +30,6 @@ public:
 
     // Speed should be in a TriggerBeginEvent, but that's not a thing, and adding it would complicate everything.
     // Not worth it for a single property.
-    const TriggerSpeed &speed() const;
-    void setSpeed(TriggerSpeed speed);
-
-    const QPointF &deltaMultiplied() const;
-    void setDeltaMultiplied(const QPointF &delta);
-
-private:
     TriggerSpeed m_speed = TriggerSpeed::Any;
     QPointF m_deltaMultiplied{};
 };
@@ -47,7 +40,7 @@ private:
 class MotionTrigger : public Trigger
 {
 public:
-    MotionTrigger() = default;
+    MotionTrigger(TriggerType type = TriggerType::None);
 
     /**
      * @return Whether the speed matches.

@@ -1,15 +1,10 @@
 #include "TestMotionTrigger.h"
+#include <libinputactions/triggers/MotionTrigger.h>
 
 namespace libinputactions
 {
 
-void TestMotionTrigger::init()
-{
-    m_motionTrigger = std::make_unique<MotionTrigger>();
-    m_event = {};
-}
-
-void TestMotionTrigger::canUpdate_data()
+void TestMotionTrigger::canUpdate_speed_data()
 {
     QTest::addColumn<TriggerSpeed>("triggerSpeed");
     QTest::addColumn<TriggerSpeed>("eventSpeed");
@@ -26,36 +21,18 @@ void TestMotionTrigger::canUpdate_data()
     QTest::addRow("slow, slow") << TriggerSpeed::Slow << TriggerSpeed::Slow << true;
 }
 
-void TestMotionTrigger::canUpdate()
+void TestMotionTrigger::canUpdate_speed()
 {
     QFETCH(TriggerSpeed, triggerSpeed);
     QFETCH(TriggerSpeed, eventSpeed);
     QFETCH(bool, result);
 
-    m_motionTrigger->setSpeed(triggerSpeed);
-    m_event.setSpeed(eventSpeed);
+    auto trigger = std::make_unique<MotionTrigger>();
+    trigger->setSpeed(triggerSpeed);
+    MotionTriggerUpdateEvent event;
+    event.m_speed = eventSpeed;
 
-    QCOMPARE(m_motionTrigger->canUpdate(&m_event), result);
-}
-
-void TestMotionTrigger::hasSpeed_data()
-{
-    QTest::addColumn<TriggerSpeed>("speed");
-    QTest::addColumn<bool>("result");
-
-    QTest::addRow("any, any") << TriggerSpeed::Any << false;
-    QTest::addRow("fast") << TriggerSpeed::Fast << true;
-    QTest::addRow("slow") << TriggerSpeed::Slow << true;
-}
-
-void TestMotionTrigger::hasSpeed()
-{
-    QFETCH(TriggerSpeed, speed);
-    QFETCH(bool, result);
-
-    m_motionTrigger->setSpeed(speed);
-
-    QCOMPARE(m_motionTrigger->hasSpeed(), result);
+    QCOMPARE(trigger->canUpdate(&event), result);
 }
 
 }

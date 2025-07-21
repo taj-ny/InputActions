@@ -16,14 +16,42 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include "TriggerActionGroup.h"
+#pragma once
+
+#include "Action.h"
+#include <vector>
 
 namespace libinputactions
 {
 
-void TriggerActionGroup::add(std::unique_ptr<TriggerAction> action)
+/**
+ * Executes actions from the specified list in a specific way.
+ */
+class ActionGroup : public Action
 {
-    m_actions.push_back(std::move(action));
-}
+public:
+    enum class ExecutionMode
+    {
+        /**
+         * Executes all conditions that satisfy their condition.
+         */
+        All,
+        /**
+         * Executes the first action that satisfied its condition.
+         */
+        First,
+    };
+
+    ActionGroup(std::vector<std::shared_ptr<Action>> actions, ExecutionMode mode = ExecutionMode::All);
+
+    bool async() const override;
+
+protected:
+    void executeImpl() override;
+
+private:
+    std::vector<std::shared_ptr<Action>> m_actions;
+    ExecutionMode m_mode;
+};
 
 }

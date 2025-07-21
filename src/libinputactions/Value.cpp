@@ -17,6 +17,7 @@
 */
 
 #include "Value.h"
+#include "InputActions.h"
 #include <QProcess>
 #include <libinputactions/globals.h>
 #include <libinputactions/variables/VariableManager.h>
@@ -46,9 +47,18 @@ Value<T>::Value(std::function<T()> getter)
 }
 
 template<typename T>
+Value<T>::Value(Expression<T> expression)
+{
+    m_value = [expression = std::move(expression)] {
+        return expression.evaluate();
+    };
+    m_mainThreadOnly = true; // uses variables
+}
+
+template<typename T>
 Value<T> Value<T>::command(Value<QString> command)
 {
-    return Value<T>([command = std::move(command)]() {
+    auto value = Value<T>([command = std::move(command)]() {
         QProcess process;
         process.setProgram("/bin/sh");
         process.setArguments({"-c", command.get()});
@@ -56,22 +66,18 @@ Value<T> Value<T>::command(Value<QString> command)
         process.waitForFinished();
         return fromString<T>(process.readAllStandardOutput());
     });
+    value.m_expensive = true;
+    return value;
 }
 
 template<typename T>
 Value<T> Value<T>::variable(QString name)
 {
-    return Value<T>([name = std::move(name)]() {
+    auto value = Value<T>([name = std::move(name)]() {
         return g_variableManager->getVariable<T>(name)->get().value();
     });
-}
-
-template<typename T>
-Value<T>::Value(Expression<T> expression)
-{
-    m_value = [expression = std::move(expression)] {
-        return expression.evaluate();
-    };
+    value.m_mainThreadOnly = true;
+    return value;
 }
 
 template<typename T>
@@ -79,14 +85,28 @@ T Value<T>::get() const
 {
     // clang-format off
     return std::visit(overloads {
-        [](const T &value) -> T {
+        [](const T &value) {
             return value;
         },
-        [](const std::function<T()> &getter) {
-            return getter();
+        [this](const std::function<T()> &getter) {
+            T value;
+            if (m_mainThreadOnly) {
+                g_inputActions->runOnMainThread([&value, getter]() {
+                    value = getter();
+                });
+            } else {
+                value = getter();
+            }
+            return value;
         }
     }, m_value);
     // clang-format on
+}
+
+template<typename T>
+bool Value<T>::expensive() const
+{
+    return m_expensive;
 }
 
 template class Value<QString>;
