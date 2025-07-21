@@ -116,22 +116,27 @@ void HyprlandInputBackend::checkDeviceChanges()
             // input device it will have the previous one of the same type.
             auto &events = pointer->m_pointerEvents;
             if (pointer->m_isTouchpad) {
-                for (auto *hyprlandSignal : {&events.axis, &events.button, &events.motion, &events.holdBegin, &events.pinchBegin, &events.swipeBegin}) {
-                    newDevice.listeners.push_back(hyprlandSignal->registerListener([this, device](const std::any &) {
-                        if (auto *foundDevice = findDevice(device.get())) {
-                            m_currentPointingDevice = foundDevice->libinputactionsDevice.get();
-                            m_currentTouchpad = m_currentPointingDevice;
-                        }
-                    }));
-                }
+                const auto listener = [this, device](const auto &) {
+                    if (auto *foundDevice = findDevice(device.get())) {
+                        m_currentPointingDevice = foundDevice->libinputactionsDevice.get();
+                        m_currentTouchpad = m_currentPointingDevice;
+                    }
+                };
+                newDevice.listeners.push_back(events.axis.registerListener(listener));
+                newDevice.listeners.push_back(events.button.registerListener(listener));
+                newDevice.listeners.push_back(events.motion.registerListener(listener));
+                newDevice.listeners.push_back(events.holdBegin.registerListener(listener));
+                newDevice.listeners.push_back(events.pinchBegin.registerListener(listener));
+                newDevice.listeners.push_back(events.swipeBegin.registerListener(listener));
             } else {
-                for (auto *hyprlandSignal : {&events.axis, &events.button, &events.motion}) {
-                    newDevice.listeners.push_back(hyprlandSignal->registerListener([this, device](const std::any &) {
-                        if (auto *foundDevice = findDevice(device.get())) {
-                            m_currentPointingDevice = foundDevice->libinputactionsDevice.get();
-                        }
-                    }));
-                }
+                const auto listener = [this, device](const auto &) {
+                    if (auto *foundDevice = findDevice(device.get())) {
+                        m_currentPointingDevice = foundDevice->libinputactionsDevice.get();
+                    }
+                };
+                newDevice.listeners.push_back(events.axis.registerListener(listener));
+                newDevice.listeners.push_back(events.button.registerListener(listener));
+                newDevice.listeners.push_back(events.motion.registerListener(listener));
             }
         } else {
             continue;
