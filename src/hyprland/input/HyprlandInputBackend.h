@@ -53,6 +53,7 @@ public:
 
 private:
     void checkDeviceChanges();
+    void deviceRemoved(const HyprlandInputDevice &device);
 
     void keyboardKey(SCallbackInfo &info, const std::any &data);
 

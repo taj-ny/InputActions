@@ -82,10 +82,9 @@ void HyprlandInputBackend::initialize()
 void HyprlandInputBackend::reset()
 {
     for (const auto &device : m_devices) {
-        deviceRemoved(device.libinputactionsDevice.get());
+        deviceRemoved(device);
     }
     m_devices.clear();
-    m_hyprlandDevices.clear();
     LibinputCompositorInputBackend::reset();
 }
 
@@ -152,13 +151,24 @@ void HyprlandInputBackend::checkDeviceChanges()
         if (!std::ranges::any_of(devices, [it](const auto &device) {
                 return device.get() == it->hyprlandDevice;
             })) {
-            deviceRemoved(it->libinputactionsDevice.get());
-            std::erase(m_hyprlandDevices, it->hyprlandDevice);
+            deviceRemoved(*it);
             it = m_devices.erase(it);
             continue;
         }
         it++;
     }
+}
+
+void HyprlandInputBackend::deviceRemoved(const HyprlandInputDevice &device)
+{
+    if (m_currentPointingDevice == device.libinputactionsDevice.get()) {
+        m_currentPointingDevice = nullptr;
+    }
+    if (m_currentTouchpad == device.libinputactionsDevice.get()) {
+        m_currentTouchpad = nullptr;
+    }
+    std::erase(m_hyprlandDevices, device.hyprlandDevice);
+    LibinputCompositorInputBackend::deviceRemoved(device.libinputactionsDevice.get());
 }
 
 void HyprlandInputBackend::keyboardKey(SCallbackInfo &info, const std::any &data)
