@@ -27,11 +27,11 @@ class HyprlandWindow : public libinputactions::Window
 public:
     HyprlandWindow(CWindow *window);
 
-    std::optional<QString> id();
-    std::optional<QRectF> geometry();
-    std::optional<QString> title();
-    std::optional<QString> resourceClass();
-    std::optional<bool> fullscreen();
+    std::optional<QString> id() override;
+    std::optional<QRectF> geometry() override;
+    std::optional<QString> title() override;
+    std::optional<QString> resourceClass() override;
+    std::optional<bool> fullscreen() override;
 
 private:
     CWindow *m_window;
