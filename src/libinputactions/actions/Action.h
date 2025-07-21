@@ -18,6 +18,7 @@
 
 #pragma once
 
+#include <QString>
 #include <memory>
 
 namespace libinputactions
@@ -31,18 +32,39 @@ public:
     Action();
     virtual ~Action();
 
+    bool canExecute() const;
     /**
-     * Do not call directly, use ActionExecutor instead. This method is not guaranteed to be called from the main thread. Implementations should use
-     * InputActions::runOnMainThread to schedule code to run on the main thread.
+     * Do not call directly, use ActionExecutor instead.
+     * @see executeImpl
      */
-    virtual void execute() const = 0;
+    void execute();
     /**
      * Whether the action should be executed asynchronously. A value of false does not guarantee that the action will be executed synchronously.
      * @see ActionExecutor::execute
      */
     virtual bool async() const;
 
-    std::shared_ptr<const Condition> m_condition;
+    void reset();
+
+    /**
+     * Must be satisfied in order for the action to be executed.
+     */
+    std::shared_ptr<Condition> m_condition;
+    /**
+     * Must be unique.
+     */
+    QString m_id;
+    /**
+     * Executions since last reset.
+     */
+    uint32_t m_executions{};
+
+protected:
+    /**
+     * This method is not guaranteed to be called from the main thread. Implementations should use InputActions::runOnMainThread to schedule code to run on the
+     * main thread.
+     */
+    virtual void executeImpl() {};
 };
 
 }

@@ -44,8 +44,10 @@ public:
 
     ActionGroup(std::vector<std::shared_ptr<Action>> actions, ExecutionMode mode = ExecutionMode::All);
 
-    void execute() const override;
     bool async() const override;
+
+protected:
+    void executeImpl() override;
 
 private:
     std::vector<std::shared_ptr<Action>> m_actions;

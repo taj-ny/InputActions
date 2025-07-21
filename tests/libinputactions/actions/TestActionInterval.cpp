@@ -1,4 +1,5 @@
 #include "TestActionInterval.h"
+#include <libinputactions/actions/TriggerAction.h>
 
 namespace libinputactions
 {

@@ -32,7 +32,10 @@ class CommandAction : public Action
 public:
     CommandAction(Value<QString> command);
 
-    virtual void execute() const override;
+    bool async() const override;
+
+protected:
+    void executeImpl() override;
 
 private:
     Value<QString> m_command;

@@ -27,7 +27,12 @@ CommandAction::CommandAction(Value<QString> command)
 {
 }
 
-void CommandAction::execute() const
+bool CommandAction::async() const
+{
+    return m_command.expensive();
+}
+
+void CommandAction::executeImpl()
 {
     std::thread thread([this]() {
         const auto command = m_command.get().toStdString();

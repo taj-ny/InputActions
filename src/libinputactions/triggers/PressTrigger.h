@@ -28,15 +28,9 @@ class PressTrigger : public Trigger
 public:
     PressTrigger();
 
-    const bool &instant() const;
     /**
-     * Currently only applies to mouse gestures.
-     * @param instant Whether the trigger should be activated immediately, preventing normal clicks from being
-     * performed.
+     * Whether the trigger should be activated immediately, preventing normal clicks from being performed. Currently only applies to mouse gestures.
      */
-    void setInstant(bool instant);
-
-private:
     bool m_instant = false;
 };
 

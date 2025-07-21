@@ -587,7 +587,7 @@ static const Node asSequence(const Node &node)
 {
     Node result(NodeType::Sequence);
     if (node.IsSequence()) {
-        for (const auto &child : node) {
+        for (const auto &child: node) {
             result.push_back(child);
         }
     } else {
@@ -623,7 +623,7 @@ static bool isEnum(const std::type_index &type)
 template<typename T>
 struct convert<Range<T>>
 {
-    static bool decode(const Node &node, Range<T> &range)
+    static bool decode(const Node &node, Range <T> &range)
     {
         const auto rangeRaw = node.as<QString>().replace(" ", "");
         if (rangeRaw.contains("-")) {
@@ -660,16 +660,16 @@ struct convert<std::shared_ptr<VariableCondition>>
         }
 
         static const std::unordered_map<QString, ComparisonOperator> operators = {
-            {"==", ComparisonOperator::EqualTo},
-            {"!=", ComparisonOperator::NotEqualTo},
-            {">", ComparisonOperator::GreaterThan},
-            {">=", ComparisonOperator::GreaterThanOrEqual},
-            {"<", ComparisonOperator::LessThan},
-            {"<=", ComparisonOperator::LessThanOrEqual},
+            {"==",       ComparisonOperator::EqualTo},
+            {"!=",       ComparisonOperator::NotEqualTo},
+            {">",        ComparisonOperator::GreaterThan},
+            {">=",       ComparisonOperator::GreaterThanOrEqual},
+            {"<",        ComparisonOperator::LessThan},
+            {"<=",       ComparisonOperator::LessThanOrEqual},
             {"contains", ComparisonOperator::Contains},
-            {"between", ComparisonOperator::Between},
-            {"matches", ComparisonOperator::Regex},
-            {"one_of", ComparisonOperator::OneOf},
+            {"between",  ComparisonOperator::Between},
+            {"matches",  ComparisonOperator::Regex},
+            {"one_of",   ComparisonOperator::OneOf},
         };
         const auto operatorRaw = raw.mid(firstSpace + 1, secondSpace - firstSpace - 1);
         if (!operators.contains(operatorRaw)) {
@@ -682,7 +682,7 @@ struct convert<std::shared_ptr<VariableCondition>>
         std::vector<std::any> right;
 
         if (!isEnum(variable->type()) && rightNode.IsSequence()) {
-            for (const auto &child : rightNode) {
+            for (const auto &child: rightNode) {
                 right.push_back(asAny(child, variable->type()));
             }
         } else if (rightRaw.contains(';')) {
@@ -723,7 +723,7 @@ struct convert<std::shared_ptr<Condition>>
             }
             if (groupMode) {
                 auto group = std::make_shared<ConditionGroup>(*groupMode);
-                for (const auto &child : groupChildren) {
+                for (const auto &child: groupChildren) {
                     group->add(child.as<std::shared_ptr<Condition>>());
                 }
                 condition = group;
@@ -761,7 +761,7 @@ struct convert<std::shared_ptr<Condition>>
         // Not in any group
         if (node.IsSequence()) {
             auto group = std::make_shared<ConditionGroup>(isLegacy(node[0]) ? ConditionGroupMode::Any : ConditionGroupMode::All);
-            for (const auto &child : node) {
+            for (const auto &child: node) {
                 group->add(child.as<std::shared_ptr<Condition>>());
             }
             condition = group;
@@ -791,7 +791,7 @@ struct convert<std::set<T>>
 {
     static bool decode(const Node &node, std::set<T> &set)
     {
-        for (const auto &child : node) {
+        for (const auto &child: node) {
             set.insert(child.as<T>());
         }
         return true;
@@ -827,12 +827,12 @@ struct convert<std::vector<std::unique_ptr<InputEventHandler>>>
     static bool decode(const Node &node, std::vector<std::unique_ptr<InputEventHandler>> &handlers)
     {
         if (const auto &mouseNode = node["mouse"]) {
-            for (const auto &mouseHandler : asSequence(mouseNode)) {
+            for (const auto &mouseHandler: asSequence(mouseNode)) {
                 handlers.push_back(decodeHandler<MouseTriggerHandler>(mouseHandler));
             }
         }
         if (const auto &touchpadNode = node["touchpad"]) {
-            for (const auto &touchpadHandler : asSequence(touchpadNode)) {
+            for (const auto &touchpadHandler: asSequence(touchpadNode)) {
                 handlers.push_back(decodeHandler<TouchpadTriggerHandler>(touchpadHandler));
             }
         }
@@ -845,10 +845,10 @@ struct convert<std::vector<std::unique_ptr<Trigger>>>
 {
     static bool decode(const Node &node, std::vector<std::unique_ptr<Trigger>> &triggers)
     {
-        for (const auto &triggerNode : node) {
+        for (const auto &triggerNode: node) {
             if (const auto &subTriggersNode = triggerNode["gestures"]) {
                 // Trigger group
-                for (const auto &subTriggerNode : subTriggersNode) {
+                for (const auto &subTriggerNode: subTriggersNode) {
                     // Trigger group
                     auto clonedNode = Clone(subTriggerNode);
                     for (auto it = triggerNode.begin(); it != triggerNode.end(); it++) {
@@ -870,7 +870,7 @@ struct convert<std::vector<std::unique_ptr<Trigger>>>
 
                     Node list;
                     list.push_back(clonedNode);
-                    for (auto &trigger : list.as<std::vector<std::unique_ptr<Trigger>>>()) {
+                    for (auto &trigger: list.as<std::vector<std::unique_ptr<Trigger>>>()) {
                         triggers.push_back(std::move(trigger));
                     }
                 }
@@ -890,35 +890,21 @@ struct convert<std::unique_ptr<Trigger>>
     {
         const auto type = node["type"].as<QString>();
         if (type == "click") {
-            trigger = std::make_unique<Trigger>();
-            trigger->setType(TriggerType::Click);
+            trigger = std::make_unique<Trigger>(TriggerType::Click);
         } else if (type == "hold" || type == "press") {
             auto pressTrigger = new PressTrigger;
-            pressTrigger->setInstant(node["instant"].as<bool>(false));
+            pressTrigger->m_instant = node["instant"].as<bool>(false);
             trigger.reset(pressTrigger);
         } else if (type == "pinch") {
-            auto pinchTrigger = new DirectionalMotionTrigger;
-            pinchTrigger->setType(TriggerType::Pinch);
-            pinchTrigger->setDirection(static_cast<TriggerDirection>(node["direction"].as<PinchDirection>()));
-            trigger.reset(pinchTrigger);
+            trigger = std::make_unique<DirectionalMotionTrigger>(TriggerType::Pinch, static_cast<TriggerDirection>(node["direction"].as<PinchDirection>()));
         } else if (type == "stroke") {
-            auto strokeTrigger = new StrokeTrigger;
-            strokeTrigger->setStrokes(asSequence(node["strokes"]).as<std::vector<Stroke>>());
-            trigger.reset(strokeTrigger);
+            trigger = std::make_unique<StrokeTrigger>(asSequence(node["strokes"]).as<std::vector<Stroke>>());
         } else if (type == "swipe") {
-            auto swipeTrigger = new DirectionalMotionTrigger;
-            swipeTrigger->setType(TriggerType::Swipe);
-            swipeTrigger->setDirection(static_cast<TriggerDirection>(node["direction"].as<SwipeDirection>()));
-            trigger.reset(swipeTrigger);
+            trigger = std::make_unique<DirectionalMotionTrigger>(TriggerType::Swipe, static_cast<TriggerDirection>(node["direction"].as<SwipeDirection>()));
         } else if (type == "rotate") {
-            auto rotateTrigger = new DirectionalMotionTrigger;
-            rotateTrigger->setType(TriggerType::Rotate);
-            rotateTrigger->setDirection(static_cast<TriggerDirection>(node["direction"].as<RotateDirection>()));
-            trigger.reset(rotateTrigger);
+            trigger = std::make_unique<DirectionalMotionTrigger>(TriggerType::Rotate, static_cast<TriggerDirection>(node["direction"].as<RotateDirection>()));
         } else if (type == "wheel") {
-            auto wheelTrigger = new WheelTrigger;
-            wheelTrigger->setDirection(static_cast<TriggerDirection>(node["direction"].as<SwipeDirection>()));
-            trigger.reset(wheelTrigger);
+            trigger = std::make_unique<WheelTrigger>(static_cast<TriggerDirection>(node["direction"].as<SwipeDirection>()));
         } else {
             throw Exception(node.Mark(), "Invalid trigger type");
         }
@@ -970,7 +956,7 @@ struct convert<std::unique_ptr<Trigger>>
         if (const auto &endConditionsNode = node["end_conditions"]) {
             trigger->setEndCondition(endConditionsNode.as<std::shared_ptr<Condition>>());
         }
-        for (const auto &actionNode : node["actions"]) {
+        for (const auto &actionNode: node["actions"]) {
             trigger->addAction(actionNode.as<std::unique_ptr<TriggerAction>>());
         }
         if (const auto &clearModifiersNode = node["clear_modifiers"]) {
@@ -994,24 +980,18 @@ struct convert<std::unique_ptr<Trigger>>
 template<>
 struct convert<std::unique_ptr<TriggerAction>>
 {
-    static bool decode(const Node &node, std::unique_ptr<TriggerAction> &value)
-    {
+    static bool decode(const Node &node, std::unique_ptr<TriggerAction> &value) {
         value = std::make_unique<TriggerAction>(node.as<std::shared_ptr<Action>>());
-        value->setName(node["name"].as<QString>(value->name()));
 
-        Range<qreal> threshold;
         if (const auto &thresholdNode = node["threshold"]) {
-            threshold = thresholdNode.as<Range<qreal>>();
-            value->setThreshold(threshold);
+            value->m_threshold = thresholdNode.as<Range<qreal>>();
         }
 
-        const auto on = node["on"].as<On>(On::End);
-        if (on == On::Begin && (threshold.min() || threshold.max())) {
+        value->m_on = node["on"].as<On>(On::End);
+        if (value->m_on == On::Begin && value->m_threshold && (value->m_threshold->min() || value->m_threshold->max())) {
             throw Exception(node.Mark(), "Begin actions can't have thresholds");
         }
-
-        value->setOn(on);
-        value->setRepeatInterval(node["interval"].as<ActionInterval>(ActionInterval()));
+        value->m_interval = node["interval"].as<ActionInterval>(ActionInterval());
 
         return true;
     }
@@ -1040,6 +1020,9 @@ struct convert<std::shared_ptr<Action>>
 
         if (const auto &conditionsNode = node["conditions"]) {
             value->m_condition = conditionsNode.as<std::shared_ptr<Condition>>();
+        }
+        if (const auto &idNode = node["id"]) {
+            value->m_id = idNode.as<QString>();
         }
 
         return true;

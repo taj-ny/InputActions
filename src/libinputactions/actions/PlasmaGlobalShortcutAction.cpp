@@ -28,7 +28,7 @@ PlasmaGlobalShortcutAction::PlasmaGlobalShortcutAction(QString component, QStrin
 {
 }
 
-void PlasmaGlobalShortcutAction::execute() const
+void PlasmaGlobalShortcutAction::executeImpl()
 {
     QDBusInterface interface("org.kde.kglobalaccel", "/component/" + m_component, "org.kde.kglobalaccel.Component");
     interface.call("invokeShortcut", m_shortcut);

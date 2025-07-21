@@ -30,7 +30,7 @@ InputAction::InputAction(std::vector<Item> sequence)
 {
 }
 
-void InputAction::execute() const
+void InputAction::executeImpl()
 {
     for (const auto &item : m_sequence) {
         const auto keyboardText = item.keyboardText.get();
@@ -70,7 +70,7 @@ void InputAction::execute() const
 bool InputAction::async() const
 {
     return std::ranges::any_of(m_sequence, [](const auto &item) {
-        return item.keyboardText.source() == ValueSource::Command;
+        return item.keyboardText.expensive();
     });
 }
 

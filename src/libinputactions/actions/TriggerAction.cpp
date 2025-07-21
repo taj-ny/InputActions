@@ -26,20 +26,21 @@ namespace libinputactions
 {
 
 TriggerAction::TriggerAction(std::shared_ptr<Action> action)
-    : m_action(std::move(action))
 {
+    if (action) {
+        m_action = std::move(action);
+    } else {
+        m_action = std::make_shared<Action>();
+    }
 }
 
 TriggerAction::~TriggerAction() = default;
 
 void TriggerAction::triggerStarted()
 {
-    m_executed = false;
     if (m_on == On::Begin) {
         tryExecute();
     }
-
-    reset();
 }
 
 void TriggerAction::triggerUpdated(qreal delta, const QPointF &deltaPointMultiplied)
@@ -54,12 +55,13 @@ void TriggerAction::triggerUpdated(qreal delta, const QPointF &deltaPointMultipl
     if (std::signbit(m_accumulatedDelta) != std::signbit(delta)) {
         // Direction changed
         m_accumulatedDelta = delta;
-        qCDebug(INPUTACTIONS_ACTION).noquote() << QString("Gesture direction changed (name: %1)").arg(m_name);
+        qCDebug(INPUTACTIONS_ACTION).noquote() << QString("Gesture direction changed (id: %1)").arg(m_action->m_id);
     } else {
         m_accumulatedDelta += delta;
         m_absoluteAccumulatedDelta += std::abs(delta);
     }
-    qCDebug(INPUTACTIONS_ACTION()).noquote() << QString("Action updated (name: %1, accumulatedDelta: %2)").arg(m_name, QString::number(m_accumulatedDelta));
+    qCDebug(INPUTACTIONS_ACTION()).noquote() << QString("Action updated (id: %1, accumulatedDelta: %2)").arg(m_action->m_id,
+                                                                                                             QString::number(m_accumulatedDelta));
 
     if (m_on != On::Update) {
         return;
@@ -86,8 +88,6 @@ void TriggerAction::triggerEnded()
     if (m_on == On::End || m_on == On::EndCancel) {
         tryExecute();
     }
-
-    m_executed = false;
     reset();
 }
 
@@ -96,66 +96,26 @@ void TriggerAction::triggerCancelled()
     if (m_on == On::Cancel || m_on == On::EndCancel) {
         tryExecute();
     }
-
-    m_executed = false;
     reset();
 }
 
 void TriggerAction::tryExecute()
 {
-    if (!canExecute()) {
-        return;
+    if (canExecute()) {
+        g_actionExecutor->execute(m_action);
     }
-
-    qCDebug(INPUTACTIONS_ACTION).noquote() << QString("Action executed (name: %1)").arg(m_name);
-    g_actionExecutor->execute(m_action);
-    m_executed = true;
 }
 
 bool TriggerAction::canExecute() const
 {
-    return (!m_action->m_condition || m_action->m_condition->satisfied()) && (!m_threshold || m_threshold->contains(m_absoluteAccumulatedDelta));
+    return m_action->canExecute() && (!m_threshold || m_threshold->contains(m_absoluteAccumulatedDelta));
 }
 
 void TriggerAction::reset()
 {
+    m_action->reset();
     m_accumulatedDelta = 0;
     m_absoluteAccumulatedDelta = 0;
-}
-
-const bool &TriggerAction::executed() const
-{
-    return m_executed;
-}
-
-const QString &TriggerAction::name() const
-{
-    return m_name;
-}
-
-void TriggerAction::setName(const QString &name)
-{
-    m_name = name;
-}
-
-const On &TriggerAction::on() const
-{
-    return m_on;
-}
-
-void TriggerAction::setRepeatInterval(const ActionInterval &interval)
-{
-    m_interval = interval;
-}
-
-void TriggerAction::setThreshold(const Range<qreal> &threshold)
-{
-    m_threshold = threshold;
-}
-
-void TriggerAction::setOn(On on)
-{
-    m_on = on;
 }
 
 const Action *TriggerAction::action() const

@@ -87,10 +87,9 @@ private:
 class StrokeTrigger : public MotionTrigger
 {
 public:
-    StrokeTrigger();
+    StrokeTrigger(std::vector<Stroke> strokes);
 
     const std::vector<Stroke> &strokes() const;
-    void setStrokes(const std::vector<Stroke> &strokes);
 
 private:
     std::vector<Stroke> m_strokes;

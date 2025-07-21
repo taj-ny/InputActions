@@ -21,10 +21,15 @@
 namespace libinputactions
 {
 
+MotionTrigger::MotionTrigger(TriggerType type)
+    : Trigger(type)
+{
+}
+
 bool MotionTrigger::canUpdate(const TriggerUpdateEvent *event) const
 {
     const auto *castedEvent = dynamic_cast<const MotionTriggerUpdateEvent *>(event);
-    return m_speed == TriggerSpeed::Any || m_speed == castedEvent->speed();
+    return m_speed == TriggerSpeed::Any || m_speed == castedEvent->m_speed;
 }
 
 bool MotionTrigger::hasSpeed() const
@@ -41,28 +46,8 @@ void MotionTrigger::updateActions(const TriggerUpdateEvent *event)
 {
     const auto *castedEvent = dynamic_cast<const MotionTriggerUpdateEvent *>(event);
     for (auto &action : actions()) {
-        action->triggerUpdated(event->delta(), castedEvent->deltaMultiplied());
+        action->triggerUpdated(event->m_delta, castedEvent->m_deltaMultiplied);
     }
-}
-
-const TriggerSpeed &MotionTriggerUpdateEvent::speed() const
-{
-    return m_speed;
-}
-
-void MotionTriggerUpdateEvent::setSpeed(TriggerSpeed speed)
-{
-    m_speed = speed;
-}
-
-const QPointF &MotionTriggerUpdateEvent::deltaMultiplied() const
-{
-    return m_deltaMultiplied;
-}
-
-void MotionTriggerUpdateEvent::setDeltaMultiplied(const QPointF &delta)
-{
-    m_deltaMultiplied = delta;
 }
 
 }

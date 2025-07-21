@@ -43,11 +43,7 @@ public:
     TriggerUpdateEvent() = default;
     virtual ~TriggerUpdateEvent() = default;
 
-    const qreal &delta() const;
-    void setDelta(qreal delta);
-
-private:
-    qreal m_delta = 0;
+    qreal m_delta{};
 };
 
 /**
@@ -55,10 +51,12 @@ private:
  *
  * Triggers are managed by a trigger handler.
  */
-class Trigger
+class Trigger : public QObject
 {
+    Q_OBJECT
+
 public:
-    Trigger() = default;
+    Trigger(TriggerType type = TriggerType::None);
     virtual ~Trigger() = default;
 
     void addAction(std::unique_ptr<TriggerAction> action);
@@ -156,10 +154,10 @@ public:
     void setId(const QString &value);
 
     const TriggerType &type() const;
-    /**
-     * Required.
-     */
-    void setType(TriggerType type);
+
+signals:
+    void cancelled();
+    void ended();
 
 protected:
     /**

@@ -10,7 +10,10 @@ namespace libinputactions
 class MockTrigger : public Trigger
 {
 public:
-    MockTrigger() = default;
+    MockTrigger(TriggerType type = TriggerType::None)
+        : Trigger(type)
+    {
+    }
 
     MOCK_METHOD(bool, canActivate, (const TriggerActivationEvent *event), (const, override));
 };

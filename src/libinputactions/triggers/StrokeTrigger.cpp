@@ -41,14 +41,10 @@
 namespace libinputactions
 {
 
-StrokeTrigger::StrokeTrigger()
+StrokeTrigger::StrokeTrigger(std::vector<Stroke> strokes)
+    : MotionTrigger(TriggerType::Stroke)
+    , m_strokes(std::move(strokes))
 {
-    setType(TriggerType::Stroke);
-}
-
-void StrokeTrigger::setStrokes(const std::vector<Stroke> &strokes)
-{
-    m_strokes = strokes;
 }
 
 const std::vector<Stroke> &StrokeTrigger::strokes() const

@@ -29,7 +29,8 @@ class PlasmaGlobalShortcutAction : public Action
 public:
     PlasmaGlobalShortcutAction(QString component, QString shortcut);
 
-    void execute() const override;
+protected:
+    void executeImpl() override;
 
 private:
     QString m_component;

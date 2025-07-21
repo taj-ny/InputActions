@@ -94,69 +94,59 @@ private:
 class TriggerAction
 {
 public:
-    TriggerAction(std::shared_ptr<Action> data);
+    /**
+     * @param action If nullptr, will be constructed.
+     */
+    TriggerAction(std::shared_ptr<Action> action = {});
     virtual ~TriggerAction();
 
     /**
      * Called by the trigger.
      * @internal
      */
-    TEST_VIRTUAL void triggerStarted();
+    void triggerStarted();
     /**
      * Called by the trigger.
      * @internal
      */
-    TEST_VIRTUAL void triggerUpdated(qreal delta, const QPointF &deltaPointMultiplied);
+    void triggerUpdated(qreal delta, const QPointF &deltaPointMultiplied);
     /**
      * Called by the trigger.
      * @internal
      */
-    TEST_VIRTUAL void triggerEnded();
+    void triggerEnded();
     /**
      * Called by the trigger.
      * @internal
      */
-    TEST_VIRTUAL void triggerCancelled();
+    void triggerCancelled();
 
     /**
      * Executes the action if it can be executed.
      * @see canExecute
      */
-    TEST_VIRTUAL void tryExecute();
-    /**
-     * @return Whether the action had been executed during the trigger.
-     */
-    TEST_VIRTUAL const bool &executed() const;
+    void tryExecute();
     /**
      * @return Whether the condition and threshold are satisfied.
      */
-    TEST_VIRTUAL bool canExecute() const;
+    bool canExecute() const;
 
-    const QString &name() const;
-    /**
-     * @param name Used in debug logs.
-     */
-    void setName(const QString &name);
-
-    const On &on() const;
-    /**
-     * @param on The point of the trigger's lifecycle at which the action should be executed.
-     */
-    void setOn(On on);
+    const Action *action() const;
 
     /**
-     * @param interval How often and when an update action should repeat.
+     * The point of the trigger's lifecycle at which the action should be executed.
      */
-    void setRepeatInterval(const ActionInterval &interval);
-
+    On m_on = On::End;
+    /**
+     * How often and when an update action should repeat.
+     */
+    ActionInterval m_interval;
     /**
      * Sets how far the trigger needs to progress in order for the action to be executed. Thresholds are always
      * positive.
      * @remark Begin actions can't have thresholds. Set the threshold on the trigger instead.
      */
-    void setThreshold(const Range<qreal> &threshold);
-
-    const Action *action() const;
+    std::optional<Range<qreal>> m_threshold;
 
 private:
     /**
@@ -164,12 +154,7 @@ private:
      */
     void reset();
 
-    QString m_name = "Unnamed action";
-    On m_on = On::End;
-    ActionInterval m_interval;
-    std::optional<Range<qreal>> m_threshold;
     std::shared_ptr<Action> m_action;
-    bool m_executed{};
 
     /**
      * The sum of deltas from update events. Reset when the direction changes.

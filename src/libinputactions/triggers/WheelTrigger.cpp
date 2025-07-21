@@ -21,15 +21,15 @@
 namespace libinputactions
 {
 
-WheelTrigger::WheelTrigger()
+WheelTrigger::WheelTrigger(TriggerDirection direction)
+    : DirectionalMotionTrigger(TriggerType::Wheel, direction)
 {
-    setType(TriggerType::Wheel);
 }
 
 void WheelTrigger::actionAdded(TriggerAction *action)
 {
     DirectionalMotionTrigger::actionAdded(action);
-    if (action->on() == On::Update) {
+    if (action->m_on == On::Update) {
         m_continuous = true;
     }
 }

@@ -29,7 +29,7 @@ ActionExecutor::ActionExecutor()
 
 void ActionExecutor::execute(const std::shared_ptr<Action> &action, ActionThread thread)
 {
-    const auto execute = [action = action]() { // copy in case config gets reloaded while actions are scheduled
+    const auto execute = [action = action]() { // copy action in case config gets reloaded while actions are scheduled
         action->execute();
     };
     switch (thread) {
@@ -38,7 +38,7 @@ void ActionExecutor::execute(const std::shared_ptr<Action> &action, ActionThread
                 m_sharedActionThreadPool.start(execute);
                 break;
             }
-            Q_FALLTHROUGH();
+            [[fallthrough]];
         case ActionThread::Current:
             execute();
             break;

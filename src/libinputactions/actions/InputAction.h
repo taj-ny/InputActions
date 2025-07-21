@@ -47,13 +47,15 @@ public:
 
     InputAction(std::vector<Item> sequence);
 
-    void execute() const override;
     bool async() const override;
 
     /**
      * Temporary hack, do not set outside of TriggerAction.
      */
     QPointF m_deltaMultiplied;
+
+protected:
+    void executeImpl() override;
 
 private:
     std::vector<Item> m_sequence;

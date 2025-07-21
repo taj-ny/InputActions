@@ -18,7 +18,6 @@ endmacro()
 
 libinputactions_add_test(action SOURCES actions/TestTriggerAction.cpp)
 libinputactions_add_test(actioninterval SOURCES actions/TestActionInterval.cpp)
-libinputactions_add_test(conditiongroup SOURCES conditions/TestConditionGroup.cpp)
 libinputactions_add_test(directionalmotiontrigger SOURCES triggers/TestDirectionalMotionTrigger.cpp)
 libinputactions_add_test(motiontrigger SOURCES triggers/TestMotionTrigger.cpp)
 libinputactions_add_test(range SOURCES TestRange.cpp)

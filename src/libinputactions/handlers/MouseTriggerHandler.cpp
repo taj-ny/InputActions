@@ -89,7 +89,7 @@ bool MouseTriggerHandler::handleEvent(const PointerButtonEvent *event)
         // This should be per-gesture instead of global, but it's good enough
         m_instantPress = false;
         for (const auto &trigger : triggers(TriggerType::Press, m_activationEvent.get())) {
-            if (dynamic_cast<PressTrigger *>(trigger)->instant()) {
+            if (dynamic_cast<PressTrigger *>(trigger)->m_instant) {
                 qCDebug(INPUTACTIONS_HANDLER_MOUSE, "Press gesture is instant");
                 m_instantPress = true;
                 break;
@@ -223,8 +223,8 @@ bool MouseTriggerHandler::handleWheelEvent(const MotionEvent *event)
         direction = SwipeDirection::Up;
     }
     DirectionalMotionTriggerUpdateEvent updateEvent;
-    updateEvent.setDelta(delta.x() != 0 ? delta.x() : delta.y());
-    updateEvent.setDirection(static_cast<TriggerDirection>(direction));
+    updateEvent.m_delta = delta.x() != 0 ? delta.x() : delta.y();
+    updateEvent.m_direction = static_cast<TriggerDirection>(direction);
 
     const auto hasTriggers = updateTriggers(TriggerType::Wheel, &updateEvent);
     bool continuous = false;

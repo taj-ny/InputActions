@@ -287,7 +287,7 @@ void TriggerHandler::updateTimedTriggers()
     std::map<TriggerType, const TriggerUpdateEvent *> events;
     for (const auto &type : TIMED_TRIGGERS) {
         auto *event = new TriggerUpdateEvent;
-        event->setDelta(m_timedTriggerUpdateDelta);
+        event->m_delta = m_timedTriggerUpdateDelta;
         events[type] = event;
     }
 

@@ -26,33 +26,33 @@
 namespace libinputactions
 {
 
-enum class ValueSource
-{
-    Command,
-    Expression,
-    Function,
-    Member,
-    Variable,
-};
-
 template<typename T>
 class Value
 {
 public:
     Value(T value = {});
-    Value(std::function<T()> getter, ValueSource = ValueSource::Function, bool threadSafe = true);
+    Value(std::function<T()> getter);
     Value(Expression<T> expression);
 
     static Value<T> command(Value<QString> command);
     static Value<T> variable(QString name);
 
+    /**
+     * Safe to call from other threads, will dispatch to main and block if required.
+     */
     T get() const;
-    const ValueSource &source() const;
+    /**
+     * Whether evaluating the value may be expensive.
+     */
+    bool expensive() const;
 
 private:
     std::variant<T, std::function<T()>> m_value;
-    ValueSource m_source;
-    bool m_threadSafe = true;
+    /**
+     * Whether the value can only be evaluated on the main thread.
+     */
+    bool m_mainThreadOnly{};
+    bool m_expensive{};
 };
 
 }

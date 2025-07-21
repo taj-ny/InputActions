@@ -17,6 +17,8 @@
 */
 
 #include "Action.h"
+#include <libinputactions/conditions/Condition.h>
+#include <libinputactions/globals.h>
 
 namespace libinputactions
 {
@@ -24,9 +26,26 @@ namespace libinputactions
 Action::Action() = default;
 Action::~Action() = default;
 
+bool Action::canExecute() const
+{
+    return !m_condition || m_condition->satisfied();
+}
+
+void Action::execute()
+{
+    qCDebug(INPUTACTIONS) << QString("Executing action \"%1\"").arg(m_id);
+    executeImpl();
+    m_executions++;
+}
+
 bool Action::async() const
 {
     return false;
+}
+
+void Action::reset()
+{
+    m_executions = 0;
 }
 
 }

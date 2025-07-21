@@ -37,83 +37,76 @@ QString fromString(const QString &s)
 template<typename T>
 Value<T>::Value(T value)
     : m_value(std::move(value))
-    , m_source(ValueSource::Member)
 {
 }
 
 template<typename T>
-Value<T>::Value(std::function<T()> getter, ValueSource source, bool threadSafe)
+Value<T>::Value(std::function<T()> getter)
     : m_value(std::move(getter))
-    , m_source(source)
-    , m_threadSafe(threadSafe)
 {
 }
 
 template<typename T>
 Value<T>::Value(Expression<T> expression)
-    : m_source(ValueSource::Expression)
-    , m_threadSafe(false) // has variables
 {
     m_value = [expression = std::move(expression)] {
         return expression.evaluate();
     };
+    m_mainThreadOnly = true; // uses variables
 }
 
 template<typename T>
 Value<T> Value<T>::command(Value<QString> command)
 {
-    return Value<T>(
-        [command = std::move(command)]() {
-            QProcess process;
-            process.setProgram("/bin/sh");
-            process.setArguments({"-c", command.get()});
-            process.start();
-            process.waitForFinished();
-            return fromString<T>(process.readAllStandardOutput());
-        },
-        ValueSource::Command);
+    auto value = Value<T>([command = std::move(command)]() {
+        QProcess process;
+        process.setProgram("/bin/sh");
+        process.setArguments({"-c", command.get()});
+        process.start();
+        process.waitForFinished();
+        return fromString<T>(process.readAllStandardOutput());
+    });
+    value.m_expensive = true;
+    return value;
 }
 
 template<typename T>
 Value<T> Value<T>::variable(QString name)
 {
-    return Value<T>(
-        [name] {
-            return g_variableManager->getVariable<T>(name)->get().value();
-        },
-        ValueSource::Variable,
-        false);
+    auto value = Value<T>([name = std::move(name)]() {
+        return g_variableManager->getVariable<T>(name)->get().value();
+    });
+    value.m_mainThreadOnly = true;
+    return value;
 }
 
 template<typename T>
 T Value<T>::get() const
 {
-    T out;
-    const auto getValue = [this, &out]() {
-        // clang-format off
-        std::visit(overloads {
-            [&out](const T &value) {
-                out = value;
-            },
-            [&out](const std::function<T()> &getter) {
-                out = getter();
+    // clang-format off
+    return std::visit(overloads {
+        [](const T &value) {
+            return value;
+        },
+        [this](const std::function<T()> &getter) {
+            T value;
+            if (m_mainThreadOnly) {
+                g_inputActions->runOnMainThread([&value, getter]() {
+                    value = getter();
+                });
+            } else {
+                value = getter();
             }
-        }, m_value);
-        // clang-format on
-    };
-
-    if (m_threadSafe) {
-        getValue();
-    } else {
-        g_inputActions->runOnMainThread(getValue);
-    }
-    return out;
+            return value;
+        }
+    }, m_value);
+    // clang-format on
 }
 
 template<typename T>
-const ValueSource &Value<T>::source() const
+bool Value<T>::expensive() const
 {
-    return m_source;
+    return m_expensive;
 }
 
 template class Value<QString>;

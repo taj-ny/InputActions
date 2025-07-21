@@ -30,7 +30,7 @@ ActionGroup::ActionGroup(std::vector<std::shared_ptr<Action>> actions, Execution
 {
 }
 
-void ActionGroup::execute() const
+void ActionGroup::executeImpl()
 {
     // TODO Each action with a condition introduces latency
     const auto evaluateCondition = [](const auto &action) {

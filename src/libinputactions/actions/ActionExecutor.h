@@ -61,6 +61,6 @@ private:
     QThreadPool m_ownActionThreadPool;
 };
 
-inline std::unique_ptr<ActionExecutor> g_actionExecutor;
+inline auto g_actionExecutor = std::make_unique<ActionExecutor>();
 
 }

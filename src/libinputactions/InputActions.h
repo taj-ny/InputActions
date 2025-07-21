@@ -30,7 +30,8 @@ class InputActions
 {
 public:
     /**
-     * Runs the specified function on the main thread. If the current thread is the main thread, the function is executed immediately.
+     * Runs the specified function on the main thread. If the current thread is the main thread, the function is executed immediately. Blocking calls introduce
+     * action latency and should be used as little as possible.
      */
     void runOnMainThread(std::function<void()> &&function, bool block = true) const;
 
