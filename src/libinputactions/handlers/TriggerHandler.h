@@ -49,19 +49,6 @@ protected:
     TriggerHandler();
 
     /**
-     * Registers a custom handler that will be executed when the specified trigger type is activated.
-     */
-    void registerTriggerActivateHandler(TriggerType type, const std::function<void()> &func);
-    /**
-     * Registers a custom handler that will be executed when the specified trigger type is ended.
-     */
-    void registerTriggerEndHandler(TriggerType type, const std::function<void()> &func);
-    /**
-     * Registers a custom handler that will be executed when the specified trigger type is ended or cancelled.
-     */
-    void registerTriggerEndCancelHandler(TriggerType type, const std::function<void()> &func);
-
-    /**
      * Cancels all active triggers and activates triggers of the specified types eligible for activation.
      * @return Whether any triggers have been activated.
      */
@@ -120,15 +107,17 @@ protected:
     virtual std::unique_ptr<TriggerActivationEvent> createActivationEvent() const;
 
     /**
-     * Called before a trigger is activated.
-     */
-    virtual void triggerActivating(const Trigger *trigger);
-    /**
      * Resets member variables that hold information about the performed input action.
      */
     virtual void reset();
 
     void updateTimedTriggers();
+
+signals:
+    void activatingTrigger(const Trigger *trigger);
+    void activatingTriggers(TriggerTypes types);
+    void cancellingTriggers(TriggerTypes types);
+    void endingTriggers(TriggerTypes types);
 
 private:
     /**
@@ -141,19 +130,6 @@ private:
      */
     QTimer m_timedTriggerUpdateTimer;
     uint32_t m_timedTriggerUpdateDelta = 5;
-
-    /**
-     * Executed when a trigger type is activated.
-     */
-    std::map<TriggerType, std::function<void()>> m_triggerActivateHandlers;
-    /**
-     * Executed when a trigger type is ended.
-     */
-    std::map<TriggerType, std::function<void()>> m_triggerEndHandlers;
-    /**
-     * Executed when a trigger type is ended or cancelled.
-     */
-    std::map<TriggerType, std::function<void()>> m_triggerEndCancelHandlers;
 
     std::vector<std::unique_ptr<Trigger>> m_triggers;
     std::vector<Trigger *> m_activeTriggers;

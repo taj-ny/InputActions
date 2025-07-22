@@ -31,6 +31,8 @@ namespace libinputactions
 MouseTriggerHandler::MouseTriggerHandler()
     : MotionTriggerHandler()
 {
+    connect(this, &TriggerHandler::activatingTrigger, this, &MouseTriggerHandler::onActivatingTrigger);
+
     m_pressTimeoutTimer.setTimerType(Qt::TimerType::PreciseTimer);
     m_pressTimeoutTimer.setSingleShot(true);
 
@@ -252,9 +254,8 @@ void MouseTriggerHandler::setPressTimeout(uint32_t timeout)
     m_pressTimeout = timeout;
 }
 
-void MouseTriggerHandler::triggerActivating(const Trigger *trigger)
+void MouseTriggerHandler::onActivatingTrigger(const Trigger *trigger)
 {
-    MotionTriggerHandler::triggerActivating(trigger);
     m_hadTriggerSincePress = true;
 }
 

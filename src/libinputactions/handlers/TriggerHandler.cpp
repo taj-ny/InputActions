@@ -67,36 +67,16 @@ void TriggerHandler::setTimedTriggerUpdateDelta(uint32_t value)
     m_timedTriggerUpdateTimer.setInterval(value);
 }
 
-void TriggerHandler::registerTriggerActivateHandler(TriggerType type, const std::function<void()> &func)
-{
-    m_triggerActivateHandlers[type] = func;
-}
-
-void TriggerHandler::registerTriggerEndHandler(TriggerType type, const std::function<void()> &func)
-{
-    m_triggerEndHandlers[type] = func;
-}
-
-void TriggerHandler::registerTriggerEndCancelHandler(TriggerType type, const std::function<void()> &func)
-{
-    m_triggerEndCancelHandlers[type] = func;
-}
-
 bool TriggerHandler::activateTriggers(TriggerTypes types, const TriggerActivationEvent *event)
 {
     qCDebug(INPUTACTIONS_HANDLER_TRIGGER).noquote().nospace() << "Triggers activating (types: " << types << ")";
     cancelTriggers(TriggerType::All);
     reset();
 
-    for (const auto &[type, handler] : m_triggerActivateHandlers) {
-        if (!(types & type)) {
-            continue;
-        }
-        handler();
-    }
+    Q_EMIT activatingTriggers(types);
 
     for (auto &trigger : triggers(types, event)) {
-        triggerActivating(trigger);
+        Q_EMIT activatingTrigger(trigger);
         m_activeTriggers.push_back(trigger);
         qCDebug(INPUTACTIONS_HANDLER_TRIGGER).noquote() << QString("Trigger activated (id: %1)").arg(trigger->id());
     }
@@ -171,18 +151,7 @@ bool TriggerHandler::endTriggers(TriggerTypes types)
 
     qCDebug(INPUTACTIONS_HANDLER_TRIGGER).nospace() << "Ending gestures (types: " << types << ")";
 
-    for (const auto &[type, handler] : m_triggerEndHandlers) {
-        if (!(types & type)) {
-            continue;
-        }
-        handler();
-    }
-    for (const auto &[type, handler] : m_triggerEndCancelHandlers) {
-        if (!(types & type)) {
-            continue;
-        }
-        handler();
-    }
+    Q_EMIT endingTriggers(types);
 
     for (auto it = m_activeTriggers.begin(); it != m_activeTriggers.end();) {
         auto trigger = *it;
@@ -214,6 +183,8 @@ bool TriggerHandler::cancelTriggers(TriggerTypes types)
     if (!hasActiveTriggers(types)) {
         return false;
     }
+
+    Q_EMIT cancellingTriggers(types);
 
     qCDebug(INPUTACTIONS_HANDLER_TRIGGER).nospace() << "Cancelling triggers (types: " << types << ")";
     for (auto it = m_activeTriggers.begin(); it != m_activeTriggers.end();) {
@@ -303,10 +274,6 @@ void TriggerHandler::updateTimedTriggers()
 std::unique_ptr<TriggerActivationEvent> TriggerHandler::createActivationEvent() const
 {
     return std::make_unique<TriggerActivationEvent>();
-}
-
-void TriggerHandler::triggerActivating(const Trigger *trigger)
-{
 }
 
 void TriggerHandler::reset()
