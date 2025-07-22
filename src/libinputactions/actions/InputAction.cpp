@@ -36,40 +36,35 @@ void InputAction::executeImpl()
         const auto keyboardText = item.keyboardText.get();
         g_inputActions->runOnMainThread(
             [this, item, keyboardText]() {
-                for (const auto &key : item.keyboardPress) {
-                    g_inputEmitter->keyboardKey(key, true);
-                }
-                for (const auto &key : item.keyboardRelease) {
-                    g_inputEmitter->keyboardKey(key, false);
-                }
-                if (!keyboardText.isEmpty()) {
+                if (item.keyboardPress) {
+                    g_inputEmitter->keyboardKey(item.keyboardPress, true);
+                } else if (item.keyboardRelease) {
+                    g_inputEmitter->keyboardKey(item.keyboardRelease, false);
+                } else if (!keyboardText.isEmpty()) {
                     g_inputEmitter->keyboardText(keyboardText);
-                }
-
-                for (const auto &button : item.mousePress) {
-                    g_inputEmitter->mouseButton(button, true);
-                }
-                for (const auto &button : item.mouseRelease) {
-                    g_inputEmitter->mouseButton(button, false);
-                }
-
-                if (!item.mouseMoveAbsolute.isNull()) {
+                } else if (item.mousePress) {
+                    g_inputEmitter->mouseButton(item.mousePress, true);
+                } else if (item.mouseRelease) {
+                    g_inputEmitter->mouseButton(item.mouseRelease, false);
+                } else if (!item.mouseMoveAbsolute.isNull()) {
                     g_pointerPositionSetter->setGlobalPointerPosition(item.mouseMoveAbsolute);
-                }
-                if (!item.mouseMoveRelative.isNull()) {
+                } else if (!item.mouseMoveRelative.isNull()) {
                     g_inputEmitter->mouseMoveRelative(item.mouseMoveRelative);
-                }
-                if (item.mouseMoveRelativeByDelta) {
+                } else if (item.mouseMoveRelativeByDelta) {
                     g_inputEmitter->mouseMoveRelative(m_deltaMultiplied);
                 }
             },
             false);
+
+        if (m_delay.count()) {
+            QThread::msleep(m_delay.count());
+        }
     }
 }
 
 bool InputAction::async() const
 {
-    return std::ranges::any_of(m_sequence, [](const auto &item) {
+    return m_delay.count() || std::ranges::any_of(m_sequence, [](const auto &item) {
         return item.keyboardText.expensive();
     });
 }

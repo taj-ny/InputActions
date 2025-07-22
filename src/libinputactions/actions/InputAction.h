@@ -20,6 +20,7 @@
 
 #include "Action.h"
 #include <QPointF>
+#include <chrono>
 #include <libinputactions/Value.h>
 
 namespace libinputactions
@@ -29,16 +30,16 @@ class InputAction : public Action
 {
 public:
     /**
-     * Input actions are performed in order as defined in the struct.
+     * Only one member may be set.
      */
     struct Item
     {
-        std::vector<uint32_t> keyboardPress;
-        std::vector<uint32_t> keyboardRelease;
+        uint32_t keyboardPress{};
+        uint32_t keyboardRelease{};
         Value<QString> keyboardText;
 
-        std::vector<uint32_t> mousePress;
-        std::vector<uint32_t> mouseRelease;
+        uint32_t mousePress{};
+        uint32_t mouseRelease{};
 
         QPointF mouseMoveAbsolute;
         QPointF mouseMoveRelative;
@@ -48,6 +49,11 @@ public:
     InputAction(std::vector<Item> sequence);
 
     bool async() const override;
+
+    /**
+     * Delay between each item in the sequence.
+     */
+    std::chrono::milliseconds m_delay{};
 
     /**
      * Temporary hack, do not set outside of TriggerAction.
