@@ -60,13 +60,14 @@ public:
     void setUnblockButtonsOnTimeout(bool unblock);
 
 protected:
-    void triggerActivating(const Trigger *trigger) override;
-
     /**
      * This implementation sets mouse buttons.
      * @see TriggerHandler::createActivationEvent
      */
     std::unique_ptr<TriggerActivationEvent> createActivationEvent() const override;
+
+private slots:
+    void onActivatingTrigger(const Trigger *trigger);
 
 private:
     bool handleEvent(const PointerButtonEvent *event);

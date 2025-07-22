@@ -76,12 +76,13 @@ protected:
      */
     bool determineSpeed(TriggerType type, qreal delta, TriggerSpeed &speed, TriggerDirection direction = UINT32_MAX);
 
-    virtual void triggerActivating(const Trigger *trigger) override;
     void reset() override;
 
-private:
-    void strokeTriggerEndHandler();
+private slots:
+    void onActivatingTrigger(const Trigger *trigger);
+    void onEndingTriggers(TriggerTypes types);
 
+private:
     Axis m_currentSwipeAxis = Axis::None;
     QPointF m_currentSwipeDelta;
     qreal m_swipeDeltaMultiplier = 1.0;
