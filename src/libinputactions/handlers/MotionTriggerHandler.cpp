@@ -26,7 +26,8 @@ namespace libinputactions
 
 MotionTriggerHandler::MotionTriggerHandler()
 {
-    registerTriggerEndHandler(TriggerType::Stroke, std::bind(&MotionTriggerHandler::strokeTriggerEndHandler, this));
+    connect(this, &TriggerHandler::activatingTrigger, this, &MotionTriggerHandler::onActivatingTrigger);
+    connect(this, &TriggerHandler::endingTriggers, this, &MotionTriggerHandler::onEndingTriggers);
 
     setSpeedThreshold(TriggerType::Pinch, 0.04, static_cast<TriggerDirection>(PinchDirection::In));
     setSpeedThreshold(TriggerType::Pinch, 0.08, static_cast<TriggerDirection>(PinchDirection::Out));
@@ -173,17 +174,6 @@ bool MotionTriggerHandler::determineSpeed(TriggerType type, qreal delta, Trigger
     return true;
 }
 
-void MotionTriggerHandler::triggerActivating(const Trigger *trigger)
-{
-    TriggerHandler::triggerActivating(trigger);
-    if (const auto motionTrigger = dynamic_cast<const MotionTrigger *>(trigger)) {
-        if (!m_isDeterminingSpeed && motionTrigger->hasSpeed()) {
-            qCDebug(INPUTACTIONS_HANDLER_MOTION).noquote() << QString("Trigger has speed (id: %1)").arg(trigger->id());
-            m_isDeterminingSpeed = true;
-        }
-    }
-}
-
 void MotionTriggerHandler::reset()
 {
     TriggerHandler::reset();
@@ -196,9 +186,19 @@ void MotionTriggerHandler::reset()
     m_stroke.clear();
 }
 
-void MotionTriggerHandler::strokeTriggerEndHandler()
+void MotionTriggerHandler::onActivatingTrigger(const Trigger *trigger)
 {
-    if (m_stroke.empty()) {
+    if (const auto motionTrigger = dynamic_cast<const MotionTrigger *>(trigger)) {
+        if (!m_isDeterminingSpeed && motionTrigger->hasSpeed()) {
+            qCDebug(INPUTACTIONS_HANDLER_MOTION).noquote() << QString("Trigger has speed (id: %1)").arg(trigger->id());
+            m_isDeterminingSpeed = true;
+        }
+    }
+}
+
+void MotionTriggerHandler::onEndingTriggers(TriggerTypes types)
+{
+    if (m_stroke.empty() || !(types & TriggerType::Stroke)) {
         return;
     }
 

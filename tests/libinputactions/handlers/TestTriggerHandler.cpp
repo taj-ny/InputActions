@@ -1,5 +1,5 @@
 #include "TestTriggerHandler.h"
-
+#include <QSignalSpy>
 #include <linux/input-event-codes.h>
 
 using namespace ::testing;
@@ -9,7 +9,7 @@ namespace libinputactions
 
 void TestTriggerHandler::init()
 {
-    m_handler = std::make_unique<MockTriggerHandler>();
+    m_handler = std::unique_ptr<TriggerHandler>(new TriggerHandler);
 }
 
 void TestTriggerHandler::triggers_data()
@@ -54,61 +54,35 @@ void TestTriggerHandler::triggers()
 
 void TestTriggerHandler::activateTriggers_cancelsAllTriggers()
 {
-    EXPECT_CALL(*m_handler, cancelTriggers(static_cast<TriggerTypes>(TriggerType::All)))
-        .Times(Exactly(3));
+    QSignalSpy spy(m_handler.get(), &TriggerHandler::cancellingTriggers);
 
-    auto trigger = std::make_unique<Trigger>(TriggerType::Swipe);
+    m_handler->addTrigger(std::make_unique<Trigger>(TriggerType::Press));
     m_handler->activateTriggers(TriggerType::Swipe);
+    QCOMPARE(spy.count(), 0);
     m_handler->activateTriggers(TriggerType::Swipe | TriggerType::Press);
+    QCOMPARE(spy.count(), 0);
     m_handler->activateTriggers(TriggerType::All);
+    QCOMPARE(spy.count(), 1);
 
-    QVERIFY(Mock::VerifyAndClearExpectations(m_handler.get()));
-}
-
-void TestTriggerHandler::activateTriggers_invokesCustomHandler()
-{
-    uint32_t swipe{};
-    uint32_t press{};
-    m_handler->registerTriggerActivateHandler(TriggerType::Swipe, [&swipe] { swipe++; });
-    m_handler->registerTriggerActivateHandler(TriggerType::Press, [&press] { press++; });
-
-    m_handler->activateTriggers(TriggerType::All);
-    QCOMPARE(swipe, 1);
-    QCOMPARE(press, 1);
-
-    m_handler->activateTriggers(TriggerType::Swipe);
-    QCOMPARE(swipe, 2);
-    QCOMPARE(press, 1);
-
-    m_handler->activateTriggers(TriggerType::Swipe | TriggerType::Press);
-    QCOMPARE(swipe, 3);
-    QCOMPARE(press, 2);
-}
-
-void TestTriggerHandler::keyboardKey_data()
-{
-    QTest::addColumn<int>("key");
-    QTest::addColumn<bool>("state");
-    QTest::addColumn<bool>("endsTriggers");
-
-    QTest::newRow("press") << KEY_LEFTCTRL << true << false;
-    QTest::newRow("release") << KEY_LEFTCTRL << false << true;
+    for (const auto &args : spy) {
+        QCOMPARE(args.at(0).value<TriggerTypes>(), TriggerType::All);
+    }
 }
 
 void TestTriggerHandler::keyboardKey()
 {
-    QFETCH(int, key);
-    QFETCH(bool, state);
-    QFETCH(bool, endsTriggers);
-
-    EXPECT_CALL(*m_handler, endTriggers(static_cast<TriggerTypes>(TriggerType::All)))
-        .Times(Exactly(endsTriggers ? 1 : 0));
-
+    QSignalSpy spy(m_handler.get(), &TriggerHandler::endingTriggers);
     InputDevice device(InputDeviceType::Keyboard);
-    const KeyboardKeyEvent event(&device, key, state);
-    m_handler->handleEvent(&event);
+    m_handler->addTrigger(std::make_unique<Trigger>(TriggerType::Press));
 
-    QVERIFY(Mock::VerifyAndClearExpectations(m_handler.get()));
+    m_handler->activateTriggers(TriggerType::Press);
+    KeyboardKeyEvent event(&device, KEY_LEFTCTRL, true);
+    m_handler->handleEvent(&event);
+    QCOMPARE(spy.count(), 0);
+
+    event = {&device, KEY_LEFTCTRL, false};
+    m_handler->handleEvent(&event);
+    QCOMPARE(spy.count(), 1);
 }
 
 MockTrigger *TestTriggerHandler::makeTrigger(TriggerType type, bool activatable)
