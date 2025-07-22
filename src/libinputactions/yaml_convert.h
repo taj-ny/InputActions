@@ -30,10 +30,13 @@
 #include <libinputactions/actions/TriggerAction.h>
 #include <libinputactions/conditions/ConditionGroup.h>
 #include <libinputactions/conditions/VariableCondition.h>
+#include <libinputactions/handlers/KeyboardTriggerHandler.h>
 #include <libinputactions/handlers/MouseTriggerHandler.h>
 #include <libinputactions/handlers/TouchpadTriggerHandler.h>
 #include <libinputactions/input/InputEventHandler.h>
+#include <libinputactions/input/Keyboard.h>
 #include <libinputactions/interfaces/CursorShapeProvider.h>
+#include <libinputactions/triggers/KeyboardShortcutTrigger.h>
 #include <libinputactions/triggers/PressTrigger.h>
 #include <libinputactions/triggers/StrokeTrigger.h>
 #include <libinputactions/triggers/WheelTrigger.h>
@@ -826,6 +829,11 @@ struct convert<std::vector<std::unique_ptr<InputEventHandler>>>
 
     static bool decode(const Node &node, std::vector<std::unique_ptr<InputEventHandler>> &handlers)
     {
+        if (const auto &mouseNode = node["keyboard"]) {
+            for (const auto &keyboardHandler : asSequence(mouseNode)) {
+                handlers.push_back(decodeHandler<KeyboardTriggerHandler>(keyboardHandler));
+            }
+        }
         if (const auto &mouseNode = node["mouse"]) {
             for (const auto &mouseHandler : asSequence(mouseNode)) {
                 handlers.push_back(decodeHandler<MouseTriggerHandler>(mouseHandler));
@@ -897,6 +905,8 @@ struct convert<std::unique_ptr<Trigger>>
             trigger.reset(pressTrigger);
         } else if (type == "pinch") {
             trigger = std::make_unique<DirectionalMotionTrigger>(TriggerType::Pinch, static_cast<TriggerDirection>(node["direction"].as<PinchDirection>()));
+        } else if (type == "shortcut") {
+            trigger = std::make_unique<KeyboardShortcutTrigger>(node["shortcut"].as<KeyboardShortcut>());
         } else if (type == "stroke") {
             trigger = std::make_unique<StrokeTrigger>(asSequence(node["strokes"]).as<std::vector<Stroke>>());
         } else if (type == "swipe") {
@@ -1103,6 +1113,17 @@ static void decodeMultiTouchMotionTriggerHandler(const Node &node, TriggerHandle
         }
     }
 }
+
+template<>
+struct convert<std::unique_ptr<KeyboardTriggerHandler>>
+{
+    static bool decode(const Node &node, std::unique_ptr<KeyboardTriggerHandler> &handler)
+    {
+        handler = std::make_unique<KeyboardTriggerHandler>();
+        decodeTriggerHandler(node, handler.get());
+        return true;
+    }
+};
 
 template<>
 struct convert<std::unique_ptr<MouseTriggerHandler>>
@@ -1355,6 +1376,21 @@ struct convert<std::vector<InputAction::Item>>
             }
         }
 
+        return true;
+    }
+};
+
+template<>
+struct convert<KeyboardShortcut>
+{
+    static bool decode(const Node &node, KeyboardShortcut &value)
+    {
+        for (const auto &key : node.as<QString>().toUpper().split('+')) {
+            if (!s_keyboard.contains(key)) {
+                throw Exception(node.Mark(), ("Invalid keyboard key ('" + key + "')").toStdString());
+            }
+            value.keys.insert(s_keyboard.at(key));
+        }
         return true;
     }
 };
