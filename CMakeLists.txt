@@ -29,7 +29,7 @@ set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O2 -DQT_NO_DEBUG_OUTPUT
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     add_compile_definitions(-DDEBUG)
 endif()
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Bsymbolic-functions -Wall -Wextra -Wpedantic -Wno-unused-parameter")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Bsymbolic-functions -Wall -Wextra -Wpedantic -Wno-unused-parameter -Wno-missing-field-initializers")
 
 find_package(ECM REQUIRED NO_MODULE)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${ECM_MODULE_PATH} ${ECM_KDE_MODULE_DIR})
