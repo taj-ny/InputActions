@@ -1385,7 +1385,8 @@ struct convert<KeyboardShortcut>
 {
     static bool decode(const Node &node, KeyboardShortcut &value)
     {
-        for (const auto &key : node.as<QString>().toUpper().split('+')) {
+        for (const auto &keyNode : node) {
+            const auto key = keyNode.as<QString>().toUpper();
             if (!s_keyboard.contains(key)) {
                 throw Exception(node.Mark(), ("Invalid keyboard key ('" + key + "')").toStdString());
             }
