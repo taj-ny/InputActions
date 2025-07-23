@@ -39,7 +39,7 @@ class MouseTriggerHandler : public MotionTriggerHandler
 public:
     MouseTriggerHandler();
 
-    bool handleEvent(const InputEvent *event) override;
+    bool handleEvent(const InputEvent &event) override;
 
     /**
      * The amount of time in milliseconds the handler will wait for motion to be performed (wheel is considered motion
@@ -70,9 +70,9 @@ private slots:
     void onActivatingTrigger(const Trigger *trigger);
 
 private:
-    bool handleEvent(const PointerButtonEvent *event);
-    bool handleMotionEvent(const MotionEvent *event);
-    bool handleWheelEvent(const MotionEvent *event);
+    bool handleEvent(const PointerButtonEvent &event);
+    bool handleMotionEvent(const MotionEvent &event);
+    bool handleWheelEvent(const MotionEvent &event);
 
     /**
      * Checks whether there is an activatable trigger that uses the specified button. Mouse buttons are ignored when

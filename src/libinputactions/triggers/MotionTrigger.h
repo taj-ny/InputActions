@@ -47,7 +47,7 @@ public:
      * @see Trigger::canUpdate
      * @internal
      */
-    bool canUpdate(const TriggerUpdateEvent *event) const override;
+    bool canUpdate(const TriggerUpdateEvent &event) const override;
 
     bool hasSpeed() const;
     /**
@@ -57,7 +57,7 @@ public:
     void setSpeed(TriggerSpeed speed);
 
 protected:
-    void updateActions(const TriggerUpdateEvent *event) override;
+    void updateActions(const TriggerUpdateEvent &event) override;
 
 private:
     TriggerSpeed m_speed = TriggerSpeed::Any;

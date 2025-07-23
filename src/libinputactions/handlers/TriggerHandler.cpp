@@ -40,20 +40,20 @@ void TriggerHandler::addTrigger(std::unique_ptr<Trigger> trigger)
     m_triggers.push_back(std::move(trigger));
 }
 
-void TriggerHandler::handleEvent(const KeyboardKeyEvent *event)
+void TriggerHandler::handleEvent(const KeyboardKeyEvent &event)
 {
     // Lazy way of detecting modifier release during mouse gestures
-    if (event->state()) {
+    if (event.state()) {
         return;
     }
     endTriggers(TriggerType::All);
 }
 
-bool TriggerHandler::handleEvent(const InputEvent *event)
+bool TriggerHandler::handleEvent(const InputEvent &event)
 {
-    switch (event->type()) {
+    switch (event.type()) {
         case InputEventType::KeyboardKey:
-            handleEvent(static_cast<const KeyboardKeyEvent *>(event));
+            handleEvent(static_cast<const KeyboardKeyEvent &>(event));
             break;
         default:
             return false;
@@ -67,7 +67,7 @@ void TriggerHandler::setTimedTriggerUpdateDelta(uint32_t value)
     m_timedTriggerUpdateTimer.setInterval(value);
 }
 
-bool TriggerHandler::activateTriggers(TriggerTypes types, const TriggerActivationEvent *event)
+bool TriggerHandler::activateTriggers(TriggerTypes types, const TriggerActivationEvent &event)
 {
     qCDebug(INPUTACTIONS_HANDLER_TRIGGER).noquote().nospace() << "Triggers activating (types: " << types << ")";
     cancelTriggers(TriggerType::All);
@@ -90,7 +90,7 @@ bool TriggerHandler::activateTriggers(TriggerTypes types, const TriggerActivatio
 bool TriggerHandler::activateTriggers(TriggerTypes types)
 {
     auto event = createActivationEvent();
-    return activateTriggers(types, event.get());
+    return activateTriggers(types, *event.get());
 }
 
 bool TriggerHandler::updateTriggers(const std::map<TriggerType, const TriggerUpdateEvent *> &events)
@@ -111,15 +111,15 @@ bool TriggerHandler::updateTriggers(const std::map<TriggerType, const TriggerUpd
             continue;
         }
 
-        const auto &event = events.at(type);
-        if (!trigger->canUpdate(event)) {
+        const auto event = events.at(type);
+        if (!trigger->canUpdate(*event)) {
             trigger->cancel();
             it = m_activeTriggers.erase(it);
             continue;
         }
 
         hasTriggers = true;
-        trigger->update(event);
+        trigger->update(*event);
 
         if (!m_conflictsResolved && m_activeTriggers.size() > 1) {
             qCDebug(INPUTACTIONS_TRIGGER, "Cancelling conflicting triggers");
@@ -138,9 +138,9 @@ bool TriggerHandler::updateTriggers(const std::map<TriggerType, const TriggerUpd
     return hasTriggers;
 }
 
-bool TriggerHandler::updateTriggers(TriggerType type, const TriggerUpdateEvent *event)
+bool TriggerHandler::updateTriggers(TriggerType type, const TriggerUpdateEvent &event)
 {
-    return updateTriggers({{type, event}});
+    return updateTriggers({{type, &event}});
 }
 
 bool TriggerHandler::endTriggers(TriggerTypes types)
@@ -214,7 +214,7 @@ void TriggerHandler::cancelTriggers(Trigger *except)
     }
 }
 
-std::vector<Trigger *> TriggerHandler::triggers(TriggerTypes types, const TriggerActivationEvent *event)
+std::vector<Trigger *> TriggerHandler::triggers(TriggerTypes types, const TriggerActivationEvent &event)
 {
     std::vector<Trigger *> result;
     for (auto &trigger : m_triggers) {

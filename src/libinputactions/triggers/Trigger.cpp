@@ -47,13 +47,13 @@ void Trigger::setEndCondition(const std::shared_ptr<const Condition> &condition)
     m_endCondition = condition;
 }
 
-bool Trigger::canActivate(const TriggerActivationEvent *event) const
+bool Trigger::canActivate(const TriggerActivationEvent &event) const
 {
-    if (!m_mouseButtons.empty() && event->mouseButtons.has_value()) {
-        if (m_mouseButtons.size() != event->mouseButtons->size()
-            || (m_mouseButtonsExactOrder && !std::ranges::equal(m_mouseButtons, event->mouseButtons.value()))
+    if (!m_mouseButtons.empty() && event.mouseButtons.has_value()) {
+        if (m_mouseButtons.size() != event.mouseButtons->size()
+            || (m_mouseButtonsExactOrder && !std::ranges::equal(m_mouseButtons, event.mouseButtons.value()))
             || (!m_mouseButtonsExactOrder && !std::ranges::all_of(m_mouseButtons, [event](auto &button) {
-                   return std::ranges::contains(event->mouseButtons.value(), button);
+                   return std::ranges::contains(event.mouseButtons.value(), button);
                }))) {
             return false;
         }
@@ -62,14 +62,14 @@ bool Trigger::canActivate(const TriggerActivationEvent *event) const
     return !m_activationCondition || m_activationCondition.value()->satisfied();
 }
 
-bool Trigger::canUpdate(const TriggerUpdateEvent *) const
+bool Trigger::canUpdate(const TriggerUpdateEvent &event) const
 {
     return true;
 }
 
-void Trigger::update(const TriggerUpdateEvent *event)
+void Trigger::update(const TriggerUpdateEvent &event)
 {
-    m_absoluteAccumulatedDelta += std::abs(event->m_delta);
+    m_absoluteAccumulatedDelta += std::abs(event.m_delta);
     m_withinThreshold = !m_threshold || m_threshold->contains(m_absoluteAccumulatedDelta);
     if (!m_withinThreshold) {
         qCDebug(INPUTACTIONS_TRIGGER).noquote() << QString("Threshold not reached (id: %1, current: %2, min: %3, max: %4")
@@ -80,7 +80,7 @@ void Trigger::update(const TriggerUpdateEvent *event)
         return;
     }
 
-    qCDebug(INPUTACTIONS_TRIGGER).noquote() << QString("Trigger updated (id: %1, delta: %2)").arg(m_id, QString::number(event->m_delta));
+    qCDebug(INPUTACTIONS_TRIGGER).noquote() << QString("Trigger updated (id: %1, delta: %2)").arg(m_id, QString::number(event.m_delta));
 
     if (!m_started) {
         qCDebug(INPUTACTIONS_TRIGGER).noquote() << QString("Trigger started (id: %1)").arg(m_id);
@@ -178,10 +178,10 @@ const std::vector<TriggerAction *> Trigger::actions()
     return result;
 }
 
-void Trigger::updateActions(const TriggerUpdateEvent *event)
+void Trigger::updateActions(const TriggerUpdateEvent &event)
 {
     for (const auto &action : m_actions) {
-        action->triggerUpdated(event->m_delta, {});
+        action->triggerUpdated(event.m_delta, {});
     }
 }
 

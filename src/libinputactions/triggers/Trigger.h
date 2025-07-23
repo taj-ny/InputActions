@@ -75,17 +75,17 @@ public:
      * @return Whether conditions, fingers, keyboard modifiers, mouse buttons and begin positions are satisfied.
      * @internal
      */
-    virtual bool canActivate(const TriggerActivationEvent *event) const;
+    virtual bool canActivate(const TriggerActivationEvent &event) const;
 
     /**
      * Called by the trigger handler before updating a trigger. If true is returned, that trigger will be cancelled.
      * @internal
      */
-    virtual bool canUpdate(const TriggerUpdateEvent *event) const;
+    virtual bool canUpdate(const TriggerUpdateEvent &event) const;
     /**
      * @internal
      */
-    TEST_VIRTUAL void update(const TriggerUpdateEvent *event);
+    TEST_VIRTUAL void update(const TriggerUpdateEvent &event);
 
     /**
      * Called by the trigger handler before ending a trigger. If true is returned, that trigger will be cancelled
@@ -165,7 +165,7 @@ protected:
 
     const std::vector<TriggerAction *> actions();
 
-    virtual void updateActions(const TriggerUpdateEvent *event);
+    virtual void updateActions(const TriggerUpdateEvent &event);
 
 private:
     void reset();

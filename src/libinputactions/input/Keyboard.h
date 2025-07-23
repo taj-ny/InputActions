@@ -45,7 +45,7 @@ public:
     Keyboard() = default;
     virtual ~Keyboard() = default;
 
-    void handleEvent(const KeyboardKeyEvent *event);
+    void handleEvent(const KeyboardKeyEvent &event);
 
     /**
      * @return Currently pressed keyboard modifiers
