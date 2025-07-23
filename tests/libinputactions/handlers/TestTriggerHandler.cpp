@@ -47,8 +47,8 @@ void TestTriggerHandler::triggers()
     }
     TriggerActivationEvent event;
 
-    QCOMPARE(m_handler->triggers(type, &event).size(), size);
-    QCOMPARE(m_handler->activateTriggers(type, &event), size != 0);
+    QCOMPARE(m_handler->triggers(type, event).size(), size);
+    QCOMPARE(m_handler->activateTriggers(type, event), size != 0);
     QCOMPARE(m_handler->activeTriggers(type).size(), size);
 }
 
@@ -76,12 +76,10 @@ void TestTriggerHandler::keyboardKey()
     m_handler->addTrigger(std::make_unique<Trigger>(TriggerType::Press));
 
     m_handler->activateTriggers(TriggerType::Press);
-    KeyboardKeyEvent event(&device, KEY_LEFTCTRL, true);
-    m_handler->handleEvent(&event);
+    m_handler->handleEvent(KeyboardKeyEvent(&device, KEY_LEFTCTRL, true));
     QCOMPARE(spy.count(), 0);
 
-    event = {&device, KEY_LEFTCTRL, false};
-    m_handler->handleEvent(&event);
+    m_handler->handleEvent(KeyboardKeyEvent(&device, KEY_LEFTCTRL, false));
     QCOMPARE(spy.count(), 1);
 }
 

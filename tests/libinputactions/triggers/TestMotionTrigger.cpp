@@ -32,7 +32,7 @@ void TestMotionTrigger::canUpdate_speed()
     MotionTriggerUpdateEvent event;
     event.m_speed = eventSpeed;
 
-    QCOMPARE(trigger->canUpdate(&event), result);
+    QCOMPARE(trigger->canUpdate(event), result);
 }
 
 }

@@ -26,10 +26,10 @@ MotionTrigger::MotionTrigger(TriggerType type)
 {
 }
 
-bool MotionTrigger::canUpdate(const TriggerUpdateEvent *event) const
+bool MotionTrigger::canUpdate(const TriggerUpdateEvent &event) const
 {
-    const auto *castedEvent = dynamic_cast<const MotionTriggerUpdateEvent *>(event);
-    return m_speed == TriggerSpeed::Any || m_speed == castedEvent->m_speed;
+    const auto &castedEvent = dynamic_cast<const MotionTriggerUpdateEvent &>(event);
+    return m_speed == TriggerSpeed::Any || m_speed == castedEvent.m_speed;
 }
 
 bool MotionTrigger::hasSpeed() const
@@ -42,11 +42,11 @@ void MotionTrigger::setSpeed(TriggerSpeed speed)
     m_speed = speed;
 }
 
-void MotionTrigger::updateActions(const TriggerUpdateEvent *event)
+void MotionTrigger::updateActions(const TriggerUpdateEvent &event)
 {
-    const auto *castedEvent = dynamic_cast<const MotionTriggerUpdateEvent *>(event);
+    const auto &castedEvent = dynamic_cast<const MotionTriggerUpdateEvent &>(event);
     for (auto &action : actions()) {
-        action->triggerUpdated(event->m_delta, castedEvent->m_deltaMultiplied);
+        action->triggerUpdated(event.m_delta, castedEvent.m_deltaMultiplied);
     }
 }
 

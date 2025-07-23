@@ -64,7 +64,7 @@ void TestTrigger::canActivate_mouseButtons()
     m_trigger->setMouseButtons(triggerButtons.value());
     m_trigger->setMouseButtonsExactOrder(orderMatters);
     event.mouseButtons = eventButtons;
-    QCOMPARE(m_trigger->canActivate(&event), result);
+    QCOMPARE(m_trigger->canActivate(event), result);
 }
 
 void TestTrigger::update_threshold_data()
@@ -98,7 +98,7 @@ void TestTrigger::update_threshold()
     TriggerUpdateEvent event;
     for (const auto &delta : deltas) {
         event.m_delta = delta;
-        m_trigger->update(&event);
+        m_trigger->update(event);
     }
     QCOMPARE(executions, actionExecuted);
 }

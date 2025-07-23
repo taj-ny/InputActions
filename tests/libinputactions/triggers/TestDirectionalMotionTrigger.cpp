@@ -80,12 +80,12 @@ void TestDirectionalMotionTrigger::canUpdate()
     for (const auto &validDirection : valid) {
         DirectionalMotionTriggerUpdateEvent event;
         event.m_direction = validDirection;
-        QVERIFY(trigger->canUpdate(&event));
+        QVERIFY(trigger->canUpdate(event));
     }
     for (const auto &invalidDirection : invalid) {
         DirectionalMotionTriggerUpdateEvent event;
         event.m_direction = invalidDirection;
-        QVERIFY(!trigger->canUpdate(&event));
+        QVERIFY(!trigger->canUpdate(event));
     }
 }
 

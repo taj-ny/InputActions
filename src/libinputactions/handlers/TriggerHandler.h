@@ -40,8 +40,8 @@ class TriggerHandler : public QObject
 public:
     void addTrigger(std::unique_ptr<Trigger> trigger);
 
-    virtual bool handleEvent(const InputEvent *event);
-    void handleEvent(const KeyboardKeyEvent *event);
+    virtual bool handleEvent(const InputEvent &event);
+    void handleEvent(const KeyboardKeyEvent &event);
 
     void setTimedTriggerUpdateDelta(uint32_t value);
 
@@ -52,7 +52,7 @@ protected:
      * Cancels all active triggers and activates triggers of the specified types eligible for activation.
      * @return Whether any triggers have been activated.
      */
-    bool activateTriggers(TriggerTypes types, const TriggerActivationEvent *event);
+    bool activateTriggers(TriggerTypes types, const TriggerActivationEvent &event);
     /**
      * @see activateTriggers(const TriggerTypes &, const TriggerActivationEvent *)
      */
@@ -69,7 +69,7 @@ protected:
      * correctly.
      * @see updateTriggers(const std::map<TriggerType, const TriggerUpdateEvent *> &events)
      */
-    bool updateTriggers(TriggerType type, const TriggerUpdateEvent *event);
+    bool updateTriggers(TriggerType type, const TriggerUpdateEvent &event);
 
     /**
      * Ends the specified types of triggers.
@@ -90,7 +90,7 @@ protected:
     /**
      * @return Triggers of the specified types eligible for activation.
      */
-    std::vector<Trigger *> triggers(TriggerTypes types, const TriggerActivationEvent *event);
+    std::vector<Trigger *> triggers(TriggerTypes types, const TriggerActivationEvent &event);
     /**
      * @return Active triggers of the specified types.
      */

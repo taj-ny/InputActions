@@ -36,7 +36,7 @@ public:
      * @return Whether the event should be blocked. False if trigger handler had not been set or the device name
      * doesn't match.
      */
-    bool handleEvent(const InputEvent *event);
+    bool handleEvent(const InputEvent &event);
 
     /**
      * Mutually exclusive with setDeviceNameWhitelist.
