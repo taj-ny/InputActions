@@ -30,8 +30,7 @@ bool LibinputCompositorInputBackend::keyboardKey(InputDevice *sender, uint32_t k
         return false;
     }
 
-    handleEvent(KeyboardKeyEvent(sender, key, state));
-    return false;
+    return handleEvent(KeyboardKeyEvent(sender, key, state));
 }
 
 bool LibinputCompositorInputBackend::pointerAxis(InputDevice *sender, const QPointF &delta)

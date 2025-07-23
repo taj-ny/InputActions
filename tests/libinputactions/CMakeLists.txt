@@ -22,4 +22,5 @@ libinputactions_add_test(directionalmotiontrigger SOURCES triggers/TestDirection
 libinputactions_add_test(motiontrigger SOURCES triggers/TestMotionTrigger.cpp)
 libinputactions_add_test(range SOURCES TestRange.cpp)
 libinputactions_add_test(trigger SOURCES triggers/TestTrigger.cpp)
+libinputactions_add_test(keyboardtriggerhandler SOURCES handlers/TestKeyboardTriggerHandler.cpp)
 libinputactions_add_test(triggerhandler SOURCES handlers/TestTriggerHandler.cpp)

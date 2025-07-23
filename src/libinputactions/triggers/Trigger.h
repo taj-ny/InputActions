@@ -23,6 +23,7 @@
 #include <libinputactions/actions/TriggerAction.h>
 #include <libinputactions/conditions/Condition.h>
 #include <libinputactions/globals.h>
+#include <set>
 
 Q_DECLARE_LOGGING_CATEGORY(INPUTACTIONS_TRIGGER)
 
@@ -35,6 +36,7 @@ namespace libinputactions
 class TriggerActivationEvent
 {
 public:
+    std::set<uint32_t> keyboardKeys;
     std::optional<std::vector<Qt::MouseButton>> mouseButtons;
 };
 class TriggerUpdateEvent
@@ -73,7 +75,7 @@ public:
      * @return Whether conditions, fingers, keyboard modifiers, mouse buttons and begin positions are satisfied.
      * @internal
      */
-    TEST_VIRTUAL bool canActivate(const TriggerActivationEvent &event) const;
+    virtual bool canActivate(const TriggerActivationEvent &event) const;
 
     /**
      * Called by the trigger handler before updating a trigger. If true is returned, that trigger will be cancelled.
