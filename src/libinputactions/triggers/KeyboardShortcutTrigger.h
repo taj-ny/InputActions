@@ -36,7 +36,7 @@ class KeyboardShortcutTrigger : public Trigger
 public:
     KeyboardShortcutTrigger(KeyboardShortcut shortcut);
 
-    bool canActivate(const TriggerActivationEvent *event) const override;
+    bool canActivate(const TriggerActivationEvent &event) const override;
 
 private:
     KeyboardShortcut m_shortcut;

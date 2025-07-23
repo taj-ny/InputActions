@@ -26,16 +26,19 @@ namespace libinputactions
 class KeyboardTriggerHandler : public TriggerHandler
 {
 public:
-    bool handleEvent(const InputEvent *event) override;
+    bool handleEvent(const InputEvent &event) override;
 
 protected:
     std::unique_ptr<TriggerActivationEvent> createActivationEvent() const override;
 
 private:
-    bool handleEvent(const KeyboardKeyEvent *event);
+    bool handleEvent(const KeyboardKeyEvent &event);
 
     bool m_block;
     std::set<uint32_t> m_keys;
+    uint32_t m_firstKey{};
+
+    friend class TestKeyboardTriggerHandler;
 };
 
 }

@@ -22,27 +22,35 @@
 namespace libinputactions
 {
 
-bool KeyboardTriggerHandler::handleEvent(const InputEvent *event)
+bool KeyboardTriggerHandler::handleEvent(const InputEvent &event)
 {
     TriggerHandler::handleEvent(event);
-    switch (event->type()) {
+    switch (event.type()) {
         case InputEventType::KeyboardKey:
-            return handleEvent(static_cast<const KeyboardKeyEvent *>(event));
+            return handleEvent(static_cast<const KeyboardKeyEvent &>(event));
         default:
             return false;
     }
 }
 
-bool KeyboardTriggerHandler::handleEvent(const KeyboardKeyEvent *event)
+bool KeyboardTriggerHandler::handleEvent(const KeyboardKeyEvent &event)
 {
-    const auto isModifier = MODIFIERS.contains(event->nativeKey());
-    if (event->state()) {
-        m_keys.insert(event->nativeKey());
+    const auto isModifier = MODIFIERS.contains(event.nativeKey());
+    if (event.state()) {
+        m_keys.insert(event.nativeKey());
+        if (m_keys.size() == 1) {
+            m_firstKey = event.nativeKey();
+        }
+        if (!MODIFIERS.contains(m_firstKey)) {
+            m_block = false;
+            return false;
+        }
+
         m_block = activateTriggers(TriggerType::KeyboardShortcut);
         return m_block && !isModifier;
     }
 
-    m_keys.erase(event->nativeKey());
+    m_keys.erase(event.nativeKey());
     endTriggers(TriggerType::KeyboardShortcut);
     return m_block && !isModifier;
 }
@@ -50,7 +58,7 @@ bool KeyboardTriggerHandler::handleEvent(const KeyboardKeyEvent *event)
 std::unique_ptr<TriggerActivationEvent> KeyboardTriggerHandler::createActivationEvent() const
 {
     auto event = TriggerHandler::createActivationEvent();
-    event->keyboardKeys = m_keys;
+    event->keyboardKeys = {m_keys.begin(), m_keys.end()};
     return event;
 }
 
