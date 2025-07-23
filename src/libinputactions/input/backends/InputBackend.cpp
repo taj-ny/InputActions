@@ -89,17 +89,17 @@ void InputBackend::deviceRemoved(const InputDevice *device)
     qCDebug(INPUTACTIONS).noquote().nospace() << "Device removed (name: " << device->name() << ")";
 }
 
-bool InputBackend::handleEvent(const InputEvent *event)
+bool InputBackend::handleEvent(const InputEvent &event)
 {
-    if (!event->sender() || g_sessionLock->sessionLocked()) {
+    if (!event.sender() || g_sessionLock->sessionLocked()) {
         return false;
     }
 
-    if (event->type() == InputEventType::KeyboardKey) {
-        g_keyboard->handleEvent(static_cast<const KeyboardKeyEvent *>(event));
+    if (event.type() == InputEventType::KeyboardKey) {
+        g_keyboard->handleEvent(static_cast<const KeyboardKeyEvent &>(event));
     }
-    if (event->sender()->type() != InputDeviceType::Keyboard) {
-        g_variableManager->getVariable(BuiltinVariables::DeviceName)->set(event->sender()->name());
+    if (event.sender()->type() != InputDeviceType::Keyboard) {
+        g_variableManager->getVariable(BuiltinVariables::DeviceName)->set(event.sender()->name());
     }
 
     for (const auto &handler : m_handlers) {

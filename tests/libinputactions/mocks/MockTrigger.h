@@ -15,7 +15,7 @@ public:
     {
     }
 
-    MOCK_METHOD(bool, canActivate, (const TriggerActivationEvent *event), (const, override));
+    MOCK_METHOD(bool, canActivate, (const TriggerActivationEvent &event), (const, override));
 };
 
 }

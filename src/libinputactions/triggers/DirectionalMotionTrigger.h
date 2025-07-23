@@ -68,10 +68,10 @@ public:
      * @see MotionTrigger::canUpdate
      * @internal
      */
-    bool canUpdate(const TriggerUpdateEvent *event) const override;
+    bool canUpdate(const TriggerUpdateEvent &event) const override;
 
 protected:
-    void updateActions(const TriggerUpdateEvent *event) override;
+    void updateActions(const TriggerUpdateEvent &event) override;
 
 private:
     TriggerDirection m_direction;

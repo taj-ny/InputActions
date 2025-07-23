@@ -36,7 +36,7 @@ class TouchpadTriggerHandler : public MultiTouchMotionTriggerHandler
 public:
     TouchpadTriggerHandler();
 
-    bool handleEvent(const InputEvent *event) override;
+    bool handleEvent(const InputEvent &event) override;
 
     /**
      * @param value The time for the user to perform a click once a press gesture had been detected by libinput. If the click is not performed, the press
@@ -45,16 +45,16 @@ public:
     void setClickTimeout(uint32_t value);
 
 private:
-    bool handleEvent(const PointerButtonEvent *event);
-    bool handleEvent(const TouchpadClickEvent *event);
-    bool handleEvent(const TouchpadGestureLifecyclePhaseEvent *event);
-    bool handleEvent(const TouchpadPinchEvent *event);
-    bool handleEvent(const TouchpadSlotEvent *event);
+    bool handleEvent(const PointerButtonEvent &event);
+    bool handleEvent(const TouchpadClickEvent &event);
+    bool handleEvent(const TouchpadGestureLifecyclePhaseEvent &event);
+    bool handleEvent(const TouchpadPinchEvent &event);
+    bool handleEvent(const TouchpadSlotEvent &event);
     /**
      * The event is treated as two-finger motion. Will not work if edge scrolling is enabled.
      */
-    bool handleScrollEvent(const MotionEvent *event);
-    bool handleSwipeEvent(const MotionEvent *event);
+    bool handleScrollEvent(const MotionEvent &event);
+    bool handleSwipeEvent(const MotionEvent &event);
 
     bool m_scrollInProgress{};
 

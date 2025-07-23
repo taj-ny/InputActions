@@ -167,8 +167,7 @@ void LibevdevComplementaryInputBackend::poll()
             switch (event.type) {
                 case EV_SYN:
                     if (code == SYN_REPORT) {
-                        const TouchpadSlotEvent slotEvent(device, libevdevDevice->fingerSlots);
-                        handleEvent(&slotEvent);
+                        handleEvent(TouchpadSlotEvent(device, libevdevDevice->fingerSlots));
 
                         static const std::map<uint16_t, uint8_t> fingerCountCodes = {
                             {0, 0},
@@ -198,8 +197,7 @@ void LibevdevComplementaryInputBackend::poll()
                         case BTN_MIDDLE:
                         case BTN_RIGHT:
                             if (properties.buttonPad()) {
-                                const TouchpadClickEvent clickEvent(device, value);
-                                handleEvent(&clickEvent);
+                                handleEvent(TouchpadClickEvent(device, value));
                             }
                             continue;
                     }

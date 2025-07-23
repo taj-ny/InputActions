@@ -93,7 +93,7 @@ protected:
      * Events with a nullptr sender will be ignored.
      * @returns Whether the event should be blocked.
      */
-    bool handleEvent(const InputEvent *event);
+    bool handleEvent(const InputEvent &event);
 
     void finishStrokeRecording();
 
