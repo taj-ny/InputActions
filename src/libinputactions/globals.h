@@ -47,6 +47,7 @@ enum class TriggerType : uint32_t
     Stroke = 1u << 4,
     Swipe = 1u << 5,
     Wheel = 1u << 6,
+    KeyboardShortcut = 1u << 7,
 
     PinchRotate = Pinch | Rotate,
     StrokeSwipe = Stroke | Swipe,

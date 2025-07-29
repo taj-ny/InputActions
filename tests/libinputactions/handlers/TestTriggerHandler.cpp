@@ -18,22 +18,11 @@ void TestTriggerHandler::triggers_data()
     QTest::addColumn<std::vector<Trigger *>>("triggers");
     QTest::addColumn<int>("size");
 
-    QTest::newRow("not activatable")
-        << TriggerType::Press
-        << std::vector<Trigger *>({makeTrigger(TriggerType::Press, false)})
-        << 0;
-    QTest::newRow("activatable")
-        << TriggerType::Press
-        << std::vector<Trigger *>({makeTrigger(TriggerType::Press, true)})
-        << 1;
-    QTest::newRow("activatable, wrong type")
-        << TriggerType::Swipe
-        << std::vector<Trigger *>({makeTrigger(TriggerType::Press, true)})
-        << 0;
-    QTest::newRow("activatable, all")
-        << TriggerType::All
-        << std::vector<Trigger *>({makeTrigger(TriggerType::Press, true), makeTrigger(TriggerType::Swipe, true)})
-        << 2;
+    QTest::newRow("not activatable") << TriggerType::Press << std::vector<Trigger *>({makeTrigger(TriggerType::Press, false)}) << 0;
+    QTest::newRow("activatable") << TriggerType::Press << std::vector<Trigger *>({makeTrigger(TriggerType::Press, true)}) << 1;
+    QTest::newRow("activatable, wrong type") << TriggerType::Swipe << std::vector<Trigger *>({makeTrigger(TriggerType::Press, true)}) << 0;
+    QTest::newRow("activatable, all") << TriggerType::All
+                                      << std::vector<Trigger *>({makeTrigger(TriggerType::Press, true), makeTrigger(TriggerType::Swipe, true)}) << 2;
 }
 
 void TestTriggerHandler::triggers()
@@ -86,8 +75,7 @@ void TestTriggerHandler::keyboardKey()
 MockTrigger *TestTriggerHandler::makeTrigger(TriggerType type, bool activatable)
 {
     auto *trigger = new MockTrigger(type);
-    ON_CALL(*trigger, canActivate(_))
-        .WillByDefault(Return(activatable));
+    ON_CALL(*trigger, canActivate(_)).WillByDefault(Return(activatable));
     return trigger;
 }
 

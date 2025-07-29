@@ -65,8 +65,8 @@ void InputAction::executeImpl()
 bool InputAction::async() const
 {
     return m_delay.count() || std::ranges::any_of(m_sequence, [](const auto &item) {
-        return item.keyboardText.expensive();
-    });
+               return item.keyboardText.expensive();
+           });
 }
 
 }

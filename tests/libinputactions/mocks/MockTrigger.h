@@ -1,8 +1,7 @@
 #pragma once
 
-#include <libinputactions/triggers/Trigger.h>
-
 #include <gmock/gmock.h>
+#include <libinputactions/triggers/Trigger.h>
 
 namespace libinputactions
 {

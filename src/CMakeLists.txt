@@ -15,6 +15,7 @@ set(libinputactions_SRCS
     libinputactions/conditions/Condition.cpp
     libinputactions/conditions/ConditionGroup.cpp
     libinputactions/conditions/VariableCondition.cpp
+    libinputactions/handlers/KeyboardTriggerHandler.cpp
     libinputactions/handlers/MotionTriggerHandler.cpp
     libinputactions/handlers/MouseTriggerHandler.cpp
     libinputactions/handlers/MultiTouchMotionTriggerHandler.cpp
@@ -36,6 +37,7 @@ set(libinputactions_SRCS
     libinputactions/interfaces/Window.h
     libinputactions/interfaces/WindowProvider.cpp
     libinputactions/triggers/DirectionalMotionTrigger.cpp
+    libinputactions/triggers/KeyboardShortcutTrigger.cpp
     libinputactions/triggers/MotionTrigger.cpp
     libinputactions/triggers/PressTrigger.cpp
     libinputactions/triggers/StrokeTrigger.cpp

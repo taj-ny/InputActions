@@ -30,8 +30,7 @@ bool LibinputCompositorInputBackend::keyboardKey(InputDevice *sender, uint32_t k
         return false;
     }
 
-    handleEvent(KeyboardKeyEvent(sender, key, state));
-    return false;
+    return handleEvent(KeyboardKeyEvent(sender, key, state));
 }
 
 bool LibinputCompositorInputBackend::pointerAxis(InputDevice *sender, const QPointF &delta)
@@ -103,7 +102,8 @@ bool LibinputCompositorInputBackend::touchpadHoldEnd(InputDevice *sender, bool c
     }
 
     LibevdevComplementaryInputBackend::poll(); // Update clicked state
-    handleEvent(TouchpadGestureLifecyclePhaseEvent(sender, cancelled ? TouchpadGestureLifecyclePhase::Cancel : TouchpadGestureLifecyclePhase::End,
+    handleEvent(TouchpadGestureLifecyclePhaseEvent(sender,
+                                                   cancelled ? TouchpadGestureLifecyclePhase::Cancel : TouchpadGestureLifecyclePhase::End,
                                                    TriggerType::Press));
     return m_block;
 }
@@ -141,7 +141,8 @@ bool LibinputCompositorInputBackend::touchpadPinchEnd(InputDevice *sender, bool 
         return false;
     }
 
-    return handleEvent(TouchpadGestureLifecyclePhaseEvent(sender, cancelled ? TouchpadGestureLifecyclePhase::Cancel : TouchpadGestureLifecyclePhase::End,
+    return handleEvent(TouchpadGestureLifecyclePhaseEvent(sender,
+                                                          cancelled ? TouchpadGestureLifecyclePhase::Cancel : TouchpadGestureLifecyclePhase::End,
                                                           TriggerType::PinchRotate));
 }
 
@@ -190,7 +191,8 @@ bool LibinputCompositorInputBackend::touchpadSwipeEnd(InputDevice *sender, bool 
         return true;
     }
 
-    return handleEvent(TouchpadGestureLifecyclePhaseEvent(sender, cancelled ? TouchpadGestureLifecyclePhase::Cancel : TouchpadGestureLifecyclePhase::End,
+    return handleEvent(TouchpadGestureLifecyclePhaseEvent(sender,
+                                                          cancelled ? TouchpadGestureLifecyclePhase::Cancel : TouchpadGestureLifecyclePhase::End,
                                                           TriggerType::StrokeSwipe));
 }
 
