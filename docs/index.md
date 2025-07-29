@@ -1,1 +1,0 @@
-https://github.com/InputActions/docs/blob/HEAD/index.md
