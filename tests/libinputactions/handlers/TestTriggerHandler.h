@@ -1,10 +1,8 @@
 #pragma once
 
-#include <libinputactions/handlers/TriggerHandler.h>
-
 #include "mocks/MockTrigger.h"
-
 #include <QTest>
+#include <libinputactions/handlers/TriggerHandler.h>
 
 namespace libinputactions
 {

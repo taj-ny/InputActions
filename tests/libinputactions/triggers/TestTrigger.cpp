@@ -1,8 +1,6 @@
 #include "TestTrigger.h"
-
 #include <libinputactions/actions/Action.h>
 #include <libinputactions/actions/TriggerAction.h>
-
 
 namespace libinputactions
 {
@@ -77,8 +75,8 @@ void TestTrigger::update_threshold_data()
     QTest::newRow("no threshold, 0 delta") << std::optional<Range<qreal>>() << std::vector<qreal>{0} << true;
     QTest::newRow("total delta < min_threshold") << std::optional<Range<qreal>>(Range<qreal>(3, {})) << std::vector<qreal>{1, 1} << false;
     QTest::newRow("total delta > min_threshold") << std::optional<Range<qreal>>(Range<qreal>(3, {})) << std::vector<qreal>{2, 2} << true;
-    QTest::newRow("delta1, delta2 > max_threshold") << std::optional<Range<qreal>>(Range<qreal>({}, 3))  << std::vector<qreal>{4, 4} << false;
-    QTest::newRow("total delta > max_threshold") << std::optional<Range<qreal>>(Range<qreal>({}, 3)) << std::vector<qreal>{2, 2}  << true;
+    QTest::newRow("delta1, delta2 > max_threshold") << std::optional<Range<qreal>>(Range<qreal>({}, 3)) << std::vector<qreal>{4, 4} << false;
+    QTest::newRow("total delta > max_threshold") << std::optional<Range<qreal>>(Range<qreal>({}, 3)) << std::vector<qreal>{2, 2} << true;
 }
 
 void TestTrigger::update_threshold()

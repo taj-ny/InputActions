@@ -11,7 +11,6 @@ class TestKeyboardTriggerHandler : public QObject
 
 private slots:
     void handleEvent_keyboardKey();
-
 };
 
 }

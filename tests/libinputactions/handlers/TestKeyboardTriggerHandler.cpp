@@ -12,9 +12,7 @@ void TestKeyboardTriggerHandler::handleEvent_keyboardKey()
     auto handler = std::make_unique<KeyboardTriggerHandler>();
     QSignalSpy activatingSpy(handler.get(), &TriggerHandler::activatingTrigger);
     QSignalSpy endingSpy(handler.get(), &TriggerHandler::endingTriggers);
-    handler->addTrigger(std::make_unique<KeyboardShortcutTrigger>(KeyboardShortcut{
-        .keys = {KEY_LEFTCTRL, KEY_A}
-    }));
+    handler->addTrigger(std::make_unique<KeyboardShortcutTrigger>(KeyboardShortcut{.keys = {KEY_LEFTCTRL, KEY_A}}));
 
     InputDevice device(InputDeviceType::Keyboard);
     QCOMPARE(handler->handleEvent(KeyboardKeyEvent(&device, KEY_A, true)), false);
