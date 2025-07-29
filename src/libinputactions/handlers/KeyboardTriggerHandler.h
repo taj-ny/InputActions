@@ -34,7 +34,7 @@ protected:
 private:
     bool handleEvent(const KeyboardKeyEvent &event);
 
-    bool m_block;
+    bool m_block{};
     std::set<uint32_t> m_keys;
     uint32_t m_firstKey{};
 
