@@ -209,7 +209,7 @@ static const std::unordered_map<QString, uint32_t> s_keyboard = {
     {"CLOSECD", KEY_CLOSECD},
     {"EJECTCD", KEY_EJECTCD},
     {"EJECTCLOSECD", KEY_EJECTCLOSECD},
-    {"NEXT SONG", KEY_NEXTSONG},
+    {"NEXTSONG", KEY_NEXTSONG},
     {"PLAYPAUSE", KEY_PLAYPAUSE},
     {"PREVIOUSSONG", KEY_PREVIOUSSONG},
     {"STOPCD", KEY_STOPCD},
