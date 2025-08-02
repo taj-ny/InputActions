@@ -144,6 +144,14 @@ bool VariableOperations<qreal>::compare(const qreal &left, const qreal &right, C
             default:                                                                                                                           \
                 return false;                                                                                                                  \
         }                                                                                                                                      \
+    }                                                                                                                                          \
+                                                                                                                                               \
+    template<>                                                                                                                                 \
+    QString VariableOperations<QFlags<type>>::toString(const QFlags<type> &value)                                                              \
+    {                                                                                                                                          \
+        QString s;                                                                                                                             \
+        QDebug{&s} << value;                                                                                                                   \
+        return s;                                                                                                                              \
     }
 
 VARIABLEOPERATIONS_COMPARE_QFLAGS(Qt::KeyboardModifier)
