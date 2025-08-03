@@ -19,20 +19,30 @@
 #pragma once
 
 #include "Action.h"
+#include <QObject>
 #include <libinputactions/Value.h>
 
 namespace libinputactions
 {
 
 /**
- * Executes a command in a separate thread (neither main nor action).
+ * Executes a command in a shell.
  */
-class CommandAction : public Action
+class CommandAction
+    : public QObject
+    , public Action
 {
+    Q_OBJECT
+
 public:
     CommandAction(Value<QString> command);
 
     bool async() const override;
+
+    /**
+     * Whether to wait for the shell process to exit.
+     */
+    bool m_wait{};
 
 protected:
     void executeImpl() override;

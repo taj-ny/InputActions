@@ -1014,7 +1014,11 @@ struct convert<std::shared_ptr<Action>>
     static bool decode(const Node &node, std::shared_ptr<Action> &value)
     {
         if (const auto &commandNode = node["command"]) {
-            value = std::make_shared<CommandAction>(commandNode.as<libinputactions::Value<QString>>());
+            auto action = std::make_shared<CommandAction>(commandNode.as<libinputactions::Value<QString>>());
+            if (const auto &waitNode = node["wait"]) {
+                action->m_wait = waitNode.as<bool>();
+            }
+            value = action;
         } else if (const auto &inputNode = node["input"]) {
             auto action = std::make_shared<InputAction>(inputNode.as<std::vector<InputAction::Item>>());
             if (const auto &delayNode = node["delay"]) {
