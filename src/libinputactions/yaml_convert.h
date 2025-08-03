@@ -802,46 +802,23 @@ struct convert<std::set<T>>
 };
 
 template<>
-struct convert<std::unique_ptr<InputEventHandler>>
-{
-    static bool decode(const Node &node, std::unique_ptr<InputEventHandler> &handler)
-    {
-        handler = std::make_unique<InputEventHandler>();
-        if (const auto &blacklistNode = node["blacklist"]) {
-            handler->setDeviceNameBlacklist(blacklistNode.as<std::set<QString>>());
-        } else if (const auto &whitelistNode = node["whitelist"]) {
-            handler->setDeviceNameWhitelist(whitelistNode.as<std::set<QString>>());
-        }
-        return true;
-    }
-};
-
-template<>
 struct convert<std::vector<std::unique_ptr<InputEventHandler>>>
 {
-    template<typename T>
-    static std::unique_ptr<InputEventHandler> decodeHandler(const Node &node)
-    {
-        auto result = node.as<std::unique_ptr<InputEventHandler>>();
-        result->setTriggerHandler(node.as<std::unique_ptr<T>>());
-        return result;
-    }
-
     static bool decode(const Node &node, std::vector<std::unique_ptr<InputEventHandler>> &handlers)
     {
         if (const auto &mouseNode = node["keyboard"]) {
             for (const auto &keyboardHandler : asSequence(mouseNode)) {
-                handlers.push_back(decodeHandler<KeyboardTriggerHandler>(keyboardHandler));
+                handlers.push_back(std::make_unique<InputEventHandler>(keyboardHandler.as<std::unique_ptr<KeyboardTriggerHandler>>()));
             }
         }
         if (const auto &mouseNode = node["mouse"]) {
             for (const auto &mouseHandler : asSequence(mouseNode)) {
-                handlers.push_back(decodeHandler<MouseTriggerHandler>(mouseHandler));
+                handlers.push_back(std::make_unique<InputEventHandler>(mouseHandler.as<std::unique_ptr<MouseTriggerHandler>>()));
             }
         }
         if (const auto &touchpadNode = node["touchpad"]) {
             for (const auto &touchpadHandler : asSequence(touchpadNode)) {
-                handlers.push_back(decodeHandler<TouchpadTriggerHandler>(touchpadHandler));
+                handlers.push_back(std::make_unique<InputEventHandler>(touchpadHandler.as<std::unique_ptr<TouchpadTriggerHandler>>()));
             }
         }
         return true;
