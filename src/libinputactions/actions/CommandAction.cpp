@@ -17,7 +17,7 @@
 */
 
 #include "CommandAction.h"
-#include <thread>
+#include <QProcess>
 
 namespace libinputactions
 {
@@ -29,16 +29,21 @@ CommandAction::CommandAction(Value<QString> command)
 
 bool CommandAction::async() const
 {
-    return m_command.expensive();
+    return m_wait || m_command.expensive();
 }
 
 void CommandAction::executeImpl()
 {
-    std::thread thread([this]() {
-        const auto command = m_command.get().toStdString();
-        std::ignore = std::system(command.c_str());
+    auto *process = new QProcess(this);
+    connect(process, &QProcess::finished, this, [process]() {
+        process->deleteLater();
     });
-    thread.detach();
+    process->setProgram("/bin/sh");
+    process->setArguments({"-c", m_command.get()});
+    process->start();
+    if (m_wait) {
+        process->waitForFinished();
+    }
 }
 
 }
