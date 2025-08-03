@@ -21,37 +21,14 @@
 namespace libinputactions
 {
 
+InputEventHandler::InputEventHandler(std::unique_ptr<TriggerHandler> triggerHandler)
+    : m_triggerHandler(std::move(triggerHandler))
+{
+}
+
 bool InputEventHandler::handleEvent(const InputEvent &event)
 {
-    if (!m_triggerHandler || !matchesDevice(event.sender()->name())) {
-        return false;
-    }
     return m_triggerHandler->handleEvent(event);
-}
-
-bool InputEventHandler::matchesDevice(const QString &name) const
-{
-    if (!m_deviceNameWhitelist.empty()) {
-        return m_deviceNameWhitelist.contains(name);
-    } else if (!m_deviceNameBlacklist.empty()) {
-        return !m_deviceNameBlacklist.contains(name);
-    }
-    return true;
-}
-
-void InputEventHandler::setDeviceNameBlacklist(const std::set<QString> &blacklist)
-{
-    m_deviceNameBlacklist = blacklist;
-}
-
-void InputEventHandler::setDeviceNameWhitelist(const std::set<QString> &whitelist)
-{
-    m_deviceNameWhitelist = whitelist;
-}
-
-void InputEventHandler::setTriggerHandler(std::unique_ptr<TriggerHandler> handler)
-{
-    m_triggerHandler = std::move(handler);
 }
 
 }

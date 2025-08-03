@@ -27,36 +27,19 @@ namespace libinputactions
 {
 
 /**
- * Handles device input events. Can handle multiple devices of different types.
+ * The point of this class is to remove the need to rewrite everything if remapping is added.
  */
 class InputEventHandler
 {
 public:
+    InputEventHandler(std::unique_ptr<TriggerHandler> triggerHandler);
+
     /**
-     * @return Whether the event should be blocked. False if trigger handler had not been set or the device name
-     * doesn't match.
+     * @return Whether the event should be blocked.
      */
     bool handleEvent(const InputEvent &event);
 
-    /**
-     * Mutually exclusive with setDeviceNameWhitelist.
-     * @param blacklist Devices to be ignored.
-     */
-    void setDeviceNameBlacklist(const std::set<QString> &blacklist);
-    /**
-     * Mutually exclusive with setDeviceNameBlacklist.
-     * @param whitelist Devices to not be ignored.
-     */
-    void setDeviceNameWhitelist(const std::set<QString> &whitelist);
-
-    void setTriggerHandler(std::unique_ptr<TriggerHandler> handler);
-
 private:
-    bool matchesDevice(const QString &name) const;
-
-    std::set<QString> m_deviceNameBlacklist;
-    std::set<QString> m_deviceNameWhitelist;
-
     std::unique_ptr<TriggerHandler> m_triggerHandler;
 };
 
