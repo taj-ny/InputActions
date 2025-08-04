@@ -20,6 +20,7 @@
 #include <QDir>
 #include <QLoggingCategory>
 #include <QObject>
+#include <experimental/scope>
 #include <fcntl.h>
 #include <libinputactions/variables/VariableManager.h>
 
@@ -69,12 +70,11 @@ std::unique_ptr<LibevdevDevice> LibevdevComplementaryInputBackend::openDevice(co
 
 void LibevdevComplementaryInputBackend::deviceAdded(InputDevice *device)
 {
-    InputBackend::deviceAdded(device);
-    if (!m_enabled) {
-        return;
-    }
+    std::experimental::scope_exit guard([this, device]() {
+        InputBackend::deviceAdded(device);
+    });
 
-    if (device->type() != InputDeviceType::Touchpad) {
+    if (!m_enabled || device->type() != InputDeviceType::Touchpad) {
         return;
     }
 
