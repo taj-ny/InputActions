@@ -35,15 +35,7 @@ struct LibevdevDevice
     int fd = -1;
     QString name;
 
-    /**
-     * If device doesn't support MT type B protocol, only the first slot will be used.
-     */
-    std::vector<TouchpadSlot> fingerSlots;
     uint8_t currentSlot{};
-    /**
-     * 0, BTN_TOOL_FINGER, BTN_TOOL_DOUBLETAP, BTN_TOOL_TRIPLETAP, BTN_TOOL_QUADTAP or BTN_TOOL_QUINTTAP
-     */
-    uint16_t currentFingerCode{};
 };
 
 /**

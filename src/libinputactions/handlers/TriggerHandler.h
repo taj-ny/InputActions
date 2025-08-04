@@ -69,7 +69,7 @@ protected:
      * correctly.
      * @see updateTriggers(const std::map<TriggerType, const TriggerUpdateEvent *> &events)
      */
-    bool updateTriggers(TriggerType type, const TriggerUpdateEvent &event);
+    bool updateTriggers(TriggerType type, const TriggerUpdateEvent &event = {});
 
     /**
      * Ends the specified types of triggers.
