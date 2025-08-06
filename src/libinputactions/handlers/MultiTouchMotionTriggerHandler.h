@@ -38,6 +38,9 @@ enum class PinchType
  */
 class MultiTouchMotionTriggerHandler : public MotionTriggerHandler
 {
+public:
+    bool handleEvent(const InputEvent &event) override;
+
 protected:
     MultiTouchMotionTriggerHandler() = default;
 
@@ -49,7 +52,37 @@ protected:
 
     void reset() override;
 
+    enum State
+    {
+        TouchpadButtonDown,
+        TouchpadButtonUp,
+
+        None,
+        Scrolling,
+
+        /**
+         * Finger(s) present but no action had been performed other than adding more fingers.
+         */
+        TouchIdle,
+        /**
+         * Finger(s) present and an action had been performed.
+         */
+        Touch,
+
+        TapBegin,
+        TapEnd
+    } m_state
+        = State::None;
+    State m_savedState = State::None;
+
 private:
+    void handleTouchDownEvent(const TouchEvent &event);
+    void handleEvent(const TouchChangedEvent &event);
+    void handleTouchUpEvent(const TouchEvent &event);
+
+    bool canTap(const InputDevice *device);
+    void updateVariables(const InputDevice *device);
+
     qreal m_previousPinchScale = 1;
     PinchType m_pinchType = PinchType::Unknown;
     qreal m_accumulatedRotateDelta = 0;
