@@ -34,7 +34,7 @@ bool CommandAction::async() const
 
 void CommandAction::executeImpl()
 {
-    auto *process = new QProcess(this);
+    auto *process = new QProcess;
     connect(process, &QProcess::finished, this, [process]() {
         process->deleteLater();
     });
