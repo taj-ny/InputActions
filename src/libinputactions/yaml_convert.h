@@ -27,6 +27,7 @@
 #include <libinputactions/actions/CommandAction.h>
 #include <libinputactions/actions/InputAction.h>
 #include <libinputactions/actions/PlasmaGlobalShortcutAction.h>
+#include <libinputactions/actions/SleepAction.h>
 #include <libinputactions/actions/TriggerAction.h>
 #include <libinputactions/conditions/ConditionGroup.h>
 #include <libinputactions/conditions/VariableCondition.h>
@@ -1008,6 +1009,8 @@ struct convert<std::shared_ptr<Action>>
                 throw Exception(node.Mark(), "Invalid Plasma shortcut format");
             }
             value = std::make_shared<PlasmaGlobalShortcutAction>(split[0], split[1]);
+        } else if (const auto &sleepActionNode = node["sleep"]) {
+            value = std::make_shared<SleepAction>(sleepActionNode.as<std::chrono::milliseconds>());
         } else if (const auto &oneNode = node["one"]) {
             value = std::make_shared<ActionGroup>(oneNode.as<std::vector<std::shared_ptr<Action>>>(), ActionGroup::ExecutionMode::First);
         } else {
