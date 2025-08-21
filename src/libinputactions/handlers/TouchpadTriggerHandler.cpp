@@ -18,6 +18,7 @@
 
 #include "TouchpadTriggerHandler.h"
 #include <libinputactions/variables/VariableManager.h>
+#include <linux/input-event-codes.h>
 
 namespace libinputactions
 {
@@ -65,34 +66,52 @@ void TouchpadTriggerHandler::setClickTimeout(uint32_t value)
 
 bool TouchpadTriggerHandler::handleEvent(const PointerButtonEvent &event)
 {
+    bool block{};
     switch (m_state) {
-        case State::TouchpadButtonDown:
-            return true;
+        case State::TouchIdle:
+            if (event.state() && event.sender()->validTouchPoints() <= 3) {
+                uint8_t fingers;
+                if (event.nativeButton() == BTN_LEFT) {
+                    fingers = 1;
+                } else if (event.nativeButton() == BTN_RIGHT) {
+                    fingers = event.sender()->properties().twoFingerTapIsMiddleButton() ? 3 : 2;
+                } else if (event.nativeButton() == BTN_MIDDLE) {
+                    fingers = event.sender()->properties().twoFingerTapIsMiddleButton() ? 2 : 3;
+                } else {
+                    break;
+                }
+                g_variableManager->getVariable(BuiltinVariables::Fingers)->set(fingers);
+                if (activateTriggers(TriggerType::Tap)) {
+                    updateTriggers(TriggerType::Tap);
+                    endTriggers(TriggerType::Tap);
+                    m_state = State::TapEnd;
+                    block = true;
+                }
+            }
+            break;
         case State::TapEnd:
-            if (!event.state()) {
-                m_state = State::None;
-            }
-            return true;
-        case State::TouchpadButtonUp:
-            m_state = m_savedState;
-            if (m_state == State::TouchIdle) {
-                m_state = State::Touch;
-            }
-            return true;
-        default:
-            return false;
+            m_state = State::None;
+            break;
+        case State::TouchpadButtonDownClickTrigger:
+            block = true;
+            break;
     }
+
+    if (block && event.state()) {
+        m_blockedButtons.insert(event.nativeButton());
+        return true;
+    } else if (!event.state()) {
+        return m_blockedButtons.erase(event.nativeButton()) || block;
+    }
+    return false;
 }
 
 void TouchpadTriggerHandler::handleEvent(const TouchpadClickEvent &event)
 {
     if (event.state()) {
         cancelTriggers(TriggerType::Press);
-        if (activateTriggers(TriggerType::Click)) {
-            m_savedState = m_state;
-            m_state = State::TouchpadButtonDown;
-        }
-    } else if (m_state == State::TouchpadButtonDown) {
+        m_state = activateTriggers(TriggerType::Click) ? State::TouchpadButtonDownClickTrigger : State::TouchpadButtonDown;
+    } else if (m_state == State::TouchpadButtonDown || m_state == State::TouchpadButtonDownClickTrigger) {
         m_state = State::TouchpadButtonUp;
         endTriggers(TriggerType::Click);
     }
@@ -105,10 +124,11 @@ bool TouchpadTriggerHandler::handleEvent(const TouchpadGestureLifecyclePhaseEven
     switch (event.phase()) {
         case TouchpadGestureLifecyclePhase::Begin:
             g_variableManager->getVariable(BuiltinVariables::Fingers)->set(event.fingers());
+
+            // Delay press trigger activation if there is a click or a tap trigger
             {
-                // Delay press gesture activation if there is a click gesture
                 TriggerActivationEvent activationEvent;
-                if (event.triggers() & TriggerType::Press && !triggers(TriggerType::Click, activationEvent).empty()) {
+                if ((event.triggers() & TriggerType::Press) && !triggers(TriggerType::Click | TriggerType::Tap, activationEvent).empty()) {
                     const auto triggers = event.triggers();
                     QObject::disconnect(&m_clickTimeoutTimer, nullptr, nullptr, nullptr);
                     QObject::connect(&m_clickTimeoutTimer, &QTimer::timeout, [triggers, this] {
@@ -117,7 +137,7 @@ bool TouchpadTriggerHandler::handleEvent(const TouchpadGestureLifecyclePhaseEven
                         }
                         activateTriggers(triggers);
                     });
-                    m_clickTimeoutTimer.start(m_clickTimeout);
+                    m_clickTimeoutTimer.start(std::max(static_cast<uint32_t>(TAP_TIMEOUT.count()), m_clickTimeout));
                     return true;
                 }
             }
@@ -127,8 +147,9 @@ bool TouchpadTriggerHandler::handleEvent(const TouchpadGestureLifecyclePhaseEven
             return cancelTriggers(event.triggers());
         case TouchpadGestureLifecyclePhase::End:
             m_clickTimeoutTimer.stop();
-            if (m_state == State::TouchpadButtonDown && event.triggers() == TriggerType::Press) {
-                return true;
+            // Libinput ends hold gestures when the touchpad is clicked instead of cancelling
+            if ((m_state == State::TouchpadButtonDown || m_state == State::TouchpadButtonDownClickTrigger) && event.triggers() == TriggerType::Press) {
+                return cancelTriggers(event.triggers());
             }
             return endTriggers(event.triggers());
         default:

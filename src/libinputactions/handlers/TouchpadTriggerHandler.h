@@ -53,9 +53,12 @@ private:
     bool handleSwipeEvent(const MotionEvent &event);
 
     bool m_usesLibevdevBackend{};
+    std::set<uint32_t> m_blockedButtons;
 
     uint32_t m_clickTimeout = 200;
     QTimer m_clickTimeoutTimer;
+
+    friend class TestTouchpadTriggerHandler;
 };
 
 }

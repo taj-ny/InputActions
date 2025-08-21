@@ -118,6 +118,7 @@ void MultiTouchMotionTriggerHandler::handleTouchDownEvent(const TouchEvent &even
 {
     switch (m_state) {
         case State::None:
+        case State::TapEnd: // In case user taps again before libinput sends a button released event
             m_state = State::TouchIdle;
             break;
     }
@@ -142,6 +143,12 @@ void MultiTouchMotionTriggerHandler::handleTouchUpEvent(const TouchEvent &event)
     switch (m_state) {
         case State::TapBegin:
         case State::TouchIdle:
+            // 1-3 finger touchpad tap gestures are detected by listening for pointer button events, as it's more reliable.
+            if (m_state == State::TouchIdle && event.sender()->type() == InputDeviceType::Touchpad
+                && g_variableManager->getVariable(BuiltinVariables::Fingers)->get() <= 3) {
+                return;
+            }
+
             if (canTap(event.sender())) {
                 if (m_state == State::TouchIdle) {
                     m_state = activateTriggers(TriggerType::Tap) ? State::TapBegin : State::Touch;
@@ -149,14 +156,7 @@ void MultiTouchMotionTriggerHandler::handleTouchUpEvent(const TouchEvent &event)
                 if (m_state == State::TapBegin && !event.sender()->validTouchPoints()) {
                     updateTriggers(TriggerType::Tap);
                     endTriggers(TriggerType::Tap);
-                    m_state = State::TapEnd;
-
-                    // Reset state manually if there is no click event
-                    QTimer::singleShot(50, [this]() {
-                        if (m_state == State::TapEnd) {
-                            m_state = State::None;
-                        }
-                    });
+                    m_state = State::None;
                 }
             } else if (m_state == State::TapBegin) {
                 cancelTriggers(TriggerType::Tap);
@@ -173,7 +173,7 @@ void MultiTouchMotionTriggerHandler::handleTouchUpEvent(const TouchEvent &event)
 
 bool MultiTouchMotionTriggerHandler::canTap(const InputDevice *device)
 {
-    return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - device->m_touchPoints[0].downTimestamp).count() <= 500;
+    return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - device->m_touchPoints[0].downTimestamp).count() <= TAP_TIMEOUT.count();
 }
 
 void MultiTouchMotionTriggerHandler::updateVariables(const InputDevice *sender)

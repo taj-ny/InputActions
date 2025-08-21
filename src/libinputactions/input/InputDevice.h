@@ -83,6 +83,12 @@ public:
      */
     void setPalmPressure(uint32_t value);
 
+    bool twoFingerTapIsMiddleButton() const;
+    /**
+     * @param value Whether a two-finger tap is bound to the middle button instead of the right button.
+     */
+    void setTwoFingerTapIsMiddleButton(bool value);
+
 private:
     std::optional<bool> m_multiTouch;
     std::optional<QSizeF> m_size;
@@ -91,6 +97,8 @@ private:
     std::optional<uint32_t> m_fingerPressure;
     std::optional<uint32_t> m_thumbPressure;
     std::optional<uint32_t> m_palmPressure;
+
+    std::optional<bool> m_twoFingerTapIsMiddleButton;
 };
 
 enum TouchPointType
@@ -109,16 +117,17 @@ struct TouchPoint
     bool valid{};
     TouchPointType type = TouchPointType::None;
 
-    QPointF initialPosition;
-    QPointF position;
-    uint32_t pressure{};
-    std::chrono::steady_clock::time_point downTimestamp;
-
     /**
      * Whether this touch point is active.
      * @internal
      */
     bool active{};
+
+    // These members must not be reset if the point becomes invalid or inactive.
+    QPointF initialPosition;
+    QPointF position;
+    uint32_t pressure{};
+    std::chrono::steady_clock::time_point downTimestamp;
 };
 
 class InputDevice
@@ -137,7 +146,7 @@ public:
     const InputDeviceProperties &properties() const;
 
     /**
-     * The size of the vector is equal to the maximum slot count.
+     * The size of the vector is equal to the slot count.
      */
     std::vector<TouchPoint> m_touchPoints;
     uint8_t validTouchPoints() const;

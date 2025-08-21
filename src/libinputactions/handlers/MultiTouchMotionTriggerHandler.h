@@ -19,8 +19,11 @@
 #pragma once
 
 #include "MotionTriggerHandler.h"
+#include <chrono>
 
 Q_DECLARE_LOGGING_CATEGORY(INPUTACTIONS_HANDLER_MULTITOUCH)
+
+static const std::chrono::milliseconds TAP_TIMEOUT(200L);
 
 namespace libinputactions
 {
@@ -33,7 +36,7 @@ enum class PinchType
 };
 
 /**
- * Handles multi-touch triggers: pinch, rotate.
+ * Handles multi-touch triggers: pinch, tap, rotate.
  * In the future this will also be able to recognize triggers based on touch points.
  */
 class MultiTouchMotionTriggerHandler : public MotionTriggerHandler
@@ -55,6 +58,10 @@ protected:
     enum State
     {
         TouchpadButtonDown,
+        /**
+         * TouchpadButtonDown but a click trigger is active.
+         */
+        TouchpadButtonDownClickTrigger,
         TouchpadButtonUp,
 
         None,
@@ -71,9 +78,7 @@ protected:
 
         TapBegin,
         TapEnd
-    } m_state
-        = State::None;
-    State m_savedState = State::None;
+    } m_state = State::None;
 
 private:
     void handleTouchDownEvent(const TouchEvent &event);
@@ -86,6 +91,8 @@ private:
     qreal m_previousPinchScale = 1;
     PinchType m_pinchType = PinchType::Unknown;
     qreal m_accumulatedRotateDelta = 0;
+
+    friend class TestTouchpadTriggerHandler;
 };
 
 }
