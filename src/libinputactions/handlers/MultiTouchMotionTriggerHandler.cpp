@@ -174,7 +174,8 @@ void MultiTouchMotionTriggerHandler::handleTouchUpEvent(const TouchEvent &event)
 
 bool MultiTouchMotionTriggerHandler::canTap(const InputDevice *device)
 {
-    return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - device->m_touchPoints[0].downTimestamp).count() <= TAP_TIMEOUT.count();
+    return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - device->m_touchPoints[0].downTimestamp).count()
+        <= TAP_TIMEOUT.count();
 }
 
 void MultiTouchMotionTriggerHandler::updateVariables(const InputDevice *sender)

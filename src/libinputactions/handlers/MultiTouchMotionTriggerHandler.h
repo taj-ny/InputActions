@@ -76,7 +76,8 @@ protected:
         Touch,
 
         TapBegin
-    } m_state = State::None;
+    } m_state
+        = State::None;
 
 private:
     void handleTouchDownEvent(const TouchEvent &event);

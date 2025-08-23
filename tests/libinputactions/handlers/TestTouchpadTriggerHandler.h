@@ -1,5 +1,5 @@
-#include <QTest>
 #include <QSignalSpy>
+#include <QTest>
 #include <libinputactions/handlers/TouchpadTriggerHandler.h>
 
 namespace libinputactions

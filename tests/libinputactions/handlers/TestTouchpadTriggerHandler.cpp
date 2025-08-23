@@ -1,11 +1,11 @@
 #include "TestTouchpadTriggerHandler.h"
 #include <QSignalSpy>
 #include <QTest>
-#include <ranges>
 #include <libinputactions/conditions/VariableCondition.h>
 #include <libinputactions/handlers/TouchpadTriggerHandler.h>
 #include <libinputactions/variables/VariableManager.h>
 #include <linux/input-event-codes.h>
+#include <ranges>
 
 namespace libinputactions
 {
