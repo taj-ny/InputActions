@@ -149,7 +149,7 @@ public:
      * The size of the vector is equal to the slot count.
      */
     std::vector<TouchPoint> m_touchPoints;
-    uint8_t validTouchPoints() const;
+    std::vector<const TouchPoint *> validTouchPoints() const;
 
 private:
     InputDeviceType m_type;

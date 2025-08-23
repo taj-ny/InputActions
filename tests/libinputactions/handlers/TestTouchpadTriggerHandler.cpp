@@ -284,7 +284,7 @@ void TestTouchpadTriggerHandler::tap_fingerCount()
 
 TouchPoint &TestTouchpadTriggerHandler::addPoint(const QPointF &position)
 {
-    auto &point = m_touchpad->m_touchPoints[m_touchpad->validTouchPoints()];
+    auto &point = m_touchpad->m_touchPoints[m_touchpad->validTouchPoints().size()];
     point.valid = true;
     point.initialPosition = point.position = position;
     point.downTimestamp = std::chrono::steady_clock::now();

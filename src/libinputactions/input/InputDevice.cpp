@@ -53,11 +53,15 @@ const InputDeviceProperties &InputDevice::properties() const
     return m_properties;
 }
 
-uint8_t InputDevice::validTouchPoints() const
+std::vector<const TouchPoint *> InputDevice::validTouchPoints() const
 {
-    return std::ranges::count_if(m_touchPoints, [](const auto &point) {
-        return point.valid;
-    });
+    std::vector<const TouchPoint *> result;
+    for (auto &point : m_touchPoints) {
+        if (point.valid) {
+            result.push_back(&point);
+        }
+    }
+    return result;
 }
 
 void InputDeviceProperties::apply(const InputDeviceProperties &other)

@@ -69,7 +69,7 @@ bool TouchpadTriggerHandler::handleEvent(const PointerButtonEvent &event)
     bool block{};
     switch (m_state) {
         case State::TouchIdle:
-            if (event.state() && event.sender()->validTouchPoints() <= 3) {
+            if (event.state() && event.sender()->validTouchPoints().size() <= 3) {
                 uint8_t fingers;
                 if (event.nativeButton() == BTN_LEFT) {
                     fingers = 1;
@@ -109,7 +109,7 @@ void TouchpadTriggerHandler::handleEvent(const TouchpadClickEvent &event)
         cancelTriggers(TriggerType::Press);
         m_state = activateTriggers(TriggerType::Click) ? State::TouchpadButtonDownClickTrigger : State::TouchpadButtonDown;
     } else if (m_state == State::TouchpadButtonDown || m_state == State::TouchpadButtonDownClickTrigger) {
-        m_state = event.sender()->validTouchPoints() ? State::Touch : State::None;
+        m_state = event.sender()->validTouchPoints().empty() ? State::None : State::Touch;
         endTriggers(TriggerType::Click);
     }
 
