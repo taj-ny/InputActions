@@ -36,6 +36,10 @@ struct LibevdevDevice
     QString name;
 
     uint8_t currentSlot{};
+    /**
+     * Absolute minimum values of ABS_X and ABS_Y.
+     */
+    QPoint absMin;
 };
 
 /**
