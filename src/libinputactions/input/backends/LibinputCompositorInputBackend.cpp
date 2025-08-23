@@ -52,7 +52,6 @@ bool LibinputCompositorInputBackend::pointerAxis(InputDevice *sender, const QPoi
         return true;
     }
 
-    LibevdevComplementaryInputBackend::poll(); // Update finger count
     return handleEvent(MotionEvent(sender, InputEventType::PointerScroll, delta));
 }
 
@@ -115,7 +114,6 @@ bool LibinputCompositorInputBackend::touchpadPinchBegin(InputDevice *sender, uin
     }
 
     m_fingers = fingers;
-    LibevdevComplementaryInputBackend::poll(); // Update finger count
     m_block = handleEvent(TouchpadGestureLifecyclePhaseEvent(sender, TouchpadGestureLifecyclePhase::Begin, TriggerType::PinchRotate, fingers));
     return m_block;
 }
@@ -155,7 +153,6 @@ bool LibinputCompositorInputBackend::touchpadSwipeBegin(InputDevice *sender, uin
     }
 
     m_fingers = fingers;
-    LibevdevComplementaryInputBackend::poll(); // Update finger count
     m_block = handleEvent(TouchpadGestureLifecyclePhaseEvent(sender, TouchpadGestureLifecyclePhase::Begin, TriggerType::StrokeSwipe, fingers));
     return m_block;
 }
