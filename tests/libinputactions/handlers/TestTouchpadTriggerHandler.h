@@ -16,10 +16,12 @@ private slots:
     void click_withLibinputButton_data();
     void click_withLibinputButton();
 
-    void press1_notDelayed();
+    void press1_notDelayedOrBlocked();
     void press1_hasClickTrigger_delayed();
     void press1_hasTapTrigger_delayed();
     void press1_clickedDuringPress_pressCancelledAndClickActivated();
+    void press2_notDelayedOrBlocked();
+    void press3_blocked();
 
     void swipe2();
 

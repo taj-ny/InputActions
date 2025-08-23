@@ -119,36 +119,39 @@ void TouchpadTriggerHandler::handleEvent(const TouchpadClickEvent &event)
 bool TouchpadTriggerHandler::handleEvent(const TouchpadGestureLifecyclePhaseEvent &event)
 {
     switch (event.phase()) {
-        case TouchpadGestureLifecyclePhase::Begin:
+        case TouchpadGestureLifecyclePhase::Begin: {
             g_variableManager->getVariable(BuiltinVariables::Fingers)->set(event.fingers());
 
+            // 1- and 2-finger hold gestures have almost no delay and are used to stop kinetic scrolling, there's no reason to block them
+            m_gestureBeginBlocked = !(event.triggers() & TriggerType::Press && event.fingers() <= 2);
+
             // Delay press trigger activation if there is a click or a tap trigger
-            {
-                TriggerActivationEvent activationEvent;
-                if ((event.triggers() & TriggerType::Press) && !triggers(TriggerType::Click | TriggerType::Tap, activationEvent).empty()) {
-                    const auto triggers = event.triggers();
-                    QObject::disconnect(&m_clickTimeoutTimer, nullptr, nullptr, nullptr);
-                    QObject::connect(&m_clickTimeoutTimer, &QTimer::timeout, [triggers, this] {
-                        if (hasActiveTriggers(TriggerType::All & ~triggers)) {
-                            return;
-                        }
-                        activateTriggers(triggers);
-                    });
-                    m_clickTimeoutTimer.start(std::max(static_cast<uint32_t>(TAP_TIMEOUT.count()), m_clickTimeout));
-                    return true;
-                }
+            TriggerActivationEvent activationEvent;
+            if ((event.triggers() & TriggerType::Press) && !triggers(TriggerType::Click | TriggerType::Tap, activationEvent).empty()) {
+                const auto triggers = event.triggers();
+                QObject::disconnect(&m_clickTimeoutTimer, nullptr, nullptr, nullptr);
+                QObject::connect(&m_clickTimeoutTimer, &QTimer::timeout, [triggers, this] {
+                    if (hasActiveTriggers(TriggerType::All & ~triggers)) {
+                        return;
+                    }
+                    activateTriggers(triggers);
+                });
+                m_clickTimeoutTimer.start(std::max(static_cast<uint32_t>(TAP_TIMEOUT.count()), m_clickTimeout));
+                return m_gestureBeginBlocked;
             }
-            return activateTriggers(event.triggers());
+
+            return activateTriggers(event.triggers()) && m_gestureBeginBlocked;
+        }
         case TouchpadGestureLifecyclePhase::Cancel:
             m_clickTimeoutTimer.stop();
-            return cancelTriggers(event.triggers());
+            return cancelTriggers(event.triggers()) && m_gestureBeginBlocked;
         case TouchpadGestureLifecyclePhase::End:
             m_clickTimeoutTimer.stop();
             // Libinput ends hold gestures when the touchpad is clicked instead of cancelling
             if ((m_state == State::TouchpadButtonDown || m_state == State::TouchpadButtonDownClickTrigger) && event.triggers() == TriggerType::Press) {
-                return cancelTriggers(event.triggers());
+                return cancelTriggers(event.triggers()) && m_gestureBeginBlocked;
             }
-            return endTriggers(event.triggers());
+            return endTriggers(event.triggers()) && m_gestureBeginBlocked;
         default:
             return false;
     }
