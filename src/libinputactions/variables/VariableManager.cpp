@@ -130,16 +130,22 @@ VariableManager::VariableManager()
 
     for (const auto &[name, variable] : m_variables) {
         if (variable->type() == typeid(QPointF)) {
-            registerRemoteVariable<qreal>(name + "_x", [this, name](auto &value) {
-                if (const auto point = getVariable<QPointF>(name)->get()) {
-                    value = point->x();
-                }
-            });
-            registerRemoteVariable<qreal>(name + "_y", [this, name](auto &value) {
-                if (const auto point = getVariable<QPointF>(name)->get()) {
-                    value = point->y();
-                }
-            });
+            registerRemoteVariable<qreal>(
+                name + "_x",
+                [this, name](auto &value) {
+                    if (const auto point = getVariable<QPointF>(name)->get()) {
+                        value = point->x();
+                    }
+                },
+                true);
+            registerRemoteVariable<qreal>(
+                name + "_y",
+                [this, name](auto &value) {
+                    if (const auto point = getVariable<QPointF>(name)->get()) {
+                        value = point->y();
+                    }
+                },
+                true);
         }
     }
 }
@@ -155,8 +161,9 @@ Variable *VariableManager::getVariable(const QString &name)
     return m_variables.at(name).get();
 }
 
-void VariableManager::registerVariable(const QString &name, std::unique_ptr<Variable> variable)
+void VariableManager::registerVariable(const QString &name, std::unique_ptr<Variable> variable, bool hidden)
 {
+    variable->m_hidden = hidden;
     m_variables[name] = std::move(variable);
 }
 
