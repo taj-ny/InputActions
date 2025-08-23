@@ -51,6 +51,11 @@ public:
 
     const std::type_index &type() const;
 
+    /**
+     * Whether the value should not be shown in the DBus interface.
+     */
+    bool m_hidden{};
+
 private:
     std::type_index m_type;
     std::variant<bool, QString> m_value;

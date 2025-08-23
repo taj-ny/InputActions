@@ -202,6 +202,12 @@ QString VariableOperations<CursorShape>::toString(const CursorShape &value)
 }
 
 template<>
+QString VariableOperations<QPointF>::toString(const QPointF &value)
+{
+    return QString("(%1, %2)").arg(value.x()).arg(value.y());
+}
+
+template<>
 QString VariableOperations<QString>::toString(const QString &value)
 {
     return value;

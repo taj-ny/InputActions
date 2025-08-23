@@ -95,7 +95,7 @@ public:
      */
     Variable *getVariable(const QString &name);
 
-    void registerVariable(const QString &name, std::unique_ptr<Variable> variable);
+    void registerVariable(const QString &name, std::unique_ptr<Variable> variable, bool hidden = false);
     template<typename T>
     void registerLocalVariable(const QString &name)
     {
@@ -107,7 +107,7 @@ public:
         registerLocalVariable<T>(variable.name);
     }
     template<typename T>
-    void registerRemoteVariable(const QString &name, const std::function<void(std::optional<T> &value)> getter)
+    void registerRemoteVariable(const QString &name, const std::function<void(std::optional<T> &value)> getter, bool hidden = false)
     {
         const std::function<void(std::any & value)> anyGetter = [getter](std::any &value) {
             std::optional<T> optValue;
@@ -116,7 +116,7 @@ public:
                 value = optValue.value();
             }
         };
-        registerVariable(name, std::make_unique<RemoteVariable>(typeid(T), anyGetter));
+        registerVariable(name, std::make_unique<RemoteVariable>(typeid(T), anyGetter), hidden);
     }
 
     std::map<QString, const Variable *> variables() const;
