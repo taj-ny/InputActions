@@ -160,14 +160,12 @@ private:
 class TouchChangedEvent : public TouchEvent
 {
 public:
-    TouchChangedEvent(InputDevice *sender, TouchPoint point, QPointF positionDelta, int8_t pressureDelta);
+    TouchChangedEvent(InputDevice *sender, TouchPoint point, QPointF positionDelta);
 
     const QPointF &positionDelta() const;
-    uint8_t pressureDelta() const;
 
 private:
     QPointF m_positionDelta;
-    int8_t m_pressureDelta;
 };
 
 }

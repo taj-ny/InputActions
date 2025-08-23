@@ -151,21 +151,15 @@ const TouchPoint &TouchEvent::point() const
     return m_point;
 }
 
-TouchChangedEvent::TouchChangedEvent(InputDevice *sender, TouchPoint point, QPointF positionDelta, int8_t pressureDelta)
+TouchChangedEvent::TouchChangedEvent(InputDevice *sender, TouchPoint point, QPointF positionDelta)
     : TouchEvent(sender, InputEventType::TouchChanged, point)
     , m_positionDelta(std::move(positionDelta))
-    , m_pressureDelta(pressureDelta)
 {
 }
 
 const QPointF &TouchChangedEvent::positionDelta() const
 {
     return m_positionDelta;
-}
-
-uint8_t TouchChangedEvent::pressureDelta() const
-{
-    return m_pressureDelta;
 }
 
 }

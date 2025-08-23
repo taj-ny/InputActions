@@ -191,7 +191,7 @@ void LibevdevComplementaryInputBackend::poll()
 
                                 handleEvent(TouchEvent(device, slot.valid ? InputEventType::TouchDown : InputEventType::TouchUp, slot));
                             } else if (previous.position != slot.position || previous.pressure != slot.pressure) {
-                                handleEvent(TouchChangedEvent(device, slot, slot.position - previous.position, slot.pressure - previous.pressure));
+                                handleEvent(TouchChangedEvent(device, slot, slot.position - previous.position));
                             }
                         }
                     }

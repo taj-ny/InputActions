@@ -189,7 +189,7 @@ void TestTouchpadTriggerHandler::tap4_moved()
     auto points = addPoints(4);
     for (auto point : points) {
         point->position += {0.1, 0.1};
-        m_handler->handleEvent(TouchChangedEvent(m_touchpad.get(), *point, {0.1, 0.1}, 0));
+        m_handler->handleEvent(TouchChangedEvent(m_touchpad.get(), *point, {0.1, 0.1}));
     }
     removePoints();
 
