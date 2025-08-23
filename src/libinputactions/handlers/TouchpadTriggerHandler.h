@@ -54,6 +54,7 @@ private:
 
     bool m_usesLibevdevBackend{};
     std::set<uint32_t> m_blockedButtons;
+    bool m_gestureBeginBlocked{};
 
     uint32_t m_clickTimeout = 200;
     QTimer m_clickTimeoutTimer;

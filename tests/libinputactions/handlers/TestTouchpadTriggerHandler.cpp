@@ -62,14 +62,16 @@ void TestTouchpadTriggerHandler::click_withLibinputButton()
     QCOMPARE(m_endingTriggersSpy->at(0).at(0).value<TriggerTypes>(), TriggerType::Click);
 }
 
-void TestTouchpadTriggerHandler::press1_notDelayed()
+void TestTouchpadTriggerHandler::press1_notDelayedOrBlocked()
 {
     m_handler->addTrigger(std::make_unique<Trigger>(TriggerType::Press));
 
-    m_handler->handleEvent(TouchpadGestureLifecyclePhaseEvent(m_touchpad.get(), TouchpadGestureLifecyclePhase::Begin, TriggerType::Press));
+    QCOMPARE(m_handler->handleEvent(TouchpadGestureLifecyclePhaseEvent(m_touchpad.get(), TouchpadGestureLifecyclePhase::Begin, TriggerType::Press, 1)), false);
 
     QCOMPARE(m_activatingTriggersSpy->count(), 1);
     QCOMPARE(m_activatingTriggersSpy->at(0).at(0).value<TriggerTypes>(), TriggerType::Press);
+
+    QCOMPARE(m_handler->handleEvent(TouchpadGestureLifecyclePhaseEvent(m_touchpad.get(), TouchpadGestureLifecyclePhase::End, TriggerType::Press)), false);
 }
 
 void TestTouchpadTriggerHandler::press1_hasClickTrigger_delayed()
@@ -118,6 +120,26 @@ void TestTouchpadTriggerHandler::press1_clickedDuringPress_pressCancelledAndClic
     QCOMPARE(m_endingTriggersSpy->count(), 0);
     QCOMPARE(m_activatingTriggersSpy->count(), 2);
     QCOMPARE(m_activatingTriggersSpy->at(1).at(0).value<TriggerTypes>(), TriggerType::Click);
+}
+
+void TestTouchpadTriggerHandler::press2_notDelayedOrBlocked()
+{
+    m_handler->addTrigger(std::make_unique<Trigger>(TriggerType::Press));
+
+    QCOMPARE(m_handler->handleEvent(TouchpadGestureLifecyclePhaseEvent(m_touchpad.get(), TouchpadGestureLifecyclePhase::Begin, TriggerType::Press, 2)), false);
+
+    QCOMPARE(m_activatingTriggersSpy->count(), 1);
+    QCOMPARE(m_activatingTriggersSpy->at(0).at(0).value<TriggerTypes>(), TriggerType::Press);
+
+    QCOMPARE(m_handler->handleEvent(TouchpadGestureLifecyclePhaseEvent(m_touchpad.get(), TouchpadGestureLifecyclePhase::End, TriggerType::Press)), false);
+}
+
+void TestTouchpadTriggerHandler::press3_blocked()
+{
+    m_handler->addTrigger(std::make_unique<Trigger>(TriggerType::Press));
+
+    QCOMPARE(m_handler->handleEvent(TouchpadGestureLifecyclePhaseEvent(m_touchpad.get(), TouchpadGestureLifecyclePhase::Begin, TriggerType::Press, 3)), true);
+    QCOMPARE(m_handler->handleEvent(TouchpadGestureLifecyclePhaseEvent(m_touchpad.get(), TouchpadGestureLifecyclePhase::End, TriggerType::Press)), true);
 }
 
 void TestTouchpadTriggerHandler::swipe2()
