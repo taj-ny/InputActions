@@ -172,10 +172,10 @@ bool KWinInputBackend::wheelEvent(KWin::WheelEvent *event)
 void KWinInputBackend::kwinDeviceAdded(KWin::InputDevice *kwinDevice)
 {
     InputDeviceType type;
-    if (kwinDevice->isKeyboard()) {
-        type = InputDeviceType::Keyboard;
-    } else if (isMouse(kwinDevice)) {
+    if (isMouse(kwinDevice)) {
         type = InputDeviceType::Mouse;
+    } else if (kwinDevice->isKeyboard()) {
+        type = InputDeviceType::Keyboard;
     } else if (kwinDevice->isTouchpad()) {
         type = InputDeviceType::Touchpad;
     } else {
