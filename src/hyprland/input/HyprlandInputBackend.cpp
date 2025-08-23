@@ -19,6 +19,7 @@
 #include "HyprlandInputBackend.h"
 #include "Plugin.h"
 #include <aquamarine/input/Input.hpp>
+#include <hyprland/src/config/ConfigManager.hpp>
 #include <hyprland/src/devices/IKeyboard.hpp>
 #include <hyprland/src/devices/IPointer.hpp>
 #include <hyprland/src/managers/SeatManager.hpp>
@@ -142,6 +143,10 @@ void HyprlandInputBackend::checkDeviceChanges()
         }
 
         newDevice.libinputactionsDevice = std::make_unique<InputDevice>(type, name);
+        if (g_pConfigManager->getDeviceString(device->m_deviceName, "tap_button_map", "input:touchpad:tap_button_map") == "lmr") {
+            newDevice.libinputactionsDevice->properties().setLmrTapButtonMap(true);
+        }
+
         deviceAdded(newDevice.libinputactionsDevice.get());
         m_devices.push_back(std::move(newDevice));
         m_hyprlandDevices.push_back(device.get());

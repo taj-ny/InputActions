@@ -53,20 +53,28 @@ const InputDeviceProperties &InputDevice::properties() const
     return m_properties;
 }
 
+uint8_t InputDevice::validTouchPoints() const
+{
+    return std::ranges::count_if(m_touchPoints, [](const auto &point) {
+        return point.valid;
+    });
+}
+
 void InputDeviceProperties::apply(const InputDeviceProperties &other)
 {
-    if (other.m_multiTouch) {
-        m_multiTouch = other.m_multiTouch;
-    }
-    if (other.m_size) {
-        m_size = other.m_size;
-    }
-    if (other.m_buttonPad) {
-        m_buttonPad = other.m_buttonPad;
-    }
-    if (other.m_thumbPressureRange) {
-        m_thumbPressureRange = other.m_thumbPressureRange;
-    }
+    static const auto apply = [](auto &thisOpt, auto &otherOpt) {
+        if (otherOpt) {
+            thisOpt = otherOpt;
+        }
+    };
+
+    apply(m_multiTouch, other.m_multiTouch);
+    apply(m_size, other.m_size);
+    apply(m_buttonPad, other.m_buttonPad);
+    apply(m_fingerPressure, other.m_fingerPressure);
+    apply(m_thumbPressure, other.m_thumbPressure);
+    apply(m_palmPressure, other.m_palmPressure);
+    apply(m_lmrTapButtonMap, other.m_lmrTapButtonMap);
 }
 
 bool InputDeviceProperties::multiTouch() const
@@ -99,14 +107,44 @@ void InputDeviceProperties::setButtonPad(bool value)
     m_buttonPad = value;
 }
 
-Range<uint32_t> InputDeviceProperties::thumbPressureRange() const
+uint32_t InputDeviceProperties::fingerPressure() const
 {
-    return m_thumbPressureRange.value_or(Range<uint32_t>(-1, -1));
+    return m_fingerPressure.value_or(0);
 }
 
-void InputDeviceProperties::setThumbPressureRange(const Range<uint32_t> &value)
+void InputDeviceProperties::setFingerPressure(uint32_t value)
 {
-    m_thumbPressureRange = value;
+    m_fingerPressure = value;
+}
+
+uint32_t InputDeviceProperties::thumbPressure() const
+{
+    return m_thumbPressure.value_or(UINT32_MAX);
+}
+
+void InputDeviceProperties::setThumbPressure(uint32_t value)
+{
+    m_thumbPressure = value;
+}
+
+uint32_t InputDeviceProperties::palmPressure() const
+{
+    return m_palmPressure.value_or(UINT32_MAX);
+}
+
+void InputDeviceProperties::setPalmPressure(uint32_t value)
+{
+    m_palmPressure = value;
+}
+
+bool InputDeviceProperties::lmrTapButtonMap() const
+{
+    return m_lmrTapButtonMap.value_or(false);
+}
+
+void InputDeviceProperties::setLmrTapButtonMap(bool value)
+{
+    m_lmrTapButtonMap = value;
 }
 
 }

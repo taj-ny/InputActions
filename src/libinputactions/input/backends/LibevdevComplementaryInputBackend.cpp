@@ -32,7 +32,7 @@ Q_LOGGING_CATEGORY(INPUTACTIONS_BACKEND_LIBEVDEV, "inputactions.input.backend.li
 LibevdevComplementaryInputBackend::LibevdevComplementaryInputBackend()
 {
     m_inputTimer.setTimerType(Qt::TimerType::PreciseTimer);
-    m_inputTimer.setInterval(100);
+    m_inputTimer.setInterval(10);
     QObject::connect(&m_inputTimer, &QTimer::timeout, [this] {
         poll();
     });
@@ -117,6 +117,7 @@ void LibevdevComplementaryInputBackend::deviceAdded(InputDevice *device)
         multiTouch = true;
         slotCount = libevdev_get_abs_maximum(libevdevDevice->libevdevPtr, ABS_MT_SLOT) + 1;
     }
+    device->m_touchPoints = std::vector<TouchPoint>(slotCount);
     qCDebug(INPUTACTIONS_BACKEND_LIBEVDEV).noquote().nospace()
         << "Found valid touchpad (size: " << size << ", multiTouch: " << multiTouch << ", slots: " << slotCount << ")";
 
@@ -125,7 +126,6 @@ void LibevdevComplementaryInputBackend::deviceAdded(InputDevice *device)
     properties.setMultiTouch(multiTouch);
     properties.setButtonPad(buttonPad);
 
-    libevdevDevice->fingerSlots = std::vector<TouchpadSlot>{slotCount};
     m_libevdevDevices[device] = std::move(libevdevDevice);
     m_inputTimer.start();
 }
@@ -153,6 +153,7 @@ void LibevdevComplementaryInputBackend::poll()
 
     input_event event;
     for (auto &[device, libevdevDevice] : m_libevdevDevices) {
+        const auto previousTouchPoints = device->m_touchPoints;
         const auto &properties = device->properties();
         int status{};
         while (true) {
@@ -167,32 +168,36 @@ void LibevdevComplementaryInputBackend::poll()
             switch (event.type) {
                 case EV_SYN:
                     if (code == SYN_REPORT) {
-                        handleEvent(TouchpadSlotEvent(device, libevdevDevice->fingerSlots));
+                        for (size_t i = 0; i < previousTouchPoints.size(); i++) {
+                            const auto &previous = previousTouchPoints[i];
+                            auto &slot = device->m_touchPoints[i];
 
-                        static const std::map<uint16_t, uint8_t> fingerCountCodes = {
-                            {0, 0},
-                            {BTN_TOOL_FINGER, 1},
-                            {BTN_TOOL_DOUBLETAP, 2},
-                            {BTN_TOOL_TRIPLETAP, 3},
-                            {BTN_TOOL_QUADTAP, 4},
-                            {BTN_TOOL_QUINTTAP, 5},
-                        };
-                        g_variableManager->getVariable(BuiltinVariables::Fingers)->set(fingerCountCodes.at(libevdevDevice->currentFingerCode));
+                            if (slot.pressure >= device->properties().palmPressure()) {
+                                slot.type = TouchPointType::Palm;
+                            } else if (slot.pressure >= device->properties().thumbPressure()) {
+                                slot.type = TouchPointType::Thumb;
+                            } else if (slot.pressure >= device->properties().fingerPressure()) {
+                                slot.type = TouchPointType::Finger;
+                            } else {
+                                slot.type = TouchPointType::None;
+                            }
+                            slot.valid = slot.active && (slot.type == TouchPointType::Finger || slot.type == TouchPointType::Thumb);
+
+                            if (previous.valid != slot.valid) {
+                                if (slot.valid) {
+                                    slot.downTimestamp = std::chrono::steady_clock::now();
+                                    slot.initialPosition = slot.position;
+                                }
+
+                                handleEvent(TouchEvent(device, slot.valid ? InputEventType::TouchDown : InputEventType::TouchUp, slot));
+                            } else if (previous.position != slot.position || previous.pressure != slot.pressure) {
+                                handleEvent(TouchChangedEvent(device, slot, slot.position - previous.position));
+                            }
+                        }
                     }
                     continue;
                 case EV_KEY:
                     switch (code) {
-                        case BTN_TOOL_FINGER:
-                        case BTN_TOOL_DOUBLETAP:
-                        case BTN_TOOL_TRIPLETAP:
-                        case BTN_TOOL_QUADTAP:
-                        case BTN_TOOL_QUINTTAP:
-                            if (value == 1) {
-                                libevdevDevice->currentFingerCode = code;
-                            } else if (value == 0 && libevdevDevice->currentFingerCode == code) {
-                                libevdevDevice->currentFingerCode = 0;
-                            }
-                            continue;
                         case BTN_LEFT:
                         case BTN_MIDDLE:
                         case BTN_RIGHT:
@@ -203,35 +208,35 @@ void LibevdevComplementaryInputBackend::poll()
                     }
                     continue;
                 case EV_ABS:
-                    auto &currentSlot = libevdevDevice->fingerSlots[libevdevDevice->currentSlot];
+                    auto &currentTouchPoint = device->m_touchPoints[libevdevDevice->currentSlot];
                     if (properties.multiTouch()) {
                         switch (code) {
                             case ABS_MT_SLOT:
                                 libevdevDevice->currentSlot = value;
                                 continue;
                             case ABS_MT_TRACKING_ID:
-                                currentSlot.active = value != -1;
+                                currentTouchPoint.active = value != -1;
                                 continue;
                             case ABS_MT_POSITION_X:
-                                currentSlot.position.setX(value / properties.size().width());
+                                currentTouchPoint.position.setX(value / properties.size().width());
                                 continue;
                             case ABS_MT_POSITION_Y:
-                                currentSlot.position.setY(value / properties.size().height());
+                                currentTouchPoint.position.setY(value / properties.size().height());
                                 continue;
                             case ABS_MT_PRESSURE:
-                                currentSlot.pressure = value;
+                                currentTouchPoint.pressure = value;
                                 continue;
                         }
                     } else {
                         switch (code) {
                             case ABS_X:
-                                currentSlot.position.setX(value / properties.size().width());
+                                currentTouchPoint.position.setX(value / properties.size().width());
                                 continue;
                             case ABS_Y:
-                                currentSlot.position.setY(value / properties.size().height());
+                                currentTouchPoint.position.setY(value / properties.size().height());
                                 continue;
                             case ABS_PRESSURE:
-                                currentSlot.pressure = value;
+                                currentTouchPoint.pressure = value;
                                 continue;
                         }
                     }

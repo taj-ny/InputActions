@@ -883,14 +883,16 @@ struct convert<std::unique_ptr<Trigger>>
             trigger.reset(pressTrigger);
         } else if (type == "pinch") {
             trigger = std::make_unique<DirectionalMotionTrigger>(TriggerType::Pinch, static_cast<TriggerDirection>(node["direction"].as<PinchDirection>()));
+        } else if (type == "rotate") {
+            trigger = std::make_unique<DirectionalMotionTrigger>(TriggerType::Rotate, static_cast<TriggerDirection>(node["direction"].as<RotateDirection>()));
         } else if (type == "shortcut") {
             trigger = std::make_unique<KeyboardShortcutTrigger>(node["shortcut"].as<KeyboardShortcut>());
         } else if (type == "stroke") {
             trigger = std::make_unique<StrokeTrigger>(asSequence(node["strokes"]).as<std::vector<Stroke>>());
         } else if (type == "swipe") {
             trigger = std::make_unique<DirectionalMotionTrigger>(TriggerType::Swipe, static_cast<TriggerDirection>(node["direction"].as<SwipeDirection>()));
-        } else if (type == "rotate") {
-            trigger = std::make_unique<DirectionalMotionTrigger>(TriggerType::Rotate, static_cast<TriggerDirection>(node["direction"].as<RotateDirection>()));
+        } else if (type == "tap") {
+            trigger = std::make_unique<Trigger>(TriggerType::Tap);
         } else if (type == "wheel") {
             trigger = std::make_unique<WheelTrigger>(static_cast<TriggerDirection>(node["direction"].as<SwipeDirection>()));
         } else {
@@ -1392,8 +1394,14 @@ struct convert<InputDeviceProperties>
             value.setButtonPad(buttonPad.as<bool>());
         }
         if (const auto &pressureRangesNode = node["pressure_ranges"]) {
+            if (const auto &fingerNode = pressureRangesNode["finger"]) {
+                value.setFingerPressure(fingerNode.as<uint32_t>());
+            }
             if (const auto &thumbNode = pressureRangesNode["thumb"]) {
-                value.setThumbPressureRange(thumbNode.as<Range<uint32_t>>());
+                value.setThumbPressure(thumbNode.as<uint32_t>());
+            }
+            if (const auto &palmNode = pressureRangesNode["palm"]) {
+                value.setPalmPressure(palmNode.as<uint32_t>());
             }
         }
         return true;

@@ -140,15 +140,26 @@ const uint8_t &TouchpadGestureLifecyclePhaseEvent::fingers() const
     return m_fingers;
 }
 
-TouchpadSlotEvent::TouchpadSlotEvent(InputDevice *sender, const std::vector<TouchpadSlot> &fingerSlots)
-    : InputEvent(InputEventType::TouchpadSlot, sender)
-    , m_slots(fingerSlots)
+TouchEvent::TouchEvent(InputDevice *sender, InputEventType type, TouchPoint point)
+    : InputEvent(type, sender)
+    , m_point(std::move(point))
 {
 }
 
-const std::vector<TouchpadSlot> &TouchpadSlotEvent::fingerSlots() const
+const TouchPoint &TouchEvent::point() const
 {
-    return m_slots;
+    return m_point;
+}
+
+TouchChangedEvent::TouchChangedEvent(InputDevice *sender, TouchPoint point, QPointF positionDelta)
+    : TouchEvent(sender, InputEventType::TouchChanged, point)
+    , m_positionDelta(std::move(positionDelta))
+{
+}
+
+const QPointF &TouchChangedEvent::positionDelta() const
+{
+    return m_positionDelta;
 }
 
 }

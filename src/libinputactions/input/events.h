@@ -34,6 +34,10 @@ enum class InputEventType
     PointerMotion,
     PointerScroll,
 
+    TouchDown,
+    TouchChanged,
+    TouchUp,
+
     TouchpadClick,
     TouchpadGestureLifecyclePhase,
     TouchpadSlot,
@@ -142,22 +146,26 @@ private:
     uint8_t m_fingers;
 };
 
-struct TouchpadSlot
-{
-    bool active{};
-    QPointF position;
-    uint32_t pressure{};
-};
-
-class TouchpadSlotEvent : public InputEvent
+class TouchEvent : public InputEvent
 {
 public:
-    TouchpadSlotEvent(InputDevice *sender, const std::vector<TouchpadSlot> &fingerSlots);
+    TouchEvent(InputDevice *sender, InputEventType type, TouchPoint point);
 
-    const std::vector<TouchpadSlot> &fingerSlots() const;
+    const TouchPoint &point() const;
 
 private:
-    std::vector<TouchpadSlot> m_slots;
+    TouchPoint m_point;
+};
+
+class TouchChangedEvent : public TouchEvent
+{
+public:
+    TouchChangedEvent(InputDevice *sender, TouchPoint point, QPointF positionDelta);
+
+    const QPointF &positionDelta() const;
+
+private:
+    QPointF m_positionDelta;
 };
 
 }

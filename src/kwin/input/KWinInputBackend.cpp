@@ -186,6 +186,9 @@ void KWinInputBackend::kwinDeviceAdded(KWin::InputDevice *kwinDevice)
         .kwinDevice = kwinDevice,
         .libinputactionsDevice = std::make_unique<libinputactions::InputDevice>(type, kwinDevice->name(), kwinDevice->property("sysName").toString()),
     };
+    if (kwinDevice->property("lmrTapButtonMap").value<bool>()) {
+        device.libinputactionsDevice->properties().setLmrTapButtonMap(true);
+    }
     deviceAdded(device.libinputactionsDevice.get());
     m_devices.push_back(std::move(device));
 }

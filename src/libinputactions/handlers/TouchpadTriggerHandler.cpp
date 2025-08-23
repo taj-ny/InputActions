@@ -18,6 +18,7 @@
 
 #include "TouchpadTriggerHandler.h"
 #include <libinputactions/variables/VariableManager.h>
+#include <linux/input-event-codes.h>
 
 namespace libinputactions
 {
@@ -30,7 +31,10 @@ TouchpadTriggerHandler::TouchpadTriggerHandler()
 
 bool TouchpadTriggerHandler::handleEvent(const InputEvent &event)
 {
-    MultiTouchMotionTriggerHandler::handleEvent(event);
+    if (MultiTouchMotionTriggerHandler::handleEvent(event)) {
+        return true;
+    }
+
     switch (event.type()) {
         case InputEventType::PointerButton:
             if (event.sender()->type() != InputDeviceType::Touchpad) {
@@ -43,18 +47,16 @@ bool TouchpadTriggerHandler::handleEvent(const InputEvent &event)
             }
             return handleScrollEvent(static_cast<const MotionEvent &>(event));
         case InputEventType::TouchpadClick:
-            return handleEvent(static_cast<const TouchpadClickEvent &>(event));
+            handleEvent(static_cast<const TouchpadClickEvent &>(event));
+            break;
         case InputEventType::TouchpadGestureLifecyclePhase:
             return handleEvent(static_cast<const TouchpadGestureLifecyclePhaseEvent &>(event));
         case InputEventType::TouchpadPinch:
             return handleEvent(static_cast<const TouchpadPinchEvent &>(event));
-        case InputEventType::TouchpadSlot:
-            return handleEvent(static_cast<const TouchpadSlotEvent &>(event));
         case InputEventType::TouchpadSwipe:
             return handleSwipeEvent(static_cast<const MotionEvent &>(event));
-        default:
-            return false;
     }
+    return false;
 }
 
 void TouchpadTriggerHandler::setClickTimeout(uint32_t value)
@@ -64,21 +66,54 @@ void TouchpadTriggerHandler::setClickTimeout(uint32_t value)
 
 bool TouchpadTriggerHandler::handleEvent(const PointerButtonEvent &event)
 {
-    if (event.state() && m_clicked) {
-        cancelTriggers(TriggerType::Press);
-        return activateTriggers(TriggerType::Click);
-    } else if (!event.state() && !m_clicked) {
-        return endTriggers(TriggerType::Click);
+    bool block{};
+    switch (m_state) {
+        case State::TouchIdle:
+            if (event.state() && event.sender()->validTouchPoints() <= 3) {
+                uint8_t fingers;
+                if (event.nativeButton() == BTN_LEFT) {
+                    fingers = 1;
+                } else if (event.nativeButton() == BTN_RIGHT) {
+                    fingers = event.sender()->properties().lmrTapButtonMap() ? 3 : 2;
+                } else if (event.nativeButton() == BTN_MIDDLE) {
+                    fingers = event.sender()->properties().lmrTapButtonMap() ? 2 : 3;
+                } else {
+                    break;
+                }
+                g_variableManager->getVariable(BuiltinVariables::Fingers)->set(fingers);
+                if (activateTriggers(TriggerType::Tap)) {
+                    updateTriggers(TriggerType::Tap);
+                    endTriggers(TriggerType::Tap);
+                    m_state = State::None;
+                    block = true;
+                }
+            }
+            break;
+        case State::TouchpadButtonDownClickTrigger:
+            block = true;
+            break;
+    }
+
+    if (block && event.state()) {
+        m_blockedButtons.insert(event.nativeButton());
+        return true;
+    } else if (!event.state()) {
+        return m_blockedButtons.erase(event.nativeButton()) || block;
     }
     return false;
 }
 
-bool TouchpadTriggerHandler::handleEvent(const TouchpadClickEvent &event)
+void TouchpadTriggerHandler::handleEvent(const TouchpadClickEvent &event)
 {
-    // Activation is done in PointerButtonEvent handler
+    if (event.state()) {
+        cancelTriggers(TriggerType::Press);
+        m_state = activateTriggers(TriggerType::Click) ? State::TouchpadButtonDownClickTrigger : State::TouchpadButtonDown;
+    } else if (m_state == State::TouchpadButtonDown || m_state == State::TouchpadButtonDownClickTrigger) {
+        m_state = event.sender()->validTouchPoints() ? State::Touch : State::None;
+        endTriggers(TriggerType::Click);
+    }
+
     m_clickTimeoutTimer.stop();
-    m_clicked = event.state();
-    return false;
 }
 
 bool TouchpadTriggerHandler::handleEvent(const TouchpadGestureLifecyclePhaseEvent &event)
@@ -86,10 +121,11 @@ bool TouchpadTriggerHandler::handleEvent(const TouchpadGestureLifecyclePhaseEven
     switch (event.phase()) {
         case TouchpadGestureLifecyclePhase::Begin:
             g_variableManager->getVariable(BuiltinVariables::Fingers)->set(event.fingers());
+
+            // Delay press trigger activation if there is a click or a tap trigger
             {
-                // Delay press gesture activation if there is a click gesture
                 TriggerActivationEvent activationEvent;
-                if (event.triggers() & TriggerType::Press && !triggers(TriggerType::Click, activationEvent).empty()) {
+                if ((event.triggers() & TriggerType::Press) && !triggers(TriggerType::Click | TriggerType::Tap, activationEvent).empty()) {
                     const auto triggers = event.triggers();
                     QObject::disconnect(&m_clickTimeoutTimer, nullptr, nullptr, nullptr);
                     QObject::connect(&m_clickTimeoutTimer, &QTimer::timeout, [triggers, this] {
@@ -98,7 +134,7 @@ bool TouchpadTriggerHandler::handleEvent(const TouchpadGestureLifecyclePhaseEven
                         }
                         activateTriggers(triggers);
                     });
-                    m_clickTimeoutTimer.start(m_clickTimeout);
+                    m_clickTimeoutTimer.start(std::max(static_cast<uint32_t>(TAP_TIMEOUT.count()), m_clickTimeout));
                     return true;
                 }
             }
@@ -109,7 +145,7 @@ bool TouchpadTriggerHandler::handleEvent(const TouchpadGestureLifecyclePhaseEven
         case TouchpadGestureLifecyclePhase::End:
             m_clickTimeoutTimer.stop();
             // Libinput ends hold gestures when the touchpad is clicked instead of cancelling
-            if (m_clicked && event.triggers() == TriggerType::Press) {
+            if ((m_state == State::TouchpadButtonDown || m_state == State::TouchpadButtonDownClickTrigger) && event.triggers() == TriggerType::Press) {
                 return cancelTriggers(event.triggers());
             }
             return endTriggers(event.triggers());
@@ -123,62 +159,29 @@ bool TouchpadTriggerHandler::handleEvent(const TouchpadPinchEvent &event)
     return handlePinch(event.scale(), event.angleDelta());
 }
 
-bool TouchpadTriggerHandler::handleEvent(const TouchpadSlotEvent &event)
-{
-    m_usesLibevdevBackend = true;
-
-    auto thumbPresent = g_variableManager->getVariable(BuiltinVariables::ThumbPresent);
-    auto thumbPosition = g_variableManager->getVariable(BuiltinVariables::ThumbPositionPercentage);
-    bool hasThumb{};
-
-    for (auto i = 0; i < std::min(static_cast<uint8_t>(event.fingerSlots().size()), s_fingerVariableCount); i++) {
-        const auto &slot = event.fingerSlots()[i];
-        const auto fingerVariableNumber = i + 1;
-
-        auto position = g_variableManager->getVariable<QPointF>(QString("finger_%1_position_percentage").arg(fingerVariableNumber));
-        auto pressure = g_variableManager->getVariable<qreal>(QString("finger_%1_pressure").arg(fingerVariableNumber));
-
-        if (!slot.active) {
-            position->set({});
-            pressure->set({});
-            continue;
-        }
-
-        if (event.sender()->properties().thumbPressureRange().contains(slot.pressure)) {
-            hasThumb = true;
-            thumbPresent->set(true);
-            thumbPosition->set(slot.position);
-        }
-        position->set(slot.position);
-        pressure->set(slot.pressure);
-    }
-
-    if (!hasThumb) {
-        thumbPresent->set(false);
-        thumbPosition->set({});
-    }
-    return false;
-}
-
 bool TouchpadTriggerHandler::handleScrollEvent(const MotionEvent &event)
 {
-    if (event.delta().isNull()) {
-        endTriggers(TriggerType::StrokeSwipe);
-        m_scrollInProgress = false;
-        return false; // Blocking a (0,0) event breaks kinetic scrolling
-    }
+    switch (m_state) {
+        case State::None:
+        case State::Touch:
+        case State::TouchIdle:
+            if (!m_usesLibevdevBackend) {
+                g_variableManager->getVariable(BuiltinVariables::Fingers)->set(2);
+            }
+            m_state = State::Scrolling;
+            activateTriggers(TriggerType::StrokeSwipe);
+            [[fallthrough]];
+        case State::Scrolling:
+            if (event.delta().isNull()) {
+                endTriggers(TriggerType::StrokeSwipe);
+                m_state = State::None;
+                return false; // Blocking a (0,0) event breaks kinetic scrolling
+            }
 
-    if (!m_scrollInProgress) {
-        if (!m_usesLibevdevBackend) {
-            g_variableManager->getVariable(BuiltinVariables::Fingers)->set(2);
-        }
-        m_scrollInProgress = true;
-        activateTriggers(TriggerType::StrokeSwipe);
+            return handleMotion(event.delta());
+        default:
+            return false;
     }
-    if (handleMotion(event.delta())) {
-        return true;
-    }
-    return false;
 }
 
 bool TouchpadTriggerHandler::handleSwipeEvent(const MotionEvent &event)

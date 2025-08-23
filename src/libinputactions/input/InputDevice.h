@@ -18,6 +18,7 @@
 
 #pragma once
 
+#include <QPointF>
 #include <QRegularExpression>
 #include <QSizeF>
 #include <libinputactions/Range.h>
@@ -64,15 +65,69 @@ public:
      */
     void setButtonPad(bool value);
 
-    Range<uint32_t> thumbPressureRange() const;
-    void setThumbPressureRange(const Range<uint32_t> &value);
+    uint32_t fingerPressure() const;
+    /**
+     * @param value Minimum pressure for a touch point to be considered a finger.
+     */
+    void setFingerPressure(uint32_t value);
+
+    uint32_t thumbPressure() const;
+    /**
+     * @param value Minimum pressure for a touch point to be considered a thumb.
+     */
+    void setThumbPressure(uint32_t value);
+
+    uint32_t palmPressure() const;
+    /**
+     * @param value Minimum pressure for a touch point to be considered a palm.
+     */
+    void setPalmPressure(uint32_t value);
+
+    bool lmrTapButtonMap() const;
+    /**
+     * @param value Whether tapping is mapped to left (1 finger), middle (2) and right (3) buttons.
+     */
+    void setLmrTapButtonMap(bool value);
 
 private:
     std::optional<bool> m_multiTouch;
     std::optional<QSizeF> m_size;
 
     std::optional<bool> m_buttonPad;
-    std::optional<Range<uint32_t>> m_thumbPressureRange;
+    std::optional<uint32_t> m_fingerPressure;
+    std::optional<uint32_t> m_thumbPressure;
+    std::optional<uint32_t> m_palmPressure;
+
+    std::optional<bool> m_lmrTapButtonMap;
+};
+
+enum TouchPointType
+{
+    None,
+    Finger,
+    Thumb,
+    Palm
+};
+
+struct TouchPoint
+{
+    /**
+     * Whether this touch point is active and fits within the pressure ranges.
+     */
+    bool valid{};
+    TouchPointType type = TouchPointType::None;
+
+    /**
+     * Whether this touch point is active.
+     * @internal
+     */
+    bool active{};
+
+    // These members must not be reset if the point becomes invalid or inactive.
+    QPointF initialPosition;
+    QPointF position;
+    uint32_t pressure{};
+    std::chrono::steady_clock::time_point downTimestamp;
 };
 
 class InputDevice
@@ -89,6 +144,12 @@ public:
     const QString &sysName() const;
     InputDeviceProperties &properties();
     const InputDeviceProperties &properties() const;
+
+    /**
+     * The size of the vector is equal to the slot count.
+     */
+    std::vector<TouchPoint> m_touchPoints;
+    uint8_t validTouchPoints() const;
 
 private:
     InputDeviceType m_type;
