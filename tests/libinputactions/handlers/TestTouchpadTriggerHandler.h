@@ -21,6 +21,8 @@ private slots:
     void press1_hasTapTrigger_delayed();
     void press1_clickedDuringPress_pressCancelledAndClickActivated();
 
+    void swipe2();
+
     void tap1();
     void tap1_tappedAgainBeforeLibinputButtonReleased();
     void tap4();
@@ -33,7 +35,8 @@ private slots:
 
 private:
     TouchPoint &addPoint(const QPointF &position = {0.5, 0.5});
-    std::vector<TouchPoint *> addPoints(uint8_t count, const QPointF &position = {0.5, 0.5});
+    void addPoints(uint8_t count, const QPointF &position = {0.5, 0.5});
+    void movePoints(const QPointF &delta);
     void removePoints(int16_t count = -1);
 
     std::unique_ptr<TouchpadTriggerHandler> m_handler;

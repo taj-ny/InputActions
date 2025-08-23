@@ -163,6 +163,7 @@ bool TouchpadTriggerHandler::handleScrollEvent(const MotionEvent &event)
 {
     switch (m_state) {
         case State::None:
+        case State::Touch:
         case State::TouchIdle:
             if (!m_usesLibevdevBackend) {
                 g_variableManager->getVariable(BuiltinVariables::Fingers)->set(2);

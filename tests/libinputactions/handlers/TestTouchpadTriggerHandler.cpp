@@ -120,6 +120,24 @@ void TestTouchpadTriggerHandler::press1_clickedDuringPress_pressCancelledAndClic
     QCOMPARE(m_activatingTriggersSpy->at(1).at(0).value<TriggerTypes>(), TriggerType::Click);
 }
 
+void TestTouchpadTriggerHandler::swipe2()
+{
+    auto trigger = std::make_unique<Trigger>(TriggerType::Swipe);
+    trigger->setActivationCondition(std::make_shared<VariableCondition>("fingers", static_cast<qreal>(2), ComparisonOperator::EqualTo));
+    m_handler->addTrigger(std::move(trigger));
+
+    addPoints(2);
+    movePoints({0.05, 0});
+    movePoints({0.05, 0});
+    movePoints({0.05, 0});
+    QCOMPARE(m_handler->handleEvent(MotionEvent(m_touchpad.get(), InputEventType::PointerScroll, {10, 0})), true);
+    QCOMPARE(m_activatingTriggerSpy->count(), 1);
+
+    QCOMPARE(m_handler->handleEvent(MotionEvent(m_touchpad.get(), InputEventType::PointerScroll, {0, 0})), false);
+    QCOMPARE(m_endingTriggersSpy->count(), 1);
+    QCOMPARE(m_endingTriggersSpy->at(0).at(0).value<TriggerTypes>(), TriggerType::StrokeSwipe);
+}
+
 void TestTouchpadTriggerHandler::tap1()
 {
     m_handler->addTrigger(std::make_unique<Trigger>(TriggerType::Tap));
@@ -186,11 +204,8 @@ void TestTouchpadTriggerHandler::tap4_moved()
 {
     m_handler->addTrigger(std::make_unique<Trigger>(TriggerType::Tap));
 
-    auto points = addPoints(4);
-    for (auto point : points) {
-        point->position += {0.1, 0.1};
-        m_handler->handleEvent(TouchChangedEvent(m_touchpad.get(), *point, {0.1, 0.1}));
-    }
+    addPoints(4);
+    movePoints({0.1, 0.1});
     removePoints();
 
     QCOMPARE(m_activatingTriggersSpy->count(), 0);
@@ -277,13 +292,23 @@ TouchPoint &TestTouchpadTriggerHandler::addPoint(const QPointF &position)
     return point;
 }
 
-std::vector<TouchPoint *> TestTouchpadTriggerHandler::addPoints(uint8_t count, const QPointF &position)
+void TestTouchpadTriggerHandler::addPoints(uint8_t count, const QPointF &position)
 {
-    std::vector<TouchPoint *> points;
     for (auto i = 0; i < count; i++) {
-        points.push_back(&addPoint(position));
+        addPoint(position);
     }
-    return points;
+}
+
+void TestTouchpadTriggerHandler::movePoints(const QPointF &delta)
+{
+    for (auto &point : m_touchpad->m_touchPoints) {
+        if (!point.valid) {
+            continue;
+        }
+
+        point.position += delta;
+        m_handler->handleEvent(TouchChangedEvent(m_touchpad.get(), point, delta));
+    }
 }
 
 void TestTouchpadTriggerHandler::removePoints(int16_t count)
