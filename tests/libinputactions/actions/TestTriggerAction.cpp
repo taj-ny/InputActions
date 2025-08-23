@@ -12,7 +12,7 @@ void TestTriggerAction::triggerUpdated_intervals_data()
     QTest::addColumn<int>("executions");
 
     ActionInterval interval{};
-    QTest::newRow("zeroes") << std::vector<qreal>{0, 0, 0} << interval << 0;
+    QTest::newRow("zeroes") << std::vector<qreal>{0, 0, 0} << interval << 3;
     interval.setValue(2);
     QTest::newRow("accumulation") << std::vector<qreal>{1, 1, 1, 1} << interval << 2;
     QTest::newRow("multiple executions") << std::vector<qreal>{4, 4} << interval << 4;
@@ -21,6 +21,10 @@ void TestTriggerAction::triggerUpdated_intervals_data()
     QTest::newRow("direction change (positive)") << std::vector<qreal>{-4, 1, -4, 1} << interval << 0;
     interval.setDirection(IntervalDirection::Negative);
     QTest::newRow("direction change (negative)") << std::vector<qreal>{4, -1, 4, -1} << interval << 0;
+
+    interval.setValue(0);
+    interval.setDirection(IntervalDirection::Positive);
+    QTest::newRow("no infinite loop") << std::vector<qreal>{1, 0} << interval << 1;
 }
 
 void TestTriggerAction::triggerUpdated_intervals()

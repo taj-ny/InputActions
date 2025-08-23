@@ -45,10 +45,6 @@ void TriggerAction::triggerStarted()
 
 void TriggerAction::triggerUpdated(qreal delta, const QPointF &deltaPointMultiplied)
 {
-    if (!delta) {
-        return;
-    }
-
     if (auto *inputAction = dynamic_cast<InputAction *>(m_action.get())) {
         inputAction->m_deltaMultiplied = deltaPointMultiplied;
     }
@@ -67,8 +63,10 @@ void TriggerAction::triggerUpdated(qreal delta, const QPointF &deltaPointMultipl
         return;
     }
     const auto interval = m_interval.value();
-    if (interval == 0 && m_interval.matches(delta)) {
-        tryExecute();
+    if (interval == 0) {
+        if (m_interval.matches(delta)) {
+            tryExecute();
+        }
         return;
     }
 
