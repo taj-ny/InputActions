@@ -38,6 +38,7 @@ VariableManager::VariableManager()
     });
     registerLocalVariable(BuiltinVariables::DeviceName);
     for (auto i = 1; i <= s_fingerVariableCount; i++) {
+        registerLocalVariable<QPointF>(QString("finger_%1_initial_position_percentage").arg(i));
         registerLocalVariable<QPointF>(QString("finger_%1_position_percentage").arg(i));
         registerLocalVariable<qreal>(QString("finger_%1_pressure").arg(i));
     }
@@ -63,6 +64,7 @@ VariableManager::VariableManager()
         const auto translatedPosition = pointerPos.value() - windowGeometry->topLeft();
         value = QPointF(translatedPosition.x() / windowGeometry->width(), translatedPosition.y() / windowGeometry->height());
     });
+    registerLocalVariable(BuiltinVariables::ThumbInitialPositionPercentage);
     registerLocalVariable(BuiltinVariables::ThumbPositionPercentage);
     registerLocalVariable(BuiltinVariables::ThumbPresent);
     registerRemoteVariable<QString>("window_class", [](auto &value) {

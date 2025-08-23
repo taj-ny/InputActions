@@ -180,18 +180,21 @@ bool MultiTouchMotionTriggerHandler::canTap(const InputDevice *device)
 
 void MultiTouchMotionTriggerHandler::updateVariables(const InputDevice *sender)
 {
-    auto thumbPresent = g_variableManager->getVariable(BuiltinVariables::ThumbPresent);
+    auto thumbInitialPosition = g_variableManager->getVariable(BuiltinVariables::ThumbInitialPositionPercentage);
     auto thumbPosition = g_variableManager->getVariable(BuiltinVariables::ThumbPositionPercentage);
+    auto thumbPresent = g_variableManager->getVariable(BuiltinVariables::ThumbPresent);
     bool hasThumb{};
 
     for (auto i = 0; i < std::min(static_cast<uint8_t>(sender->m_touchPoints.size()), s_fingerVariableCount); i++) {
         const auto &slot = sender->m_touchPoints[i];
         const auto fingerVariableNumber = i + 1;
 
+        auto initialPosition = g_variableManager->getVariable<QPointF>(QString("finger_%1_initial_position_percentage").arg(fingerVariableNumber));
         auto position = g_variableManager->getVariable<QPointF>(QString("finger_%1_position_percentage").arg(fingerVariableNumber));
         auto pressure = g_variableManager->getVariable<qreal>(QString("finger_%1_pressure").arg(fingerVariableNumber));
 
         if (!slot.valid) {
+            initialPosition->set({});
             position->set({});
             pressure->set({});
             continue;
@@ -199,16 +202,19 @@ void MultiTouchMotionTriggerHandler::updateVariables(const InputDevice *sender)
 
         if (slot.type == TouchPointType::Thumb) {
             hasThumb = true;
-            thumbPresent->set(true);
+            thumbInitialPosition->set(slot.initialPosition);
             thumbPosition->set(slot.position);
+            thumbPresent->set(true);
         }
+        initialPosition->set(slot.initialPosition);
         position->set(slot.position);
         pressure->set(slot.pressure);
     }
 
     if (!hasThumb) {
-        thumbPresent->set(false);
+        thumbInitialPosition->set({});
         thumbPosition->set({});
+        thumbPresent->set(false);
     }
 
     g_variableManager->getVariable(BuiltinVariables::Fingers)->set(sender->validTouchPoints());
