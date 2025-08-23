@@ -104,7 +104,14 @@ void LibevdevComplementaryInputBackend::deviceAdded(InputDevice *device)
         return;
     }
 
-    const QSize size(libevdev_get_abs_maximum(libevdevDevice->libevdevPtr, ABS_X), libevdev_get_abs_maximum(libevdevDevice->libevdevPtr, ABS_Y));
+    const auto *x = libevdev_get_abs_info(libevdevDevice->libevdevPtr, ABS_X);
+    const auto *y = libevdev_get_abs_info(libevdevDevice->libevdevPtr, ABS_Y);
+    if (!x || !y) {
+        return;
+    }
+
+    libevdevDevice->absMin = {std::abs(x->minimum), std::abs(y->minimum)};
+    const QSize size(libevdevDevice->absMin.x() + x->maximum, libevdevDevice->absMin.y() + y->maximum);
     if (size.width() == 0 || size.height() == 0) {
         qCDebug(INPUTACTIONS_BACKEND_LIBEVDEV, "Device has a size of 0");
         return;
@@ -218,10 +225,10 @@ void LibevdevComplementaryInputBackend::poll()
                                 currentTouchPoint.active = value != -1;
                                 continue;
                             case ABS_MT_POSITION_X:
-                                currentTouchPoint.position.setX(value / properties.size().width());
+                                currentTouchPoint.position.setX((value + libevdevDevice->absMin.x()) / properties.size().width());
                                 continue;
                             case ABS_MT_POSITION_Y:
-                                currentTouchPoint.position.setY(value / properties.size().height());
+                                currentTouchPoint.position.setY((value + libevdevDevice->absMin.y()) / properties.size().height());
                                 continue;
                             case ABS_MT_PRESSURE:
                                 currentTouchPoint.pressure = value;
@@ -230,10 +237,10 @@ void LibevdevComplementaryInputBackend::poll()
                     } else {
                         switch (code) {
                             case ABS_X:
-                                currentTouchPoint.position.setX(value / properties.size().width());
+                                currentTouchPoint.position.setX((value + libevdevDevice->absMin.x()) / properties.size().width());
                                 continue;
                             case ABS_Y:
-                                currentTouchPoint.position.setY(value / properties.size().height());
+                                currentTouchPoint.position.setY((value + libevdevDevice->absMin.y()) / properties.size().height());
                                 continue;
                             case ABS_PRESSURE:
                                 currentTouchPoint.pressure = value;
