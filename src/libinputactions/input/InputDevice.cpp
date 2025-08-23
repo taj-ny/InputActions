@@ -74,7 +74,7 @@ void InputDeviceProperties::apply(const InputDeviceProperties &other)
     apply(m_fingerPressure, other.m_fingerPressure);
     apply(m_thumbPressure, other.m_thumbPressure);
     apply(m_palmPressure, other.m_palmPressure);
-    apply(m_twoFingerTapIsMiddleButton, other.m_twoFingerTapIsMiddleButton);
+    apply(m_lmrTapButtonMap, other.m_lmrTapButtonMap);
 }
 
 bool InputDeviceProperties::multiTouch() const
@@ -137,14 +137,14 @@ void InputDeviceProperties::setPalmPressure(uint32_t value)
     m_palmPressure = value;
 }
 
-bool InputDeviceProperties::twoFingerTapIsMiddleButton() const
+bool InputDeviceProperties::lmrTapButtonMap() const
 {
-    return m_twoFingerTapIsMiddleButton.value_or(false);
+    return m_lmrTapButtonMap.value_or(false);
 }
 
-void InputDeviceProperties::setTwoFingerTapIsMiddleButton(bool value)
+void InputDeviceProperties::setLmrTapButtonMap(bool value)
 {
-    m_twoFingerTapIsMiddleButton = value;
+    m_lmrTapButtonMap = value;
 }
 
 }

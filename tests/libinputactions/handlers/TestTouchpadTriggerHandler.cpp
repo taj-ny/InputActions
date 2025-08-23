@@ -2,7 +2,9 @@
 #include <QSignalSpy>
 #include <QTest>
 #include <ranges>
+#include <libinputactions/conditions/VariableCondition.h>
 #include <libinputactions/handlers/TouchpadTriggerHandler.h>
+#include <libinputactions/variables/VariableManager.h>
 #include <linux/input-event-codes.h>
 
 namespace libinputactions
@@ -11,6 +13,7 @@ namespace libinputactions
 void TestTouchpadTriggerHandler::init()
 {
     m_handler = std::make_unique<TouchpadTriggerHandler>();
+    m_activatingTriggerSpy = std::make_unique<QSignalSpy>(m_handler.get(), &TriggerHandler::activatingTrigger);
     m_activatingTriggersSpy = std::make_unique<QSignalSpy>(m_handler.get(), &TriggerHandler::activatingTriggers);
     m_cancellingTriggersSpy = std::make_unique<QSignalSpy>(m_handler.get(), &TriggerHandler::cancellingTriggers);
     m_endingTriggersSpy = std::make_unique<QSignalSpy>(m_handler.get(), &TriggerHandler::endingTriggers);
@@ -18,15 +21,55 @@ void TestTouchpadTriggerHandler::init()
     m_touchpad->m_touchPoints = std::vector<TouchPoint>(5);
 }
 
-void TestTouchpadTriggerHandler::clickLeft_notTap()
+void TestTouchpadTriggerHandler::click_withoutLibinputButton()
 {
-    m_handler->handleEvent(TouchpadClickEvent(m_touchpad.get(), true));
-    m_handler->handleEvent(PointerButtonEvent(m_touchpad.get(), Qt::MouseButton::LeftButton, BTN_LEFT, true));
-    m_handler->handleEvent(TouchpadClickEvent(m_touchpad.get(), false));
-    m_handler->handleEvent(PointerButtonEvent(m_touchpad.get(), Qt::MouseButton::LeftButton, BTN_LEFT, false));
+    m_handler->addTrigger(std::make_unique<Trigger>(TriggerType::Click));
 
+    m_handler->handleEvent(TouchpadClickEvent(m_touchpad.get(), true));
     QCOMPARE(m_activatingTriggersSpy->count(), 1);
     QCOMPARE(m_activatingTriggersSpy->at(0).at(0).value<TriggerTypes>(), TriggerType::Click);
+
+    m_handler->handleEvent(TouchpadClickEvent(m_touchpad.get(), false));
+    QCOMPARE(m_endingTriggersSpy->count(), 1);
+    QCOMPARE(m_endingTriggersSpy->at(0).at(0).value<TriggerTypes>(), TriggerType::Click);
+}
+
+void TestTouchpadTriggerHandler::click_withLibinputButton_data()
+{
+    QTest::addColumn<Qt::MouseButton>("button");
+    QTest::addColumn<int>("nativeButton");
+
+    QTest::addRow("left") << Qt::MouseButton::LeftButton << BTN_LEFT;
+    QTest::addRow("right") << Qt::MouseButton::RightButton << BTN_RIGHT;
+    QTest::addRow("middle") << Qt::MouseButton::MiddleButton << BTN_MIDDLE;
+}
+
+void TestTouchpadTriggerHandler::click_withLibinputButton()
+{
+    QFETCH(Qt::MouseButton, button);
+    QFETCH(int, nativeButton);
+
+    m_handler->addTrigger(std::make_unique<Trigger>(TriggerType::Click));
+
+    m_handler->handleEvent(TouchpadClickEvent(m_touchpad.get(), true));
+    QCOMPARE(m_handler->handleEvent(PointerButtonEvent(m_touchpad.get(), button, nativeButton, true)), true);
+    QCOMPARE(m_activatingTriggersSpy->count(), 1);
+    QCOMPARE(m_activatingTriggersSpy->at(0).at(0).value<TriggerTypes>(), TriggerType::Click);
+
+    m_handler->handleEvent(TouchpadClickEvent(m_touchpad.get(), false));
+    QCOMPARE(m_handler->handleEvent(PointerButtonEvent(m_touchpad.get(), button, nativeButton, false)), true);
+    QCOMPARE(m_endingTriggersSpy->count(), 1);
+    QCOMPARE(m_endingTriggersSpy->at(0).at(0).value<TriggerTypes>(), TriggerType::Click);
+}
+
+void TestTouchpadTriggerHandler::press1_notDelayed()
+{
+    m_handler->addTrigger(std::make_unique<Trigger>(TriggerType::Press));
+
+    m_handler->handleEvent(TouchpadGestureLifecyclePhaseEvent(m_touchpad.get(), TouchpadGestureLifecyclePhase::Begin, TriggerType::Press));
+
+    QCOMPARE(m_activatingTriggersSpy->count(), 1);
+    QCOMPARE(m_activatingTriggersSpy->at(0).at(0).value<TriggerTypes>(), TriggerType::Press);
 }
 
 void TestTouchpadTriggerHandler::press1_hasClickTrigger_delayed()
@@ -73,7 +116,6 @@ void TestTouchpadTriggerHandler::press1_clickedDuringPress_pressCancelledAndClic
     QCOMPARE(m_cancellingTriggersSpy->count(), 1);
     QCOMPARE(m_cancellingTriggersSpy->at(0).at(0).value<TriggerTypes>(), TriggerType::Press);
     QCOMPARE(m_endingTriggersSpy->count(), 0);
-
     QCOMPARE(m_activatingTriggersSpy->count(), 2);
     QCOMPARE(m_activatingTriggersSpy->at(1).at(0).value<TriggerTypes>(), TriggerType::Click);
 }
@@ -93,6 +135,8 @@ void TestTouchpadTriggerHandler::tap1()
     QCOMPARE(m_activatingTriggersSpy->count(), 1);
     QCOMPARE(m_activatingTriggersSpy->at(0).at(0).value<TriggerTypes>(), TriggerType::Tap);
     QCOMPARE(m_handler->handleEvent(PointerButtonEvent(m_touchpad.get(), Qt::MouseButton::LeftButton, BTN_LEFT, false)), true);
+    QCOMPARE(m_endingTriggersSpy->count(), 1);
+    QCOMPARE(m_endingTriggersSpy->at(0).at(0).value<TriggerTypes>(), TriggerType::Tap);
 
     QCOMPARE(m_handler->handleEvent(PointerButtonEvent(m_touchpad.get(), Qt::MouseButton::LeftButton, BTN_LEFT, true)), false);
     QCOMPARE(m_handler->handleEvent(PointerButtonEvent(m_touchpad.get(), Qt::MouseButton::LeftButton, BTN_LEFT, false)), false);
@@ -113,11 +157,16 @@ void TestTouchpadTriggerHandler::tap1_tappedAgainBeforeLibinputButtonReleased()
     removePoints();
 
     QCOMPARE(m_handler->handleEvent(PointerButtonEvent(m_touchpad.get(), Qt::MouseButton::LeftButton, BTN_LEFT, false)), true);
-    QCOMPARE(m_handler->handleEvent(PointerButtonEvent(m_touchpad.get(), Qt::MouseButton::LeftButton, BTN_LEFT, true)), true);
-    QCOMPARE(m_handler->handleEvent(PointerButtonEvent(m_touchpad.get(), Qt::MouseButton::LeftButton, BTN_LEFT, false)), true);
+    QCOMPARE(m_endingTriggersSpy->count(), 1);
+    QCOMPARE(m_endingTriggersSpy->at(0).at(0).value<TriggerTypes>(), TriggerType::Tap);
 
+    QCOMPARE(m_handler->handleEvent(PointerButtonEvent(m_touchpad.get(), Qt::MouseButton::LeftButton, BTN_LEFT, true)), true);
     QCOMPARE(m_activatingTriggersSpy->count(), 2);
     QCOMPARE(m_activatingTriggersSpy->at(1).at(0).value<TriggerTypes>(), TriggerType::Tap);
+
+    QCOMPARE(m_handler->handleEvent(PointerButtonEvent(m_touchpad.get(), Qt::MouseButton::LeftButton, BTN_LEFT, false)), true);
+    QCOMPARE(m_endingTriggersSpy->count(), 2);
+    QCOMPARE(m_endingTriggersSpy->at(1).at(0).value<TriggerTypes>(), TriggerType::Tap);
 }
 
 void TestTouchpadTriggerHandler::tap4()
@@ -129,6 +178,8 @@ void TestTouchpadTriggerHandler::tap4()
 
     QCOMPARE(m_activatingTriggersSpy->count(), 1);
     QCOMPARE(m_activatingTriggersSpy->at(0).at(0).value<TriggerTypes>(), TriggerType::Tap);
+    QCOMPARE(m_endingTriggersSpy->count(), 1);
+    QCOMPARE(m_endingTriggersSpy->at(0).at(0).value<TriggerTypes>(), TriggerType::Tap);
 }
 
 void TestTouchpadTriggerHandler::tap4_moved()
@@ -168,6 +219,52 @@ void TestTouchpadTriggerHandler::tap4_clicked()
 
     QCOMPARE(m_activatingTriggersSpy->count(), 1);
     QCOMPARE(m_activatingTriggersSpy->at(0).at(0).value<TriggerTypes>(), TriggerType::Click);
+}
+
+void TestTouchpadTriggerHandler::tap_fingerCount_data()
+{
+    QTest::addColumn<int>("triggerFingers");
+    QTest::addColumn<int>("fingers");
+    QTest::addColumn<Qt::MouseButton>("libinputButton");
+    QTest::addColumn<int>("libinputNativeButton");
+    QTest::addColumn<bool>("lmrTapButtonMap");
+    QTest::addColumn<bool>("activated");
+
+    QTest::addRow("1") << 1 << 1 << Qt::MouseButton::LeftButton << BTN_LEFT << false << true;
+    QTest::addRow("2") << 2 << 2 << Qt::MouseButton::RightButton << BTN_RIGHT << false << true;
+    QTest::addRow("3") << 3 << 3 << Qt::MouseButton::MiddleButton << BTN_MIDDLE << false << true;
+    QTest::addRow("4") << 4 << 4 << Qt::MouseButton::NoButton << 0 << false << true;
+    QTest::addRow("5") << 5 << 5 << Qt::MouseButton::NoButton << 0 << false << true;
+    QTest::addRow("wrong") << 2 << 1 << Qt::MouseButton::LeftButton << BTN_LEFT << false << false;
+    QTest::addRow("1 lmr") << 1 << 1 << Qt::MouseButton::LeftButton << BTN_LEFT << true << true;
+    QTest::addRow("2 lmr") << 2 << 2 << Qt::MouseButton::MiddleButton << BTN_MIDDLE << true << true;
+    QTest::addRow("3 lmr") << 3 << 3 << Qt::MouseButton::RightButton << BTN_RIGHT << true << true;
+    QTest::addRow("4 lmr") << 4 << 4 << Qt::MouseButton::NoButton << 0 << true << true;
+    QTest::addRow("5 lmr") << 5 << 5 << Qt::MouseButton::NoButton << 0 << true << true;
+}
+
+void TestTouchpadTriggerHandler::tap_fingerCount()
+{
+    QFETCH(int, triggerFingers);
+    QFETCH(int, fingers);
+    QFETCH(Qt::MouseButton, libinputButton);
+    QFETCH(int, libinputNativeButton);
+    QFETCH(bool, lmrTapButtonMap);
+    QFETCH(bool, activated);
+
+    auto trigger = std::make_unique<Trigger>(TriggerType::Tap);
+    trigger->setActivationCondition(std::make_shared<VariableCondition>("fingers", static_cast<qreal>(triggerFingers), ComparisonOperator::EqualTo));
+    m_handler->addTrigger(std::move(trigger));
+    m_touchpad->properties().setLmrTapButtonMap(lmrTapButtonMap);
+
+    addPoints(fingers);
+    removePoints();
+    if (libinputButton) {
+        m_handler->handleEvent(PointerButtonEvent(m_touchpad.get(), libinputButton, libinputNativeButton, true));
+        m_handler->handleEvent(PointerButtonEvent(m_touchpad.get(), libinputButton, libinputNativeButton, false));
+    }
+
+    QCOMPARE(m_activatingTriggerSpy->count(), activated);
 }
 
 TouchPoint &TestTouchpadTriggerHandler::addPoint(const QPointF &position)

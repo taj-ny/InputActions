@@ -62,7 +62,6 @@ protected:
          * TouchpadButtonDown but a click trigger is active.
          */
         TouchpadButtonDownClickTrigger,
-        TouchpadButtonUp,
 
         None,
         Scrolling,
@@ -76,8 +75,7 @@ protected:
          */
         Touch,
 
-        TapBegin,
-        TapEnd
+        TapBegin
     } m_state = State::None;
 
 private:

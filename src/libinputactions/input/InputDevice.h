@@ -83,11 +83,11 @@ public:
      */
     void setPalmPressure(uint32_t value);
 
-    bool twoFingerTapIsMiddleButton() const;
+    bool lmrTapButtonMap() const;
     /**
-     * @param value Whether a two-finger tap is bound to the middle button instead of the right button.
+     * @param value Whether tapping is mapped to left (1 finger), middle (2) and right (3) buttons.
      */
-    void setTwoFingerTapIsMiddleButton(bool value);
+    void setLmrTapButtonMap(bool value);
 
 private:
     std::optional<bool> m_multiTouch;
@@ -98,7 +98,7 @@ private:
     std::optional<uint32_t> m_thumbPressure;
     std::optional<uint32_t> m_palmPressure;
 
-    std::optional<bool> m_twoFingerTapIsMiddleButton;
+    std::optional<bool> m_lmrTapButtonMap;
 };
 
 enum TouchPointType

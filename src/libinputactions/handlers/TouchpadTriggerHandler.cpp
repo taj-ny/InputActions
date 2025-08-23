@@ -74,9 +74,9 @@ bool TouchpadTriggerHandler::handleEvent(const PointerButtonEvent &event)
                 if (event.nativeButton() == BTN_LEFT) {
                     fingers = 1;
                 } else if (event.nativeButton() == BTN_RIGHT) {
-                    fingers = event.sender()->properties().twoFingerTapIsMiddleButton() ? 3 : 2;
+                    fingers = event.sender()->properties().lmrTapButtonMap() ? 3 : 2;
                 } else if (event.nativeButton() == BTN_MIDDLE) {
-                    fingers = event.sender()->properties().twoFingerTapIsMiddleButton() ? 2 : 3;
+                    fingers = event.sender()->properties().lmrTapButtonMap() ? 2 : 3;
                 } else {
                     break;
                 }
@@ -84,13 +84,10 @@ bool TouchpadTriggerHandler::handleEvent(const PointerButtonEvent &event)
                 if (activateTriggers(TriggerType::Tap)) {
                     updateTriggers(TriggerType::Tap);
                     endTriggers(TriggerType::Tap);
-                    m_state = State::TapEnd;
+                    m_state = State::None;
                     block = true;
                 }
             }
-            break;
-        case State::TapEnd:
-            m_state = State::None;
             break;
         case State::TouchpadButtonDownClickTrigger:
             block = true;
@@ -112,7 +109,7 @@ void TouchpadTriggerHandler::handleEvent(const TouchpadClickEvent &event)
         cancelTriggers(TriggerType::Press);
         m_state = activateTriggers(TriggerType::Click) ? State::TouchpadButtonDownClickTrigger : State::TouchpadButtonDown;
     } else if (m_state == State::TouchpadButtonDown || m_state == State::TouchpadButtonDownClickTrigger) {
-        m_state = State::TouchpadButtonUp;
+        m_state = event.sender()->validTouchPoints() ? State::Touch : State::None;
         endTriggers(TriggerType::Click);
     }
 

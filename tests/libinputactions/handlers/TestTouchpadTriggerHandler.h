@@ -12,8 +12,11 @@ class TestTouchpadTriggerHandler : public QObject
 private slots:
     void init();
 
-    void clickLeft_notTap();
+    void click_withoutLibinputButton();
+    void click_withLibinputButton_data();
+    void click_withLibinputButton();
 
+    void press1_notDelayed();
     void press1_hasClickTrigger_delayed();
     void press1_hasTapTrigger_delayed();
     void press1_clickedDuringPress_pressCancelledAndClickActivated();
@@ -25,12 +28,16 @@ private slots:
     void tap4_slow();
     void tap4_clicked();
 
+    void tap_fingerCount_data();
+    void tap_fingerCount();
+
 private:
     TouchPoint &addPoint(const QPointF &position = {0.5, 0.5});
     std::vector<TouchPoint *> addPoints(uint8_t count, const QPointF &position = {0.5, 0.5});
     void removePoints(int16_t count = -1);
 
     std::unique_ptr<TouchpadTriggerHandler> m_handler;
+    std::unique_ptr<QSignalSpy> m_activatingTriggerSpy;
     std::unique_ptr<QSignalSpy> m_activatingTriggersSpy;
     std::unique_ptr<QSignalSpy> m_cancellingTriggersSpy;
     std::unique_ptr<QSignalSpy> m_endingTriggersSpy;

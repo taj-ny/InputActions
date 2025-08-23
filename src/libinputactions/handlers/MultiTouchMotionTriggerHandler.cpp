@@ -118,7 +118,6 @@ void MultiTouchMotionTriggerHandler::handleTouchDownEvent(const TouchEvent &even
 {
     switch (m_state) {
         case State::None:
-        case State::TapEnd: // In case user taps again before libinput sends a button released event
             m_state = State::TouchIdle;
             break;
     }
@@ -140,13 +139,15 @@ void MultiTouchMotionTriggerHandler::handleEvent(const TouchChangedEvent &event)
 
 void MultiTouchMotionTriggerHandler::handleTouchUpEvent(const TouchEvent &event)
 {
+    bool libinputTap{};
     switch (m_state) {
         case State::TapBegin:
         case State::TouchIdle:
             // 1-3 finger touchpad tap gestures are detected by listening for pointer button events, as it's more reliable.
             if (m_state == State::TouchIdle && event.sender()->type() == InputDeviceType::Touchpad
                 && g_variableManager->getVariable(BuiltinVariables::Fingers)->get() <= 3) {
-                return;
+                libinputTap = true;
+                break;
             }
 
             if (canTap(event.sender())) {
@@ -160,13 +161,13 @@ void MultiTouchMotionTriggerHandler::handleTouchUpEvent(const TouchEvent &event)
                 }
             } else if (m_state == State::TapBegin) {
                 cancelTriggers(TriggerType::Tap);
-                m_state = State::TouchIdle;
+                m_state = State::Touch;
             }
             break;
     }
     updateVariables(event.sender());
 
-    if (m_state != State::TapEnd && !event.sender()->validTouchPoints()) {
+    if (!libinputTap && !event.sender()->validTouchPoints()) {
         m_state = State::None;
     }
 }
