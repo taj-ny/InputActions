@@ -119,6 +119,7 @@ void MultiTouchMotionTriggerHandler::handleTouchDownEvent(const TouchEvent &even
     switch (m_state) {
         case State::None:
             m_state = State::TouchIdle;
+            m_firstTouchPoint = event.point();
             break;
     }
     updateVariables(event.sender());
@@ -150,11 +151,11 @@ void MultiTouchMotionTriggerHandler::handleTouchUpEvent(const TouchEvent &event)
                 break;
             }
 
-            if (canTap(event.sender())) {
+            if (canTap()) {
                 if (m_state == State::TouchIdle) {
                     m_state = activateTriggers(TriggerType::Tap) ? State::TapBegin : State::Touch;
                 }
-                if (m_state == State::TapBegin && !event.sender()->validTouchPoints()) {
+                if (m_state == State::TapBegin && event.sender()->validTouchPoints().empty()) {
                     updateTriggers(TriggerType::Tap);
                     endTriggers(TriggerType::Tap);
                     m_state = State::None;
@@ -167,14 +168,14 @@ void MultiTouchMotionTriggerHandler::handleTouchUpEvent(const TouchEvent &event)
     }
     updateVariables(event.sender());
 
-    if (!libinputTap && !event.sender()->validTouchPoints()) {
+    if (!libinputTap && event.sender()->validTouchPoints().empty()) {
         m_state = State::None;
     }
 }
 
-bool MultiTouchMotionTriggerHandler::canTap(const InputDevice *device)
+bool MultiTouchMotionTriggerHandler::canTap()
 {
-    return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - device->m_touchPoints[0].downTimestamp).count()
+    return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - m_firstTouchPoint.downTimestamp).count()
         <= TAP_TIMEOUT.count();
 }
 
@@ -185,30 +186,30 @@ void MultiTouchMotionTriggerHandler::updateVariables(const InputDevice *sender)
     auto thumbPresent = g_variableManager->getVariable(BuiltinVariables::ThumbPresent);
     bool hasThumb{};
 
-    for (auto i = 0; i < std::min(static_cast<uint8_t>(sender->m_touchPoints.size()), s_fingerVariableCount); i++) {
-        const auto &slot = sender->m_touchPoints[i];
+    const auto touchPoints = sender->validTouchPoints();
+    for (size_t i = 0; i < s_fingerVariableCount; i++) {
         const auto fingerVariableNumber = i + 1;
-
         auto initialPosition = g_variableManager->getVariable<QPointF>(QString("finger_%1_initial_position_percentage").arg(fingerVariableNumber));
         auto position = g_variableManager->getVariable<QPointF>(QString("finger_%1_position_percentage").arg(fingerVariableNumber));
         auto pressure = g_variableManager->getVariable<qreal>(QString("finger_%1_pressure").arg(fingerVariableNumber));
 
-        if (!slot.valid) {
+        if (touchPoints.size() <= i || !touchPoints[i]->valid) {
             initialPosition->set({});
             position->set({});
             pressure->set({});
             continue;
         }
 
-        if (slot.type == TouchPointType::Thumb) {
+        const auto *point = touchPoints[i];
+        if (point->type == TouchPointType::Thumb) {
             hasThumb = true;
-            thumbInitialPosition->set(slot.initialPosition);
-            thumbPosition->set(slot.position);
+            thumbInitialPosition->set(point->initialPosition);
+            thumbPosition->set(point->position);
             thumbPresent->set(true);
         }
-        initialPosition->set(slot.initialPosition);
-        position->set(slot.position);
-        pressure->set(slot.pressure);
+        initialPosition->set(point->initialPosition);
+        position->set(point->position);
+        pressure->set(point->pressure);
     }
 
     if (!hasThumb) {
@@ -217,7 +218,7 @@ void MultiTouchMotionTriggerHandler::updateVariables(const InputDevice *sender)
         thumbPresent->set(false);
     }
 
-    g_variableManager->getVariable(BuiltinVariables::Fingers)->set(sender->validTouchPoints());
+    g_variableManager->getVariable(BuiltinVariables::Fingers)->set(sender->validTouchPoints().size());
 }
 
 }

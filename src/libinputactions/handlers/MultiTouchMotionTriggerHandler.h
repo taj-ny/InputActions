@@ -84,8 +84,10 @@ private:
     void handleEvent(const TouchChangedEvent &event);
     void handleTouchUpEvent(const TouchEvent &event);
 
-    bool canTap(const InputDevice *device);
-    void updateVariables(const InputDevice *device);
+    bool canTap();
+    static void updateVariables(const InputDevice *device);
+
+    TouchPoint m_firstTouchPoint;
 
     qreal m_previousPinchScale = 1;
     PinchType m_pinchType = PinchType::Unknown;
