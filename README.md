@@ -1,5 +1,5 @@
 # InputActions <img src="https://img.shields.io/badge/c%2B%2B-blue"> <a href="https://github.com/taj-ny/InputActions/releases"><img src="https://img.shields.io/github/v/release/taj-ny/inputactions?color=%23009688"></a> <a href="https://github.com/taj-ny/InputActions/blob/main/LICENSE"><img src="https://img.shields.io/github/license/taj-ny/inputactions?color=%23009688"></a> <a href="https://github.com/sponsors/taj-ny"><img src="https://img.shields.io/badge/Sponsor-gray?logo=githubsponsors"></a>
-Input handler that executes user-defined actions, currently in a very early stage of development.
+Input handler that executes user-defined actions, currently in an early stage of development.
 
 Supported environments: Hyprland, Plasma 6 Wayland
 

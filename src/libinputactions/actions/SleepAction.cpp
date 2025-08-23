@@ -16,34 +16,25 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include "CommandAction.h"
-#include <QProcess>
+#include "SleepAction.h"
+#include <QThread>
 
 namespace libinputactions
 {
 
-CommandAction::CommandAction(Value<QString> command)
-    : m_command(std::move(command))
+SleepAction::SleepAction(std::chrono::milliseconds time)
+    : m_time(std::move(time))
 {
 }
 
-bool CommandAction::async() const
+bool SleepAction::async() const
 {
-    return m_wait || m_command.expensive();
+    return true;
 }
 
-void CommandAction::executeImpl()
+void SleepAction::executeImpl()
 {
-    auto *process = new QProcess;
-    connect(process, &QProcess::finished, this, [process]() {
-        process->deleteLater();
-    });
-    process->setProgram("/bin/sh");
-    process->setArguments({"-c", m_command.get()});
-    process->start();
-    if (m_wait) {
-        process->waitForFinished();
-    }
+    QThread::msleep(m_time.count());
 }
 
 }

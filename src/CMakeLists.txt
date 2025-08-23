@@ -10,6 +10,7 @@ set(libinputactions_SRCS
     libinputactions/actions/CommandAction.cpp
     libinputactions/actions/InputAction.cpp
     libinputactions/actions/PlasmaGlobalShortcutAction.cpp
+    libinputactions/actions/SleepAction.cpp
     libinputactions/actions/TriggerAction.cpp
     libinputactions/conditions/CallbackCondition.cpp
     libinputactions/conditions/Condition.cpp

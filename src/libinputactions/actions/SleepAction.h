@@ -16,34 +16,26 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include "CommandAction.h"
-#include <QProcess>
+#pragma once
+
+#include "Action.h"
+#include <chrono>
 
 namespace libinputactions
 {
 
-CommandAction::CommandAction(Value<QString> command)
-    : m_command(std::move(command))
+class SleepAction : public Action
 {
-}
+public:
+    SleepAction(std::chrono::milliseconds time);
 
-bool CommandAction::async() const
-{
-    return m_wait || m_command.expensive();
-}
+    bool async() const override;
 
-void CommandAction::executeImpl()
-{
-    auto *process = new QProcess;
-    connect(process, &QProcess::finished, this, [process]() {
-        process->deleteLater();
-    });
-    process->setProgram("/bin/sh");
-    process->setArguments({"-c", m_command.get()});
-    process->start();
-    if (m_wait) {
-        process->waitForFinished();
-    }
-}
+protected:
+    void executeImpl() override;
+
+private:
+    std::chrono::milliseconds m_time;
+};
 
 }
