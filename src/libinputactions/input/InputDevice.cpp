@@ -61,6 +61,9 @@ std::vector<const TouchPoint *> InputDevice::validTouchPoints() const
             result.push_back(&point);
         }
     }
+    std::ranges::sort(result, [](const auto *a, const auto *b) {
+        return a->downTimestamp < b->downTimestamp;
+    });
     return result;
 }
 
