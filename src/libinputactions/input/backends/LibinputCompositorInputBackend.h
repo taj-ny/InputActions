@@ -106,6 +106,8 @@ protected:
 private:
     uint32_t m_fingers{};
     bool m_block{};
+
+    std::optional<QPointF> m_previousPointerPosition;
 };
 
 }

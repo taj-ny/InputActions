@@ -71,9 +71,22 @@ protected:
          */
         TouchIdle,
         /**
-         * Finger(s) present and an action had been performed.
+         * Finger(s) present and an action had been performed (tap or click).
          */
         Touch,
+
+        /**
+         * At least one finger was moved.
+         */
+        Motion,
+        /**
+         * At least one finger was moved and no triggers were recognized.
+         */
+        MotionNoTrigger,
+        /**
+         * At least one finger was moved and a trigger was recognized.
+         */
+        MotionTrigger,
 
         TapBegin
     } m_state

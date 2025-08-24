@@ -18,6 +18,8 @@
 
 #include "LibinputCompositorInputBackend.h"
 #include <libinputactions/interfaces/InputEmitter.h>
+#include <libinputactions/interfaces/PointerPositionGetter.h>
+#include <libinputactions/interfaces/PointerPositionSetter.h>
 
 namespace libinputactions
 {
@@ -69,17 +71,25 @@ bool LibinputCompositorInputBackend::pointerButton(InputDevice *sender, Qt::Mous
 
 bool LibinputCompositorInputBackend::pointerMotion(InputDevice *sender, const QPointF &delta)
 {
-    if (m_ignoreEvents || !sender || sender->type() != InputDeviceType::Mouse) {
+    if (m_ignoreEvents || !sender) {
         return false;
     }
 
     if (m_isRecordingStroke) {
         m_strokePoints.push_back(delta);
         m_strokeRecordingTimeoutTimer.start(STROKE_RECORD_TIMEOUT);
-    } else {
-        handleEvent(MotionEvent(sender, InputEventType::PointerMotion, delta));
+        return false;
     }
-    return false;
+
+    // Don't block mouse motion for now, more changes are required
+    auto block = handleEvent(MotionEvent(sender, InputEventType::PointerMotion, delta)) && sender->type() == InputDeviceType::Touchpad;
+    if (block && m_previousPointerPosition) {
+        g_pointerPositionSetter->setGlobalPointerPosition(m_previousPointerPosition.value());
+    }
+    if (!block) {
+        m_previousPointerPosition = g_pointerPositionGetter->globalPointerPosition();
+    }
+    return block;
 }
 
 bool LibinputCompositorInputBackend::touchpadHoldBegin(InputDevice *sender, uint8_t fingers)
