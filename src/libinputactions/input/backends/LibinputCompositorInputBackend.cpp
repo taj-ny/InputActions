@@ -69,7 +69,7 @@ bool LibinputCompositorInputBackend::pointerButton(InputDevice *sender, Qt::Mous
     return handleEvent(PointerButtonEvent(sender, button, nativeButton, state));
 }
 
-bool LibinputCompositorInputBackend::pointerMotion(InputDevice *sender, const QPointF &delta)
+bool LibinputCompositorInputBackend::pointerMotion(InputDevice *sender, const QPointF &delta, QPointF deltaUnaccelerated)
 {
     if (m_ignoreEvents || !sender) {
         return false;
@@ -81,8 +81,13 @@ bool LibinputCompositorInputBackend::pointerMotion(InputDevice *sender, const QP
         return false;
     }
 
+    if (deltaUnaccelerated.isNull()) {
+        deltaUnaccelerated = delta;
+    }
+
+    const auto isTouchpad = sender->type() == InputDeviceType::Touchpad;
     // Don't block mouse motion for now, more changes are required
-    auto block = handleEvent(MotionEvent(sender, InputEventType::PointerMotion, delta)) && sender->type() == InputDeviceType::Touchpad;
+    auto block = handleEvent(MotionEvent(sender, InputEventType::PointerMotion, isTouchpad ? deltaUnaccelerated : delta)) && isTouchpad;
     if (block && m_previousPointerPosition) {
         g_pointerPositionSetter->setGlobalPointerPosition(m_previousPointerPosition.value());
     }

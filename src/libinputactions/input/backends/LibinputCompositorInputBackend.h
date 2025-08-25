@@ -52,7 +52,7 @@ protected:
      * @param sender The event will be ignored if nullptr.
      * @returns Whether to block the event.
      */
-    bool pointerMotion(InputDevice *sender, const QPointF &delta);
+    bool pointerMotion(InputDevice *sender, const QPointF &delta, QPointF deltaUnaccelerated = {});
 
     /**
      * @param sender The event will be ignored if nullptr.
