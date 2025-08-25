@@ -23,6 +23,7 @@ private slots:
     void press2_notDelayedOrBlocked();
     void press3_blocked();
 
+    void swipe1();
     void swipe2();
 
     void tap1();

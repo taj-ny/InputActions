@@ -142,6 +142,22 @@ void TestTouchpadTriggerHandler::press3_blocked()
     QCOMPARE(m_handler->handleEvent(TouchpadGestureLifecyclePhaseEvent(m_touchpad.get(), TouchpadGestureLifecyclePhase::End, TriggerType::Press)), true);
 }
 
+void TestTouchpadTriggerHandler::swipe1()
+{
+    auto trigger = std::make_unique<Trigger>(TriggerType::Swipe);
+    trigger->setActivationCondition(std::make_shared<VariableCondition>("fingers", static_cast<qreal>(1), ComparisonOperator::EqualTo));
+    m_handler->addTrigger(std::move(trigger));
+
+    addPoints(1);
+    movePoints({0.05, 0});
+    QCOMPARE(m_handler->handleEvent(MotionEvent(m_touchpad.get(), InputEventType::PointerMotion, {10, 0})), true);
+    QCOMPARE(m_activatingTriggerSpy->count(), 1);
+
+    removePoints();
+    QCOMPARE(m_endingTriggersSpy->count(), 1);
+    QVERIFY(m_endingTriggersSpy->at(0).at(0).value<TriggerTypes>() & TriggerType::StrokeSwipe);
+}
+
 void TestTouchpadTriggerHandler::swipe2()
 {
     auto trigger = std::make_unique<Trigger>(TriggerType::Swipe);
@@ -152,10 +168,10 @@ void TestTouchpadTriggerHandler::swipe2()
     movePoints({0.05, 0});
     movePoints({0.05, 0});
     movePoints({0.05, 0});
-    QCOMPARE(m_handler->handleEvent(MotionEvent(m_touchpad.get(), InputEventType::PointerScroll, {10, 0})), true);
+    QCOMPARE(m_handler->handleScrollEvent(MotionEvent(m_touchpad.get(), InputEventType::PointerScroll, {10, 0})), true);
     QCOMPARE(m_activatingTriggerSpy->count(), 1);
 
-    QCOMPARE(m_handler->handleEvent(MotionEvent(m_touchpad.get(), InputEventType::PointerScroll, {0, 0})), false);
+    QCOMPARE(m_handler->handleScrollEvent(MotionEvent(m_touchpad.get(), InputEventType::PointerScroll, {0, 0})), false);
     QCOMPARE(m_endingTriggersSpy->count(), 1);
     QCOMPARE(m_endingTriggersSpy->at(0).at(0).value<TriggerTypes>(), TriggerType::StrokeSwipe);
 }

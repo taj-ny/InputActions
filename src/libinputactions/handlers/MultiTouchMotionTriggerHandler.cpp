@@ -128,10 +128,11 @@ void MultiTouchMotionTriggerHandler::handleTouchDownEvent(const TouchEvent &even
 void MultiTouchMotionTriggerHandler::handleEvent(const TouchChangedEvent &event)
 {
     switch (m_state) {
+        case State::Touch:
         case State::TouchIdle:
             const auto diff = event.point().position - event.point().initialPosition;
             if (std::hypot(diff.x(), diff.y()) >= 0.02) {
-                m_state = State::Touch;
+                m_state = State::Motion;
             }
             break;
     }
@@ -170,6 +171,7 @@ void MultiTouchMotionTriggerHandler::handleTouchUpEvent(const TouchEvent &event)
 
     if (!libinputTap && event.sender()->validTouchPoints().empty()) {
         m_state = State::None;
+        endTriggers(TriggerType::All);
     }
 }
 

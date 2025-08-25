@@ -33,18 +33,16 @@ bool TouchpadTriggerHandler::handleEvent(const InputEvent &event)
 {
     if (MultiTouchMotionTriggerHandler::handleEvent(event)) {
         return true;
+    } else if (event.sender()->type() != InputDeviceType::Touchpad) {
+        return false;
     }
 
     switch (event.type()) {
         case InputEventType::PointerButton:
-            if (event.sender()->type() != InputDeviceType::Touchpad) {
-                return false;
-            }
             return handleEvent(static_cast<const PointerButtonEvent &>(event));
+        case InputEventType::PointerMotion:
+            return handleEvent(static_cast<const MotionEvent &>(event));
         case InputEventType::PointerScroll:
-            if (event.sender()->type() != InputDeviceType::Touchpad) {
-                return false;
-            }
             return handleScrollEvent(static_cast<const MotionEvent &>(event));
         case InputEventType::TouchpadClick:
             handleEvent(static_cast<const TouchpadClickEvent &>(event));
@@ -62,6 +60,22 @@ bool TouchpadTriggerHandler::handleEvent(const InputEvent &event)
 void TouchpadTriggerHandler::setClickTimeout(uint32_t value)
 {
     m_clickTimeout = value;
+}
+
+bool TouchpadTriggerHandler::handleEvent(const MotionEvent &event)
+{
+    switch (m_state) {
+        case State::Motion:
+        case State::None:
+        case State::Touch:
+        case State::TouchIdle:
+            g_variableManager->getVariable(BuiltinVariables::Fingers)->set(1);
+            m_state = activateTriggers(TriggerType::StrokeSwipe) ? State::MotionTrigger : State::MotionNoTrigger;
+            [[fallthrough]];
+        case State::MotionTrigger:
+            return handleMotion(event.delta());
+    }
+    return false;
 }
 
 bool TouchpadTriggerHandler::handleEvent(const PointerButtonEvent &event)
@@ -165,6 +179,8 @@ bool TouchpadTriggerHandler::handleEvent(const TouchpadPinchEvent &event)
 bool TouchpadTriggerHandler::handleScrollEvent(const MotionEvent &event)
 {
     switch (m_state) {
+        case State::Motion:
+        case State::MotionNoTrigger:
         case State::None:
         case State::Touch:
         case State::TouchIdle:
