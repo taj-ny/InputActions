@@ -129,7 +129,7 @@ bool KWinInputBackend::pinchGestureCancelled(std::chrono::microseconds time)
 #ifdef KWIN_6_3_OR_GREATER
 bool KWinInputBackend::pointerMotion(KWin::PointerMotionEvent *event)
 {
-    return LibinputCompositorInputBackend::pointerMotion(findInputActionsDevice(event->device), event->delta);
+    return LibinputCompositorInputBackend::pointerMotion(findInputActionsDevice(event->device), event->delta, event->deltaUnaccelerated);
 }
 
 bool KWinInputBackend::pointerButton(KWin::PointerButtonEvent *event)

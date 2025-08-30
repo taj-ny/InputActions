@@ -42,6 +42,7 @@ public:
     void setClickTimeout(uint32_t value);
 
 private:
+    bool handleEvent(const MotionEvent &event);
     bool handleEvent(const PointerButtonEvent &event);
     void handleEvent(const TouchpadClickEvent &event);
     bool handleEvent(const TouchpadGestureLifecyclePhaseEvent &event);
