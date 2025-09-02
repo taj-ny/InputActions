@@ -1,6 +1,6 @@
 #include "InputActions.h"
-#include "Config.h"
 #include "actions/ActionExecutor.h"
+#include "config/Config.h"
 #include "input/Keyboard.h"
 #include "input/backends/InputBackend.h"
 #include "interfaces/CursorShapeProvider.h"

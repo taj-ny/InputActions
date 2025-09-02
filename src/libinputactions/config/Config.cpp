@@ -17,12 +17,12 @@
 */
 
 #include "Config.h"
+#include "yaml.h"
 #include <QDir>
 #include <QFile>
 #include <QStandardPaths>
 #include <fcntl.h>
 #include <libinputactions/input/backends/LibevdevComplementaryInputBackend.h>
-#include <libinputactions/yaml_convert.h>
 #include <sys/inotify.h>
 
 namespace libinputactions

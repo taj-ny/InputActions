@@ -47,14 +47,14 @@ public:
 
     bool multiTouch() const;
     /**
-     * Do not set in custom properties unless for testing purposes.
+     * Only for testing.
      * @internal
      */
     void setMultiTouch(bool value);
 
     QSizeF size() const;
     /**
-     * Do not set in custom properties unless for testing purposes.
+     * Only for testing.
      * @internal
      */
     void setSize(const QSizeF &value);
@@ -135,7 +135,7 @@ class InputDevice
 public:
     /**
      * @param name Full name of the device.
-     * @param sysName Name of the device in /dev/input.
+     * @param sysName Name of the device in /dev/input (e.g. event6).
      */
     InputDevice(InputDeviceType type, QString name = {}, QString sysName = {});
 

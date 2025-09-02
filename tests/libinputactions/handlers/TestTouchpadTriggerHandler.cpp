@@ -145,7 +145,7 @@ void TestTouchpadTriggerHandler::press3_blocked()
 void TestTouchpadTriggerHandler::swipe1()
 {
     auto trigger = std::make_unique<Trigger>(TriggerType::Swipe);
-    trigger->setActivationCondition(std::make_shared<VariableCondition>("fingers", static_cast<qreal>(1), ComparisonOperator::EqualTo));
+    trigger->m_activationCondition = std::make_shared<VariableCondition>("fingers", static_cast<qreal>(1), ComparisonOperator::EqualTo);
     m_handler->addTrigger(std::move(trigger));
 
     addPoints(1);
@@ -161,7 +161,7 @@ void TestTouchpadTriggerHandler::swipe1()
 void TestTouchpadTriggerHandler::swipe2()
 {
     auto trigger = std::make_unique<Trigger>(TriggerType::Swipe);
-    trigger->setActivationCondition(std::make_shared<VariableCondition>("fingers", static_cast<qreal>(2), ComparisonOperator::EqualTo));
+    trigger->m_activationCondition = std::make_shared<VariableCondition>("fingers", static_cast<qreal>(2), ComparisonOperator::EqualTo);
     m_handler->addTrigger(std::move(trigger));
 
     addPoints(2);
@@ -306,7 +306,7 @@ void TestTouchpadTriggerHandler::tap_fingerCount()
     QFETCH(bool, activated);
 
     auto trigger = std::make_unique<Trigger>(TriggerType::Tap);
-    trigger->setActivationCondition(std::make_shared<VariableCondition>("fingers", static_cast<qreal>(triggerFingers), ComparisonOperator::EqualTo));
+    trigger->m_activationCondition = std::make_shared<VariableCondition>("fingers", static_cast<qreal>(triggerFingers), ComparisonOperator::EqualTo);
     m_handler->addTrigger(std::move(trigger));
     m_touchpad->properties().setLmrTapButtonMap(lmrTapButtonMap);
 

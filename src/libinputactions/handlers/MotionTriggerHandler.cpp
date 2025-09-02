@@ -52,16 +52,6 @@ void MotionTriggerHandler::setSpeedThreshold(TriggerType type, qreal threshold, 
     });
 }
 
-void MotionTriggerHandler::setSpeedInputEventsToSample(uint8_t events)
-{
-    m_inputEventsToSample = events;
-}
-
-void MotionTriggerHandler::setSwipeDeltaMultiplier(qreal multiplier)
-{
-    m_swipeDeltaMultiplier = multiplier;
-}
-
 bool MotionTriggerHandler::handleMotion(const QPointF &delta)
 {
     if (!hasActiveTriggers(TriggerType::StrokeSwipe)) {
@@ -190,7 +180,7 @@ void MotionTriggerHandler::onActivatingTrigger(const Trigger *trigger)
 {
     if (const auto motionTrigger = dynamic_cast<const MotionTrigger *>(trigger)) {
         if (!m_isDeterminingSpeed && motionTrigger->hasSpeed()) {
-            qCDebug(INPUTACTIONS_HANDLER_MOTION).noquote() << QString("Trigger has speed (id: %1)").arg(trigger->id());
+            qCDebug(INPUTACTIONS_HANDLER_MOTION).noquote() << QString("Trigger has speed (id: %1)").arg(trigger->m_id);
             m_isDeterminingSpeed = true;
         }
     }

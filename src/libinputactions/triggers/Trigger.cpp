@@ -37,16 +37,6 @@ void Trigger::addAction(std::unique_ptr<TriggerAction> action)
     m_actions.push_back(std::move(action));
 }
 
-void Trigger::setActivationCondition(const std::shared_ptr<const Condition> &condition)
-{
-    m_activationCondition = condition;
-}
-
-void Trigger::setEndCondition(const std::shared_ptr<const Condition> &condition)
-{
-    m_endCondition = condition;
-}
-
 bool Trigger::canActivate(const TriggerActivationEvent &event) const
 {
     if (!m_mouseButtons.empty() && event.mouseButtons.has_value()) {
@@ -58,7 +48,7 @@ bool Trigger::canActivate(const TriggerActivationEvent &event) const
         }
     }
 
-    return !m_activationCondition || m_activationCondition.value()->satisfied();
+    return !m_activationCondition || m_activationCondition->satisfied();
 }
 
 bool Trigger::canUpdate(const TriggerUpdateEvent &event) const
@@ -103,7 +93,7 @@ void Trigger::update(const TriggerUpdateEvent &event)
 
 bool Trigger::canEnd() const
 {
-    return m_withinThreshold && (!m_endCondition || m_endCondition.value()->satisfied());
+    return m_withinThreshold && (!m_endCondition || m_endCondition->satisfied());
 }
 
 void Trigger::end()
@@ -182,51 +172,6 @@ void Trigger::updateActions(const TriggerUpdateEvent &event)
     for (const auto &action : m_actions) {
         action->triggerUpdated(event.m_delta, {});
     }
-}
-
-void Trigger::setThreshold(const Range<qreal> &threshold)
-{
-    m_threshold = threshold;
-}
-
-void Trigger::setClearModifiers(bool value)
-{
-    m_clearModifiers = value;
-}
-
-void Trigger::setSetLastTrigger(bool value)
-{
-    m_setLastTrigger = value;
-}
-
-const std::vector<Qt::MouseButton> &Trigger::mouseButtons() const
-{
-    return m_mouseButtons;
-}
-
-void Trigger::setMouseButtons(const std::vector<Qt::MouseButton> &buttons)
-{
-    m_mouseButtons = buttons;
-}
-
-const bool &Trigger::mouseButtonsExactOrder() const
-{
-    return m_mouseButtonsExactOrder;
-}
-
-void Trigger::setMouseButtonsExactOrder(bool value)
-{
-    m_mouseButtonsExactOrder = value;
-}
-
-const QString &Trigger::id() const
-{
-    return m_id;
-}
-
-void Trigger::setId(const QString &value)
-{
-    m_id = value;
 }
 
 const TriggerType &Trigger::type() const

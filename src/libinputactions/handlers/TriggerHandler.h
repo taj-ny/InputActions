@@ -43,6 +43,9 @@ public:
     virtual bool handleEvent(const InputEvent &event);
     void handleEvent(const KeyboardKeyEvent &event);
 
+    /**
+     * @param value The interval (in milliseconds) and delta used for updating time-based triggers.
+     */
     void setTimedTriggerUpdateDelta(uint32_t value);
 
 protected:

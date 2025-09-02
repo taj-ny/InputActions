@@ -50,17 +50,11 @@ public:
     bool canUpdate(const TriggerUpdateEvent &event) const override;
 
     bool hasSpeed() const;
-    /**
-     * Ignored unless set.
-     * @param speed Speed the gesture must be performed at.
-     */
-    void setSpeed(TriggerSpeed speed);
+
+    TriggerSpeed m_speed = TriggerSpeed::Any;
 
 protected:
     void updateActions(const TriggerUpdateEvent &event) override;
-
-private:
-    TriggerSpeed m_speed = TriggerSpeed::Any;
 };
 
 }

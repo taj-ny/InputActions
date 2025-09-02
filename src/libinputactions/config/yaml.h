@@ -45,9 +45,7 @@
 #include <libinputactions/variables/VariableManager.h>
 #include <unordered_set>
 
-// Keep s_keyboard and s_mouse at the top, the documentation links to them.
-
-static const std::unordered_map<QString, uint32_t> s_keyboard = {
+static const std::unordered_map<QString, uint32_t> KEYBOARD = {
     {"RESERVED", KEY_RESERVED},
     {"ESC", KEY_ESC},
     {"1", KEY_1},
@@ -558,7 +556,7 @@ static const std::unordered_map<QString, uint32_t> s_keyboard = {
 };
 
 // https://invent.kde.org/plasma/kwin/-/blob/cc4d99ae/src/mousebuttons.cpp#L14
-static const std::unordered_map<QString, uint32_t> s_mouse = {
+static const std::unordered_map<QString, uint32_t> MOUSE = {
     {"LEFT", BTN_LEFT},
     {"MIDDLE", BTN_MIDDLE},
     {"RIGHT", BTN_RIGHT},
@@ -697,7 +695,7 @@ struct convert<std::shared_ptr<VariableCondition>>
             right.push_back(asAny(rightNode, variable->type()));
         }
         condition = std::make_shared<VariableCondition>(variableName, right, comparisonOperator);
-        condition->setNegate(negate);
+        condition->m_negate = negate;
         return true;
     }
 };
@@ -742,7 +740,7 @@ struct convert<std::shared_ptr<Condition>>
                     auto classGroup = std::make_shared<ConditionGroup>(ConditionGroupMode::Any);
                     classGroup->add(std::make_shared<VariableCondition>("window_class", value, ComparisonOperator::Regex));
                     classGroup->add(std::make_shared<VariableCondition>("window_name", value, ComparisonOperator::Regex));
-                    classGroup->setNegate(negate.contains("window_class"));
+                    classGroup->m_negate = negate.contains("window_class");
                     group->add(classGroup);
                 }
                 if (const auto &windowStateNode = node["window_state"]) {
@@ -754,7 +752,7 @@ struct convert<std::shared_ptr<Condition>>
                     if (value.contains("maximized")) {
                         classGroup->add(std::make_shared<VariableCondition>("window_maximized", true, ComparisonOperator::EqualTo));
                     }
-                    classGroup->setNegate(negate.contains("window_state"));
+                    classGroup->m_negate = negate.contains("window_state");
                     group->add(classGroup);
                 }
                 condition = group;
@@ -869,6 +867,21 @@ struct convert<std::vector<std::unique_ptr<Trigger>>>
     }
 };
 
+template<typename T>
+void loadMember(T &member, const Node &node)
+{
+    if (node) {
+        member = node.as<T>();
+    }
+}
+template<typename T>
+void loadMember(std::optional<T> &member, const Node &node)
+{
+    if (node) {
+        member = node.as<T>();
+    }
+}
+
 template<>
 struct convert<std::unique_ptr<Trigger>>
 {
@@ -879,7 +892,7 @@ struct convert<std::unique_ptr<Trigger>>
             trigger = std::make_unique<Trigger>(TriggerType::Click);
         } else if (type == "hold" || type == "press") {
             auto pressTrigger = new PressTrigger;
-            pressTrigger->m_instant = node["instant"].as<bool>(false);
+            loadMember(pressTrigger->m_instant, node["instant"]);
             trigger.reset(pressTrigger);
         } else if (type == "pinch") {
             trigger = std::make_unique<DirectionalMotionTrigger>(TriggerType::Pinch, static_cast<TriggerDirection>(node["direction"].as<PinchDirection>()));
@@ -899,11 +912,18 @@ struct convert<std::unique_ptr<Trigger>>
             throw Exception(node.Mark(), "Invalid trigger type");
         }
 
-        auto conditionGroup = std::make_shared<ConditionGroup>();
-
-        if (const auto &idNode = node["id"]) {
-            trigger->setId(idNode.as<QString>());
+        loadMember(trigger->m_clearModifiers, node["clear_modifiers"]);
+        loadMember(trigger->m_endCondition, node["end_conditions"]);
+        loadMember(trigger->m_id, node["id"]);
+        loadMember(trigger->m_mouseButtons, node["mouse_buttons"]);
+        loadMember(trigger->m_mouseButtonsExactOrder, node["mouse_buttons_exact_order"]);
+        loadMember(trigger->m_setLastTrigger, node["set_last_trigger"]);
+        loadMember(trigger->m_threshold, node["threshold"]);
+        if (auto *motionTrigger = dynamic_cast<MotionTrigger *>(trigger.get())) {
+            loadMember(motionTrigger->m_speed, node["speed"]);
         }
+
+        auto conditionGroup = std::make_shared<ConditionGroup>();
         if (const auto &fingersNode = node["fingers"]) {
             auto range = fingersNode.as<Range<qreal>>();
             if (!range.max()) {
@@ -913,9 +933,6 @@ struct convert<std::unique_ptr<Trigger>>
                                                                         std::vector<std::any>{range.min().value(), range.max().value()},
                                                                         ComparisonOperator::Between));
             }
-        }
-        if (const auto &thresholdNode = node["threshold"]) {
-            trigger->setThreshold(thresholdNode.as<Range<qreal>>());
         }
         if (const auto &modifiersNode = node["keyboard_modifiers"]) {
             std::optional<Qt::KeyboardModifiers> modifiers;
@@ -934,35 +951,15 @@ struct convert<std::unique_ptr<Trigger>>
                 conditionGroup->add(std::make_shared<VariableCondition>(BuiltinVariables::KeyboardModifiers, modifiers.value(), ComparisonOperator::EqualTo));
             }
         }
-        if (const auto &mouseButtonsNode = node["mouse_buttons"]) {
-            trigger->setMouseButtons(mouseButtonsNode.as<std::vector<Qt::MouseButton>>());
-        }
-        if (const auto &mouseButtonsExactOrderNode = node["mouse_buttons_exact_order"]) {
-            trigger->setMouseButtonsExactOrder(mouseButtonsExactOrderNode.as<bool>());
-        }
         if (const auto &conditionsNode = node["conditions"]) {
             conditionGroup->add(conditionsNode.as<std::shared_ptr<Condition>>());
         }
-        if (const auto &endConditionsNode = node["end_conditions"]) {
-            trigger->setEndCondition(endConditionsNode.as<std::shared_ptr<Condition>>());
-        }
+        trigger->m_activationCondition = conditionGroup;
+
         for (const auto &actionNode : node["actions"]) {
             trigger->addAction(actionNode.as<std::unique_ptr<TriggerAction>>());
         }
-        if (const auto &clearModifiersNode = node["clear_modifiers"]) {
-            trigger->setClearModifiers(clearModifiersNode.as<bool>());
-        }
-        if (const auto &setLastTriggerNode = node["set_last_trigger"]) {
-            trigger->setSetLastTrigger(setLastTriggerNode.as<bool>());
-        }
 
-        if (auto *motionTrigger = dynamic_cast<MotionTrigger *>(trigger.get())) {
-            if (const auto &speedNode = node["speed"]) {
-                motionTrigger->setSpeed(speedNode.as<TriggerSpeed>());
-            }
-        }
-
-        trigger->setActivationCondition(conditionGroup);
         return true;
     }
 };
@@ -974,15 +971,13 @@ struct convert<std::unique_ptr<TriggerAction>>
     {
         value = std::make_unique<TriggerAction>(node.as<std::shared_ptr<Action>>());
 
-        if (const auto &thresholdNode = node["threshold"]) {
-            value->m_threshold = thresholdNode.as<Range<qreal>>();
-        }
+        loadMember(value->m_interval, node["interval"]);
+        loadMember(value->m_threshold, node["threshold"]);
+        loadMember(value->m_on, node["on"]);
 
-        value->m_on = node["on"].as<On>(On::End);
         if (value->m_on == On::Begin && value->m_threshold && (value->m_threshold->min() || value->m_threshold->max())) {
             throw Exception(node.Mark(), "Begin actions can't have thresholds");
         }
-        value->m_interval = node["interval"].as<ActionInterval>(ActionInterval());
 
         return true;
     }
@@ -995,15 +990,11 @@ struct convert<std::shared_ptr<Action>>
     {
         if (const auto &commandNode = node["command"]) {
             auto action = std::make_shared<CommandAction>(commandNode.as<libinputactions::Value<QString>>());
-            if (const auto &waitNode = node["wait"]) {
-                action->m_wait = waitNode.as<bool>();
-            }
+            loadMember(action->m_wait, node["wait"]);
             value = action;
         } else if (const auto &inputNode = node["input"]) {
             auto action = std::make_shared<InputAction>(inputNode.as<std::vector<InputAction::Item>>());
-            if (const auto &delayNode = node["delay"]) {
-                action->m_delay = delayNode.as<std::chrono::milliseconds>();
-            }
+            loadMember(action->m_delay, node["delay"]);
             value = action;
         } else if (const auto &plasmaShortcutNode = node["plasma_shortcut"]) {
             const auto split = plasmaShortcutNode.as<QString>().split(",");
@@ -1019,12 +1010,8 @@ struct convert<std::shared_ptr<Action>>
             throw Exception(node.Mark(), "Action has no valid action property");
         }
 
-        if (const auto &conditionsNode = node["conditions"]) {
-            value->m_condition = conditionsNode.as<std::shared_ptr<Condition>>();
-        }
-        if (const auto &idNode = node["id"]) {
-            value->m_id = idNode.as<QString>();
-        }
+        loadMember(value->m_condition, node["conditions"]);
+        loadMember(value->m_id, node["id"]);
 
         return true;
     }
@@ -1073,9 +1060,7 @@ static void decodeMotionTriggerHandler(const Node &node, TriggerHandler *handler
 
     auto *motionHandler = dynamic_cast<MotionTriggerHandler *>(handler);
     if (const auto &speedNode = node["speed"]) {
-        if (const auto &eventsNode = speedNode["events"]) {
-            motionHandler->setSpeedInputEventsToSample(eventsNode.as<uint8_t>());
-        }
+        loadMember(motionHandler->m_inputEventsToSample, speedNode["events"]);
         if (const auto &thresholdNode = speedNode["swipe_threshold"]) {
             motionHandler->setSpeedThreshold(TriggerType::Swipe, thresholdNode.as<qreal>());
         }
@@ -1120,15 +1105,9 @@ struct convert<std::unique_ptr<MouseTriggerHandler>>
         handler.reset(mouseTriggerHandler);
         decodeMotionTriggerHandler(node, handler.get());
 
-        if (const auto &motionTimeoutNode = node["motion_timeout"]) {
-            mouseTriggerHandler->setMotionTimeout(motionTimeoutNode.as<uint32_t>());
-        }
-        if (const auto &pressTimeoutNode = node["press_timeout"]) {
-            mouseTriggerHandler->setPressTimeout(pressTimeoutNode.as<uint32_t>());
-        }
-        if (const auto &unblockButtonsOnTimeout = node["unblock_buttons_on_timeout"]) {
-            mouseTriggerHandler->setUnblockButtonsOnTimeout(unblockButtonsOnTimeout.as<bool>());
-        }
+        loadMember(mouseTriggerHandler->m_motionTimeout, node["motion_timeout"]);
+        loadMember(mouseTriggerHandler->m_pressTimeout, node["press_timeout"]);
+        loadMember(mouseTriggerHandler->m_unblockButtonsOnTimeout, node["unblock_buttons_on_timeout"]);
 
         return true;
     }
@@ -1143,12 +1122,8 @@ struct convert<std::unique_ptr<TouchpadTriggerHandler>>
         handler.reset(touchpadTriggerHandler);
         decodeMultiTouchMotionTriggerHandler(node, handler.get());
 
-        if (const auto &deltaMultiplierNode = node["delta_multiplier"]) {
-            touchpadTriggerHandler->setSwipeDeltaMultiplier(deltaMultiplierNode.as<qreal>());
-        }
-        if (const auto &clickTimeoutNode = node["click_timeout"]) {
-            touchpadTriggerHandler->setClickTimeout(clickTimeoutNode.as<uint32_t>());
-        }
+        loadMember(touchpadTriggerHandler->m_clickTimeout, node["click_timeout"]);
+        loadMember(touchpadTriggerHandler->m_swipeDeltaMultiplier, node["delta_multiplier"]);
 
         return true;
     }
@@ -1269,26 +1244,26 @@ struct convert<std::vector<InputAction::Item>>
                         const auto actionRaw = actionNode.as<QString>().toUpper();
                         if (actionRaw.startsWith("+") || actionRaw.startsWith("-")) {
                             const auto key = actionRaw.mid(1);
-                            if (!s_keyboard.contains(key)) {
+                            if (!KEYBOARD.contains(key)) {
                                 throw Exception(node.Mark(), ("Invalid keyboard key ('" + key + "')").toStdString());
                             }
 
                             if (actionRaw[0] == '+') {
                                 value.push_back({
-                                    .keyboardPress = s_keyboard.at(key),
+                                    .keyboardPress = KEYBOARD.at(key),
                                 });
                             } else {
                                 value.push_back({
-                                    .keyboardRelease = s_keyboard.at(key),
+                                    .keyboardRelease = KEYBOARD.at(key),
                                 });
                             }
                         } else {
                             std::vector<uint32_t> keys;
                             for (const auto &keyRaw : actionRaw.split("+")) {
-                                if (!s_keyboard.contains(keyRaw)) {
+                                if (!KEYBOARD.contains(keyRaw)) {
                                     throw Exception(node.Mark(), ("Invalid keyboard key ('" + keyRaw + "')").toStdString());
                                 }
-                                keys.push_back(s_keyboard.at(keyRaw));
+                                keys.push_back(KEYBOARD.at(keyRaw));
                             }
 
                             for (const auto key : keys) {
@@ -1310,17 +1285,17 @@ struct convert<std::vector<InputAction::Item>>
                     actionRaw = actionRaw.toUpper();
                     if (actionRaw.startsWith("+") || actionRaw.startsWith("-")) {
                         const auto button = actionRaw.mid(1);
-                        if (!s_mouse.contains(button)) {
+                        if (!MOUSE.contains(button)) {
                             throw Exception(node.Mark(), ("Invalid mouse button ('" + button + "')").toStdString());
                         }
 
                         if (actionRaw[0] == '+') {
                             value.push_back({
-                                .mousePress = s_mouse.at(button),
+                                .mousePress = MOUSE.at(button),
                             });
                         } else {
                             value.push_back({
-                                .mouseRelease = s_mouse.at(button),
+                                .mouseRelease = MOUSE.at(button),
                             });
                         }
                     } else if (actionRaw.startsWith("MOVE_BY_DELTA")) {
@@ -1340,10 +1315,10 @@ struct convert<std::vector<InputAction::Item>>
                     } else {
                         std::vector<uint32_t> buttons;
                         for (const auto &buttonRaw : actionRaw.split("+")) {
-                            if (!s_mouse.contains(buttonRaw)) {
+                            if (!MOUSE.contains(buttonRaw)) {
                                 throw Exception(node.Mark(), ("Invalid mouse button ('" + buttonRaw + "')").toStdString());
                             }
-                            buttons.push_back(s_mouse.at(buttonRaw));
+                            buttons.push_back(MOUSE.at(buttonRaw));
                         }
 
                         for (const auto button : buttons) {
@@ -1373,10 +1348,10 @@ struct convert<KeyboardShortcut>
     {
         for (const auto &keyNode : node) {
             const auto key = keyNode.as<QString>().toUpper();
-            if (!s_keyboard.contains(key)) {
+            if (!KEYBOARD.contains(key)) {
                 throw Exception(node.Mark(), ("Invalid keyboard key ('" + key + "')").toStdString());
             }
-            value.keys.insert(s_keyboard.at(key));
+            value.keys.insert(KEYBOARD.at(key));
         }
         return true;
     }

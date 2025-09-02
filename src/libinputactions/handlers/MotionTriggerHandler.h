@@ -53,9 +53,13 @@ public:
     void setSpeedInputEventsToSample(uint8_t events);
 
     /**
-     * Used in input actions, as KWin doesn't provide accelerated deltas for gestures. Temporary workaround.
+     * Used for the move_by_delta mouse input action. Temporary workaround.
      */
-    void setSwipeDeltaMultiplier(qreal multiplier);
+    qreal m_swipeDeltaMultiplier = 1.0;
+    /**
+     * How many input events to sample in order to determine the speed.
+     */
+    uint8_t m_inputEventsToSample = 3;
 
 protected:
     MotionTriggerHandler();
@@ -85,10 +89,8 @@ private slots:
 private:
     Axis m_currentSwipeAxis = Axis::None;
     QPointF m_currentSwipeDelta;
-    qreal m_swipeDeltaMultiplier = 1.0;
 
     bool m_isDeterminingSpeed = false;
-    uint8_t m_inputEventsToSample = 3;
     uint8_t m_sampledInputEvents = 0;
     qreal m_accumulatedAbsoluteSampledDelta = 0;
     std::optional<TriggerSpeed> m_speed;

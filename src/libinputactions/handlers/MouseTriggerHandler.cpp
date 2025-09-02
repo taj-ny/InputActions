@@ -244,16 +244,6 @@ bool MouseTriggerHandler::handleWheelEvent(const MotionEvent &event)
     return hasTriggers;
 }
 
-void MouseTriggerHandler::setMotionTimeout(uint32_t timeout)
-{
-    m_motionTimeout = timeout;
-}
-
-void MouseTriggerHandler::setPressTimeout(uint32_t timeout)
-{
-    m_pressTimeout = timeout;
-}
-
 void MouseTriggerHandler::onActivatingTrigger(const Trigger *trigger)
 {
     m_hadTriggerSincePress = true;
@@ -272,10 +262,10 @@ bool MouseTriggerHandler::shouldBlockMouseButton(Qt::MouseButton button)
     // A partial match is required, not an exact one
     event->mouseButtons = {};
     for (const auto &trigger : triggers(TriggerType::All, *event.get())) {
-        const auto buttons = trigger->mouseButtons();
-        if ((trigger->mouseButtonsExactOrder() && std::ranges::equal(m_buttons, buttons | std::views::take(m_buttons.size())))
-            || (!trigger->mouseButtonsExactOrder() && std::ranges::contains(buttons, button))) {
-            qCDebug(INPUTACTIONS_HANDLER_MOUSE).noquote().nospace() << "Mouse button blocked (button: " << button << ", trigger: " << trigger->id() << ")";
+        const auto buttons = trigger->m_mouseButtons;
+        if ((trigger->m_mouseButtonsExactOrder && std::ranges::equal(m_buttons, buttons | std::views::take(m_buttons.size())))
+            || (!trigger->m_mouseButtonsExactOrder && std::ranges::contains(buttons, button))) {
+            qCDebug(INPUTACTIONS_HANDLER_MOUSE).noquote().nospace() << "Mouse button blocked (button: " << button << ", trigger: " << trigger->m_id << ")";
             return true;
         }
     }
@@ -289,11 +279,6 @@ void MouseTriggerHandler::pressBlockedMouseButtons()
         qCDebug(INPUTACTIONS_HANDLER_MOUSE).nospace() << "Mouse button unblocked (button: " << button << ")";
     }
     m_blockedMouseButtons.clear();
-}
-
-void MouseTriggerHandler::setUnblockButtonsOnTimeout(bool unblock)
-{
-    m_unblockButtonsOnTimeout = unblock;
 }
 
 }
