@@ -55,6 +55,8 @@ protected:
 
     void reset() override;
 
+    static void updateVariables(const InputDevice *device);
+
     enum State
     {
         TouchpadButtonDown,
@@ -88,7 +90,14 @@ protected:
          */
         MotionTrigger,
 
-        TapBegin
+        /**
+         * A tap gesture had been recognized and is being handled by InputActions.
+         */
+        TapBegin,
+        /**
+         * A tap gesture had been recognized and will be handled on libinput's pointer button event.
+         */
+        LibinputTapBegin
     } m_state
         = State::None;
 
@@ -98,7 +107,6 @@ private:
     void handleTouchUpEvent(const TouchEvent &event);
 
     bool canTap();
-    static void updateVariables(const InputDevice *device);
 
     TouchPoint m_firstTouchPoint;
 
