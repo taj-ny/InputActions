@@ -1011,6 +1011,7 @@ struct convert<std::shared_ptr<Action>>
         }
 
         loadMember(value->m_condition, node["conditions"]);
+        loadMember(value->m_executionLimit, node["limit"]);
         loadMember(value->m_id, node["id"]);
 
         return true;

@@ -28,7 +28,7 @@ Action::~Action() = default;
 
 bool Action::canExecute() const
 {
-    return !m_condition || m_condition->satisfied();
+    return (!m_condition || m_condition->satisfied()) && (!m_executionLimit || m_executions < m_executionLimit);
 }
 
 void Action::execute()

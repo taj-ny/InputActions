@@ -58,6 +58,12 @@ public:
      * Executions since last reset.
      */
     uint32_t m_executions{};
+    /**
+     * The maximum amount of times the action can execute during the gesture.
+     *
+     * 0 = no limit
+     */
+    uint32_t m_executionLimit{};
 
 protected:
     /**
