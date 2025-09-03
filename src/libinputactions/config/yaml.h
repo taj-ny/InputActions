@@ -661,39 +661,46 @@ struct convert<std::shared_ptr<VariableCondition>>
             throw Exception(node.Mark(), QString("Variable '%1' does not exist.").arg(variableName).toStdString());
         }
 
-        static const std::unordered_map<QString, ComparisonOperator> operators = {
-            {"==", ComparisonOperator::EqualTo},
-            {"!=", ComparisonOperator::NotEqualTo},
-            {">", ComparisonOperator::GreaterThan},
-            {">=", ComparisonOperator::GreaterThanOrEqual},
-            {"<", ComparisonOperator::LessThan},
-            {"<=", ComparisonOperator::LessThanOrEqual},
-            {"contains", ComparisonOperator::Contains},
-            {"between", ComparisonOperator::Between},
-            {"matches", ComparisonOperator::Regex},
-            {"one_of", ComparisonOperator::OneOf},
-        };
-        const auto operatorRaw = raw.mid(firstSpace + 1, secondSpace - firstSpace - 1);
-        if (!operators.contains(operatorRaw)) {
-            throw Exception(node.Mark(), "Invalid operator");
-        }
-        const auto comparisonOperator = operators.at(operatorRaw);
-
-        const auto rightRaw = raw.mid(secondSpace + 1);
-        const auto rightNode = YAML::Load(rightRaw.toStdString());
+        ComparisonOperator comparisonOperator;
         std::vector<libinputactions::Value<std::any>> right;
-
-        if (!isEnum(variable->type()) && rightNode.IsSequence()) {
-            for (const auto &child : rightNode) {
-                right.push_back(asAny(child, variable->type()));
-            }
-        } else if (rightRaw.contains(';')) {
-            const auto split = rightRaw.split(';');
-            right.push_back(asAny(YAML::Load(split[0].toStdString()), variable->type()));
-            right.push_back(asAny(YAML::Load(split[1].toStdString()), variable->type()));
+        if (firstSpace == -1 && variable->type() == typeid(bool)) { // bool variable condition without operator
+            comparisonOperator = ComparisonOperator::EqualTo;
+            right.push_back(libinputactions::Value<bool>(true));
         } else {
-            right.push_back(asAny(rightNode, variable->type()));
+            static const std::unordered_map<QString, ComparisonOperator> operators = {
+                {"==", ComparisonOperator::EqualTo},
+                {"!=", ComparisonOperator::NotEqualTo},
+                {">", ComparisonOperator::GreaterThan},
+                {">=", ComparisonOperator::GreaterThanOrEqual},
+                {"<", ComparisonOperator::LessThan},
+                {"<=", ComparisonOperator::LessThanOrEqual},
+                {"contains", ComparisonOperator::Contains},
+                {"between", ComparisonOperator::Between},
+                {"matches", ComparisonOperator::Regex},
+                {"one_of", ComparisonOperator::OneOf},
+            };
+            const auto operatorRaw = raw.mid(firstSpace + 1, secondSpace - firstSpace - 1);
+            if (!operators.contains(operatorRaw)) {
+                throw Exception(node.Mark(), "Invalid operator");
+            }
+            comparisonOperator = operators.at(operatorRaw);
+
+            const auto rightRaw = raw.mid(secondSpace + 1);
+            const auto rightNode = YAML::Load(rightRaw.toStdString());
+
+            if (!isEnum(variable->type()) && rightNode.IsSequence()) {
+                for (const auto &child : rightNode) {
+                    right.push_back(asAny(child, variable->type()));
+                }
+            } else if (rightRaw.contains(';')) {
+                const auto split = rightRaw.split(';');
+                right.push_back(asAny(YAML::Load(split[0].toStdString()), variable->type()));
+                right.push_back(asAny(YAML::Load(split[1].toStdString()), variable->type()));
+            } else {
+                right.push_back(asAny(rightNode, variable->type()));
+            }
         }
+
         condition = std::make_shared<VariableCondition>(variableName, right, comparisonOperator);
         condition->m_negate = negate;
         return true;
@@ -776,12 +783,12 @@ struct convert<std::shared_ptr<Condition>>
             auto conditionNode = node;
             const auto tag = node.Tag();
             if (tag != "!" && tag.starts_with('!')) {
-                conditionNode = node.Tag() + " " + node.as<std::string>();
+                conditionNode = QString("%1 %2").arg(QString::fromStdString(tag), node.as<QString>()).trimmed().toStdString();
             }
 
             const auto raw = conditionNode.as<QString>("");
             if (raw.startsWith("$") || raw.startsWith("!$")) {
-                condition = node.as<std::shared_ptr<VariableCondition>>();
+                condition = conditionNode.as<std::shared_ptr<VariableCondition>>();
                 return true;
             }
         }
