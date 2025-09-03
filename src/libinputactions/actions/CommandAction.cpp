@@ -34,12 +34,17 @@ bool CommandAction::async() const
 
 void CommandAction::executeImpl()
 {
+    const auto commandValue = m_command.get();
+    if (!commandValue) {
+        return;
+    }
+
     auto *process = new QProcess;
     connect(process, &QProcess::finished, this, [process]() {
         process->deleteLater();
     });
     process->setProgram("/bin/sh");
-    process->setArguments({"-c", m_command.get()});
+    process->setArguments({"-c", commandValue.value()});
     process->start();
     if (m_wait) {
         process->waitForFinished();

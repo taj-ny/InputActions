@@ -152,6 +152,11 @@ VariableManager::VariableManager()
 
 VariableManager::~VariableManager() = default;
 
+bool VariableManager::hasVariable(const QString &name)
+{
+    return m_variables.contains(name);
+}
+
 Variable *VariableManager::getVariable(const QString &name)
 {
     if (!m_variables.contains(name)) {

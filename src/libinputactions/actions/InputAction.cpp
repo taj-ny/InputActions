@@ -40,8 +40,8 @@ void InputAction::executeImpl()
                     g_inputEmitter->keyboardKey(item.keyboardPress, true);
                 } else if (item.keyboardRelease) {
                     g_inputEmitter->keyboardKey(item.keyboardRelease, false);
-                } else if (!keyboardText.isEmpty()) {
-                    g_inputEmitter->keyboardText(keyboardText);
+                } else if (keyboardText) {
+                    g_inputEmitter->keyboardText(keyboardText.value());
                 } else if (item.mousePress) {
                     g_inputEmitter->mouseButton(item.mousePress, true);
                 } else if (item.mouseRelease) {

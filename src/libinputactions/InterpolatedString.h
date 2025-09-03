@@ -19,26 +19,28 @@
 #pragma once
 
 #include <QString>
+#include <libinputactions/Value.h>
 #include <set>
 
 namespace libinputactions
 {
 
 /**
- * An expression that evaluates to T.
+ * A string containing variable references ($variable) that will be replaced with the value of the variable.
  */
-template<typename T>
-class Expression
+class InterpolatedString
 {
 public:
-    explicit Expression(const QString &expression);
+    InterpolatedString(QString string);
 
-    T evaluate() const;
+    operator Value<QString>() const;
 
 private:
-    QString m_expression;
+    QString evaluate() const;
+
+    QString m_string;
     /**
-     * Variable names referenced in the expression.
+     * Referenced variables.
      */
     std::set<QString> m_variables;
 };

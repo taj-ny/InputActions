@@ -16,21 +16,19 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include "Expression.h"
+#include "InterpolatedString.h"
 #include <QRegularExpression>
 #include <libinputactions/variables/VariableManager.h>
 
 namespace libinputactions
 {
 
-template<typename T>
-Expression<T>::Expression(const QString &expression)
+InterpolatedString::InterpolatedString(QString string)
+    : m_string(std::move(string))
 {
-    m_expression = expression;
-
     static const QRegularExpression variableReferenceRegex("\\$([a-zA-Z0-9_])+");
     const auto variables = g_variableManager->variables();
-    auto it = variableReferenceRegex.globalMatch(m_expression);
+    auto it = variableReferenceRegex.globalMatch(m_string);
     while (it.hasNext()) {
         const auto match = it.next();
         const auto variableName = match.captured(0).mid(1);
@@ -41,21 +39,25 @@ Expression<T>::Expression(const QString &expression)
     }
 }
 
-template<>
-QString Expression<QString>::evaluate() const
+InterpolatedString::operator Value<QString>() const
+{
+    return Value<QString>::function([string = *this] {
+        return string.evaluate();
+    });
+}
+
+QString InterpolatedString::evaluate() const
 {
     if (m_variables.empty()) {
-        return m_expression;
+        return m_string;
     }
 
-    QString result = m_expression;
+    QString result = m_string;
     for (const auto &variable : m_variables) {
         const auto value = g_variableManager->getVariable(variable)->operations()->toString();
         result = result.replace(QRegularExpression("\\$" + variable + "(?![a-zA-Z0-9_])"), value);
     }
     return result;
 }
-
-template class Expression<QString>;
 
 }

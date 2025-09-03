@@ -20,13 +20,17 @@
 #include "InputActions.h"
 #include <QProcess>
 #include <libinputactions/globals.h>
+#include <libinputactions/interfaces/CursorShapeProvider.h>
 #include <libinputactions/variables/VariableManager.h>
 
 namespace libinputactions
 {
 
 template<typename T>
-T fromString(const QString &s);
+T fromString(const QString &s)
+{
+    return T{};
+}
 
 template<>
 QString fromString(const QString &s)
@@ -36,32 +40,22 @@ QString fromString(const QString &s)
 
 template<typename T>
 Value<T>::Value(T value)
-    : m_value(std::move(value))
+    : m_value(value)
 {
-}
-
-template<typename T>
-Value<T>::Value(std::function<T()> getter)
-    : m_value(std::move(getter))
-{
-}
-
-template<typename T>
-Value<T>::Value(Expression<T> expression)
-{
-    m_value = [expression = std::move(expression)] {
-        return expression.evaluate();
-    };
-    m_mainThreadOnly = true; // uses variables
 }
 
 template<typename T>
 Value<T> Value<T>::command(Value<QString> command)
 {
-    auto value = Value<T>([command = std::move(command)]() {
+    auto value = Value<T>::function([command = std::move(command)]() -> std::optional<T> {
+        const auto commandValue = command.get();
+        if (!commandValue) {
+            return {};
+        }
+
         QProcess process;
         process.setProgram("/bin/sh");
-        process.setArguments({"-c", command.get()});
+        process.setArguments({"-c", commandValue.value()});
         process.start();
         process.waitForFinished();
         return fromString<T>(process.readAllStandardOutput());
@@ -71,25 +65,48 @@ Value<T> Value<T>::command(Value<QString> command)
 }
 
 template<typename T>
+Value<T> Value<T>::function(std::function<std::optional<T>()> function)
+{
+    auto value = Value<T>();
+    value.m_value = std::move(function);
+    return value;
+}
+
+template<typename T>
 Value<T> Value<T>::variable(QString name)
 {
-    auto value = Value<T>([name = std::move(name)]() {
-        return g_variableManager->getVariable<T>(name)->get().value();
+    auto value = Value<T>::function([name = std::move(name)]() -> std::optional<T> {
+        const auto variable = g_variableManager->getVariable(name);
+        if constexpr (typeid(T) == typeid(QString)) {
+            return variable->operations()->toString();
+        }
+
+        if (variable->type() != typeid(T)) {
+            qCWarning(INPUTACTIONS).noquote() << QString("Failed to get value: variable %1 is of type %2, expected %3").arg(name, variable->type().name(), typeid(T).name());
+            return {};
+        }
+
+        if (const auto variableValue = g_variableManager->getVariable<T>(name)->get()) {
+            return variableValue;
+        }
+
+        qCWarning(INPUTACTIONS).noquote() << QString("Failed to get value: variable %1 is not set").arg(name);
+        return {};
     });
     value.m_mainThreadOnly = true;
     return value;
 }
 
 template<typename T>
-T Value<T>::get() const
+std::optional<T> Value<T>::get() const
 {
     // clang-format off
     return std::visit(overloads {
-        [](const T &value) {
+        [](const T &value) -> std::optional<T> {
             return value;
         },
-        [this](const std::function<T()> &getter) {
-            T value;
+        [this](const std::function<std::optional<T>()> &getter) {
+            std::optional<T> value;
             if (m_mainThreadOnly) {
                 g_inputActions->runOnMainThread([&value, getter]() {
                     value = getter();
@@ -109,6 +126,23 @@ bool Value<T>::expensive() const
     return m_expensive;
 }
 
+template<typename T>
+Value<T>::operator Value<std::any>() const
+{
+    return Value<std::any>::function([valueProvider = *this] -> std::any {
+        if (const auto value = valueProvider.get()) {
+            return value.value();
+        }
+        return {};
+    });
+}
+
+template class Value<bool>;
+template class Value<CursorShape>;
+template class Value<Qt::KeyboardModifiers>;
+template class Value<qreal>;
+template class Value<QPointF>;
+template class Value<std::any>;
 template class Value<QString>;
 
 }

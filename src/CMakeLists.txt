@@ -52,9 +52,9 @@ set(libinputactions_SRCS
     libinputactions/variables/Variable.cpp
     libinputactions/variables/VariableWrapper.h
     libinputactions/DBusInterface.cpp
-    libinputactions/Expression.cpp
     libinputactions/globals.cpp
     libinputactions/InputActions.cpp
+    libinputactions/InterpolatedString.cpp
     libinputactions/Range.cpp
     libinputactions/Value.cpp
 )
