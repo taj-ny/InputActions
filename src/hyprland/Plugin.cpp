@@ -26,7 +26,7 @@
 #include <hyprland/src/Compositor.hpp>
 #include <hyprland/src/helpers/Monitor.hpp>
 #include <hyprland/src/managers/eventLoop/EventLoopManager.hpp>
-#include <libinputactions/Config.h>
+#include <libinputactions/config/Config.h>
 #include <libinputactions/variables/VariableManager.h>
 #undef HANDLE
 

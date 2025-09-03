@@ -42,22 +42,18 @@ public:
     bool handleEvent(const InputEvent &event) override;
 
     /**
-     * The amount of time in milliseconds the handler will wait for motion to be performed (wheel is considered motion
-     * as well) before attempting to activate press triggers. For pointer motion there is a small threshold to prevent
-     * accidental activations.
+     * The amount of time in the handler will wait for motion to be performed (wheel is considered motion as well) before attempting to activate press triggers.
+     * For pointer motion there is a small threshold to prevent accidental activations.
      */
-    void setMotionTimeout(uint32_t timeout);
+    std::chrono::milliseconds m_motionTimeout{200};
     /**
-     * The amount of time in milliseconds the handler will wait for all mouse buttons to be pressed before activating
-     * press triggers.
+     * The amount of time the handler will wait for all mouse buttons to be pressed before activating press triggers.
      */
-    void setPressTimeout(uint32_t timeout);
-
+    std::chrono::milliseconds m_pressTimeout{50};
     /**
-     * @param unblock Whether blocked mouse buttons should be pressed immediately on timeout. If false, they will be
-     * pressed and instantly released on button release.
+     * Whether blocked mouse buttons should be pressed immediately on timeout. If false, they will be pressed and instantly released on button release.
      */
-    void setUnblockButtonsOnTimeout(bool unblock);
+    bool m_unblockButtonsOnTimeout = true;
 
 protected:
     /**
@@ -90,9 +86,7 @@ private:
      * one button.
      */
     QTimer m_pressTimeoutTimer;
-    uint32_t m_pressTimeout = 50;
     QTimer m_motionTimeoutTimer;
-    uint32_t m_motionTimeout = 200;
 
     /**
      * Activation event for the last button press.
@@ -108,7 +102,6 @@ private:
 
     QList<uint32_t> m_blockedMouseButtons;
     std::vector<Qt::MouseButton> m_buttons;
-    bool m_unblockButtonsOnTimeout = true;
 };
 
 }

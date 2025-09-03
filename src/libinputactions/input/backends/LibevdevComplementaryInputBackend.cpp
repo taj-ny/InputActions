@@ -65,7 +65,6 @@ std::unique_ptr<LibevdevDevice> LibevdevComplementaryInputBackend::openDevice(co
     }
     device->name = QString::fromStdString(libevdev_get_name(device->libevdevPtr));
     return device;
-    qCDebug(INPUTACTIONS_BACKEND_LIBEVDEV).noquote().nospace() << "Opened device (name: " << libevdev_get_name(device->libevdevPtr) << ")";
 }
 
 void LibevdevComplementaryInputBackend::deviceAdded(InputDevice *device)

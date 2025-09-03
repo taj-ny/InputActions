@@ -18,6 +18,7 @@
 
 #pragma once
 
+#include <chrono>
 #include <libinputactions/handlers/MultiTouchMotionTriggerHandler.h>
 
 namespace libinputactions
@@ -25,8 +26,6 @@ namespace libinputactions
 
 /**
  * Handles touchpad triggers: click, pinch, press, rotate, stroke, swipe, tap.
- *
- * If the libevdev backend is not available, the finger count is fetched from libinput's gesture begin events and scroll events.
  */
 class TouchpadTriggerHandler : public MultiTouchMotionTriggerHandler
 {
@@ -36,28 +35,29 @@ public:
     bool handleEvent(const InputEvent &event) override;
 
     /**
-     * @param value The time for the user to perform a click once a press gesture had been detected by libinput. If the click is not performed, the press
-     * gesture is activated.
+     * The time for the user to perform a click once a press gesture had been detected by libinput. If the click is not performed, the press trigger is
+     * activated.
      */
-    void setClickTimeout(uint32_t value);
+    std::chrono::milliseconds m_clickTimeout{200};
 
 private:
+    /**
+     * Treated as single-finger motion.
+     */
     bool handleEvent(const MotionEvent &event);
     bool handleEvent(const PointerButtonEvent &event);
     void handleEvent(const TouchpadClickEvent &event);
     bool handleEvent(const TouchpadGestureLifecyclePhaseEvent &event);
     bool handleEvent(const TouchpadPinchEvent &event);
     /**
-     * The event is treated as two-finger motion. Will not work if edge scrolling is enabled.
+     * Treated as two-finger motion.
      */
     bool handleScrollEvent(const MotionEvent &event);
     bool handleSwipeEvent(const MotionEvent &event);
 
-    bool m_usesLibevdevBackend{};
     std::set<uint32_t> m_blockedButtons;
     bool m_gestureBeginBlocked{};
 
-    uint32_t m_clickTimeout = 200;
     QTimer m_clickTimeoutTimer;
 
     friend class TestTouchpadTriggerHandler;

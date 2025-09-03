@@ -78,7 +78,7 @@ bool TriggerHandler::activateTriggers(TriggerTypes types, const TriggerActivatio
     for (auto &trigger : triggers(types, event)) {
         Q_EMIT activatingTrigger(trigger);
         m_activeTriggers.push_back(trigger);
-        qCDebug(INPUTACTIONS_HANDLER_TRIGGER).noquote() << QString("Trigger activated (id: %1)").arg(trigger->id());
+        qCDebug(INPUTACTIONS_HANDLER_TRIGGER).noquote() << QString("Trigger activated (id: %1)").arg(trigger->m_id);
     }
     m_timedTriggerUpdateTimer.start();
 
@@ -202,7 +202,7 @@ bool TriggerHandler::cancelTriggers(TriggerTypes types)
 
 void TriggerHandler::cancelTriggers(Trigger *except)
 {
-    qCDebug(INPUTACTIONS_HANDLER_TRIGGER).noquote().nospace() << "Cancelling triggers (except: " << except->id() << ")";
+    qCDebug(INPUTACTIONS_HANDLER_TRIGGER).noquote().nospace() << "Cancelling triggers (except: " << except->m_id << ")";
     for (auto it = m_activeTriggers.begin(); it != m_activeTriggers.end();) {
         auto gesture = *it;
         if (gesture != except) {

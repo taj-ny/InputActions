@@ -27,12 +27,11 @@ public:
     virtual ~Condition() = default;
 
     bool satisfied() const;
-    void setNegate(bool value);
+
+    bool m_negate{};
 
 private:
     virtual bool satisfiedInternal() const;
-
-    bool m_negate{};
 };
 
 }

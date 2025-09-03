@@ -28,7 +28,7 @@ void TestMotionTrigger::canUpdate_speed()
     QFETCH(bool, result);
 
     auto trigger = std::make_unique<MotionTrigger>();
-    trigger->setSpeed(triggerSpeed);
+    trigger->m_speed = triggerSpeed;
     MotionTriggerUpdateEvent event;
     event.m_speed = eventSpeed;
 

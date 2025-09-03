@@ -12,7 +12,8 @@ set(libinputactions_SRCS
     libinputactions/actions/PlasmaGlobalShortcutAction.cpp
     libinputactions/actions/SleepAction.cpp
     libinputactions/actions/TriggerAction.cpp
-    libinputactions/conditions/CallbackCondition.cpp
+    libinputactions/config/Config.cpp
+    libinputactions/config/yaml.h
     libinputactions/conditions/Condition.cpp
     libinputactions/conditions/ConditionGroup.cpp
     libinputactions/conditions/VariableCondition.cpp
@@ -50,14 +51,12 @@ set(libinputactions_SRCS
     libinputactions/variables/VariableOperations.cpp
     libinputactions/variables/Variable.cpp
     libinputactions/variables/VariableWrapper.h
-    libinputactions/Config.cpp
     libinputactions/DBusInterface.cpp
     libinputactions/Expression.cpp
     libinputactions/globals.cpp
     libinputactions/InputActions.cpp
     libinputactions/Range.cpp
     libinputactions/Value.cpp
-    libinputactions/yaml_convert.h
 )
 
 add_library(libinputactions STATIC ${libinputactions_SRCS})

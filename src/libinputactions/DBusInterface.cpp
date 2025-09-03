@@ -18,7 +18,7 @@
 
 #include "DBusInterface.h"
 #include <QRegularExpression>
-#include <libinputactions/Config.h>
+#include <libinputactions/config/Config.h>
 #include <libinputactions/input/backends/InputBackend.h>
 #include <libinputactions/interfaces/OnScreenMessageManager.h>
 #include <libinputactions/triggers/StrokeTrigger.h>

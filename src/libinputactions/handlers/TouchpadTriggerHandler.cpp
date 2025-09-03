@@ -57,11 +57,6 @@ bool TouchpadTriggerHandler::handleEvent(const InputEvent &event)
     return false;
 }
 
-void TouchpadTriggerHandler::setClickTimeout(uint32_t value)
-{
-    m_clickTimeout = value;
-}
-
 bool TouchpadTriggerHandler::handleEvent(const MotionEvent &event)
 {
     switch (m_state) {
@@ -150,7 +145,7 @@ bool TouchpadTriggerHandler::handleEvent(const TouchpadGestureLifecyclePhaseEven
                     }
                     activateTriggers(triggers);
                 });
-                m_clickTimeoutTimer.start(std::max(static_cast<uint32_t>(TAP_TIMEOUT.count()), m_clickTimeout));
+                m_clickTimeoutTimer.start(std::max(TAP_TIMEOUT.count(), m_clickTimeout.count()));
                 return m_gestureBeginBlocked;
             }
 
@@ -184,9 +179,7 @@ bool TouchpadTriggerHandler::handleScrollEvent(const MotionEvent &event)
         case State::None:
         case State::Touch:
         case State::TouchIdle:
-            if (!m_usesLibevdevBackend) {
-                g_variableManager->getVariable(BuiltinVariables::Fingers)->set(2);
-            }
+            g_variableManager->getVariable(BuiltinVariables::Fingers)->set(2);
             m_state = State::Scrolling;
             activateTriggers(TriggerType::StrokeSwipe);
             [[fallthrough]];

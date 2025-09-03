@@ -63,15 +63,6 @@ public:
 
     void addAction(std::unique_ptr<TriggerAction> action);
     /**
-     * @param condition Must be satisfied in order for the trigger to be activated.
-     */
-    void setActivationCondition(const std::shared_ptr<const Condition> &condition);
-    /**
-     * @param condition Must be satisfied in order for the trigger to end..
-     */
-    void setEndCondition(const std::shared_ptr<const Condition> &condition);
-
-    /**
      * @return Whether conditions, fingers, keyboard modifiers, mouse buttons and begin positions are satisfied.
      * @internal
      */
@@ -122,38 +113,50 @@ public:
     bool overridesOtherTriggersOnUpdate();
 
     /**
-     * Ignored unless set.
+     * Must be satisfied in order for the trigger to be activated.
      *
-     * @param threshold How far the gesture must progress in order to begin.
+     * Ignored if not set.
      */
-    void setThreshold(const Range<qreal> &threshold);
+    std::shared_ptr<Condition> m_activationCondition;
+    /**
+     * Must be satisfied in order for the trigger to end. Otherwise, it is cancelled.
+     *
+     * Ignored if not set.
+     */
+    std::shared_ptr<Condition> m_endCondition;
 
     /**
-     * @param value Whether keyboard modifiers should be cleared when this trigger starts. By default true if the
-     * trigger has an input action, otherwise false.
+     * Whether keyboard modifiers should be cleared when this trigger starts. By default true if the trigger has an input action, otherwise false.
      */
-    void setClearModifiers(bool value);
+    std::optional<bool> m_clearModifiers;
+    /**
+     * Must be unique.
+     */
+    QString m_id;
+    /**
+     * Whether to set last_trigger variables.
+     */
+    bool m_setLastTrigger = true;
+    /**
+     * The trigger will begin when the lower threshold (min) is reached. If the trigger ends but the upper threshold (max) had been exceeded, it is cancelled
+     * instead.
+     *
+     * Ignored if not set.
+     */
+    std::optional<Range<qreal>> m_threshold;
 
     /**
-     * @param value Whether to set last_trigger variables. Default: true
-     */
-    void setSetLastTrigger(bool value);
-
-    const std::vector<Qt::MouseButton> &mouseButtons() const;
-    /**
+     * Mouse buttons that must be pressed before and during the trigger.
+     *
      * Only applies to mouse triggers.
-     * @param buttons Mouse buttons that must be pressed before and during the trigger.
      */
-    void setMouseButtons(const std::vector<Qt::MouseButton> &buttons);
-
-    const bool &mouseButtonsExactOrder() const;
-    void setMouseButtonsExactOrder(bool value);
-
-    const QString &id() const;
+    std::vector<Qt::MouseButton> m_mouseButtons;
     /**
-     * @param name Must be unique.
+     * Whether mouse buttons must be pressed in order as specified.
+     *
+     * Only applies to mouse triggers.
      */
-    void setId(const QString &value);
+    bool m_mouseButtonsExactOrder{};
 
     const TriggerType &type() const;
 
@@ -170,20 +173,10 @@ protected:
 private:
     void reset();
 
-    QString m_id;
     TriggerType m_type{0};
     std::vector<std::unique_ptr<TriggerAction>> m_actions;
     bool m_started = false;
-    std::optional<bool> m_clearModifiers;
-    bool m_setLastTrigger = true;
 
-    std::optional<std::shared_ptr<const Condition>> m_activationCondition;
-    std::optional<std::shared_ptr<const Condition>> m_endCondition;
-
-    std::vector<Qt::MouseButton> m_mouseButtons;
-    bool m_mouseButtonsExactOrder{};
-
-    std::optional<Range<qreal>> m_threshold;
     bool m_withinThreshold = false;
     qreal m_absoluteAccumulatedDelta = 0;
 

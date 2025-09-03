@@ -59,8 +59,8 @@ void TestTrigger::canActivate_mouseButtons()
     QFETCH(bool, result);
 
     TriggerActivationEvent event;
-    m_trigger->setMouseButtons(triggerButtons.value());
-    m_trigger->setMouseButtonsExactOrder(orderMatters);
+    m_trigger->m_mouseButtons = triggerButtons.value();
+    m_trigger->m_mouseButtonsExactOrder = orderMatters;
     event.mouseButtons = eventButtons;
     QCOMPARE(m_trigger->canActivate(event), result);
 }
@@ -90,7 +90,7 @@ void TestTrigger::update_threshold()
     action->m_on = On::Begin;
     m_trigger->addAction(std::move(action));
     if (threshold) {
-        m_trigger->setThreshold(*threshold);
+        m_trigger->m_threshold = threshold.value();
     }
 
     TriggerUpdateEvent event;

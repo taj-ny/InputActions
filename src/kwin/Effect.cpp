@@ -26,7 +26,7 @@
 #include "interfaces/KWinWindowProvider.h"
 #include "workspace.h"
 #include <QDir>
-#include <libinputactions/Config.h>
+#include <libinputactions/config/Config.h>
 #include <libinputactions/variables/VariableManager.h>
 
 using namespace libinputactions;
