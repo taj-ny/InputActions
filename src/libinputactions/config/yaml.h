@@ -21,7 +21,7 @@
 #include "yaml-cpp/yaml.h"
 #include <QRegularExpression>
 #include <QVector>
-#include <libinputactions/Expression.cpp>
+#include <libinputactions/InterpolatedString.h>
 #include <libinputactions/Value.h>
 #include <libinputactions/actions/ActionGroup.h>
 #include <libinputactions/actions/CommandAction.h>
@@ -598,20 +598,20 @@ static const Node asSequence(const Node &node)
     return result;
 }
 
-static std::any asAny(const Node &node, const std::type_index &type)
+static libinputactions::Value<std::any> asAny(const Node &node, const std::type_index &type)
 {
     if (type == typeid(bool)) {
-        return node.as<bool>();
+        return node.as<libinputactions::Value<bool>>();
     } else if (type == typeid(CursorShape)) {
-        return node.as<CursorShape>();
+        return node.as<libinputactions::Value<CursorShape>>();
     } else if (type == typeid(Qt::KeyboardModifiers)) {
-        return asSequence(node).as<Qt::KeyboardModifiers>();
+        return libinputactions::Value<Qt::KeyboardModifiers>(asSequence(node).as<Qt::KeyboardModifiers>()); // TODO
     } else if (type == typeid(qreal)) {
-        return node.as<qreal>();
+        return node.as<libinputactions::Value<qreal>>();
     } else if (type == typeid(QPointF)) {
-        return node.as<QPointF>();
+        return node.as<libinputactions::Value<QPointF>>();
     } else if (type == typeid(QString)) {
-        return node.as<QString>();
+        return node.as<libinputactions::Value<QString>>();
     }
     throw Exception(node.Mark(), "Unexpected type");
 }
@@ -681,7 +681,7 @@ struct convert<std::shared_ptr<VariableCondition>>
 
         const auto rightRaw = raw.mid(secondSpace + 1);
         const auto rightNode = YAML::Load(rightRaw.toStdString());
-        std::vector<std::any> right;
+        std::vector<libinputactions::Value<std::any>> right;
 
         if (!isEnum(variable->type()) && rightNode.IsSequence()) {
             for (const auto &child : rightNode) {
@@ -736,7 +736,7 @@ struct convert<std::shared_ptr<Condition>>
                 auto group = std::make_shared<ConditionGroup>();
                 const auto negate = node["negate"].as<QStringList>(QStringList());
                 if (const auto &windowClassNode = node["window_class"]) {
-                    const auto value = windowClassNode.as<QString>();
+                    const auto value = libinputactions::Value<QString>(windowClassNode.as<QString>());
                     auto classGroup = std::make_shared<ConditionGroup>(ConditionGroupMode::Any);
                     classGroup->add(std::make_shared<VariableCondition>("window_class", value, ComparisonOperator::Regex));
                     classGroup->add(std::make_shared<VariableCondition>("window_name", value, ComparisonOperator::Regex));
@@ -745,12 +745,13 @@ struct convert<std::shared_ptr<Condition>>
                 }
                 if (const auto &windowStateNode = node["window_state"]) {
                     const auto value = windowStateNode.as<QStringList>(QStringList());
+                    const auto trueValue = libinputactions::Value<bool>(true);
                     auto classGroup = std::make_shared<ConditionGroup>(ConditionGroupMode::Any);
                     if (value.contains("fullscreen")) {
-                        classGroup->add(std::make_shared<VariableCondition>("window_fullscreen", true, ComparisonOperator::EqualTo));
+                        classGroup->add(std::make_shared<VariableCondition>("window_fullscreen", trueValue, ComparisonOperator::EqualTo));
                     }
                     if (value.contains("maximized")) {
-                        classGroup->add(std::make_shared<VariableCondition>("window_maximized", true, ComparisonOperator::EqualTo));
+                        classGroup->add(std::make_shared<VariableCondition>("window_maximized", trueValue, ComparisonOperator::EqualTo));
                     }
                     classGroup->m_negate = negate.contains("window_state");
                     group->add(classGroup);
@@ -927,10 +928,14 @@ struct convert<std::unique_ptr<Trigger>>
         if (const auto &fingersNode = node["fingers"]) {
             auto range = fingersNode.as<Range<qreal>>();
             if (!range.max()) {
-                conditionGroup->add(std::make_shared<VariableCondition>(BuiltinVariables::Fingers, range.min().value(), ComparisonOperator::EqualTo));
+                conditionGroup->add(std::make_shared<VariableCondition>(BuiltinVariables::Fingers,
+                                                                        libinputactions::Value<qreal>(range.min().value()),
+                                                                        ComparisonOperator::EqualTo));
             } else {
                 conditionGroup->add(std::make_shared<VariableCondition>(BuiltinVariables::Fingers,
-                                                                        std::vector<std::any>{range.min().value(), range.max().value()},
+                                                                        std::vector<libinputactions::Value<std::any>>{
+                                                                            libinputactions::Value<qreal>(range.min().value()),
+                                                                            libinputactions::Value<qreal>(range.max().value())},
                                                                         ComparisonOperator::Between));
             }
         }
@@ -948,7 +953,9 @@ struct convert<std::unique_ptr<Trigger>>
             }
 
             if (modifiers) {
-                conditionGroup->add(std::make_shared<VariableCondition>(BuiltinVariables::KeyboardModifiers, modifiers.value(), ComparisonOperator::EqualTo));
+                conditionGroup->add(std::make_shared<VariableCondition>(BuiltinVariables::KeyboardModifiers,
+                                                                        libinputactions::Value<Qt::KeyboardModifiers>(modifiers.value()),
+                                                                        ComparisonOperator::EqualTo));
             }
         }
         if (const auto &conditionsNode = node["conditions"]) {
@@ -1449,9 +1456,11 @@ struct convert<libinputactions::Value<T>>
             }
         } else {
             const auto raw = node.as<QString>();
-            // TODO Variable reference only
-            if (typeid(T) == typeid(QString)) { // String with possible variable references (too lazy to check)
-                value = libinputactions::Value<T>(Expression<QString>(raw));
+            const auto variableName = raw.mid(1); // remove $
+            if (g_variableManager->hasVariable(variableName)) {
+                value = libinputactions::Value<T>::variable(variableName);
+            } else if constexpr (typeid(T) == typeid(QString)) { // String with possible variable references (too lazy to check)
+                value = InterpolatedString(raw);
             } else {
                 value = libinputactions::Value<T>(node.as<T>());
             }

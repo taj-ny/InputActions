@@ -90,6 +90,7 @@ public:
         return VariableWrapper<T>(getVariable(name));
     }
 
+    bool hasVariable(const QString &name);
     /**
      * @return The variable with the specified name or nullptr if not found.
      */

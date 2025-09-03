@@ -17,7 +17,6 @@
 */
 
 #include "VariableCondition.h"
-#include "ConditionGroup.h"
 #include <QLoggingCategory>
 #include <QRegularExpression>
 #include <libinputactions/variables/Variable.h>
@@ -28,15 +27,15 @@ Q_LOGGING_CATEGORY(INPUTACTIONS_CONDITION_VARIABLE, "inputactions.condition.vari
 namespace libinputactions
 {
 
-VariableCondition::VariableCondition(const QString &variableName, const std::vector<std::any> &values, ComparisonOperator comparisonOperator)
+VariableCondition::VariableCondition(const QString &variableName, const std::vector<Value<std::any>> &values, ComparisonOperator comparisonOperator)
     : m_variableName(variableName)
     , m_values(values)
     , m_comparisonOperator(comparisonOperator)
 {
 }
 
-VariableCondition::VariableCondition(const QString &variableName, const std::any &value, ComparisonOperator comparisonOperator)
-    : VariableCondition(variableName, std::vector<std::any>{value}, comparisonOperator)
+VariableCondition::VariableCondition(const QString &variableName, const Value<std::any> &value, ComparisonOperator comparisonOperator)
+    : VariableCondition(variableName, std::vector<Value<std::any>>{value}, comparisonOperator)
 {
 }
 
@@ -47,7 +46,16 @@ bool VariableCondition::satisfiedInternal() const
         qCWarning(INPUTACTIONS_CONDITION_VARIABLE).noquote() << QString("Failed to get variable %1, assuming the condition is satisfied.").arg(m_variableName);
         return true;
     }
-    return variable->operations()->compare(m_values, m_comparisonOperator);
+
+    std::vector<std::any> values;
+    for (const auto &valueProvider : m_values) {
+        if (const auto value = valueProvider.get()) {
+            values.push_back(value.value());
+        } else {
+            return false;
+        }
+    }
+    return variable->operations()->compare(values, m_comparisonOperator);
 }
 
 }
