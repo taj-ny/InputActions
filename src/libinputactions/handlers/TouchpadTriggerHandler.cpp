@@ -82,6 +82,7 @@ bool TouchpadTriggerHandler::handleEvent(const PointerButtonEvent &event)
 {
     bool block{};
     switch (m_state) {
+        case State::LibinputTapBegin:
         case State::TouchIdle:
             if (event.state() && event.sender()->validTouchPoints().size() <= 3) {
                 uint8_t fingers;
@@ -98,9 +99,10 @@ bool TouchpadTriggerHandler::handleEvent(const PointerButtonEvent &event)
                 if (activateTriggers(TriggerType::Tap)) {
                     updateTriggers(TriggerType::Tap);
                     endTriggers(TriggerType::Tap);
-                    m_state = State::None;
                     block = true;
                 }
+                updateVariables(event.sender());
+                m_state = State::None;
             }
             break;
         case State::TouchpadButtonDownClickTrigger:

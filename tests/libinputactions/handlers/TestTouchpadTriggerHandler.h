@@ -28,6 +28,7 @@ private slots:
 
     void tap1();
     void tap1_tappedAgainBeforeLibinputButtonReleased();
+    void tap2_variablesSetDuringActivation();
     void tap4();
     void tap4_moved();
     void tap4_slow();

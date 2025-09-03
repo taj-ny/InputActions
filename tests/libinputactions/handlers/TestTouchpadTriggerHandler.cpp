@@ -225,6 +225,36 @@ void TestTouchpadTriggerHandler::tap1_tappedAgainBeforeLibinputButtonReleased()
     QCOMPARE(m_endingTriggersSpy->at(1).at(0).value<TriggerTypes>(), TriggerType::Tap);
 }
 
+void TestTouchpadTriggerHandler::tap2_variablesSetDuringActivation()
+{
+    m_handler->addTrigger(std::make_unique<Trigger>(TriggerType::Tap));
+
+    const QPointF first(0.1, 0.1);
+    const QPointF second(0.2, 0.2);
+    addPoint(first);
+    addPoint(second);
+
+    const auto finger1Position = g_variableManager->getVariable<QPointF>("finger_1_position_percentage");
+    const auto finger2Position = g_variableManager->getVariable<QPointF>("finger_2_position_percentage");
+    QCOMPARE(finger1Position->get(), first);
+    QCOMPARE(finger2Position->get(), second);
+
+    m_handler->handleEvent(TouchChangedEvent(m_touchpad.get(), m_touchpad->m_touchPoints[0], {}));
+    removePoints(1);
+    QCOMPARE(finger1Position->get(), first);
+    QCOMPARE(finger2Position->get(), second);
+
+    m_handler->handleEvent(TouchChangedEvent(m_touchpad.get(), m_touchpad->m_touchPoints[0], {}));
+    removePoints(1);
+    QCOMPARE(finger1Position->get(), first);
+    QCOMPARE(finger2Position->get(), second);
+
+    m_handler->handleEvent(PointerButtonEvent(m_touchpad.get(), Qt::MouseButton::LeftButton, BTN_LEFT, true));
+    m_handler->handleEvent(PointerButtonEvent(m_touchpad.get(), Qt::MouseButton::LeftButton, BTN_LEFT, false));
+    QVERIFY(!finger1Position->get().has_value());
+    QVERIFY(!finger2Position->get().has_value());
+}
+
 void TestTouchpadTriggerHandler::tap4()
 {
     m_handler->addTrigger(std::make_unique<Trigger>(TriggerType::Tap));
