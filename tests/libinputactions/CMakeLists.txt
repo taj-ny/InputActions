@@ -26,3 +26,4 @@ libinputactions_add_test(keyboardtriggerhandler SOURCES handlers/TestKeyboardTri
 libinputactions_add_test(triggeraction SOURCES actions/TestTriggerAction.cpp)
 libinputactions_add_test(triggerhandler SOURCES handlers/TestTriggerHandler.cpp)
 libinputactions_add_test(touchpadtriggerhandler SOURCES handlers/TestTouchpadTriggerHandler.cpp)
+libinputactions_add_test(value SOURCES TestValue.cpp)

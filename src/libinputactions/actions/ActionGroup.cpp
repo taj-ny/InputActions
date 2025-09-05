@@ -36,7 +36,7 @@ void ActionGroup::executeImpl()
     const auto evaluateCondition = [](const auto &action) {
         auto satisfied = true;
         if (const auto &condition = action->m_condition) {
-            g_inputActions->runOnMainThread([&condition, &satisfied]() {
+            InputActions::runOnMainThread([&condition, &satisfied]() {
                 if (!condition->satisfied()) {
                     satisfied = false;
                     return;

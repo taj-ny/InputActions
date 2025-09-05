@@ -82,7 +82,12 @@ template<typename T>
 Value<T> Value<T>::variable(QString name)
 {
     auto value = Value<T>::function([name = std::move(name)]() -> std::optional<T> {
-        const auto variable = g_variableManager->getVariable(name);
+        const auto *variable = g_variableManager->getVariable(name);
+        if (!variable) {
+            qCWarning(INPUTACTIONS).noquote() << QString("Failed to get value: variable %1 does not exist").arg(name);
+            return {};
+        }
+
         if constexpr (typeid(T) == typeid(QString)) {
             return variable->operations()->toString();
         }
@@ -114,7 +119,7 @@ std::optional<T> Value<T>::get() const
         [this](const std::function<std::optional<T>()> &getter) {
             std::optional<T> value;
             if (m_mainThreadOnly) {
-                g_inputActions->runOnMainThread([&value, getter]() {
+                InputActions::runOnMainThread([&value, getter]() {
                     value = getter();
                 });
             } else {
