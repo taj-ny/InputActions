@@ -30,10 +30,11 @@ template<typename T>
 class Value
 {
 public:
+    Value();
     /**
      * Constructs a Value that always returns the specified value.
      */
-    Value(T value = {});
+    Value(T value);
 
     /**
      * Constructs a Value that returns the standard output of the specified command.
@@ -62,7 +63,7 @@ public:
     operator Value<std::any>() const;
 
 private:
-    std::variant<T, std::function<std::optional<T>()>> m_value;
+    std::variant<std::optional<T>, std::function<std::optional<T>()>> m_value;
     /**
      * Whether the value can only be evaluated on the main thread.
      */

@@ -39,8 +39,14 @@ QString fromString(const QString &s)
 }
 
 template<typename T>
+Value<T>::Value()
+    : m_value(std::nullopt)
+{
+}
+
+template<typename T>
 Value<T>::Value(T value)
-    : m_value(value)
+    : m_value(std::move(value))
 {
 }
 
@@ -102,7 +108,7 @@ std::optional<T> Value<T>::get() const
 {
     // clang-format off
     return std::visit(overloads {
-        [](const T &value) -> std::optional<T> {
+        [](const std::optional<T> &value) {
             return value;
         },
         [this](const std::function<std::optional<T>()> &getter) {
