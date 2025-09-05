@@ -1,6 +1,6 @@
 #include "TestValue.h"
-#include <libinputactions/variables/VariableManager.h>
 #include <libinputactions/Value.h>
+#include <libinputactions/variables/VariableManager.h>
 
 namespace libinputactions
 {
@@ -36,13 +36,17 @@ void TestValue::get_commandNullValue_returnsNullopt()
 
 void TestValue::get_function()
 {
-    const auto value = Value<bool>::function([]() { return true; });
+    const auto value = Value<bool>::function([]() {
+        return true;
+    });
     QVERIFY(value.get().value());
 }
 
 void TestValue::get_existentVariable()
 {
-    g_variableManager->registerRemoteVariable<bool>("_test", [](auto &value) { value = true; });
+    g_variableManager->registerRemoteVariable<bool>("_test", [](auto &value) {
+        value = true;
+    });
     const auto value = Value<bool>::variable("_test");
     QVERIFY(value.get().value());
 }

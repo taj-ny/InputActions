@@ -93,7 +93,8 @@ Value<T> Value<T>::variable(QString name)
         }
 
         if (variable->type() != typeid(T)) {
-            qCWarning(INPUTACTIONS).noquote() << QString("Failed to get value: variable %1 is of type %2, expected %3").arg(name, variable->type().name(), typeid(T).name());
+            qCWarning(INPUTACTIONS).noquote()
+                << QString("Failed to get value: variable %1 is of type %2, expected %3").arg(name, variable->type().name(), typeid(T).name());
             return {};
         }
 
