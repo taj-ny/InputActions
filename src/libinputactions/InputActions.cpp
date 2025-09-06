@@ -12,12 +12,12 @@
 #include "interfaces/WindowProvider.h"
 #include "variables/VariableManager.h"
 #include <QAbstractEventDispatcher>
+#include <QCoreApplication>
 
 namespace libinputactions
 {
 
 InputActions::InputActions(std::unique_ptr<InputBackend> inputBackend)
-    : m_mainThread(QThread::currentThread())
 {
     g_inputActions = this;
 
@@ -53,12 +53,13 @@ InputActions::~InputActions()
     g_variableManager.reset();
 }
 
-void InputActions::runOnMainThread(std::function<void()> &&function, bool block) const
+void InputActions::runOnMainThread(std::function<void()> &&function, bool block)
 {
-    if (QThread::currentThread() == m_mainThread) { // QThread::isMainThread requires Qt 6.8
+    auto *mainThread = QCoreApplication::instance()->thread();
+    if (QThread::currentThread() == mainThread) { // QThread::isMainThread requires Qt 6.8
         function();
     } else {
-        QMetaObject::invokeMethod(QAbstractEventDispatcher::instance(m_mainThread), function, block ? Qt::BlockingQueuedConnection : Qt::QueuedConnection);
+        QMetaObject::invokeMethod(QAbstractEventDispatcher::instance(mainThread), function, block ? Qt::BlockingQueuedConnection : Qt::QueuedConnection);
     }
 }
 

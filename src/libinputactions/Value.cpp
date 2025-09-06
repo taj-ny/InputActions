@@ -39,8 +39,14 @@ QString fromString(const QString &s)
 }
 
 template<typename T>
+Value<T>::Value()
+    : m_value(std::nullopt)
+{
+}
+
+template<typename T>
 Value<T>::Value(T value)
-    : m_value(value)
+    : m_value(std::move(value))
 {
 }
 
@@ -76,13 +82,19 @@ template<typename T>
 Value<T> Value<T>::variable(QString name)
 {
     auto value = Value<T>::function([name = std::move(name)]() -> std::optional<T> {
-        const auto variable = g_variableManager->getVariable(name);
+        const auto *variable = g_variableManager->getVariable(name);
+        if (!variable) {
+            qCWarning(INPUTACTIONS).noquote() << QString("Failed to get value: variable %1 does not exist").arg(name);
+            return {};
+        }
+
         if constexpr (typeid(T) == typeid(QString)) {
             return variable->operations()->toString();
         }
 
         if (variable->type() != typeid(T)) {
-            qCWarning(INPUTACTIONS).noquote() << QString("Failed to get value: variable %1 is of type %2, expected %3").arg(name, variable->type().name(), typeid(T).name());
+            qCWarning(INPUTACTIONS).noquote()
+                << QString("Failed to get value: variable %1 is of type %2, expected %3").arg(name, variable->type().name(), typeid(T).name());
             return {};
         }
 
@@ -102,13 +114,13 @@ std::optional<T> Value<T>::get() const
 {
     // clang-format off
     return std::visit(overloads {
-        [](const T &value) -> std::optional<T> {
+        [](const std::optional<T> &value) {
             return value;
         },
         [this](const std::function<std::optional<T>()> &getter) {
             std::optional<T> value;
             if (m_mainThreadOnly) {
-                g_inputActions->runOnMainThread([&value, getter]() {
+                InputActions::runOnMainThread([&value, getter]() {
                     value = getter();
                 });
             } else {

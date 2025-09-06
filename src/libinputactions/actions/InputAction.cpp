@@ -34,7 +34,7 @@ void InputAction::executeImpl()
 {
     for (const auto &item : m_sequence) {
         const auto keyboardText = item.keyboardText.get();
-        g_inputActions->runOnMainThread(
+        InputActions::runOnMainThread(
             [this, item, keyboardText]() {
                 if (item.keyboardPress) {
                     g_inputEmitter->keyboardKey(item.keyboardPress, true);
