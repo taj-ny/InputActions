@@ -17,6 +17,7 @@ macro(libinputactions_add_test TARGET_NAME)
 endmacro()
 
 libinputactions_add_test(action SOURCES actions/TestAction.cpp)
+libinputactions_add_test(actionexecutor SOURCES actions/TestActionExecutor.cpp)
 libinputactions_add_test(actioninterval SOURCES actions/TestActionInterval.cpp)
 libinputactions_add_test(directionalmotiontrigger SOURCES triggers/TestDirectionalMotionTrigger.cpp)
 libinputactions_add_test(motiontrigger SOURCES triggers/TestMotionTrigger.cpp)

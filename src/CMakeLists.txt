@@ -8,6 +8,7 @@ set(libinputactions_SRCS
     libinputactions/actions/ActionExecutor.cpp
     libinputactions/actions/ActionGroup.cpp
     libinputactions/actions/CommandAction.cpp
+    libinputactions/actions/CustomAction.cpp
     libinputactions/actions/InputAction.cpp
     libinputactions/actions/PlasmaGlobalShortcutAction.cpp
     libinputactions/actions/SleepAction.cpp
