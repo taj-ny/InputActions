@@ -90,12 +90,10 @@ private:
     QPointF m_currentSwipeDelta;
 
     bool m_isDeterminingSpeed = false;
-    uint8_t m_sampledInputEvents = 0;
-    qreal m_accumulatedAbsoluteSampledDelta = 0;
     std::optional<TriggerSpeed> m_speed;
     std::vector<TriggerSpeedThreshold> m_speedThresholds;
 
-    std::vector<QPointF> m_stroke;
+    std::vector<QPointF> m_deltas;
 };
 
 }
