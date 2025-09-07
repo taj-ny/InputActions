@@ -50,7 +50,6 @@ public:
      * Duplicate thresholds (same type and direction) will be replaced.
      */
     void setSpeedThreshold(TriggerType type, qreal threshold, TriggerDirection directions = UINT32_MAX);
-    void setSpeedInputEventsToSample(uint8_t events);
 
     /**
      * Used for the move_by_delta mouse input action. Temporary workaround.
