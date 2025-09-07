@@ -18,8 +18,8 @@
 
 #include "input/LibinputInputBackend.h"
 
-#include <libinputactions/Config.h>
-#include <libinputactions/DBusInterface.h>
+#include <libinputactions/config/Config.h>
+#include <libinputactions/InputActions.h>
 
 #include "interfaces/StandaloneInputEmitter.h"
 #include "interfaces/StandaloneWindowProvider.h"
@@ -33,6 +33,8 @@
 
 #include <print>
 
+using namespace libinputactions;
+
 int main()
 {
     std::println(PROJECT_NAME " v" PROJECT_VERSION);
@@ -41,27 +43,30 @@ int main()
     static int argc = 0;
     QCoreApplication app(argc, nullptr);
 
+    g_virtualKeyboardUnstableV1 = std::make_unique<VirtualKeyboardUnstableV1>();
+    g_wlrForeignToplevelManagementV1 = std::make_unique<WlrForeignToplevelManagementV1>();
+    g_wlrVirtualPointerUnstableV1 = std::make_unique<WlrVirtualPointerUnstableV1>();
+    g_wlSeat = std::make_unique<WlSeat>();
+
     auto *display = wl_display_connect(nullptr);
     auto *registry = wl_display_get_registry(display);
     WaylandProtocolManager protocolManager(registry);
-    protocolManager.addProtocol(VirtualKeyboardUnstableV1::instance());
-    protocolManager.addProtocol(WlrForeignToplevelManagementV1::instance());
-    protocolManager.addProtocol(WlrVirtualPointerUnstableV1::instance());
-    protocolManager.addProtocol(WlSeat::instance());
+    protocolManager.addProtocol(g_virtualKeyboardUnstableV1.get());
+    protocolManager.addProtocol(g_wlrForeignToplevelManagementV1.get());
+    protocolManager.addProtocol(g_wlrVirtualPointerUnstableV1.get());
+    protocolManager.addProtocol(g_wlSeat.get());
     wl_display_roundtrip(display);
 
-    libinputactions::InputEmitter::setInstance(std::make_shared<StandaloneInputEmitter>());
-    libinputactions::WindowProvider::setInstance(std::make_shared<StandaloneWindowProvider>());
+    InputActions inputActions(std::make_unique<LibinputInputBackend>());
+    g_inputEmitter = std::make_shared<StandaloneInputEmitter>();
+    g_windowProvider = std::make_shared<StandaloneWindowProvider>();
 
-    LibinputInputBackend backend;
-    libinputactions::Config config(&backend);
-    libinputactions::DBusInterface dbusInterface(&config);
-    config.load(false);
+    g_config->load(false);
 
     while (true) {
         wl_display_roundtrip(display); // not sure if this is correct
         QCoreApplication::processEvents();
-        backend.poll();
+        g_inputBackend->poll();
         usleep(1000);
     }
 }

@@ -19,10 +19,9 @@
 #pragma once
 
 #include "Condition.h"
-
-#include <any>
-
 #include <QString>
+#include <any>
+#include <libinputactions/Value.h>
 
 namespace libinputactions
 {
@@ -35,15 +34,15 @@ enum class ComparisonOperator;
 class VariableCondition : public Condition
 {
 public:
-    VariableCondition(const QString &variableName, const std::vector<std::any> &values, const ComparisonOperator &comparisonOperator);
-    VariableCondition(const QString &variableName, const std::any &value, const ComparisonOperator &comparisonOperator);
+    VariableCondition(const QString &variableName, const std::vector<Value<std::any>> &values, ComparisonOperator comparisonOperator);
+    VariableCondition(const QString &variableName, const Value<std::any> &value, ComparisonOperator comparisonOperator);
 
 protected:
     bool satisfiedInternal() const override;
 
 private:
     QString m_variableName;
-    std::vector<std::any> m_values;
+    std::vector<Value<std::any>> m_values;
     ComparisonOperator m_comparisonOperator;
 };
 

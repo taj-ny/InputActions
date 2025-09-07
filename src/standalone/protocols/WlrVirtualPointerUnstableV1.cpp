@@ -41,8 +41,6 @@ std::unique_ptr<WlrVirtualPointerUnstableV1Pointer> WlrVirtualPointerUnstableV1:
     return std::make_unique<WlrVirtualPointerUnstableV1Pointer>(m_manager);
 }
 
-INPUTACTIONS_SINGLETON(WlrVirtualPointerUnstableV1)
-
 WlrVirtualPointerUnstableV1Pointer::WlrVirtualPointerUnstableV1Pointer(zwlr_virtual_pointer_manager_v1 *manager)
 {
     m_pointer = zwlr_virtual_pointer_manager_v1_create_virtual_pointer(manager, nullptr);

@@ -18,10 +18,9 @@
 
 #pragma once
 
+#include <QTimer>
 #include <libinputactions/input/events.h>
 #include <libinputactions/triggers/Trigger.h>
-
-#include <QTimer>
 
 Q_DECLARE_LOGGING_CATEGORY(INPUTACTIONS_HANDLER_TRIGGER)
 
@@ -41,36 +40,26 @@ class TriggerHandler : public QObject
 public:
     void addTrigger(std::unique_ptr<Trigger> trigger);
 
-    virtual bool handleEvent(const InputEvent *event);
-    void handleEvent(const KeyboardKeyEvent *event);
+    virtual bool handleEvent(const InputEvent &event);
+    void handleEvent(const KeyboardKeyEvent &event);
 
-    void setTimedTriggerUpdateDelta(const uint32_t &value);
+    /**
+     * @param value The interval (in milliseconds) and delta used for updating time-based triggers.
+     */
+    void setTimedTriggerUpdateDelta(uint32_t value);
 
 protected:
     TriggerHandler();
 
     /**
-     * Registers a custom handler that will be executed when the specified trigger type is activated.
-     */
-    void registerTriggerActivateHandler(const TriggerType &type, const std::function<void()> &func);
-    /**
-     * Registers a custom handler that will be executed when the specified trigger type is ended.
-     */
-    void registerTriggerEndHandler(const TriggerType &type, const std::function<void()> &func);
-    /**
-     * Registers a custom handler that will be executed when the specified trigger type is ended or cancelled.
-     */
-    void registerTriggerEndCancelHandler(const TriggerType &type, const std::function<void()> &func);
-
-    /**
      * Cancels all active triggers and activates triggers of the specified types eligible for activation.
      * @return Whether any triggers have been activated.
      */
-    bool activateTriggers(const TriggerTypes &types, const TriggerActivationEvent *event);
+    bool activateTriggers(TriggerTypes types, const TriggerActivationEvent &event);
     /**
      * @see activateTriggers(const TriggerTypes &, const TriggerActivationEvent *)
      */
-    bool activateTriggers(const TriggerTypes &types);
+    bool activateTriggers(TriggerTypes types);
 
     /**
      * Updates triggers of multiple types in order as added to the handler.
@@ -83,19 +72,19 @@ protected:
      * correctly.
      * @see updateTriggers(const std::map<TriggerType, const TriggerUpdateEvent *> &events)
      */
-    bool updateTriggers(const TriggerType &type, const TriggerUpdateEvent *event);
+    bool updateTriggers(TriggerType type, const TriggerUpdateEvent &event = {});
 
     /**
      * Ends the specified types of triggers.
      * @return Whether there were any active triggers of the specified types.
      */
-    TEST_VIRTUAL bool endTriggers(const TriggerTypes &types);
+    TEST_VIRTUAL bool endTriggers(TriggerTypes types);
 
     /**
      * Cancels the specified types of triggers.
      * @return Whether there were any active triggers of the specified types.
      */
-    TEST_VIRTUAL bool cancelTriggers(const TriggerTypes &types);
+    TEST_VIRTUAL bool cancelTriggers(TriggerTypes types);
     /**
      * Cancels all triggers leaving only the specified one.
      */
@@ -104,15 +93,15 @@ protected:
     /**
      * @return Triggers of the specified types eligible for activation.
      */
-    std::vector<Trigger *> triggers(const TriggerTypes &types, const TriggerActivationEvent *event);
+    std::vector<Trigger *> triggers(TriggerTypes types, const TriggerActivationEvent &event);
     /**
      * @return Active triggers of the specified types.
      */
-    std::vector<Trigger *> activeTriggers(const TriggerTypes &types);
+    std::vector<Trigger *> activeTriggers(TriggerTypes types);
     /**
      * @return Whether there are any triggers of the specified types.
      */
-    bool hasActiveTriggers(const TriggerTypes &types = TriggerType::All);
+    bool hasActiveTriggers(TriggerTypes types = TriggerType::All);
 
     /**
      * Creates a trigger activation event with information that can be provided by the input device(s).
@@ -121,15 +110,17 @@ protected:
     virtual std::unique_ptr<TriggerActivationEvent> createActivationEvent() const;
 
     /**
-     * Called before a trigger is activated.
-     */
-    virtual void triggerActivating(const Trigger *trigger);
-    /**
      * Resets member variables that hold information about the performed input action.
      */
     virtual void reset();
 
     void updateTimedTriggers();
+
+signals:
+    void activatingTrigger(const Trigger *trigger);
+    void activatingTriggers(TriggerTypes types);
+    void cancellingTriggers(TriggerTypes types);
+    void endingTriggers(TriggerTypes types);
 
 private:
     /**
@@ -142,19 +133,6 @@ private:
      */
     QTimer m_timedTriggerUpdateTimer;
     uint32_t m_timedTriggerUpdateDelta = 5;
-
-    /**
-     * Executed when a trigger type is activated.
-     */
-    std::map<TriggerType, std::function<void()>> m_triggerActivateHandlers;
-    /**
-     * Executed when a trigger type is ended.
-     */
-    std::map<TriggerType, std::function<void()>> m_triggerEndHandlers;
-    /**
-     * Executed when a trigger type is ended or cancelled.
-     */
-    std::map<TriggerType, std::function<void()>> m_triggerEndCancelHandlers;
 
     std::vector<std::unique_ptr<Trigger>> m_triggers;
     std::vector<Trigger *> m_activeTriggers;

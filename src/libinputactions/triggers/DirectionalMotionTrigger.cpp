@@ -21,49 +21,41 @@
 namespace libinputactions
 {
 
-bool DirectionalMotionTrigger::canUpdate(const TriggerUpdateEvent *event) const
+DirectionalMotionTrigger::DirectionalMotionTrigger(TriggerType type, TriggerDirection direction)
+    : MotionTrigger(type)
+    , m_direction(direction)
+{
+}
+
+bool DirectionalMotionTrigger::canUpdate(const TriggerUpdateEvent &event) const
 {
     if (!MotionTrigger::canUpdate(event)) {
         return false;
     }
 
-    const auto *castedEvent = dynamic_cast<const DirectionalMotionTriggerUpdateEvent *>(event);
-    return m_direction & castedEvent->direction();
+    const auto &castedEvent = dynamic_cast<const DirectionalMotionTriggerUpdateEvent &>(event);
+    return m_direction & castedEvent.m_direction;
 }
 
-void DirectionalMotionTrigger::setDirection(const TriggerDirection &direction)
+void DirectionalMotionTrigger::updateActions(const TriggerUpdateEvent &event)
 {
-    m_direction = direction;
-}
-
-void DirectionalMotionTrigger::updateActions(const TriggerUpdateEvent *event)
-{
-    const auto *castedEvent = dynamic_cast<const DirectionalMotionTriggerUpdateEvent *>(event);
+    const auto &castedEvent = dynamic_cast<const DirectionalMotionTriggerUpdateEvent &>(event);
 
     // Ensure delta is always positive for single-directional gestures, it makes intervals easier to use.
-    static std::vector<TriggerDirection> negativeDirections = {static_cast<TriggerDirection>(PinchDirection::In),
-                                                               static_cast<TriggerDirection>(RotateDirection::Counterclockwise),
-                                                               static_cast<TriggerDirection>(SwipeDirection::Left),
-                                                               static_cast<TriggerDirection>(SwipeDirection::Up)};
-    auto delta = castedEvent->delta();
-    if ((m_direction & (m_direction - 1)) == 0
-        && std::find(negativeDirections.begin(), negativeDirections.end(), m_direction) != negativeDirections.end()) {
+    static std::vector<TriggerDirection> negativeDirections = {
+        static_cast<TriggerDirection>(PinchDirection::In),
+        static_cast<TriggerDirection>(RotateDirection::Counterclockwise),
+        static_cast<TriggerDirection>(SwipeDirection::Left),
+        static_cast<TriggerDirection>(SwipeDirection::Up),
+    };
+    auto delta = castedEvent.m_delta;
+    if ((m_direction & (m_direction - 1)) == 0 && std::find(negativeDirections.begin(), negativeDirections.end(), m_direction) != negativeDirections.end()) {
         delta *= -1;
     }
 
     for (auto &action : actions()) {
-        action->triggerUpdated(delta, castedEvent->deltaMultiplied());
+        action->triggerUpdated(delta, castedEvent.m_deltaMultiplied);
     }
-}
-
-const TriggerDirection &DirectionalMotionTriggerUpdateEvent::direction() const
-{
-    return m_direction;
-}
-
-void DirectionalMotionTriggerUpdateEvent::setDirection(const TriggerDirection &direction)
-{
-    m_direction = direction;
 }
 
 }

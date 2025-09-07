@@ -18,17 +18,16 @@
 
 #pragma once
 
-#include "Plugin.h"
-
+#include "utils/HyprlandFunctionHook.h"
 #include <libinputactions/interfaces/CursorShapeProvider.h>
 #include <libinputactions/interfaces/PointerPositionGetter.h>
 
-#include <hyprland/src/plugins/HookSystem.hpp>
-
-class HyprlandPointer : public libinputactions::CursorShapeProvider, public libinputactions::PointerPositionGetter
+class HyprlandPointer
+    : public libinputactions::CursorShapeProvider
+    , public libinputactions::PointerPositionGetter
 {
 public:
-    HyprlandPointer(Plugin *plugin);
+    HyprlandPointer(void *handle);
 
     std::optional<libinputactions::CursorShape> cursorShape() override;
 
@@ -36,8 +35,8 @@ public:
     std::optional<QPointF> screenPointerPosition() override;
 
 private:
-    CFunctionHook *m_setCursorFromNameHook;
-    QString m_currentCursorShape;
+    static void setCursorFromNameHook(void *thisPtr, const std::string &name);
 
-    friend void setCursorFromNameHook(void *thisPtr, const std::string &name);
+    HyprlandFunctionHook m_setCursorFromNameHook;
+    QString m_currentCursorShape;
 };

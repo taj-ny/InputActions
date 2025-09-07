@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.16.0)
 
 project(inputactions)
-set(PROJECT_VERSION "0.7.0")
+set(PROJECT_VERSION "0.8.0")
 
 set(QT_MIN_VERSION "6.6.0")
 set(QT_MAJOR_VERSION 6)
@@ -30,6 +30,7 @@ set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O2 -DQT_NO_DEBUG_OUTPUT
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     add_compile_definitions(-DDEBUG)
 endif()
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Bsymbolic-functions -Wall -Wextra -Wpedantic -Wno-unused-parameter -Wno-missing-field-initializers -Wno-switch")
 
 find_package(ECM REQUIRED NO_MODULE)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${ECM_MODULE_PATH} ${ECM_KDE_MODULE_DIR})
@@ -42,7 +43,6 @@ find_package(Qt6 ${QT_MIN_VERSION} CONFIG REQUIRED COMPONENTS
     DBus
 )
 
-add_compile_options(-Wno-unused-parameter) # This warning is stupid
 
 add_compile_definitions(PROJECT_NAME="InputActions")
 add_compile_definitions(PROJECT_VERSION="${PROJECT_VERSION}")

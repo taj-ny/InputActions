@@ -1,5 +1,5 @@
 #include "TestTriggerHandler.h"
-
+#include <QSignalSpy>
 #include <linux/input-event-codes.h>
 
 using namespace ::testing;
@@ -9,7 +9,7 @@ namespace libinputactions
 
 void TestTriggerHandler::init()
 {
-    m_handler = std::make_unique<MockTriggerHandler>();
+    m_handler = std::unique_ptr<TriggerHandler>(new TriggerHandler);
 }
 
 void TestTriggerHandler::triggers_data()
@@ -18,22 +18,11 @@ void TestTriggerHandler::triggers_data()
     QTest::addColumn<std::vector<Trigger *>>("triggers");
     QTest::addColumn<int>("size");
 
-    QTest::newRow("not activatable")
-        << TriggerType::Press
-        << std::vector<Trigger *>({makeTrigger(TriggerType::Press, false)})
-        << 0;
-    QTest::newRow("activatable")
-        << TriggerType::Press
-        << std::vector<Trigger *>({makeTrigger(TriggerType::Press, true)})
-        << 1;
-    QTest::newRow("activatable, wrong type")
-        << TriggerType::Swipe
-        << std::vector<Trigger *>({makeTrigger(TriggerType::Press, true)})
-        << 0;
-    QTest::newRow("activatable, all")
-        << TriggerType::All
-        << std::vector<Trigger *>({makeTrigger(TriggerType::Press, true), makeTrigger(TriggerType::Swipe, true)})
-        << 2;
+    QTest::newRow("not activatable") << TriggerType::Press << std::vector<Trigger *>({makeTrigger(TriggerType::Press, false)}) << 0;
+    QTest::newRow("activatable") << TriggerType::Press << std::vector<Trigger *>({makeTrigger(TriggerType::Press, true)}) << 1;
+    QTest::newRow("activatable, wrong type") << TriggerType::Swipe << std::vector<Trigger *>({makeTrigger(TriggerType::Press, true)}) << 0;
+    QTest::newRow("activatable, all") << TriggerType::All
+                                      << std::vector<Trigger *>({makeTrigger(TriggerType::Press, true), makeTrigger(TriggerType::Swipe, true)}) << 2;
 }
 
 void TestTriggerHandler::triggers()
@@ -47,75 +36,46 @@ void TestTriggerHandler::triggers()
     }
     TriggerActivationEvent event;
 
-    QCOMPARE(m_handler->triggers(type, &event).size(), size);
-    QCOMPARE(m_handler->activateTriggers(type, &event), size != 0);
+    QCOMPARE(m_handler->triggers(type, event).size(), size);
+    QCOMPARE(m_handler->activateTriggers(type, event), size != 0);
     QCOMPARE(m_handler->activeTriggers(type).size(), size);
 }
 
 void TestTriggerHandler::activateTriggers_cancelsAllTriggers()
 {
-    EXPECT_CALL(*m_handler, cancelTriggers(static_cast<TriggerTypes>(TriggerType::All)))
-        .Times(Exactly(3));
+    QSignalSpy spy(m_handler.get(), &TriggerHandler::cancellingTriggers);
 
+    m_handler->addTrigger(std::make_unique<Trigger>(TriggerType::Press));
     m_handler->activateTriggers(TriggerType::Swipe);
+    QCOMPARE(spy.count(), 0);
     m_handler->activateTriggers(TriggerType::Swipe | TriggerType::Press);
+    QCOMPARE(spy.count(), 0);
     m_handler->activateTriggers(TriggerType::All);
+    QCOMPARE(spy.count(), 1);
 
-    QVERIFY(Mock::VerifyAndClearExpectations(m_handler.get()));
-}
-
-void TestTriggerHandler::activateTriggers_invokesCustomHandler()
-{
-    uint32_t swipe{};
-    uint32_t press{};
-    m_handler->registerTriggerActivateHandler(TriggerType::Swipe, [&swipe] { swipe++; });
-    m_handler->registerTriggerActivateHandler(TriggerType::Press, [&press] { press++; });
-
-    m_handler->activateTriggers(TriggerType::All);
-    QCOMPARE(swipe, 1);
-    QCOMPARE(press, 1);
-
-    m_handler->activateTriggers(TriggerType::Swipe);
-    QCOMPARE(swipe, 2);
-    QCOMPARE(press, 1);
-
-    m_handler->activateTriggers(TriggerType::Swipe | TriggerType::Press);
-    QCOMPARE(swipe, 3);
-    QCOMPARE(press, 2);
-}
-
-void TestTriggerHandler::keyboardKey_data()
-{
-    QTest::addColumn<int>("key");
-    QTest::addColumn<bool>("state");
-    QTest::addColumn<bool>("endsTriggers");
-
-    QTest::newRow("press") << KEY_LEFTCTRL << true << false;
-    QTest::newRow("release") << KEY_LEFTCTRL << false << true;
+    for (const auto &args : spy) {
+        QCOMPARE(args.at(0).value<TriggerTypes>(), TriggerType::All);
+    }
 }
 
 void TestTriggerHandler::keyboardKey()
 {
-    QFETCH(int, key);
-    QFETCH(bool, state);
-    QFETCH(bool, endsTriggers);
-
-    EXPECT_CALL(*m_handler, endTriggers(static_cast<TriggerTypes>(TriggerType::All)))
-        .Times(Exactly(endsTriggers ? 1 : 0));
-
+    QSignalSpy spy(m_handler.get(), &TriggerHandler::endingTriggers);
     InputDevice device(InputDeviceType::Keyboard);
-    const KeyboardKeyEvent event(&device, key, state);
-    m_handler->handleEvent(&event);
+    m_handler->addTrigger(std::make_unique<Trigger>(TriggerType::Press));
 
-    QVERIFY(Mock::VerifyAndClearExpectations(m_handler.get()));
+    m_handler->activateTriggers(TriggerType::Press);
+    m_handler->handleEvent(KeyboardKeyEvent(&device, KEY_LEFTCTRL, true));
+    QCOMPARE(spy.count(), 0);
+
+    m_handler->handleEvent(KeyboardKeyEvent(&device, KEY_LEFTCTRL, false));
+    QCOMPARE(spy.count(), 1);
 }
 
-MockTrigger *TestTriggerHandler::makeTrigger(const TriggerType &type, const bool &activatable)
+MockTrigger *TestTriggerHandler::makeTrigger(TriggerType type, bool activatable)
 {
-    auto *trigger = new MockTrigger;
-    trigger->setType(type);
-    ON_CALL(*trigger, canActivate(_))
-        .WillByDefault(Return(activatable));
+    auto *trigger = new MockTrigger(type);
+    ON_CALL(*trigger, canActivate(_)).WillByDefault(Return(activatable));
     return trigger;
 }
 

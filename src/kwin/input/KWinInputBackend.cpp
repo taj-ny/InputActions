@@ -19,7 +19,6 @@
 #include "KWinInputBackend.h"
 #include "globals.h"
 #include "utils.h"
-
 #include <libinputactions/input/events.h>
 #include <libinputactions/interfaces/InputEmitter.h>
 #include <libinputactions/triggers/StrokeTrigger.h>
@@ -40,11 +39,20 @@ KWinInputBackend::KWinInputBackend()
     auto *input = KWin::input();
     connect(input, &KWin::InputRedirection::deviceAdded, this, &KWinInputBackend::kwinDeviceAdded);
     connect(input, &KWin::InputRedirection::deviceRemoved, this, &KWinInputBackend::kwinDeviceRemoved);
+
+#ifdef KWIN_6_2_OR_GREATER
+    KWin::input()->installInputEventFilter(this);
+#else
+    KWin::input()->prependInputEventFilter(this);
+#endif
 }
 
 KWinInputBackend::~KWinInputBackend()
 {
     reset();
+    if (auto *input = KWin::input()) {
+        input->uninstallInputEventFilter(this);
+    }
 }
 
 void KWinInputBackend::initialize()
@@ -121,13 +129,15 @@ bool KWinInputBackend::pinchGestureCancelled(std::chrono::microseconds time)
 #ifdef KWIN_6_3_OR_GREATER
 bool KWinInputBackend::pointerMotion(KWin::PointerMotionEvent *event)
 {
-    return LibinputIndirectInputBackend::pointerMotion(findInputActionsDevice(event->device), event->delta);
+    return LibinputIndirectInputBackend::pointerMotion(findInputActionsDevice(event->device), event->delta, event->deltaUnaccelerated);
 }
 
 bool KWinInputBackend::pointerButton(KWin::PointerButtonEvent *event)
 {
-    return LibinputIndirectInputBackend::pointerButton(findInputActionsDevice(event->device), event->button, event->nativeButton,
-        event->state == PointerButtonStatePressed);
+    return LibinputIndirectInputBackend::pointerButton(findInputActionsDevice(event->device),
+                                                       event->button,
+                                                       event->nativeButton,
+                                                       event->state == PointerButtonStatePressed);
 }
 
 bool KWinInputBackend::keyboardKey(KWin::KeyboardKeyEvent *event)
@@ -152,9 +162,7 @@ bool KWinInputBackend::wheelEvent(KWin::WheelEvent *event)
     const auto inverted = event->inverted();
 #endif
 
-    auto delta = orientation == Qt::Orientation::Horizontal
-        ? QPointF(eventDelta, 0)
-        : QPointF(0, eventDelta);
+    auto delta = orientation == Qt::Orientation::Horizontal ? QPointF(eventDelta, 0) : QPointF(0, eventDelta);
     if (inverted) {
         delta *= -1;
     }
@@ -164,10 +172,10 @@ bool KWinInputBackend::wheelEvent(KWin::WheelEvent *event)
 void KWinInputBackend::kwinDeviceAdded(KWin::InputDevice *kwinDevice)
 {
     InputDeviceType type;
-    if (kwinDevice->isKeyboard()) {
-        type = InputDeviceType::Keyboard;
-    } else if (isMouse(kwinDevice)) {
+    if (isMouse(kwinDevice)) {
         type = InputDeviceType::Mouse;
+    } else if (kwinDevice->isKeyboard()) {
+        type = InputDeviceType::Keyboard;
     } else if (kwinDevice->isTouchpad()) {
         type = InputDeviceType::Touchpad;
     } else {
@@ -176,8 +184,11 @@ void KWinInputBackend::kwinDeviceAdded(KWin::InputDevice *kwinDevice)
 
     KWinInputDevice device{
         .kwinDevice = kwinDevice,
-        .libinputactionsDevice = std::make_unique<libinputactions::InputDevice>(type, kwinDevice->name(), kwinDevice->property("sysName").toString())
+        .libinputactionsDevice = std::make_unique<libinputactions::InputDevice>(type, kwinDevice->name(), kwinDevice->property("sysName").toString()),
     };
+    if (kwinDevice->property("lmrTapButtonMap").value<bool>()) {
+        device.libinputactionsDevice->properties().setLmrTapButtonMap(true);
+    }
     deviceAdded(device.libinputactionsDevice.get());
     m_devices.push_back(std::move(device));
 }

@@ -18,8 +18,8 @@
 
 #pragma once
 
-#include <libinputactions/triggers/DirectionalMotionTrigger.h>
 #include "TriggerHandler.h"
+#include <libinputactions/triggers/DirectionalMotionTrigger.h>
 
 Q_DECLARE_LOGGING_CATEGORY(INPUTACTIONS_HANDLER_MOTION)
 
@@ -49,13 +49,16 @@ public:
     /**
      * Duplicate thresholds (same type and direction) will be replaced.
      */
-    void setSpeedThreshold(const TriggerType &type, const qreal &threshold, const TriggerDirection &directions = UINT32_MAX);
-    void setSpeedInputEventsToSample(const uint8_t &events);
+    void setSpeedThreshold(TriggerType type, qreal threshold, TriggerDirection directions = UINT32_MAX);
 
     /**
-     * Used in input actions, as KWin doesn't provide accelerated deltas for gestures. Temporary workaround.
+     * Used for the move_by_delta mouse input action. Temporary workaround.
      */
-    void setSwipeDeltaMultiplier(const qreal &multiplier);
+    qreal m_swipeDeltaMultiplier = 1.0;
+    /**
+     * How many input events to sample in order to determine the speed.
+     */
+    uint8_t m_inputEventsToSample = 3;
 
 protected:
     MotionTriggerHandler();
@@ -74,20 +77,19 @@ protected:
      * @return Whether speed is necessary and has been determined.
      * @see setSpeedThreshold
      */
-    bool determineSpeed(const TriggerType &type, const qreal &delta, TriggerSpeed &speed, const TriggerDirection &direction = UINT32_MAX);
+    bool determineSpeed(TriggerType type, qreal delta, TriggerSpeed &speed, TriggerDirection direction = UINT32_MAX);
 
-    virtual void triggerActivating(const Trigger *trigger) override;
     void reset() override;
 
-private:
-    void strokeTriggerEndHandler();
+private slots:
+    void onActivatingTrigger(const Trigger *trigger);
+    void onEndingTriggers(TriggerTypes types);
 
+private:
     Axis m_currentSwipeAxis = Axis::None;
     QPointF m_currentSwipeDelta;
-    qreal m_swipeDeltaMultiplier = 1.0;
 
     bool m_isDeterminingSpeed = false;
-    uint8_t m_inputEventsToSample = 3;
     uint8_t m_sampledInputEvents = 0;
     qreal m_accumulatedAbsoluteSampledDelta = 0;
     std::optional<TriggerSpeed> m_speed;

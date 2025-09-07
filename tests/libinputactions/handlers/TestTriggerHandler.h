@@ -1,11 +1,8 @@
 #pragma once
 
-#include <libinputactions/handlers/TriggerHandler.h>
-
 #include "mocks/MockTrigger.h"
-#include "mocks/MockTriggerHandler.h"
-
 #include <QTest>
+#include <libinputactions/handlers/TriggerHandler.h>
 
 namespace libinputactions
 {
@@ -21,15 +18,13 @@ private slots:
     void triggers();
 
     void activateTriggers_cancelsAllTriggers();
-    void activateTriggers_invokesCustomHandler();
 
-    void keyboardKey_data();
     void keyboardKey();
 
 private:
-    MockTrigger *makeTrigger(const TriggerType &type, const bool &activatable);
+    MockTrigger *makeTrigger(TriggerType type, bool activatable);
 
-    std::unique_ptr<MockTriggerHandler> m_handler;
+    std::unique_ptr<TriggerHandler> m_handler;
 };
 
 }

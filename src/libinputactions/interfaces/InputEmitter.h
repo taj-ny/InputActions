@@ -18,52 +18,46 @@
 
 #pragma once
 
+#include <QPointF>
 #include <libinputactions/globals.h>
 #include <libinputactions/Resettable.h>
-
 #include <memory>
-
-#include <QPointF>
 
 namespace libinputactions
 {
 
 class InputEmitter : public Resettable
 {
-    INPUTACTIONS_DECLARE_SINGLETON(InputEmitter)
-
 public:
+    InputEmitter();
     virtual ~InputEmitter() = default;
 
-    void reset() override;
-
-    virtual void keyboardClearModifiers();
+    virtual void keyboardClearModifiers() {};
     /**
      * @param key <linux/input-event-codes.h>
      * @param state True - press, false - release
      */
-    virtual void keyboardKey(const uint32_t &key, const bool &state);
-    /**
-     * The implementation may require that all keys that will be used must be registered before initialization.
-     * Modifier keys are added by default. InputTriggerAction will call this on construction.
-     * May be called multiple times with the same key.
-     */
-    void keyboardRegisterKey(const uint32_t &key);
+    virtual void keyboardKey(uint32_t key, bool state) {};
+    virtual void keyboardText(const QString &text) {};
 
     /**
      * @param button <linux/input-event-codes.h>
      * @param state True - press, false - release
      */
-    virtual void mouseButton(const uint32_t &button, const bool &state);
-    virtual void mouseMoveRelative(const QPointF &pos);
+    virtual void mouseButton(uint32_t button, bool state) {};
+    virtual void mouseMoveRelative(const QPointF &pos) {};
 
-    virtual void touchpadPinchBegin(const uint8_t &fingers);
-    virtual void touchpadSwipeBegin(const uint8_t &fingers);
+    virtual void touchpadPinchBegin(uint8_t fingers) {};
+    virtual void touchpadSwipeBegin(uint8_t fingers) {};
 
-protected:
-    InputEmitter();
-
-    std::unordered_set<uint32_t> m_keyboardRequiredKeys;
+    /**
+     * The implementation may require that all keys that will be used must be registered before initialization.
+     * Modifier keys are added by default. InputTriggerAction will call this on construction.
+     * May be called multiple times with the same key.
+     */
+    std::set<uint32_t> m_keyboardRequiredKeys;
 };
+
+inline std::shared_ptr<InputEmitter> g_inputEmitter;
 
 }

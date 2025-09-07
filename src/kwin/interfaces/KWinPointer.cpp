@@ -18,15 +18,13 @@
 
 #include "KWinPointer.h"
 #include "KWinInputEmitter.h"
-#include "utils.h"
-
-#include <libinputactions/input/backends/InputBackend.h>
-
 #include "core/output.h"
 #include "cursor.h"
 #include "cursorsource.h"
 #include "pointer_input.h"
+#include "utils.h"
 #include "workspace.h"
+#include <libinputactions/input/backends/InputBackend.h>
 
 using namespace libinputactions;
 
@@ -79,10 +77,9 @@ std::optional<QPointF> KWinPointer::screenPointerPosition()
 
 void KWinPointer::setGlobalPointerPosition(const QPointF &position)
 {
-    auto *backend = InputBackend::instance();
-    auto *device = static_cast<KWinInputEmitter *>(InputEmitter::instance())->device();
-    backend->setIgnoreEvents(true);
+    auto *device = static_cast<KWinInputEmitter *>(g_inputEmitter.get())->device();
+    g_inputBackend->setIgnoreEvents(true);
     Q_EMIT device->pointerMotionAbsolute(position, timestamp(), device);
     Q_EMIT device->pointerFrame(device);
-    backend->setIgnoreEvents(false);
+    g_inputBackend->setIgnoreEvents(false);
 }

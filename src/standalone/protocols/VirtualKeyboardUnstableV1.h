@@ -22,8 +22,6 @@
 
 #include "virtual-keyboard-unstable-v1.h"
 
-#include <libinputactions/globals.h>
-
 #include <xkbcommon/xkbcommon.h>
 
 class VirtualKeyboardUnstableV1Keyboard
@@ -45,8 +43,6 @@ private:
 
 class VirtualKeyboardUnstableV1 : public WaylandProtocol
 {
-    INPUTACTIONS_DECLARE_SINGLETON(VirtualKeyboardUnstableV1)
-
 public:
     VirtualKeyboardUnstableV1();
     ~VirtualKeyboardUnstableV1() override;
@@ -62,3 +58,5 @@ protected:
 private:
     zwp_virtual_keyboard_manager_v1 *m_manager{};
 };
+
+inline std::unique_ptr<VirtualKeyboardUnstableV1> g_virtualKeyboardUnstableV1;

@@ -18,16 +18,12 @@
 
 #pragma once
 
-#include <libinputactions/globals.h>
-
 #include "WaylandProtocol.h"
 
 #include <wayland-client-protocol.h>
 
 class WlSeat : public WaylandProtocol
 {
-    INPUTACTIONS_DECLARE_SINGLETON(WlSeat)
-
 public:
     WlSeat();
     ~WlSeat() override;
@@ -39,3 +35,5 @@ public:
 private:
     wl_seat *m_seat{};
 };
+
+inline std::unique_ptr<WlSeat> g_wlSeat;

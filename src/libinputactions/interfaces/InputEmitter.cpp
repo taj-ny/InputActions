@@ -17,7 +17,6 @@
 */
 
 #include "InputEmitter.h"
-
 #include <libinputactions/input/Keyboard.h>
 
 namespace libinputactions
@@ -29,41 +28,5 @@ InputEmitter::InputEmitter()
         m_keyboardRequiredKeys.insert(key);
     }
 }
-
-void InputEmitter::reset()
-{
-}
-
-void InputEmitter::keyboardClearModifiers()
-{
-}
-
-void InputEmitter::keyboardKey(const uint32_t &key, const bool &state)
-{
-}
-
-void InputEmitter::keyboardRegisterKey(const uint32_t &key)
-{
-    // Unused keys will not be removed after config reload, but it should never result in any problems so it's good enough.
-    m_keyboardRequiredKeys.insert(key);
-}
-
-void InputEmitter::mouseButton(const uint32_t &button, const bool &state)
-{
-}
-
-void InputEmitter::mouseMoveRelative(const QPointF &pos)
-{
-}
-
-void InputEmitter::touchpadPinchBegin(const uint8_t &fingers)
-{
-}
-
-void InputEmitter::touchpadSwipeBegin(const uint8_t &fingers)
-{
-}
-
-INPUTACTIONS_SINGLETON(InputEmitter)
 
 }

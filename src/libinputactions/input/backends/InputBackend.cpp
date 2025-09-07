@@ -17,14 +17,13 @@
 */
 
 #include "InputBackend.h"
-
+#include <QObject>
+#include <libinputactions/input/InputEventHandler.h>
 #include <libinputactions/input/Keyboard.h>
 #include <libinputactions/interfaces/SessionLock.h>
 #include <libinputactions/triggers/StrokeTrigger.h>
-#include <libinputactions/variables/VariableManager.h>
 #include <libinputactions/variables/Variable.h>
-
-#include <QObject>
+#include <libinputactions/variables/VariableManager.h>
 
 namespace libinputactions
 {
@@ -32,15 +31,19 @@ namespace libinputactions
 InputBackend::InputBackend()
 {
     m_strokeRecordingTimeoutTimer.setSingleShot(true);
-    QObject::connect(&m_strokeRecordingTimeoutTimer, &QTimer::timeout, [this] { finishStrokeRecording(); });
+    QObject::connect(&m_strokeRecordingTimeoutTimer, &QTimer::timeout, [this] {
+        finishStrokeRecording();
+    });
 }
+
+InputBackend::~InputBackend() = default;
 
 void InputBackend::addEventHandler(std::unique_ptr<InputEventHandler> handler)
 {
     m_handlers.push_back(std::move(handler));
 }
 
-void InputBackend::setIgnoreEvents(const bool &value)
+void InputBackend::setIgnoreEvents(bool value)
 {
     m_ignoreEvents = value;
 }
@@ -92,17 +95,17 @@ bool InputBackend::isDeviceBlacklisted(const QString &name)
     return blacklist.contains(name);
 }
 
-bool InputBackend::handleEvent(const InputEvent *event)
+bool InputBackend::handleEvent(const InputEvent &event)
 {
-    if (!event->sender() || SessionLock::instance()->sessionLocked()) {
+    if (!event.sender() || g_sessionLock->sessionLocked()) {
         return false;
     }
 
-    if (event->type() == InputEventType::KeyboardKey) {
-        Keyboard::instance()->handleEvent(static_cast<const KeyboardKeyEvent *>(event));
+    if (event.type() == InputEventType::KeyboardKey) {
+        g_keyboard->handleEvent(static_cast<const KeyboardKeyEvent &>(event));
     }
-    if (event->sender()->type() != InputDeviceType::Keyboard) {
-        VariableManager::instance()->getVariable(BuiltinVariables::DeviceName)->set(event->sender()->name());
+    if (event.sender()->type() != InputDeviceType::Keyboard) {
+        g_variableManager->getVariable(BuiltinVariables::DeviceName)->set(event.sender()->name());
     }
 
     for (const auto &handler : m_handlers) {
@@ -119,7 +122,5 @@ void InputBackend::finishStrokeRecording()
     m_strokeCallback(Stroke(m_strokePoints));
     m_strokePoints.clear();
 }
-
-INPUTACTIONS_SINGLETON(InputBackend)
 
 }

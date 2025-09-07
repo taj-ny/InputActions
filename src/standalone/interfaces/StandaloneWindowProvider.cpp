@@ -22,8 +22,8 @@
 
 std::shared_ptr<libinputactions::Window> StandaloneWindowProvider::activeWindow()
 {
-    if (WlrForeignToplevelManagementV1::instance()->supported()) {
-        return WlrForeignToplevelManagementV1::instance()->activeWindow();
+    if (g_wlrForeignToplevelManagementV1->supported()) {
+        return g_wlrForeignToplevelManagementV1->activeWindow();
     }
     return {};
 }

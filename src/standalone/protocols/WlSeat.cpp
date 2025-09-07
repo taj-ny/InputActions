@@ -39,5 +39,3 @@ void WlSeat::bind(wl_registry *registry, uint32_t name)
 {
     m_seat = static_cast<wl_seat *>(wl_registry_bind(registry, name, &wl_seat_interface, 9));
 }
-
-INPUTACTIONS_SINGLETON(WlSeat)

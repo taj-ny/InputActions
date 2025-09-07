@@ -12,8 +12,8 @@
 }:
 
 hyprlandPlugins.mkHyprlandPlugin hyprland rec {
-  pluginName = "inputactions-hyprland";
-  version = "0.7.0";
+  pluginName = "inputactions_hyprland";
+  version = "0.8.0";
 
   src = ./..;
 

@@ -18,12 +18,10 @@
 
 #pragma once
 
-#include "Expression.h"
-
+#include <QString>
+#include <any>
 #include <functional>
 #include <variant>
-
-#include <QString>
 
 namespace libinputactions
 {
@@ -32,15 +30,45 @@ template<typename T>
 class Value
 {
 public:
-    Value(const T &value = {});
-    Value(const std::function<T()> &getter);
-    Value(const Expression<T> &expression);
-    static Value<T> variable(const QString &name);
+    Value();
+    /**
+     * Constructs a Value that always returns the specified value.
+     */
+    Value(T value);
 
-    T get() const;
+    /**
+     * Constructs a Value that returns the standard output of the specified command.
+     */
+    static Value<T> command(Value<QString> command);
+
+    /**
+     * Constructs a Value that returns the value returned by the specified function.
+     */
+    static Value<T> function(std::function<std::optional<T>()> function);
+
+    /*
+     * Constructs a Value that returns the value of the specified variable.
+     */
+    static Value<T> variable(QString name);
+
+    /**
+     * Safe to call from other threads, will dispatch to main and block if required.
+     */
+    std::optional<T> get() const;
+    /**
+     * Whether evaluating the value may be expensive.
+     */
+    bool expensive() const;
+
+    operator Value<std::any>() const;
 
 private:
-    std::variant<T, std::function<T()>> m_value;
+    std::variant<std::optional<T>, std::function<std::optional<T>()>> m_value;
+    /**
+     * Whether the value can only be evaluated on the main thread.
+     */
+    bool m_mainThreadOnly{};
+    bool m_expensive{};
 };
 
 }

@@ -21,7 +21,6 @@
 #include "WaylandProtocol.h"
 #include "wlr-foreign-toplevel-management-unstable-v1.h"
 
-#include <libinputactions/globals.h>
 #include <libinputactions/interfaces/Window.h>
 
 class WlrForeignToplevelManagementV1Window : public libinputactions::Window
@@ -45,8 +44,6 @@ private:
 
 class WlrForeignToplevelManagementV1 : public WaylandProtocol
 {
-    INPUTACTIONS_DECLARE_SINGLETON(WlrForeignToplevelManagementV1)
-
 public:
     WlrForeignToplevelManagementV1();
     ~WlrForeignToplevelManagementV1();
@@ -68,3 +65,5 @@ private:
     std::vector<std::shared_ptr<WlrForeignToplevelManagementV1Window>> m_windows;
     std::shared_ptr<WlrForeignToplevelManagementV1Window> m_activeWindow;
 };
+
+inline std::unique_ptr<WlrForeignToplevelManagementV1> g_wlrForeignToplevelManagementV1;

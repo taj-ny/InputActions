@@ -22,7 +22,10 @@
 #include <libinputactions/interfaces/PointerPositionGetter.h>
 #include <libinputactions/interfaces/PointerPositionSetter.h>
 
-class KWinPointer : public libinputactions::CursorShapeProvider, public libinputactions::PointerPositionGetter, public libinputactions::PointerPositionSetter
+class KWinPointer
+    : public libinputactions::CursorShapeProvider
+    , public libinputactions::PointerPositionGetter
+    , public libinputactions::PointerPositionSetter
 {
 public:
     std::optional<libinputactions::CursorShape> cursorShape() override;

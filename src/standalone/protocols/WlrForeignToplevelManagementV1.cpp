@@ -77,7 +77,7 @@ void WlrForeignToplevelManagementV1::handleAppId(void *data, zwlr_foreign_toplev
 
 void WlrForeignToplevelManagementV1::handleState(void *data, zwlr_foreign_toplevel_handle_v1 *handle, wl_array *state)
 {
-    auto *self = WlrForeignToplevelManagementV1::instance();
+    auto *self = g_wlrForeignToplevelManagementV1.get();
     auto *window = static_cast<WlrForeignToplevelManagementV1Window *>(data);
     window->m_fullscreen = false;
     window->m_maximized = false;
@@ -102,7 +102,7 @@ void WlrForeignToplevelManagementV1::handleState(void *data, zwlr_foreign_toplev
 
 void WlrForeignToplevelManagementV1::handleClosed(void *data, zwlr_foreign_toplevel_handle_v1 *handle)
 {
-    auto *self = WlrForeignToplevelManagementV1::instance();
+    auto *self = g_wlrForeignToplevelManagementV1.get();
     auto *window = static_cast<WlrForeignToplevelManagementV1Window *>(data);
     self->m_windows.erase(std::ranges::find_if(self->m_windows, [window](auto &other) {
         return window == other.get();
@@ -111,8 +111,6 @@ void WlrForeignToplevelManagementV1::handleClosed(void *data, zwlr_foreign_tople
         self->m_activeWindow = {};
     }
 }
-
-INPUTACTIONS_SINGLETON(WlrForeignToplevelManagementV1)
 
 std::optional<QString> WlrForeignToplevelManagementV1Window::title()
 {

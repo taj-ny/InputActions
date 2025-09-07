@@ -18,7 +18,7 @@
 
 #include "VirtualKeyboardUnstableV1.h"
 #include "WlSeat.h"
-
+#include <libinputactions/globals.h>
 #include <sys/mman.h>
 
 VirtualKeyboardUnstableV1::VirtualKeyboardUnstableV1()
@@ -48,11 +48,9 @@ void VirtualKeyboardUnstableV1::bind(wl_registry *registry, uint32_t name)
     m_manager = static_cast<zwp_virtual_keyboard_manager_v1 *>(wl_registry_bind(registry, name, &zwp_virtual_keyboard_manager_v1_interface, 1));
 }
 
-INPUTACTIONS_SINGLETON(VirtualKeyboardUnstableV1)
-
 VirtualKeyboardUnstableV1Keyboard::VirtualKeyboardUnstableV1Keyboard(zwp_virtual_keyboard_manager_v1 *manager)
 {
-    m_keyboard = zwp_virtual_keyboard_manager_v1_create_virtual_keyboard(manager, WlSeat::instance()->seat());
+    m_keyboard = zwp_virtual_keyboard_manager_v1_create_virtual_keyboard(manager, g_wlSeat->seat());
 
     xkb_context *context = xkb_context_new(XKB_CONTEXT_NO_FLAGS);
     if (!context) {

@@ -21,7 +21,6 @@
 #include "WaylandProtocol.h"
 #include "wlr-virtual-pointer-unstable-v1.h"
 
-#include <libinputactions/globals.h>
 #include <libinputactions/interfaces/Window.h>
 
 class WlrVirtualPointerUnstableV1Pointer
@@ -40,8 +39,6 @@ private:
 
 class WlrVirtualPointerUnstableV1 : public WaylandProtocol
 {
-    INPUTACTIONS_DECLARE_SINGLETON(WlrVirtualPointerUnstableV1)
-
 public:
     WlrVirtualPointerUnstableV1();
     ~WlrVirtualPointerUnstableV1();
@@ -53,3 +50,5 @@ protected:
 
     zwlr_virtual_pointer_manager_v1 *m_manager{};
 };
+
+inline std::unique_ptr<WlrVirtualPointerUnstableV1> g_wlrVirtualPointerUnstableV1;

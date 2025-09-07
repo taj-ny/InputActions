@@ -17,6 +17,7 @@
 */
 
 #include "HyprlandWindow.h"
+#include <hyprland/src/desktop/Window.hpp>
 
 HyprlandWindow::HyprlandWindow(CWindow *window)
     : m_window(window)
@@ -25,7 +26,7 @@ HyprlandWindow::HyprlandWindow(CWindow *window)
 
 std::optional<QString> HyprlandWindow::id()
 {
-    return QString::fromStdString(std::format("{:x}", (uintptr_t)m_window));
+    return QString::number((uintptr_t)m_window, 16);
 }
 
 std::optional<QRectF> HyprlandWindow::geometry()

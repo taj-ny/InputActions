@@ -17,13 +17,12 @@
 */
 
 #include "ConditionGroup.h"
-
 #include <algorithm>
 
 namespace libinputactions
 {
 
-ConditionGroup::ConditionGroup(const ConditionGroupMode &mode)
+ConditionGroup::ConditionGroup(ConditionGroupMode mode)
     : m_mode(mode)
 {
 }
@@ -35,8 +34,7 @@ bool ConditionGroup::satisfiedInternal() const
     const auto pred = [](const auto &condition) {
         return condition->satisfied();
     };
-    switch (m_mode)
-    {
+    switch (m_mode) {
         case ConditionGroupMode::All:
             return std::all_of(begin, end, pred);
         case ConditionGroupMode::Any:

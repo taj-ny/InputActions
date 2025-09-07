@@ -17,23 +17,22 @@
 */
 
 #include "LibinputIndirectInputBackend.h"
-
 #include <libinputactions/interfaces/InputEmitter.h>
+#include <libinputactions/interfaces/PointerPositionGetter.h>
+#include <libinputactions/interfaces/PointerPositionSetter.h>
 
 namespace libinputactions
 {
 
 static const uint32_t STROKE_RECORD_TIMEOUT = 250;
 
-bool LibinputIndirectInputBackend::keyboardKey(InputDevice *sender, const uint32_t &key, const bool &state)
+bool LibinputIndirectInputBackend::keyboardKey(InputDevice *sender, uint32_t key, bool state)
 {
     if (m_ignoreEvents || !sender) {
         return false;
     }
 
-    const KeyboardKeyEvent keyEvent(sender, key, state);
-    handleEvent(&keyEvent);
-    return false;
+    return handleEvent(KeyboardKeyEvent(sender, key, state));
 }
 
 bool LibinputIndirectInputBackend::pointerAxis(InputDevice *sender, const QPointF &delta)
@@ -43,8 +42,7 @@ bool LibinputIndirectInputBackend::pointerAxis(InputDevice *sender, const QPoint
     }
 
     if (sender->type() == InputDeviceType::Mouse) {
-        const MotionEvent wheelEvent(sender, InputEventType::PointerScroll, delta);
-        return handleEvent(&wheelEvent);
+        return handleEvent(MotionEvent(sender, InputEventType::PointerScroll, delta));
     }
 
     if (m_isRecordingStroke) {
@@ -56,12 +54,10 @@ bool LibinputIndirectInputBackend::pointerAxis(InputDevice *sender, const QPoint
         return true;
     }
 
-    LibevdevComplementaryInputBackend::poll(); // Update finger count
-    const MotionEvent scrollEvent(sender, InputEventType::PointerScroll, delta);
-    return handleEvent(&scrollEvent);
+    return handleEvent(MotionEvent(sender, InputEventType::PointerScroll, delta));
 }
 
-bool LibinputIndirectInputBackend::pointerButton(InputDevice *sender, const Qt::MouseButton &button, const quint32 &nativeButton, const bool &state)
+bool LibinputIndirectInputBackend::pointerButton(InputDevice *sender, Qt::MouseButton button, uint32_t nativeButton, bool state)
 {
     if (m_ignoreEvents || !sender) {
         return false;
@@ -70,27 +66,38 @@ bool LibinputIndirectInputBackend::pointerButton(InputDevice *sender, const Qt::
     if (sender->type() == InputDeviceType::Touchpad) {
         LibevdevComplementaryInputBackend::poll(); // Update clicked state
     }
-    const PointerButtonEvent buttonEvent(sender, button, nativeButton, state);
-    return handleEvent(&buttonEvent);
+    return handleEvent(PointerButtonEvent(sender, button, nativeButton, state));
 }
 
-bool LibinputIndirectInputBackend::pointerMotion(InputDevice *sender, const QPointF &delta)
+bool LibinputIndirectInputBackend::pointerMotion(InputDevice *sender, const QPointF &delta, QPointF deltaUnaccelerated)
 {
-    if (m_ignoreEvents || !sender || sender->type() != InputDeviceType::Mouse) {
+    if (m_ignoreEvents || !sender) {
         return false;
     }
 
     if (m_isRecordingStroke) {
         m_strokePoints.push_back(delta);
         m_strokeRecordingTimeoutTimer.start(STROKE_RECORD_TIMEOUT);
-    } else {
-        const MotionEvent motionEvent(sender, InputEventType::PointerMotion, delta);
-        handleEvent(&motionEvent);
+        return false;
     }
-    return false;
+
+    if (deltaUnaccelerated.isNull()) {
+        deltaUnaccelerated = delta;
+    }
+
+    const auto isTouchpad = sender->type() == InputDeviceType::Touchpad;
+    // Don't block mouse motion for now, more changes are required
+    auto block = handleEvent(MotionEvent(sender, InputEventType::PointerMotion, isTouchpad ? deltaUnaccelerated : delta)) && isTouchpad;
+    if (block && m_previousPointerPosition) {
+        g_pointerPositionSetter->setGlobalPointerPosition(m_previousPointerPosition.value());
+    }
+    if (!block) {
+        m_previousPointerPosition = g_pointerPositionGetter->globalPointerPosition();
+    }
+    return block;
 }
 
-bool LibinputIndirectInputBackend::touchpadHoldBegin(InputDevice *sender, const uint8_t &fingers)
+bool LibinputIndirectInputBackend::touchpadHoldBegin(InputDevice *sender, uint8_t fingers)
 {
     if (m_ignoreEvents || !sender) {
         return false;
@@ -98,65 +105,61 @@ bool LibinputIndirectInputBackend::touchpadHoldBegin(InputDevice *sender, const 
 
     m_fingers = fingers;
     LibevdevComplementaryInputBackend::poll(); // Update clicked state
-    const TouchpadGestureLifecyclePhaseEvent event(sender, TouchpadGestureLifecyclePhase::Begin, TriggerType::Press, fingers);
-    m_block = handleEvent(&event);
+    m_block = handleEvent(TouchpadGestureLifecyclePhaseEvent(sender, TouchpadGestureLifecyclePhase::Begin, TriggerType::Press, fingers));
     return m_block;
 }
 
-bool LibinputIndirectInputBackend::touchpadHoldEnd(InputDevice *sender, const bool &cancelled)
+bool LibinputIndirectInputBackend::touchpadHoldEnd(InputDevice *sender, bool cancelled)
 {
     if (m_ignoreEvents || !sender) {
         return false;
     }
 
     LibevdevComplementaryInputBackend::poll(); // Update clicked state
-    const TouchpadGestureLifecyclePhaseEvent event(sender, cancelled ? TouchpadGestureLifecyclePhase::Cancel : TouchpadGestureLifecyclePhase::End,
-        TriggerType::Press);
-    handleEvent(&event);
+    handleEvent(TouchpadGestureLifecyclePhaseEvent(sender,
+                                                   cancelled ? TouchpadGestureLifecyclePhase::Cancel : TouchpadGestureLifecyclePhase::End,
+                                                   TriggerType::Press));
     return m_block;
 }
 
-bool LibinputIndirectInputBackend::touchpadPinchBegin(InputDevice *sender, const uint8_t &fingers)
+bool LibinputIndirectInputBackend::touchpadPinchBegin(InputDevice *sender, uint8_t fingers)
 {
     if (m_ignoreEvents || !sender) {
         return false;
     }
 
     m_fingers = fingers;
-    LibevdevComplementaryInputBackend::poll(); // Update finger count
-    const TouchpadGestureLifecyclePhaseEvent event(sender, TouchpadGestureLifecyclePhase::Begin, TriggerType::PinchRotate, fingers);
-    m_block = handleEvent(&event);
+    m_block = handleEvent(TouchpadGestureLifecyclePhaseEvent(sender, TouchpadGestureLifecyclePhase::Begin, TriggerType::PinchRotate, fingers));
     return m_block;
 }
 
-bool LibinputIndirectInputBackend::touchpadPinchUpdate(InputDevice *sender, const qreal &scale, const qreal &angleDelta)
+bool LibinputIndirectInputBackend::touchpadPinchUpdate(InputDevice *sender, qreal scale, qreal angleDelta)
 {
     if (m_ignoreEvents || !sender) {
         return false;
     }
 
-    const TouchpadPinchEvent event(sender, scale, angleDelta);
-    const auto block = handleEvent(&event);
+    const auto block = handleEvent(TouchpadPinchEvent(sender, scale, angleDelta));
     if (m_block && !block) {
         // Allow the compositor/client to handle the gesture
-        InputEmitter::instance()->touchpadPinchBegin(m_fingers);
+        g_inputEmitter->touchpadPinchBegin(m_fingers);
     }
     m_block = block;
     return block;
 }
 
-bool LibinputIndirectInputBackend::touchpadPinchEnd(InputDevice *sender, const bool &cancelled)
+bool LibinputIndirectInputBackend::touchpadPinchEnd(InputDevice *sender, bool cancelled)
 {
     if (m_ignoreEvents || !sender) {
         return false;
     }
 
-    const TouchpadGestureLifecyclePhaseEvent event(sender, cancelled ? TouchpadGestureLifecyclePhase::Cancel : TouchpadGestureLifecyclePhase::End,
-        TriggerType::PinchRotate);
-    return handleEvent(&event);
+    return handleEvent(TouchpadGestureLifecyclePhaseEvent(sender,
+                                                          cancelled ? TouchpadGestureLifecyclePhase::Cancel : TouchpadGestureLifecyclePhase::End,
+                                                          TriggerType::PinchRotate));
 }
 
-bool LibinputIndirectInputBackend::touchpadSwipeBegin(InputDevice *sender, const uint8_t &fingers)
+bool LibinputIndirectInputBackend::touchpadSwipeBegin(InputDevice *sender, uint8_t fingers)
 {
     if (m_ignoreEvents || !sender) {
         return false;
@@ -165,9 +168,7 @@ bool LibinputIndirectInputBackend::touchpadSwipeBegin(InputDevice *sender, const
     }
 
     m_fingers = fingers;
-    LibevdevComplementaryInputBackend::poll(); // Update finger count
-    const TouchpadGestureLifecyclePhaseEvent event(sender, TouchpadGestureLifecyclePhase::Begin, TriggerType::StrokeSwipe, fingers);
-    m_block = handleEvent(&event);
+    m_block = handleEvent(TouchpadGestureLifecyclePhaseEvent(sender, TouchpadGestureLifecyclePhase::Begin, TriggerType::StrokeSwipe, fingers));
     return m_block;
 }
 
@@ -182,17 +183,16 @@ bool LibinputIndirectInputBackend::touchpadSwipeUpdate(InputDevice *sender, cons
         return true;
     }
 
-    const MotionEvent event(sender, InputEventType::TouchpadSwipe, delta);
-    const auto block = handleEvent(&event);
+    const auto block = handleEvent(MotionEvent(sender, InputEventType::TouchpadSwipe, delta));
     if (m_block && !block) {
         // Allow the compositor/client to handle the gesture
-        InputEmitter::instance()->touchpadSwipeBegin(m_fingers);
+        g_inputEmitter->touchpadSwipeBegin(m_fingers);
     }
     m_block = block;
     return block;
 }
 
-bool LibinputIndirectInputBackend::touchpadSwipeEnd(InputDevice *sender, const bool &cancelled)
+bool LibinputIndirectInputBackend::touchpadSwipeEnd(InputDevice *sender, bool cancelled)
 {
     if (m_ignoreEvents || !sender) {
         return false;
@@ -203,12 +203,13 @@ bool LibinputIndirectInputBackend::touchpadSwipeEnd(InputDevice *sender, const b
         return true;
     }
 
-    const TouchpadGestureLifecyclePhaseEvent event(sender, cancelled ? TouchpadGestureLifecyclePhase::Cancel : TouchpadGestureLifecyclePhase::End,
-        TriggerType::StrokeSwipe);
-    return handleEvent(&event);
+    return handleEvent(TouchpadGestureLifecyclePhaseEvent(sender,
+                                                          cancelled ? TouchpadGestureLifecyclePhase::Cancel : TouchpadGestureLifecyclePhase::End,
+                                                          TriggerType::StrokeSwipe));
 }
 
-Qt::MouseButton LibinputIndirectInputBackend::scanCodeToMouseButton(const uint32_t &scanCode) const
+
+Qt::MouseButton LibinputIndirectInputBackend::scanCodeToMouseButton(uint32_t scanCode) const
 {
     static const std::map<uint32_t, Qt::MouseButton> buttons = {
         {BTN_LEFT, Qt::LeftButton},

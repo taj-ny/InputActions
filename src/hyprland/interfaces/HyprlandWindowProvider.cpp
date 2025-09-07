@@ -18,11 +18,12 @@
 
 #include "HyprlandWindowProvider.h"
 #include "HyprlandWindow.h"
-
 #include <hyprland/src/Compositor.hpp>
 #include <hyprland/src/managers/PointerManager.hpp>
 
-std::shared_ptr<libinputactions::Window> HyprlandWindowProvider::activeWindow()
+using namespace libinputactions;
+
+std::shared_ptr<Window> HyprlandWindowProvider::activeWindow()
 {
     if (auto *window = g_pCompositor->m_lastWindow.lock().get()) {
         return std::make_shared<HyprlandWindow>(window);
@@ -30,7 +31,7 @@ std::shared_ptr<libinputactions::Window> HyprlandWindowProvider::activeWindow()
     return {};
 }
 
-std::shared_ptr<libinputactions::Window> HyprlandWindowProvider::windowUnderPointer()
+std::shared_ptr<Window> HyprlandWindowProvider::windowUnderPointer()
 {
     if (auto *window = g_pCompositor->vectorToWindowUnified(g_pPointerManager->position(), 0).get()) {
         return std::make_shared<HyprlandWindow>(window);

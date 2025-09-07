@@ -17,13 +17,34 @@
 */
 
 #include "MultiTouchMotionTriggerHandler.h"
+#include <libinputactions/variables/VariableManager.h>
 
 Q_LOGGING_CATEGORY(INPUTACTIONS_HANDLER_MULTITOUCH, "inputactions.handler.multitouch", QtWarningMsg)
 
 namespace libinputactions
 {
 
-bool MultiTouchMotionTriggerHandler::handlePinch(const qreal &scale, const qreal &angleDelta)
+bool MultiTouchMotionTriggerHandler::handleEvent(const InputEvent &event)
+{
+    if (TriggerHandler::handleEvent(event)) {
+        return true;
+    }
+
+    switch (event.type()) {
+        case InputEventType::TouchDown:
+            handleTouchDownEvent(static_cast<const TouchEvent &>(event));
+            break;
+        case InputEventType::TouchChanged:
+            handleEvent(static_cast<const TouchChangedEvent &>(event));
+            break;
+        case InputEventType::TouchUp:
+            handleTouchUpEvent(static_cast<const TouchEvent &>(event));
+            break;
+    }
+    return false;
+}
+
+bool MultiTouchMotionTriggerHandler::handlePinch(qreal scale, qreal angleDelta)
 {
     if (!hasActiveTriggers(TriggerType::PinchRotate)) {
         return false;
@@ -76,10 +97,10 @@ bool MultiTouchMotionTriggerHandler::handlePinch(const qreal &scale, const qreal
     }
 
     DirectionalMotionTriggerUpdateEvent event;
-    event.setDelta(delta);
-    event.setDirection(direction);
-    event.setSpeed(speed);
-    const auto hasGestures = updateTriggers(type, &event);
+    event.m_delta = delta;
+    event.m_direction = direction;
+    event.m_speed = speed;
+    const auto hasGestures = updateTriggers(type, event);
 
     qCDebug(INPUTACTIONS_HANDLER_MULTITOUCH).nospace() << "Event processed (type: Pinch, hasGestures: " << hasGestures << ")";
     return hasGestures;
@@ -93,5 +114,119 @@ void MultiTouchMotionTriggerHandler::reset()
     m_accumulatedRotateDelta = 0;
 }
 
+void MultiTouchMotionTriggerHandler::updateVariables(const InputDevice *sender)
+{
+    auto thumbInitialPosition = g_variableManager->getVariable(BuiltinVariables::ThumbInitialPositionPercentage);
+    auto thumbPosition = g_variableManager->getVariable(BuiltinVariables::ThumbPositionPercentage);
+    auto thumbPresent = g_variableManager->getVariable(BuiltinVariables::ThumbPresent);
+    bool hasThumb{};
+
+    const auto touchPoints = sender->validTouchPoints();
+    for (size_t i = 0; i < s_fingerVariableCount; i++) {
+        const auto fingerVariableNumber = i + 1;
+        auto initialPosition = g_variableManager->getVariable<QPointF>(QString("finger_%1_initial_position_percentage").arg(fingerVariableNumber));
+        auto position = g_variableManager->getVariable<QPointF>(QString("finger_%1_position_percentage").arg(fingerVariableNumber));
+        auto pressure = g_variableManager->getVariable<qreal>(QString("finger_%1_pressure").arg(fingerVariableNumber));
+
+        if (touchPoints.size() <= i || !touchPoints[i]->valid) {
+            initialPosition->set({});
+            position->set({});
+            pressure->set({});
+            continue;
+        }
+
+        const auto *point = touchPoints[i];
+        if (point->type == TouchPointType::Thumb) {
+            hasThumb = true;
+            thumbInitialPosition->set(point->initialPosition);
+            thumbPosition->set(point->position);
+            thumbPresent->set(true);
+        }
+        initialPosition->set(point->initialPosition);
+        position->set(point->position);
+        pressure->set(point->pressure);
+    }
+
+    if (!hasThumb) {
+        thumbInitialPosition->set({});
+        thumbPosition->set({});
+        thumbPresent->set(false);
+    }
+
+    g_variableManager->getVariable(BuiltinVariables::Fingers)->set(sender->validTouchPoints().size());
+}
+
+void MultiTouchMotionTriggerHandler::handleTouchDownEvent(const TouchEvent &event)
+{
+    switch (m_state) {
+        case State::None:
+            m_state = State::TouchIdle;
+            m_firstTouchPoint = event.point();
+            break;
+    }
+    updateVariables(event.sender());
+}
+
+void MultiTouchMotionTriggerHandler::handleEvent(const TouchChangedEvent &event)
+{
+    switch (m_state) {
+        case State::LibinputTapBegin:
+            return;
+        case State::Touch:
+        case State::TouchIdle:
+            const auto diff = event.point().position - event.point().initialPosition;
+            if (std::hypot(diff.x(), diff.y()) >= 0.02) {
+                m_state = State::Motion;
+            }
+            break;
+    }
+
+    updateVariables(event.sender());
+}
+
+void MultiTouchMotionTriggerHandler::handleTouchUpEvent(const TouchEvent &event)
+{
+    switch (m_state) {
+        case State::TapBegin:
+        case State::TouchIdle:
+            // 1-3 finger touchpad tap gestures are detected by listening for pointer button events, as it's more reliable.
+            if (m_state == State::TouchIdle && event.sender()->type() == InputDeviceType::Touchpad
+                && g_variableManager->getVariable(BuiltinVariables::Fingers)->get() <= 3) {
+                m_state = State::LibinputTapBegin;
+                break;
+            }
+
+            if (canTap()) {
+                if (m_state == State::TouchIdle) {
+                    m_state = activateTriggers(TriggerType::Tap) ? State::TapBegin : State::Touch;
+                }
+                if (m_state == State::TapBegin && event.sender()->validTouchPoints().empty()) {
+                    updateTriggers(TriggerType::Tap);
+                    endTriggers(TriggerType::Tap);
+                    m_state = State::None;
+                }
+            } else if (m_state == State::TapBegin) {
+                cancelTriggers(TriggerType::Tap);
+                m_state = State::Touch;
+            }
+            break;
+    }
+
+    if (m_state == State::LibinputTapBegin) {
+        return;
+    }
+
+    updateVariables(event.sender());
+    if (event.sender()->validTouchPoints().empty()) {
+        m_state = State::None;
+        endTriggers(TriggerType::All);
+    }
+}
+
+bool MultiTouchMotionTriggerHandler::canTap()
+{
+    return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - m_firstTouchPoint.downTimestamp).count()
+        <= TAP_TIMEOUT.count();
+}
 
 }

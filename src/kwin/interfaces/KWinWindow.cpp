@@ -17,7 +17,6 @@
 */
 
 #include "KWinWindow.h"
-
 #include "core/output.h"
 #include "effect/effecthandler.h"
 #include "window.h"

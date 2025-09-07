@@ -18,12 +18,11 @@
 
 #pragma once
 
-#include <libinputactions/interfaces/InputEmitter.h>
-
 #include <aquamarine/input/Input.hpp>
 #include <hyprland/src/devices/IKeyboard.hpp>
 #include <hyprland/src/devices/IPointer.hpp>
-#undef HANDLE
+#include <hyprland/src/protocols/TextInputV3.hpp>
+#include <libinputactions/interfaces/InputEmitter.h>
 
 class VirtualKeyboard : public Aquamarine::IKeyboard
 {
@@ -38,8 +37,8 @@ class VirtualPointer : public IPointer
 public:
     VirtualPointer() = default;
 
-    bool isVirtual();
-    SP<Aquamarine::IPointer> aq();
+    bool isVirtual() override;
+    SP<Aquamarine::IPointer> aq() override;
 };
 
 class HyprlandInputEmitter : public libinputactions::InputEmitter
@@ -49,16 +48,22 @@ public:
     ~HyprlandInputEmitter() override;
 
     void keyboardClearModifiers() override;
-    void keyboardKey(const uint32_t &key, const bool &state) override;
+    void keyboardKey(uint32_t key, bool state) override;
+    void keyboardText(const QString &text) override;
 
-    void mouseButton(const uint32_t &button, const bool &state) override;
+    void mouseButton(uint32_t button, bool state) override;
     void mouseMoveRelative(const QPointF &pos) override;
 
-    void touchpadPinchBegin(const uint8_t &fingers) override;
-    void touchpadSwipeBegin(const uint8_t &fingers) override;
+    void touchpadPinchBegin(uint8_t fingers) override;
+    void touchpadSwipeBegin(uint8_t fingers) override;
 
 private:
+    void onNewTextInputV3(const WP<CTextInputV3> &textInput);
+
     uint32_t m_modifiers{};
     SP<Aquamarine::IKeyboard> m_keyboard;
     SP<IPointer> m_pointer;
+
+    std::vector<std::pair<WP<CTextInputV3>, CHyprSignalListener>> m_v3TextInputs;
+    std::vector<CHyprSignalListener> m_listeners;
 };

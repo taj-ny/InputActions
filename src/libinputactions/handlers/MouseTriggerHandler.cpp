@@ -17,12 +17,10 @@
 */
 
 #include "MouseTriggerHandler.h"
-
 #include <libinputactions/input/Keyboard.h>
 #include <libinputactions/interfaces/InputEmitter.h>
 #include <libinputactions/triggers/PressTrigger.h>
 #include <libinputactions/triggers/WheelTrigger.h>
-
 #include <ranges>
 
 Q_LOGGING_CATEGORY(INPUTACTIONS_HANDLER_MOUSE, "inputactions.handler.mouse", QtWarningMsg)
@@ -33,6 +31,8 @@ namespace libinputactions
 MouseTriggerHandler::MouseTriggerHandler()
     : MotionTriggerHandler()
 {
+    connect(this, &TriggerHandler::activatingTrigger, this, &MouseTriggerHandler::onActivatingTrigger);
+
     m_pressTimeoutTimer.setTimerType(Qt::TimerType::PreciseTimer);
     m_pressTimeoutTimer.setSingleShot(true);
 
@@ -40,10 +40,10 @@ MouseTriggerHandler::MouseTriggerHandler()
     m_motionTimeoutTimer.setSingleShot(true);
 }
 
-bool MouseTriggerHandler::handleEvent(const InputEvent *event)
+bool MouseTriggerHandler::handleEvent(const InputEvent &event)
 {
     MotionTriggerHandler::handleEvent(event);
-    switch (event->type()) {
+    switch (event.type()) {
         case InputEventType::KeyboardKey:
             // If a modifier is released before mouse button, this will mess up blocking
             if (m_blockedMouseButtons.empty()) {
@@ -51,30 +51,30 @@ bool MouseTriggerHandler::handleEvent(const InputEvent *event)
             }
             return false;
         case InputEventType::PointerButton:
-            if (event->sender()->type() != InputDeviceType::Mouse) {
+            if (event.sender()->type() != InputDeviceType::Mouse) {
                 return false;
             }
-            return handleEvent(static_cast<const PointerButtonEvent *>(event));
+            return handleEvent(static_cast<const PointerButtonEvent &>(event));
         case InputEventType::PointerMotion:
-            if (event->sender()->type() != InputDeviceType::Mouse) {
+            if (event.sender()->type() != InputDeviceType::Mouse) {
                 return false;
             }
-            return handleMotionEvent(static_cast<const MotionEvent *>(event));
+            return handleMotionEvent(static_cast<const MotionEvent &>(event));
         case InputEventType::PointerScroll:
-            if (event->sender()->type() != InputDeviceType::Mouse) {
+            if (event.sender()->type() != InputDeviceType::Mouse) {
                 return false;
             }
-            return handleWheelEvent(static_cast<const MotionEvent *>(event));
+            return handleWheelEvent(static_cast<const MotionEvent &>(event));
         default:
             return false;
     }
 }
 
-bool MouseTriggerHandler::handleEvent(const PointerButtonEvent *event)
+bool MouseTriggerHandler::handleEvent(const PointerButtonEvent &event)
 {
-    const auto &button = event->button();
-    const auto &nativeButton = event->nativeButton();
-    const auto &state = event->state();
+    const auto &button = event.button();
+    const auto &nativeButton = event.nativeButton();
+    const auto &state = event.state();
     qCDebug(INPUTACTIONS_HANDLER_MOUSE).nospace() << "Event (type: PointerMotion, button: " << button << ", state: " << state << ")";
 
     endTriggers(TriggerType::Wheel);
@@ -90,8 +90,8 @@ bool MouseTriggerHandler::handleEvent(const PointerButtonEvent *event)
 
         // This should be per-gesture instead of global, but it's good enough
         m_instantPress = false;
-        for (const auto &trigger : triggers(TriggerType::Press, m_activationEvent.get())) {
-            if (dynamic_cast<PressTrigger *>(trigger)->instant()) {
+        for (const auto &trigger : triggers(TriggerType::Press, *m_activationEvent)) {
+            if (dynamic_cast<PressTrigger *>(trigger)->m_instant) {
                 qCDebug(INPUTACTIONS_HANDLER_MOUSE, "Press gesture is instant");
                 m_instantPress = true;
                 break;
@@ -109,7 +109,7 @@ bool MouseTriggerHandler::handleEvent(const PointerButtonEvent *event)
                 }
 
                 qCDebug(INPUTACTIONS_HANDLER_MOUSE, "Attempting to activate mouse press gestures");
-                if (!activateTriggers(TriggerType::Press, m_activationEvent.get())) {
+                if (!activateTriggers(TriggerType::Press, *m_activationEvent)) {
                     qCDebug(INPUTACTIONS_HANDLER_MOUSE, "No wheel or press mouse gestures");
                     if (m_unblockButtonsOnTimeout) {
                         pressBlockedMouseButtons();
@@ -146,7 +146,7 @@ bool MouseTriggerHandler::handleEvent(const PointerButtonEvent *event)
             m_motionTimeoutTimer.stop();
 
             if (m_instantPress) {
-                activateTriggers(TriggerType::Press, m_activationEvent.get());
+                activateTriggers(TriggerType::Press, *m_activationEvent);
                 updateTimedTriggers();
                 endTriggers(TriggerType::Press);
             }
@@ -155,8 +155,8 @@ bool MouseTriggerHandler::handleEvent(const PointerButtonEvent *event)
         const auto block = m_blockedMouseButtons.contains(nativeButton);
         if (m_blockedMouseButtons.removeAll(nativeButton) && !m_hadTriggerSincePress) {
             qCDebug(INPUTACTIONS_HANDLER_MOUSE).nospace() << "Mouse button pressed and released (button: " << nativeButton << ")";
-            InputEmitter::instance()->mouseButton(nativeButton, true);
-            InputEmitter::instance()->mouseButton(nativeButton, false);
+            g_inputEmitter->mouseButton(nativeButton, true);
+            g_inputEmitter->mouseButton(nativeButton, false);
         }
         if (m_blockedMouseButtons.empty()) {
             m_hadTriggerSincePress = false;
@@ -167,9 +167,9 @@ bool MouseTriggerHandler::handleEvent(const PointerButtonEvent *event)
     return false;
 }
 
-bool MouseTriggerHandler::handleMotionEvent(const MotionEvent *event)
+bool MouseTriggerHandler::handleMotionEvent(const MotionEvent &event)
 {
-    const auto &delta = event->delta();
+    const auto &delta = event.delta();
     qCDebug(INPUTACTIONS_HANDLER_MOUSE).nospace() << "Event (type: PointerMotion, delta: " << delta << ")";
 
     if (m_pressTimeoutTimer.isActive()) {
@@ -206,9 +206,9 @@ bool MouseTriggerHandler::handleMotionEvent(const MotionEvent *event)
     return block;
 }
 
-bool MouseTriggerHandler::handleWheelEvent(const MotionEvent *event)
+bool MouseTriggerHandler::handleWheelEvent(const MotionEvent &event)
 {
-    const auto &delta = event->delta();
+    const auto &delta = event.delta();
     qCDebug(INPUTACTIONS_HANDLER_MOUSE).nospace() << "Event (type: Wheel, delta: " << delta << ")";
 
     if (!hasActiveTriggers(TriggerType::Wheel) && !activateTriggers(TriggerType::Wheel)) {
@@ -225,17 +225,17 @@ bool MouseTriggerHandler::handleWheelEvent(const MotionEvent *event)
         direction = SwipeDirection::Up;
     }
     DirectionalMotionTriggerUpdateEvent updateEvent;
-    updateEvent.setDelta(delta.x() != 0 ? delta.x() : delta.y());
-    updateEvent.setDirection(static_cast<TriggerDirection>(direction));
+    updateEvent.m_delta = delta.x() != 0 ? delta.x() : delta.y();
+    updateEvent.m_direction = static_cast<TriggerDirection>(direction);
 
-    const auto hasTriggers = updateTriggers(TriggerType::Wheel, &updateEvent);
+    const auto hasTriggers = updateTriggers(TriggerType::Wheel, updateEvent);
     bool continuous = false;
     for (const auto &trigger : activeTriggers(TriggerType::Wheel)) {
         if (static_cast<WheelTrigger *>(trigger)->continuous()) {
             continuous = true;
         }
     }
-    if (!continuous || (m_buttons.empty() && !Keyboard::instance()->modifiers())) {
+    if (!continuous || (m_buttons.empty() && !g_keyboard->modifiers())) {
         qCDebug(INPUTACTIONS_HANDLER_MOUSE, "Wheel trigger will end immediately");
         endTriggers(TriggerType::Wheel);
     }
@@ -244,19 +244,8 @@ bool MouseTriggerHandler::handleWheelEvent(const MotionEvent *event)
     return hasTriggers;
 }
 
-void MouseTriggerHandler::setMotionTimeout(const uint32_t &timeout)
+void MouseTriggerHandler::onActivatingTrigger(const Trigger *trigger)
 {
-    m_motionTimeout = timeout;
-}
-
-void MouseTriggerHandler::setPressTimeout(const uint32_t &timeout)
-{
-    m_pressTimeout = timeout;
-}
-
-void MouseTriggerHandler::triggerActivating(const Trigger *trigger)
-{
-    MotionTriggerHandler::triggerActivating(trigger);
     m_hadTriggerSincePress = true;
 }
 
@@ -267,16 +256,16 @@ std::unique_ptr<TriggerActivationEvent> MouseTriggerHandler::createActivationEve
     return event;
 }
 
-bool MouseTriggerHandler::shouldBlockMouseButton(const Qt::MouseButton &button)
+bool MouseTriggerHandler::shouldBlockMouseButton(Qt::MouseButton button)
 {
     const auto event = createActivationEvent();
     // A partial match is required, not an exact one
     event->mouseButtons = {};
-    for (const auto &trigger : triggers(TriggerType::All, event.get())) {
-        const auto buttons = trigger->mouseButtons();
-        if ((trigger->mouseButtonsExactOrder() && std::ranges::equal(m_buttons, buttons | std::views::take(m_buttons.size())))
-            || (!trigger->mouseButtonsExactOrder() && std::ranges::contains(buttons, button))) {
-            qCDebug(INPUTACTIONS_HANDLER_MOUSE).noquote().nospace() << "Mouse button blocked (button: " << button << ", trigger: " << trigger->id() << ")";
+    for (const auto &trigger : triggers(TriggerType::All, *event.get())) {
+        const auto buttons = trigger->m_mouseButtons;
+        if ((trigger->m_mouseButtonsExactOrder && std::ranges::equal(m_buttons, buttons | std::views::take(m_buttons.size())))
+            || (!trigger->m_mouseButtonsExactOrder && std::ranges::contains(buttons, button))) {
+            qCDebug(INPUTACTIONS_HANDLER_MOUSE).noquote().nospace() << "Mouse button blocked (button: " << button << ", trigger: " << trigger->m_id << ")";
             return true;
         }
     }
@@ -286,15 +275,10 @@ bool MouseTriggerHandler::shouldBlockMouseButton(const Qt::MouseButton &button)
 void MouseTriggerHandler::pressBlockedMouseButtons()
 {
     for (const auto &button : m_blockedMouseButtons) {
-        InputEmitter::instance()->mouseButton(button, true);
+        g_inputEmitter->mouseButton(button, true);
         qCDebug(INPUTACTIONS_HANDLER_MOUSE).nospace() << "Mouse button unblocked (button: " << button << ")";
     }
     m_blockedMouseButtons.clear();
-}
-
-void MouseTriggerHandler::setUnblockButtonsOnTimeout(const bool &unblock)
-{
-    m_unblockButtonsOnTimeout = unblock;
 }
 
 }

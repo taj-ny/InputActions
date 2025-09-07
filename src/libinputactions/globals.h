@@ -3,30 +3,6 @@
 #include <QLoggingCategory>
 #include <QObject>
 
-#define INPUTACTIONS_DECLARE_SINGLETON(T)                     \
-    public:                                                   \
-        static T *instance();                                 \
-        static void setInstance(std::shared_ptr<T> instance); \
-                                                              \
-    private:                                                  \
-        static std::shared_ptr<T> s_instance;
-
-#define INPUTACTIONS_SINGLETON_IMPL(T, DEFAULT)                   \
-    T *T::instance()                                              \
-    {                                                             \
-        return s_instance.get();                                  \
-    }                                                             \
-                                                                  \
-    void T::setInstance(std::shared_ptr<T> instance)              \
-    {                                                             \
-        s_instance = std::move(instance);                         \
-    }                                                             \
-                                                                  \
-    std::shared_ptr<T> T::s_instance = DEFAULT;
-
-#define INPUTACTIONS_SINGLETON(T) INPUTACTIONS_SINGLETON_IMPL(T, std::shared_ptr<T>(new T))
-#define INPUTACTIONS_SINGLETON_NODEFAULT(T) INPUTACTIONS_SINGLETON_IMPL(T, nullptr)
-
 Q_DECLARE_LOGGING_CATEGORY(INPUTACTIONS)
 
 namespace libinputactions
@@ -61,7 +37,8 @@ enum class TriggerSpeed
 };
 Q_ENUM_NS(TriggerSpeed)
 
-enum class TriggerType : uint32_t {
+enum class TriggerType : uint32_t
+{
     None = 0,
     Click = 1u << 0,
     Pinch = 1u << 1,
@@ -70,6 +47,9 @@ enum class TriggerType : uint32_t {
     Stroke = 1u << 4,
     Swipe = 1u << 5,
     Wheel = 1u << 6,
+    KeyboardShortcut = 1u << 7,
+    Tap = 1u << 8,
+    Hover = 1u << 9,
 
     PinchRotate = Pinch | Rotate,
     StrokeSwipe = Stroke | Swipe,
@@ -80,12 +60,15 @@ Q_ENUM_NS(TriggerType)
 Q_DECLARE_FLAGS(TriggerTypes, TriggerType)
 Q_DECLARE_OPERATORS_FOR_FLAGS(TriggerTypes)
 
-static inline TriggerType operator~(const TriggerType &value)
+static inline TriggerType operator~(TriggerType value)
 {
     return TriggerType(~static_cast<uint32_t>(value));
 }
 
 template<class... Ts>
-struct overloads : Ts... { using Ts::operator()...; };
+struct overloads : Ts...
+{
+    using Ts::operator()...;
+};
 
 }

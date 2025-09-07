@@ -18,51 +18,49 @@
 
 #pragma once
 
+#include <chrono>
 #include <libinputactions/handlers/MultiTouchMotionTriggerHandler.h>
 
 namespace libinputactions
 {
 
 /**
- * Handles touchpad triggers: click, pinch, press, rotate, stroke, swipe.
- *
- * Pinch triggers may not be detected correctly because libinput appears to be really bad at it. Five-finger triggers also do not work for some reason, even on
- * a touchpad with five slots.
- *
- * If the libevdev backend is not available, the finger count is fetched from libinput's gesture begin events and scroll events.
+ * Handles touchpad triggers: click, pinch, press, rotate, stroke, swipe, tap.
  */
 class TouchpadTriggerHandler : public MultiTouchMotionTriggerHandler
 {
 public:
     TouchpadTriggerHandler();
 
-    bool handleEvent(const InputEvent *event) override;
+    bool handleEvent(const InputEvent &event) override;
 
     /**
-     * @param value The time for the user to perform a click once a press gesture had been detected by libinput. If the click is not performed, the press
-     * gesture is activated.
+     * The time for the user to perform a click once a press gesture had been detected by libinput. If the click is not performed, the press trigger is
+     * activated.
      */
-    void setClickTimeout(const uint32_t &value);
+    std::chrono::milliseconds m_clickTimeout{200};
 
 private:
-    bool handleEvent(const PointerButtonEvent *event);
-    bool handleEvent(const TouchpadClickEvent *event);
-    bool handleEvent(const TouchpadGestureLifecyclePhaseEvent *event);
-    bool handleEvent(const TouchpadPinchEvent *event);
-    bool handleEvent(const TouchpadSlotEvent *event);
     /**
-     * The event is treated as two-finger motion. Will not work if edge scrolling is enabled.
+     * Treated as single-finger motion.
      */
-    bool handleScrollEvent(const MotionEvent *event);
-    bool handleSwipeEvent(const MotionEvent *event);
+    bool handleEvent(const MotionEvent &event);
+    bool handleEvent(const PointerButtonEvent &event);
+    void handleEvent(const TouchpadClickEvent &event);
+    bool handleEvent(const TouchpadGestureLifecyclePhaseEvent &event);
+    bool handleEvent(const TouchpadPinchEvent &event);
+    /**
+     * Treated as two-finger motion.
+     */
+    bool handleScrollEvent(const MotionEvent &event);
+    bool handleSwipeEvent(const MotionEvent &event);
 
-    bool m_scrollInProgress{};
+    std::set<uint32_t> m_blockedButtons;
+    bool m_gestureBeginBlocked{};
 
-    bool m_usesLibevdevBackend{};
-    bool m_clicked{};
-
-    uint32_t m_clickTimeout = 200;
     QTimer m_clickTimeoutTimer;
+
+    friend class TestTouchpadTriggerHandler;
 };
 
 }

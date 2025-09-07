@@ -18,13 +18,15 @@
 
 #pragma once
 
-#include <libinputactions/input/InputEventHandler.h>
-
 #include <QTimer>
 
 namespace libinputactions
 {
 
+class InputDevice;
+class InputDeviceProperties;
+class InputEvent;
+class InputEventHandler;
 class Stroke;
 
 /**
@@ -41,17 +43,15 @@ class Stroke;
  */
 class InputBackend
 {
-    INPUTACTIONS_DECLARE_SINGLETON(InputBackend)
-
 public:
-    virtual ~InputBackend() = default;
+    virtual ~InputBackend();
 
     void addEventHandler(std::unique_ptr<InputEventHandler> handler);
     /**
      * This method should be used in order to prevent feedback loops when input is being emitted.
      * @param value Whether to ignore all input events.
      */
-    void setIgnoreEvents(const bool &value);
+    void setIgnoreEvents(bool value);
     /**
      * Polls and handles events from all devices until there are no events left in the queue.
      */
@@ -94,7 +94,7 @@ protected:
      * Events with a nullptr sender will be ignored.
      * @returns Whether the event should be blocked.
      */
-    bool handleEvent(const InputEvent *event);
+    bool handleEvent(const InputEvent &event);
 
     void finishStrokeRecording();
 
@@ -111,5 +111,7 @@ private:
     std::vector<std::unique_ptr<InputDevice>> m_devices;
     std::map<QString, InputDeviceProperties> m_customDeviceProperties;
 };
+
+inline std::unique_ptr<InputBackend> g_inputBackend;
 
 }

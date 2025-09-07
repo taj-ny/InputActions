@@ -25,15 +25,15 @@ using namespace libinputactions;
 
 StandaloneInputEmitter::StandaloneInputEmitter()
 {
-    if (VirtualKeyboardUnstableV1::instance()->supported()) {
-        m_virtualKeyboardUnstableV1Keyboard = VirtualKeyboardUnstableV1::instance()->createKeyboard();
+    if (g_virtualKeyboardUnstableV1->supported()) {
+        m_virtualKeyboardUnstableV1Keyboard = g_virtualKeyboardUnstableV1->createKeyboard();
     }
-    if (WlrVirtualPointerUnstableV1::instance()->supported()) {
-        m_wlrVirtualPointerUnstableV1Pointer = WlrVirtualPointerUnstableV1::instance()->createPointer();
+    if (g_wlrVirtualPointerUnstableV1->supported()) {
+        m_wlrVirtualPointerUnstableV1Pointer = g_wlrVirtualPointerUnstableV1->createPointer();
     }
 }
 
-void StandaloneInputEmitter::keyboardKey(const uint32_t &key, const bool &state)
+void StandaloneInputEmitter::keyboardKey(uint32_t key, bool state)
 {
     if (m_virtualKeyboardUnstableV1Keyboard) {
         if (MODIFIERS.contains(key)) {
@@ -50,7 +50,7 @@ void StandaloneInputEmitter::keyboardKey(const uint32_t &key, const bool &state)
     }
 }
 
-void StandaloneInputEmitter::mouseButton(const uint32_t &button, const bool &state)
+void StandaloneInputEmitter::mouseButton(uint32_t button, bool state)
 {
     if (m_wlrVirtualPointerUnstableV1Pointer) {
         m_wlrVirtualPointerUnstableV1Pointer->button(button, state);

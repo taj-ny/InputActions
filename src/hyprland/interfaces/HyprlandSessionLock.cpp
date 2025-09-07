@@ -17,7 +17,6 @@
 */
 
 #include "HyprlandSessionLock.h"
-
 #include <hyprland/src/managers/SessionLockManager.hpp>
 
 bool HyprlandSessionLock::sessionLocked()

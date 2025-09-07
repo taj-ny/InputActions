@@ -1,8 +1,7 @@
 #pragma once
 
-#include <libinputactions/Range.h>
-
 #include <QTest>
+#include <libinputactions/Range.h>
 
 namespace libinputactions
 {

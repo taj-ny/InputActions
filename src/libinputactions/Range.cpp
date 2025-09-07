@@ -17,24 +17,22 @@
 */
 
 #include "Range.h"
-
-#include <limits>
-
 #include <QPointF>
+#include <limits>
 
 namespace libinputactions
 {
 
 template<typename T>
-Range<T>::Range(const T &minmax)
+Range<T>::Range(T minmax)
     : Range(minmax, minmax)
 {
 }
 
 template<typename T>
-Range<T>::Range(const std::optional<T> &min, const std::optional<T> &max)
-    : m_min(min)
-    , m_max(max)
+Range<T>::Range(std::optional<T> min, std::optional<T> max)
+    : m_min(std::move(min))
+    , m_max(std::move(max))
 {
 }
 
@@ -47,8 +45,7 @@ bool Range<T>::contains(const T &value) const
 template<>
 bool Range<QPointF>::contains(const QPointF &value) const
 {
-    return (!m_min || (value.x() >= m_min->x() && value.y() >= m_min->y()))
-        && (!m_max || (value.x() <= m_max->x() && value.y() <= m_max->y()));
+    return (!m_min || (value.x() >= m_min->x() && value.y() >= m_min->y())) && (!m_max || (value.x() <= m_max->x() && value.y() <= m_max->y()));
 }
 
 template<typename T>

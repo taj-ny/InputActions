@@ -22,18 +22,8 @@ namespace libinputactions
 {
 
 PressTrigger::PressTrigger()
+    : Trigger(TriggerType::Press)
 {
-    setType(TriggerType::Press);
-}
-
-const bool &PressTrigger::instant() const
-{
-    return m_instant;
-}
-
-void PressTrigger::setInstant(const bool &instant)
-{
-    m_instant = instant;
 }
 
 }

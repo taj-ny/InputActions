@@ -18,24 +18,25 @@
 
 #pragma once
 
-#include <libinputactions/conditions/Condition.h>
-#include <libinputactions/Range.h>
-
-#include <memory>
-
 #include <QLoggingCategory>
 #include <QPointF>
 #include <QString>
+#include <libinputactions/Range.h>
+#include <libinputactions/conditions/Condition.h>
+#include <memory>
 
 Q_DECLARE_LOGGING_CATEGORY(INPUTACTIONS_ACTION)
 
 namespace libinputactions
 {
 
+class Action;
+
 /**
  * The point of the trigger's lifecycle at which the action should be executed.
  */
-enum class On {
+enum class On
+{
     Begin,
     Cancel,
     End,
@@ -68,14 +69,14 @@ public:
     /**
      * @return Whether the specified delta matches the interval's direction.
      */
-    bool matches(const qreal &delta) const;
+    bool matches(qreal delta) const;
 
     const qreal &value() const;
     /**
      * @param value Will be converted to an absolute value. 0 means execute exactly once per input event, direction
      * still applies. Default is 0.
      */
-    void setValue(const qreal &value);
+    void setValue(qreal value);
 
     /**
      * @param direction Default is Any.
@@ -93,83 +94,59 @@ private:
 class TriggerAction
 {
 public:
-    virtual ~TriggerAction() = default;
+    /**
+     * @param action If nullptr, will be constructed.
+     */
+    TriggerAction(std::shared_ptr<Action> action = {});
+    virtual ~TriggerAction();
 
     /**
      * Called by the trigger.
      * @internal
      */
-    TEST_VIRTUAL void triggerStarted();
+    void triggerStarted();
     /**
      * Called by the trigger.
      * @internal
      */
-    TEST_VIRTUAL void triggerUpdated(const qreal &delta, const QPointF &deltaPointMultiplied);
+    void triggerUpdated(qreal delta, const QPointF &deltaPointMultiplied);
     /**
      * Called by the trigger.
      * @internal
      */
-    TEST_VIRTUAL void triggerEnded();
+    void triggerEnded();
     /**
      * Called by the trigger.
      * @internal
      */
-    TEST_VIRTUAL void triggerCancelled();
+    void triggerCancelled();
 
     /**
      * Executes the action if it can be executed.
      * @see canExecute
      */
-    TEST_VIRTUAL void tryExecute();
-    /**
-     * @return Whether the action had been executed during the trigger.
-     */
-    TEST_VIRTUAL const bool &executed() const;
+    void tryExecute();
     /**
      * @return Whether the condition and threshold are satisfied.
      */
-    TEST_VIRTUAL bool canExecute() const;
+    bool canExecute() const;
+
+    const Action *action() const;
 
     /**
-     * @param condition Must be satisfied in order for the action to be executed. To add multiple conditions, use a
-     * condition group.
+     * The point of the trigger's lifecycle at which the action should be executed.
      */
-    void setCondition(const std::shared_ptr<const Condition> &condition);
-
-    const QString &name() const;
+    On m_on = On::End;
     /**
-     * @param name Used in debug logs.
+     * How often and when an update action should repeat.
      */
-    void setName(const QString &name);
-
-    const On &on() const;
-    /**
-     * @param on The point of the trigger's lifecycle at which the action should be executed.
-     */
-    void setOn(const On &on);
-
-    /**
-     * @param interval How often and when an update action should repeat.
-     */
-    void setRepeatInterval(const ActionInterval &interval);
-
+    ActionInterval m_interval;
     /**
      * Sets how far the trigger needs to progress in order for the action to be executed. Thresholds are always
      * positive.
      * @remark Begin actions can't have thresholds. Set the threshold on the trigger instead.
      */
-    void setThreshold(const Range<qreal> &threshold);
-
-protected:
-    TriggerAction() = default;
-
-    /**
-     * Executes the action without checking conditions.
-     */
-    virtual void execute() {};
-
-    // This is just a quick way to get directionless swipe gestures working
-    QPointF m_currentDeltaPointMultiplied;
+    std::optional<Range<qreal>> m_threshold;
 
 private:
     /**
@@ -177,12 +154,7 @@ private:
      */
     void reset();
 
-    QString m_name = "Unnamed action";
-    On m_on = On::End;
-    ActionInterval m_interval;
-    std::optional<Range<qreal>> m_threshold;
-    std::optional<std::shared_ptr<const Condition>> m_condition;
-    bool m_executed{};
+    std::shared_ptr<Action> m_action;
 
     /**
      * The sum of deltas from update events. Reset when the direction changes.

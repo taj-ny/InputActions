@@ -39,46 +39,43 @@ class MouseTriggerHandler : public MotionTriggerHandler
 public:
     MouseTriggerHandler();
 
-    bool handleEvent(const InputEvent *event) override;
+    bool handleEvent(const InputEvent &event) override;
 
     /**
-     * The amount of time in milliseconds the handler will wait for motion to be performed (wheel is considered motion
-     * as well) before attempting to activate press triggers. For pointer motion there is a small threshold to prevent
-     * accidental activations.
+     * The amount of time in the handler will wait for motion to be performed (wheel is considered motion as well) before attempting to activate press triggers.
+     * For pointer motion there is a small threshold to prevent accidental activations.
      */
-    void setMotionTimeout(const uint32_t &timeout);
+    std::chrono::milliseconds m_motionTimeout{200};
     /**
-     * The amount of time in milliseconds the handler will wait for all mouse buttons to be pressed before activating
-     * press triggers.
+     * The amount of time the handler will wait for all mouse buttons to be pressed before activating press triggers.
      */
-    void setPressTimeout(const uint32_t &timeout);
-
+    std::chrono::milliseconds m_pressTimeout{50};
     /**
-     * @param unblock Whether blocked mouse buttons should be pressed immediately on timeout. If false, they will be
-     * pressed and instantly released on button release.
+     * Whether blocked mouse buttons should be pressed immediately on timeout. If false, they will be pressed and instantly released on button release.
      */
-    void setUnblockButtonsOnTimeout(const bool &unblock);
+    bool m_unblockButtonsOnTimeout = true;
 
 protected:
-    void triggerActivating(const Trigger *trigger) override;
-
     /**
      * This implementation sets mouse buttons.
      * @see TriggerHandler::createActivationEvent
      */
     std::unique_ptr<TriggerActivationEvent> createActivationEvent() const override;
 
+private slots:
+    void onActivatingTrigger(const Trigger *trigger);
+
 private:
-    bool handleEvent(const PointerButtonEvent *event);
-    bool handleMotionEvent(const MotionEvent *event);
-    bool handleWheelEvent(const MotionEvent *event);
+    bool handleEvent(const PointerButtonEvent &event);
+    bool handleMotionEvent(const MotionEvent &event);
+    bool handleWheelEvent(const MotionEvent &event);
 
     /**
      * Checks whether there is an activatable trigger that uses the specified button. Mouse buttons are ignored when
      * checking activatibility. If a trigger has multiple buttons, all of them will be blocked, even if only one was
      * pressed.
      */
-    bool shouldBlockMouseButton(const Qt::MouseButton &button);
+    bool shouldBlockMouseButton(Qt::MouseButton button);
     /**
      * Presses all currently blocked mouse buttons without releasing them.
      */
@@ -89,9 +86,7 @@ private:
      * one button.
      */
     QTimer m_pressTimeoutTimer;
-    uint32_t m_pressTimeout = 50;
     QTimer m_motionTimeoutTimer;
-    uint32_t m_motionTimeout = 200;
 
     /**
      * Activation event for the last button press.
@@ -105,9 +100,8 @@ private:
      */
     bool m_hadTriggerSincePress = false;
 
-    QList<quint32> m_blockedMouseButtons;
+    QList<uint32_t> m_blockedMouseButtons;
     std::vector<Qt::MouseButton> m_buttons;
-    bool m_unblockButtonsOnTimeout = true;
 };
 
 }

@@ -69,7 +69,7 @@ void EvdevInputEmitter::reset()
 
 void EvdevInputEmitter::keyboardClearModifiers()
 {
-    const auto modifiers = Keyboard::instance()->modifiers();
+    const auto modifiers = g_keyboard->modifiers();
     for (const auto &[key, modifier] : MODIFIERS) {
         if (modifiers & modifier) {
             keyboardKey(key, false);
@@ -77,13 +77,13 @@ void EvdevInputEmitter::keyboardClearModifiers()
     }
 }
 
-void EvdevInputEmitter::keyboardKey(const uint32_t &key, const bool &state)
+void EvdevInputEmitter::keyboardKey(uint32_t key, bool state)
 {
     uinputEmit(m_keyboardFd, EV_KEY, key, state);
     uinputEmit(m_keyboardFd, EV_SYN, SYN_REPORT);
 }
 
-void EvdevInputEmitter::mouseButton(const uint32_t &button, const bool &state)
+void EvdevInputEmitter::mouseButton(uint32_t button, bool state)
 {
     uinputEmit(m_mouseFd, EV_KEY, button, state);
     uinputEmit(m_mouseFd, EV_SYN, SYN_REPORT);

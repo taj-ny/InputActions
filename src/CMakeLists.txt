@@ -4,19 +4,26 @@ find_package(yaml-cpp REQUIRED)
 pkg_search_module(LIBEVDEV REQUIRED libevdev)
 
 set(libinputactions_SRCS
-    libinputactions/actions/CommandTriggerAction.cpp
-    libinputactions/actions/InputTriggerAction.cpp
-    libinputactions/actions/OneTriggerActionGroup.cpp
-    libinputactions/actions/PlasmaGlobalShortcutTriggerAction.cpp
+    libinputactions/actions/Action.cpp
+    libinputactions/actions/ActionExecutor.cpp
+    libinputactions/actions/ActionGroup.cpp
+    libinputactions/actions/CommandAction.cpp
+    libinputactions/actions/CustomAction.cpp
+    libinputactions/actions/InputAction.cpp
+    libinputactions/actions/PlasmaGlobalShortcutAction.cpp
+    libinputactions/actions/SleepAction.cpp
     libinputactions/actions/TriggerAction.cpp
-    libinputactions/actions/TriggerActionGroup.cpp
-    libinputactions/conditions/CallbackCondition.cpp
+    libinputactions/config/Config.cpp
+    libinputactions/config/yaml.h
     libinputactions/conditions/Condition.cpp
     libinputactions/conditions/ConditionGroup.cpp
+    libinputactions/conditions/CustomCondition.cpp
     libinputactions/conditions/VariableCondition.cpp
+    libinputactions/handlers/KeyboardTriggerHandler.cpp
     libinputactions/handlers/MotionTriggerHandler.cpp
     libinputactions/handlers/MouseTriggerHandler.cpp
     libinputactions/handlers/MultiTouchMotionTriggerHandler.cpp
+    libinputactions/handlers/PointerTriggerHandler.cpp
     libinputactions/handlers/TouchpadTriggerHandler.cpp
     libinputactions/handlers/TriggerHandler.cpp
     libinputactions/input/backends/InputBackend.cpp
@@ -26,31 +33,35 @@ set(libinputactions_SRCS
     libinputactions/input/events.cpp
     libinputactions/input/InputEventHandler.cpp
     libinputactions/input/Keyboard.cpp
-    libinputactions/interfaces/CursorShapeProvider.cpp
+    libinputactions/interfaces/CursorShapeProvider.h
     libinputactions/interfaces/InputEmitter.cpp
-    libinputactions/interfaces/OnScreenMessageManager.cpp
-    libinputactions/interfaces/PointerPositionGetter.cpp
-    libinputactions/interfaces/PointerPositionSetter.cpp
-    libinputactions/interfaces/SessionLock.cpp
-    libinputactions/interfaces/Window.cpp
+    libinputactions/interfaces/OnScreenMessageManager.h
+    libinputactions/interfaces/PointerPositionGetter.h
+    libinputactions/interfaces/PointerPositionSetter.h
+    libinputactions/interfaces/SessionLock.h
+    libinputactions/interfaces/Window.h
     libinputactions/interfaces/WindowProvider.cpp
     libinputactions/triggers/DirectionalMotionTrigger.cpp
+    libinputactions/triggers/HoverTrigger.cpp
+    libinputactions/triggers/KeyboardShortcutTrigger.cpp
     libinputactions/triggers/MotionTrigger.cpp
     libinputactions/triggers/PressTrigger.cpp
     libinputactions/triggers/StrokeTrigger.cpp
     libinputactions/triggers/Trigger.cpp
     libinputactions/triggers/WheelTrigger.cpp
+    libinputactions/variables/LocalVariable.cpp
+    libinputactions/variables/RemoteVariable.cpp
     libinputactions/variables/VariableManager.cpp
     libinputactions/variables/VariableOperations.cpp
     libinputactions/variables/Variable.cpp
-    libinputactions/Config.cpp
+    libinputactions/variables/VariableWrapper.h
     libinputactions/DBusInterface.cpp
-    libinputactions/Expression.cpp
     libinputactions/globals.cpp
+    libinputactions/InputActions.cpp
+    libinputactions/InterpolatedString.cpp
     libinputactions/Range.cpp
     libinputactions/Resettable.h
     libinputactions/Value.cpp
-    libinputactions/yaml_convert.h
 )
 
 add_library(libinputactions STATIC ${libinputactions_SRCS})

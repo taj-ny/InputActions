@@ -30,7 +30,7 @@ namespace libinputactions
 class WheelTrigger : public DirectionalMotionTrigger
 {
 public:
-    WheelTrigger();
+    WheelTrigger(TriggerDirection direction);
 
     bool continuous() const;
 

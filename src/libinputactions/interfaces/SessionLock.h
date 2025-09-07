@@ -18,15 +18,13 @@
 
 #pragma once
 
-#include <libinputactions/globals.h>
+#include <memory>
 
 namespace libinputactions
 {
 
 class SessionLock
 {
-    INPUTACTIONS_DECLARE_SINGLETON(SessionLock)
-
 public:
     SessionLock() = default;
     virtual ~SessionLock() = default;
@@ -34,7 +32,12 @@ public:
     /**
      * @returns Whether the current session is locked.
      */
-    virtual bool sessionLocked();
+    virtual bool sessionLocked()
+    {
+        return false;
+    };
 };
+
+inline std::shared_ptr<SessionLock> g_sessionLock;
 
 }

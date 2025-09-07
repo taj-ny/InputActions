@@ -18,27 +18,21 @@
 
 #pragma once
 
-#include <libinputactions/globals.h>
-
-#include <memory>
-
-#include <QPointF>
+#include <QString>
 
 namespace libinputactions
 {
 
 class OnScreenMessageManager
 {
-    INPUTACTIONS_DECLARE_SINGLETON(OnScreenMessageManager)
-
 public:
+    OnScreenMessageManager() = default;
     virtual ~OnScreenMessageManager() = default;
 
-    virtual void showMessage(const QString &message);
-    virtual void hideMessage();
-
-protected:
-    OnScreenMessageManager() = default;
+    virtual void showMessage(const QString &message) {};
+    virtual void hideMessage() {};
 };
+
+inline std::shared_ptr<OnScreenMessageManager> g_onScreenMessageManager;
 
 }
