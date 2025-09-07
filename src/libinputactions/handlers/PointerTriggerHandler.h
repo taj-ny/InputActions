@@ -18,7 +18,6 @@
 
 #pragma once
 
-#include <chrono>
 #include "TriggerHandler.h"
 
 namespace libinputactions
@@ -30,6 +29,8 @@ public:
     PointerTriggerHandler() = default;
 
     bool handleEvent(const InputEvent &event) override;
+
+    friend class TestPointerTriggerHandler;
 };
 
 }

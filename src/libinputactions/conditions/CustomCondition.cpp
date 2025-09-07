@@ -16,24 +16,19 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include "HoverTrigger.h"
+#include "CustomCondition.h"
 
 namespace libinputactions
 {
 
-HoverTrigger::HoverTrigger()
-    : Trigger(TriggerType::Hover)
+CustomCondition::CustomCondition(std::function<bool()> function)
+    : m_function(std::move(function))
 {
 }
 
-bool HoverTrigger::canUpdate(const TriggerUpdateEvent &event) const
+bool CustomCondition::satisfiedInternal() const
 {
-    return Trigger::canUpdate(event) && (!m_activationCondition || m_activationCondition->satisfied());
-}
-
-bool HoverTrigger::endIfCannotUpdate() const
-{
-    return true;
+    return m_function();
 }
 
 }

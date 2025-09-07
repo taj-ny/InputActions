@@ -17,6 +17,7 @@ set(libinputactions_SRCS
     libinputactions/config/yaml.h
     libinputactions/conditions/Condition.cpp
     libinputactions/conditions/ConditionGroup.cpp
+    libinputactions/conditions/CustomCondition.cpp
     libinputactions/conditions/VariableCondition.cpp
     libinputactions/handlers/KeyboardTriggerHandler.cpp
     libinputactions/handlers/MotionTriggerHandler.cpp

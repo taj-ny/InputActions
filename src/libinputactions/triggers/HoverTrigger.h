@@ -29,6 +29,7 @@ public:
     HoverTrigger();
 
     bool canUpdate(const TriggerUpdateEvent &event) const override;
+    bool endIfCannotUpdate() const override;
 };
 
 }
