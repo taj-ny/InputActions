@@ -18,13 +18,17 @@
 
 #pragma once
 
-#include <libinputactions/interfaces/WindowProvider.h>
+#include "WaylandProtocol.h"
 
-class KWinWindowProvider : public libinputactions::WindowProvider
+class WaylandProtocolManager
 {
 public:
-    KWinWindowProvider() = default;
+    WaylandProtocolManager(wl_registry *registry);
 
-    std::shared_ptr<libinputactions::Window> activeWindow() override;
-    std::shared_ptr<libinputactions::Window> windowUnderPointer() override;
+    void addProtocol(WaylandProtocol *protocol);
+
+private:
+    static void handleGlobal(void *data, wl_registry *registry, uint32_t name, const char *interface, uint32_t version);
+
+    std::vector<WaylandProtocol *> m_protocols;
 };

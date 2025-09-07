@@ -16,15 +16,17 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#pragma once
+#include "InputEmitter.h"
+#include <libinputactions/input/Keyboard.h>
 
-#include <libinputactions/interfaces/WindowProvider.h>
-
-class KWinWindowProvider : public libinputactions::WindowProvider
+namespace libinputactions
 {
-public:
-    KWinWindowProvider() = default;
 
-    std::shared_ptr<libinputactions::Window> activeWindow() override;
-    std::shared_ptr<libinputactions::Window> windowUnderPointer() override;
-};
+InputEmitter::InputEmitter()
+{
+    for (const auto &[key, _] : MODIFIERS) {
+        m_keyboardRequiredKeys.insert(key);
+    }
+}
+
+}

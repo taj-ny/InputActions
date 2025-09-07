@@ -19,15 +19,17 @@
 #pragma once
 
 #include <QPointF>
+#include <libinputactions/globals.h>
+#include <libinputactions/Resettable.h>
 #include <memory>
 
 namespace libinputactions
 {
 
-class InputEmitter
+class InputEmitter : public Resettable
 {
 public:
-    InputEmitter() = default;
+    InputEmitter();
     virtual ~InputEmitter() = default;
 
     virtual void keyboardClearModifiers() {};
@@ -47,6 +49,13 @@ public:
 
     virtual void touchpadPinchBegin(uint8_t fingers) {};
     virtual void touchpadSwipeBegin(uint8_t fingers) {};
+
+    /**
+     * The implementation may require that all keys that will be used must be registered before initialization.
+     * Modifier keys are added by default. InputTriggerAction will call this on construction.
+     * May be called multiple times with the same key.
+     */
+    std::set<uint32_t> m_keyboardRequiredKeys;
 };
 
 inline std::shared_ptr<InputEmitter> g_inputEmitter;

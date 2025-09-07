@@ -16,15 +16,14 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#pragma once
+#include "StandaloneWindowProvider.h"
 
-#include <libinputactions/interfaces/WindowProvider.h>
+#include "protocols/WlrForeignToplevelManagementV1.h"
 
-class KWinWindowProvider : public libinputactions::WindowProvider
+std::shared_ptr<libinputactions::Window> StandaloneWindowProvider::activeWindow()
 {
-public:
-    KWinWindowProvider() = default;
-
-    std::shared_ptr<libinputactions::Window> activeWindow() override;
-    std::shared_ptr<libinputactions::Window> windowUnderPointer() override;
-};
+    if (g_wlrForeignToplevelManagementV1->supported()) {
+        return g_wlrForeignToplevelManagementV1->activeWindow();
+    }
+    return {};
+}

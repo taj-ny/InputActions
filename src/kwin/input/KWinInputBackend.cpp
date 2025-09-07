@@ -68,7 +68,7 @@ void KWinInputBackend::reset()
         deviceRemoved(device.libinputactionsDevice.get());
     }
     m_devices.clear();
-    LibinputCompositorInputBackend::reset();
+    LibinputIndirectInputBackend::reset();
 }
 
 bool KWinInputBackend::holdGestureBegin(int fingerCount, std::chrono::microseconds time)
@@ -129,20 +129,20 @@ bool KWinInputBackend::pinchGestureCancelled(std::chrono::microseconds time)
 #ifdef KWIN_6_3_OR_GREATER
 bool KWinInputBackend::pointerMotion(KWin::PointerMotionEvent *event)
 {
-    return LibinputCompositorInputBackend::pointerMotion(findInputActionsDevice(event->device), event->delta, event->deltaUnaccelerated);
+    return LibinputIndirectInputBackend::pointerMotion(findInputActionsDevice(event->device), event->delta, event->deltaUnaccelerated);
 }
 
 bool KWinInputBackend::pointerButton(KWin::PointerButtonEvent *event)
 {
-    return LibinputCompositorInputBackend::pointerButton(findInputActionsDevice(event->device),
-                                                         event->button,
-                                                         event->nativeButton,
-                                                         event->state == PointerButtonStatePressed);
+    return LibinputIndirectInputBackend::pointerButton(findInputActionsDevice(event->device),
+                                                       event->button,
+                                                       event->nativeButton,
+                                                       event->state == PointerButtonStatePressed);
 }
 
 bool KWinInputBackend::keyboardKey(KWin::KeyboardKeyEvent *event)
 {
-    return LibinputCompositorInputBackend::keyboardKey(findInputActionsDevice(event->device), event->nativeScanCode, event->state == KeyboardKeyStatePressed);
+    return LibinputIndirectInputBackend::keyboardKey(findInputActionsDevice(event->device), event->nativeScanCode, event->state == KeyboardKeyStatePressed);
 }
 #endif
 
@@ -166,7 +166,7 @@ bool KWinInputBackend::wheelEvent(KWin::WheelEvent *event)
     if (inverted) {
         delta *= -1;
     }
-    return LibinputCompositorInputBackend::pointerAxis(findInputActionsDevice(device), delta);
+    return LibinputIndirectInputBackend::pointerAxis(findInputActionsDevice(device), delta);
 }
 
 void KWinInputBackend::kwinDeviceAdded(KWin::InputDevice *kwinDevice)

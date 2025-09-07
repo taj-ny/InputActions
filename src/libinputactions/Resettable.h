@@ -16,15 +16,17 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#pragma once
+namespace libinputactions
+{
 
-#include <libinputactions/interfaces/WindowProvider.h>
-
-class KWinWindowProvider : public libinputactions::WindowProvider
+/**
+ * An object that can be reset and re-initialized later with possibly different parameters.
+ */
+class Resettable
 {
 public:
-    KWinWindowProvider() = default;
-
-    std::shared_ptr<libinputactions::Window> activeWindow() override;
-    std::shared_ptr<libinputactions::Window> windowUnderPointer() override;
+    virtual void initialize() {};
+    virtual void reset() {};
 };
+
+}

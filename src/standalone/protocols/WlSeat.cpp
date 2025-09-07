@@ -16,15 +16,26 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#pragma once
+#include "WlSeat.h"
 
-#include <libinputactions/interfaces/WindowProvider.h>
-
-class KWinWindowProvider : public libinputactions::WindowProvider
+WlSeat::WlSeat()
+    : WaylandProtocol(wl_seat_interface.name)
 {
-public:
-    KWinWindowProvider() = default;
+}
 
-    std::shared_ptr<libinputactions::Window> activeWindow() override;
-    std::shared_ptr<libinputactions::Window> windowUnderPointer() override;
-};
+WlSeat::~WlSeat()
+{
+    if (m_seat) {
+        wl_seat_destroy(m_seat);
+    }
+}
+
+wl_seat *WlSeat::seat()
+{
+    return m_seat;
+}
+
+void WlSeat::bind(wl_registry *registry, uint32_t name)
+{
+    m_seat = static_cast<wl_seat *>(wl_registry_bind(registry, name, &wl_seat_interface, 9));
+}

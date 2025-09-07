@@ -23,7 +23,7 @@
 #include <hyprland/src/devices/IPointer.hpp>
 #include <hyprland/src/plugins/HookSystem.hpp>
 #undef HANDLE
-#include <libinputactions/input/backends/LibinputCompositorInputBackend.h>
+#include <libinputactions/input/backends/LibinputIndirectInputBackend.h>
 
 namespace libinputactions
 {
@@ -42,7 +42,7 @@ struct HyprlandInputDevice
  */
 class HyprlandInputBackend
     : public QObject
-    , public libinputactions::LibinputCompositorInputBackend
+    , public libinputactions::LibinputIndirectInputBackend
 {
 public:
     HyprlandInputBackend(void *handle);

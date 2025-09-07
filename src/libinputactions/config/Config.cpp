@@ -23,6 +23,7 @@
 #include <QStandardPaths>
 #include <fcntl.h>
 #include <libinputactions/input/backends/LibevdevComplementaryInputBackend.h>
+#include <libinputactions/interfaces/InputEmitter.h>
 #include <sys/inotify.h>
 
 namespace libinputactions
@@ -121,12 +122,16 @@ std::optional<QString> Config::load(bool firstLoad)
             }
 
             g_inputBackend->reset();
+            g_inputEmitter->reset();
+
             for (auto &eventHandler : eventHandlers) {
                 g_inputBackend->addEventHandler(std::move(eventHandler));
             }
             for (auto &[device, properties] : customDeviceProperties) {
                 g_inputBackend->addCustomDeviceProperties(device, properties);
             }
+
+            g_inputEmitter->initialize();
             g_inputBackend->initialize();
         } catch (const YAML::Exception &e) {
             const auto message = QString("Failed to load configuration: %1 (line %2, column %3)")

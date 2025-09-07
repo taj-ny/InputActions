@@ -18,13 +18,35 @@
 
 #pragma once
 
-#include <libinputactions/interfaces/WindowProvider.h>
+#include <libinputactions/input/backends/LibinputIndirectInputBackend.h>
 
-class KWinWindowProvider : public libinputactions::WindowProvider
+#include <libinput.h>
+#include <libudev.h>
+
+struct LibinputInputDevice
+{
+    libinput_device *libinputDevice;
+    std::unique_ptr<libinputactions::InputDevice> libinputactionsDevice;
+};
+
+class LibinputInputBackend : public libinputactions::LibinputIndirectInputBackend
 {
 public:
-    KWinWindowProvider() = default;
+    LibinputInputBackend();
+    ~LibinputInputBackend() override;
 
-    std::shared_ptr<libinputactions::Window> activeWindow() override;
-    std::shared_ptr<libinputactions::Window> windowUnderPointer() override;
+    void initialize() override;
+    void reset() override;
+
+    void poll() override;
+
+private:
+    libinput_interface m_libinputInterface;
+    libinput *m_libinput{};
+    udev *m_udev{};
+
+    std::vector<LibinputInputDevice> m_devices;
+
+    static int openRestricted(const char *path, int flags, void *data);
+    static void close_restricted(int fd, void *data);
 };

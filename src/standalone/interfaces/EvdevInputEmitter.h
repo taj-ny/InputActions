@@ -18,13 +18,30 @@
 
 #pragma once
 
-#include <libinputactions/interfaces/WindowProvider.h>
+#include <libinputactions/interfaces/InputEmitter.h>
 
-class KWinWindowProvider : public libinputactions::WindowProvider
+class EvdevInputEmitter : public libinputactions::InputEmitter
 {
 public:
-    KWinWindowProvider() = default;
+    ~EvdevInputEmitter() override;
 
-    std::shared_ptr<libinputactions::Window> activeWindow() override;
-    std::shared_ptr<libinputactions::Window> windowUnderPointer() override;
+    void initialize() override;
+    void reset() final;
+
+    void keyboardClearModifiers() override;
+    void keyboardKey(uint32_t key, bool state) override;
+
+    void mouseButton(uint32_t button, bool state) override;
+    void mouseMoveRelative(const QPointF &pos) override;
+
+private:
+    /**
+     * Destroys the device, closes the fd and sets it to -1.
+     */
+    static void uinputDestroyDevice(int &fd);
+    static void uinputEmit(int fd, uint16_t type, uint16_t code, int32_t value = 0);
+
+    int m_keyboardFd = -1;
+    int m_mouseFd = -1;
+    QPointF m_mouseDelta;
 };

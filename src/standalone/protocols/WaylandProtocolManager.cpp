@@ -16,15 +16,28 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#pragma once
+#include "WaylandProtocolManager.h"
 
-#include <libinputactions/interfaces/WindowProvider.h>
-
-class KWinWindowProvider : public libinputactions::WindowProvider
+WaylandProtocolManager::WaylandProtocolManager(wl_registry *registry)
 {
-public:
-    KWinWindowProvider() = default;
+    static const wl_registry_listener listener{
+        &WaylandProtocolManager::handleGlobal
+    };
+    wl_registry_add_listener(registry, &listener, this);
+}
 
-    std::shared_ptr<libinputactions::Window> activeWindow() override;
-    std::shared_ptr<libinputactions::Window> windowUnderPointer() override;
-};
+void WaylandProtocolManager::addProtocol(WaylandProtocol *protocol)
+{
+    m_protocols.push_back(protocol);
+}
+
+void WaylandProtocolManager::handleGlobal(void *data, wl_registry *registry, uint32_t name, const char *interface, uint32_t version)
+{
+    auto *self = static_cast<WaylandProtocolManager *>(data);
+    for (auto *protocol : self->m_protocols) {
+        if (strcmp(interface, protocol->name().toStdString().c_str()) == 0) {
+            protocol->bind(registry, name);
+            return;
+        }
+    }
+}

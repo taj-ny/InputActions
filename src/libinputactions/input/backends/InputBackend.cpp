@@ -89,6 +89,12 @@ void InputBackend::deviceRemoved(const InputDevice *device)
     qCDebug(INPUTACTIONS).noquote().nospace() << "Device removed (name: " << device->name() << ")";
 }
 
+bool InputBackend::isDeviceBlacklisted(const QString &name)
+{
+    static const std::set<QString> blacklist = { QStringLiteral("inputactions"), QStringLiteral("inputactions_keyboard"), QStringLiteral("inputactions_mouse") };
+    return blacklist.contains(name);
+}
+
 bool InputBackend::handleEvent(const InputEvent &event)
 {
     if (!event.sender() || g_sessionLock->sessionLocked()) {
