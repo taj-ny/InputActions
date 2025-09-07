@@ -22,6 +22,7 @@ set(libinputactions_SRCS
     libinputactions/handlers/MotionTriggerHandler.cpp
     libinputactions/handlers/MouseTriggerHandler.cpp
     libinputactions/handlers/MultiTouchMotionTriggerHandler.cpp
+    libinputactions/handlers/PointerTriggerHandler.cpp
     libinputactions/handlers/TouchpadTriggerHandler.cpp
     libinputactions/handlers/TriggerHandler.cpp
     libinputactions/input/backends/InputBackend.cpp
@@ -40,6 +41,7 @@ set(libinputactions_SRCS
     libinputactions/interfaces/Window.h
     libinputactions/interfaces/WindowProvider.cpp
     libinputactions/triggers/DirectionalMotionTrigger.cpp
+    libinputactions/triggers/HoverTrigger.cpp
     libinputactions/triggers/KeyboardShortcutTrigger.cpp
     libinputactions/triggers/MotionTrigger.cpp
     libinputactions/triggers/PressTrigger.cpp

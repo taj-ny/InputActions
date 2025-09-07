@@ -33,10 +33,12 @@
 #include <libinputactions/conditions/VariableCondition.h>
 #include <libinputactions/handlers/KeyboardTriggerHandler.h>
 #include <libinputactions/handlers/MouseTriggerHandler.h>
+#include <libinputactions/handlers/PointerTriggerHandler.h>
 #include <libinputactions/handlers/TouchpadTriggerHandler.h>
 #include <libinputactions/input/InputEventHandler.h>
 #include <libinputactions/input/Keyboard.h>
 #include <libinputactions/interfaces/CursorShapeProvider.h>
+#include <libinputactions/triggers/HoverTrigger.h>
 #include <libinputactions/triggers/KeyboardShortcutTrigger.h>
 #include <libinputactions/triggers/PressTrigger.h>
 #include <libinputactions/triggers/StrokeTrigger.h>
@@ -828,6 +830,11 @@ struct convert<std::vector<std::unique_ptr<InputEventHandler>>>
                 handlers.push_back(std::make_unique<InputEventHandler>(touchpadHandler.as<std::unique_ptr<TouchpadTriggerHandler>>()));
             }
         }
+        if (const auto &pointerNode = node["pointer"]) {
+            for (const auto &pointerHandler : asSequence(pointerNode)) {
+                handlers.push_back(std::make_unique<InputEventHandler>(pointerHandler.as<std::unique_ptr<PointerTriggerHandler>>()));
+            }
+        }
         return true;
     }
 };
@@ -902,6 +909,8 @@ struct convert<std::unique_ptr<Trigger>>
             auto pressTrigger = new PressTrigger;
             loadMember(pressTrigger->m_instant, node["instant"]);
             trigger.reset(pressTrigger);
+        } else if (type == "hover") {
+            trigger = std::make_unique<HoverTrigger>();
         } else if (type == "pinch") {
             trigger = std::make_unique<DirectionalMotionTrigger>(TriggerType::Pinch, static_cast<TriggerDirection>(node["direction"].as<PinchDirection>()));
         } else if (type == "rotate") {
@@ -1124,6 +1133,17 @@ struct convert<std::unique_ptr<MouseTriggerHandler>>
         loadMember(mouseTriggerHandler->m_pressTimeout, node["press_timeout"]);
         loadMember(mouseTriggerHandler->m_unblockButtonsOnTimeout, node["unblock_buttons_on_timeout"]);
 
+        return true;
+    }
+};
+
+template<>
+struct convert<std::unique_ptr<PointerTriggerHandler>>
+{
+    static bool decode(const Node &node, std::unique_ptr<PointerTriggerHandler> &handler)
+    {
+        handler = std::make_unique<PointerTriggerHandler>();
+        decodeTriggerHandler(node, handler.get());
         return true;
     }
 };

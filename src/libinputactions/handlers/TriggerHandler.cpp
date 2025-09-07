@@ -24,7 +24,7 @@ Q_LOGGING_CATEGORY(INPUTACTIONS_HANDLER_TRIGGER, "inputactions.handler.trigger",
 namespace libinputactions
 {
 
-static const std::vector<TriggerType> TIMED_TRIGGERS = {TriggerType::Click, TriggerType::KeyboardShortcut, TriggerType::Press};
+static const std::vector<TriggerType> TIMED_TRIGGERS = {TriggerType::Click, TriggerType::KeyboardShortcut, TriggerType::Hover, TriggerType::Press};
 
 TriggerHandler::TriggerHandler()
 {
