@@ -56,6 +56,11 @@ bool Trigger::canUpdate(const TriggerUpdateEvent &event) const
     return true;
 }
 
+bool Trigger::endIfCannotUpdate() const
+{
+    return false;
+}
+
 void Trigger::update(const TriggerUpdateEvent &event)
 {
     m_absoluteAccumulatedDelta += std::abs(event.m_delta);
@@ -110,6 +115,7 @@ void Trigger::end()
     for (const auto &action : m_actions) {
         action->triggerEnded();
     }
+    Q_EMIT ended();
     reset();
 }
 

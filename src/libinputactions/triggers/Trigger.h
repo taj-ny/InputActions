@@ -74,6 +74,10 @@ public:
      */
     virtual bool canUpdate(const TriggerUpdateEvent &event) const;
     /**
+     * Whether the trigger should be ended and not cancelled if canUpdate returns false.
+     */
+    virtual bool endIfCannotUpdate() const;
+    /**
      * @internal
      */
     TEST_VIRTUAL void update(const TriggerUpdateEvent &event);
@@ -159,6 +163,10 @@ public:
     bool m_mouseButtonsExactOrder{};
 
     const TriggerType &type() const;
+
+signals:
+    void activated();
+    void ended();
 
 protected:
     /**

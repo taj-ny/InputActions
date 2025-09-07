@@ -24,7 +24,7 @@ Q_LOGGING_CATEGORY(INPUTACTIONS_HANDLER_TRIGGER, "inputactions.handler.trigger",
 namespace libinputactions
 {
 
-static const std::vector<TriggerType> TIMED_TRIGGERS = {TriggerType::Click, TriggerType::KeyboardShortcut, TriggerType::Press};
+static const std::vector<TriggerType> TIMED_TRIGGERS = {TriggerType::Click, TriggerType::KeyboardShortcut, TriggerType::Hover, TriggerType::Press};
 
 TriggerHandler::TriggerHandler()
 {
@@ -77,6 +77,7 @@ bool TriggerHandler::activateTriggers(TriggerTypes types, const TriggerActivatio
 
     for (auto &trigger : triggers(types, event)) {
         Q_EMIT activatingTrigger(trigger);
+        Q_EMIT trigger->activated();
         m_activeTriggers.push_back(trigger);
         qCDebug(INPUTACTIONS_HANDLER_TRIGGER).noquote() << QString("Trigger activated (id: %1)").arg(trigger->m_id);
     }
@@ -113,7 +114,11 @@ bool TriggerHandler::updateTriggers(const std::map<TriggerType, const TriggerUpd
 
         const auto event = events.at(type);
         if (!trigger->canUpdate(*event)) {
-            trigger->cancel();
+            if (trigger->endIfCannotUpdate()) {
+                trigger->end();
+            } else {
+                trigger->cancel();
+            }
             it = m_activeTriggers.erase(it);
             continue;
         }
