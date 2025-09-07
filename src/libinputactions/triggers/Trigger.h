@@ -37,6 +37,7 @@ class TriggerActivationEvent
 {
 public:
     std::set<uint32_t> keyboardKeys;
+    uint32_t keyboardFirstKey{};
     std::optional<std::vector<Qt::MouseButton>> mouseButtons;
 };
 class TriggerUpdateEvent

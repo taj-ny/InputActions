@@ -7,31 +7,88 @@
 namespace libinputactions
 {
 
-void TestKeyboardTriggerHandler::handleEvent_keyboardKey()
+void TestKeyboardTriggerHandler::init()
 {
-    auto handler = std::make_unique<KeyboardTriggerHandler>();
-    QSignalSpy activatingSpy(handler.get(), &TriggerHandler::activatingTrigger);
-    QSignalSpy endingSpy(handler.get(), &TriggerHandler::endingTriggers);
-    handler->addTrigger(std::make_unique<KeyboardShortcutTrigger>(KeyboardShortcut{.keys = {KEY_LEFTCTRL, KEY_A}}));
+    m_device = std::make_unique<InputDevice>(InputDeviceType::Keyboard);
+}
 
-    InputDevice device(InputDeviceType::Keyboard);
-    QCOMPARE(handler->handleEvent(KeyboardKeyEvent(&device, KEY_A, true)), false);
-    QCOMPARE(handler->handleEvent(KeyboardKeyEvent(&device, KEY_LEFTCTRL, true)), false);
-    QCOMPARE(activatingSpy.count(), 0);
+void TestKeyboardTriggerHandler::shortcut_oneModifierKeyShortcut_triggerActivatedEndedAndEventsNotBlocked()
+{
+    auto trigger = std::make_unique<KeyboardShortcutTrigger>(KeyboardShortcut{
+        .keys = {KEY_LEFTMETA},
+    });
+    QSignalSpy activatedSpy(trigger.get(), &Trigger::activated);
+    QSignalSpy endedSpy(trigger.get(), &Trigger::ended);
 
-    QCOMPARE(handler->handleEvent(KeyboardKeyEvent(&device, KEY_LEFTCTRL, false)), false);
-    QCOMPARE(handler->handleEvent(KeyboardKeyEvent(&device, KEY_A, false)), false);
+    KeyboardTriggerHandler handler;
+    handler.addTrigger(std::move(trigger));
 
-    QCOMPARE(handler->handleEvent(KeyboardKeyEvent(&device, KEY_LEFTCTRL, true)), false);
-    QCOMPARE(handler->handleEvent(KeyboardKeyEvent(&device, KEY_A, true)), true);
-    QCOMPARE(activatingSpy.count(), 1);
+    QVERIFY(!handler.handleEvent(KeyboardKeyEvent(m_device.get(), KEY_LEFTMETA, true)));
+    handler.updateTriggers(TriggerType::KeyboardShortcut);
+    QCOMPARE(activatedSpy.count(), 1);
+    QCOMPARE(endedSpy.count(), 0);
 
-    QCOMPARE(handler->handleEvent(KeyboardKeyEvent(&device, KEY_A, false)), true);
-    QCOMPARE(endingSpy.count(), 1);
-    QCOMPARE(handler->handleEvent(KeyboardKeyEvent(&device, KEY_LEFTCTRL, false)), false);
+    QVERIFY(!handler.handleEvent(KeyboardKeyEvent(m_device.get(), KEY_LEFTMETA, false)));
+    QCOMPARE(endedSpy.count(), 1);
+}
 
-    QCOMPARE(activatingSpy.count(), 1);
-    QCOMPARE(endingSpy.count(), 1);
+void TestKeyboardTriggerHandler::shortcut_oneNonModifierKeyShortcut_triggerActivatedEndedAndEventsBlocked()
+{
+    auto trigger = std::make_unique<KeyboardShortcutTrigger>(KeyboardShortcut{
+        .keys = {KEY_A},
+    });
+    QSignalSpy activatedSpy(trigger.get(), &Trigger::activated);
+    QSignalSpy endedSpy(trigger.get(), &Trigger::ended);
+
+    KeyboardTriggerHandler handler;
+    handler.addTrigger(std::move(trigger));
+
+    QVERIFY(handler.handleEvent(KeyboardKeyEvent(m_device.get(), KEY_A, true)));
+    handler.updateTriggers(TriggerType::KeyboardShortcut);
+    QCOMPARE(activatedSpy.count(), 1);
+    QCOMPARE(endedSpy.count(), 0);
+
+    QVERIFY(handler.handleEvent(KeyboardKeyEvent(m_device.get(), KEY_A, false)));
+    QCOMPARE(endedSpy.count(), 1);
+}
+
+void TestKeyboardTriggerHandler::shortcut_twoKeysWrongOrder_triggerNotActivatedAndEventsNotBlocked()
+{
+    auto trigger = std::make_unique<KeyboardShortcutTrigger>(KeyboardShortcut{
+        .keys = {KEY_LEFTCTRL, KEY_A},
+    });
+    QSignalSpy activatedSpy(trigger.get(), &Trigger::activated);
+
+    KeyboardTriggerHandler handler;
+    handler.addTrigger(std::move(trigger));
+
+    QVERIFY(!handler.handleEvent(KeyboardKeyEvent(m_device.get(), KEY_A, true)));
+    QVERIFY(!handler.handleEvent(KeyboardKeyEvent(m_device.get(), KEY_LEFTCTRL, true)));
+    QVERIFY(!handler.handleEvent(KeyboardKeyEvent(m_device.get(), KEY_LEFTCTRL, false)));
+    QVERIFY(!handler.handleEvent(KeyboardKeyEvent(m_device.get(), KEY_A, false)));
+    QCOMPARE(activatedSpy.count(), 0);
+}
+
+void TestKeyboardTriggerHandler::shortcut_twoKeysCorrectOrder_triggerActivatedAndNormalKeyBlockedAndModifierKeyNotBlocked()
+{
+    auto trigger = std::make_unique<KeyboardShortcutTrigger>(KeyboardShortcut{
+        .keys = {KEY_LEFTCTRL, KEY_A},
+    });
+    QSignalSpy activatedSpy(trigger.get(), &Trigger::activated);
+    QSignalSpy endedSpy(trigger.get(), &Trigger::ended);
+
+    KeyboardTriggerHandler handler;
+    handler.addTrigger(std::move(trigger));
+
+    QVERIFY(!handler.handleEvent(KeyboardKeyEvent(m_device.get(), KEY_LEFTCTRL, true)));
+    QVERIFY(handler.handleEvent(KeyboardKeyEvent(m_device.get(), KEY_A, true)));
+    handler.updateTriggers(TriggerType::KeyboardShortcut);
+    QCOMPARE(activatedSpy.count(), 1);
+
+    QVERIFY(handler.handleEvent(KeyboardKeyEvent(m_device.get(), KEY_A, false)));
+    QCOMPARE(endedSpy.count(), 1);
+
+    QVERIFY(!handler.handleEvent(KeyboardKeyEvent(m_device.get(), KEY_LEFTCTRL, false)));
 }
 
 }

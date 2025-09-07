@@ -17,6 +17,7 @@
 */
 
 #include "KeyboardShortcutTrigger.h"
+#include <libinputactions/input/Keyboard.h>
 
 namespace libinputactions
 {
@@ -29,7 +30,15 @@ KeyboardShortcutTrigger::KeyboardShortcutTrigger(KeyboardShortcut shortcut)
 
 bool KeyboardShortcutTrigger::canActivate(const TriggerActivationEvent &event) const
 {
-    return Trigger::canActivate(event) && (m_shortcut.keys == event.keyboardKeys);
+    if (!Trigger::canActivate(event) || m_shortcut.keys != event.keyboardKeys) {
+        return false;
+    }
+
+    // If the shortcut contains a modifier key, the first key must be a modifier.
+    const auto hasModifier = std::ranges::any_of(m_shortcut.keys, [](auto key) {
+                                 return MODIFIERS.contains(key);
+                             });
+    return !hasModifier || MODIFIERS.contains(event.keyboardFirstKey);
 }
 
 }
