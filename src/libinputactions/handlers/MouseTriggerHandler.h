@@ -79,7 +79,7 @@ private:
     /**
      * Presses all currently blocked mouse buttons without releasing them.
      */
-    void pressBlockedMouseButtons();
+    void pressBlockedMouseButtons(const InputDevice *target);
 
     /**
      * Used to wait until all mouse buttons have been pressed to avoid conflicts with gestures that require more than

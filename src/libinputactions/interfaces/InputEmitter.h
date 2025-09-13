@@ -20,40 +20,42 @@
 
 #include <QPointF>
 #include <libinputactions/globals.h>
-#include <libinputactions/Resettable.h>
 #include <memory>
 
 namespace libinputactions
 {
 
-class InputEmitter : public Resettable
+class InputDevice;
+
+class InputEmitter
 {
 public:
     InputEmitter();
     virtual ~InputEmitter() = default;
 
+    virtual void initialize() {};
+    virtual void reset() {};
+
     virtual void keyboardClearModifiers() {};
     /**
-     * @param key <linux/input-event-codes.h>
+     * @param key See <linux/input-event-codes.h>. If the key is not in m_keyboardRequiredKeys, the call may fail.
      * @param state True - press, false - release
      */
-    virtual void keyboardKey(uint32_t key, bool state) {};
+    virtual void keyboardKey(uint32_t key, bool state, const InputDevice *target = nullptr) {};
     virtual void keyboardText(const QString &text) {};
 
     /**
      * @param button <linux/input-event-codes.h>
      * @param state True - press, false - release
      */
-    virtual void mouseButton(uint32_t button, bool state) {};
+    virtual void mouseButton(uint32_t button, bool state, const InputDevice *target = nullptr) {};
     virtual void mouseMoveRelative(const QPointF &pos) {};
 
     virtual void touchpadPinchBegin(uint8_t fingers) {};
     virtual void touchpadSwipeBegin(uint8_t fingers) {};
 
     /**
-     * The implementation may require that all keys that will be used must be registered before initialization.
-     * Modifier keys are added by default. InputTriggerAction will call this on construction.
-     * May be called multiple times with the same key.
+     * The implementation may require that all keys that will be used must be registered before initialization. Modifier keys are added by default.
      */
     std::set<uint32_t> m_keyboardRequiredKeys;
 };

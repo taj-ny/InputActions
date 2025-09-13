@@ -16,21 +16,17 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include "input/LibinputInputBackend.h"
-
-#include <libinputactions/config/Config.h>
-#include <libinputactions/InputActions.h>
-
+#include "input/StandaloneInputBackend.h"
 #include "interfaces/StandaloneInputEmitter.h"
 #include "interfaces/StandaloneWindowProvider.h"
 #include "protocols/VirtualKeyboardUnstableV1.h"
-#include "protocols/WlrForeignToplevelManagementV1.h"
-#include "protocols/WlrVirtualPointerUnstableV1.h"
 #include "protocols/WaylandProtocolManager.h"
 #include "protocols/WlSeat.h"
-
+#include "protocols/WlrForeignToplevelManagementV1.h"
+#include "protocols/WlrVirtualPointerUnstableV1.h"
 #include <QCoreApplication>
-
+#include <libinputactions/InputActions.h>
+#include <libinputactions/config/Config.h>
 #include <print>
 
 using namespace libinputactions;
@@ -38,7 +34,7 @@ using namespace libinputactions;
 int main()
 {
     std::println(PROJECT_NAME " v" PROJECT_VERSION);
-    std::println();
+    std::println("Starting... ");
 
     static int argc = 0;
     QCoreApplication app(argc, nullptr);
@@ -57,16 +53,18 @@ int main()
     protocolManager.addProtocol(g_wlSeat.get());
     wl_display_roundtrip(display);
 
-    InputActions inputActions(std::make_unique<LibinputInputBackend>());
+    InputActions inputActions(std::make_unique<StandaloneInputBackend>());
     g_inputEmitter = std::make_shared<StandaloneInputEmitter>();
     g_windowProvider = std::make_shared<StandaloneWindowProvider>();
 
     g_config->load(false);
 
+    std::println("done");
+
     while (true) {
-        wl_display_roundtrip(display); // not sure if this is correct
-        QCoreApplication::processEvents();
         g_inputBackend->poll();
-        usleep(1000);
+        QCoreApplication::processEvents();
+        wl_display_roundtrip(display);
+        dynamic_cast<StandaloneInputBackend *>(g_inputBackend.get())->waitForEvents(5);
     }
 }

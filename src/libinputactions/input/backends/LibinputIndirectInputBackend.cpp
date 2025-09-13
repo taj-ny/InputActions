@@ -208,7 +208,6 @@ bool LibinputIndirectInputBackend::touchpadSwipeEnd(InputDevice *sender, bool ca
                                                           TriggerType::StrokeSwipe));
 }
 
-
 Qt::MouseButton LibinputIndirectInputBackend::scanCodeToMouseButton(uint32_t scanCode) const
 {
     static const std::map<uint32_t, Qt::MouseButton> buttons = {

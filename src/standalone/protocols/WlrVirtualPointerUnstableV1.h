@@ -20,7 +20,6 @@
 
 #include "WaylandProtocol.h"
 #include "wlr-virtual-pointer-unstable-v1.h"
-
 #include <libinputactions/interfaces/Window.h>
 
 class WlrVirtualPointerUnstableV1Pointer

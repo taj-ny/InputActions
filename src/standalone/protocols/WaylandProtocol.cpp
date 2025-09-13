@@ -17,7 +17,6 @@
 */
 
 #include "WaylandProtocol.h"
-
 #include <QLoggingCategory>
 
 WaylandProtocol::WaylandProtocol(QString name)

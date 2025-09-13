@@ -20,9 +20,7 @@
 
 WaylandProtocolManager::WaylandProtocolManager(wl_registry *registry)
 {
-    static const wl_registry_listener listener{
-        &WaylandProtocolManager::handleGlobal
-    };
+    static const wl_registry_listener listener(&WaylandProtocolManager::handleGlobal);
     wl_registry_add_listener(registry, &listener, this);
 }
 

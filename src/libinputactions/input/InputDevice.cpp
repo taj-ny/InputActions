@@ -82,6 +82,7 @@ void InputDeviceProperties::apply(const InputDeviceProperties &other)
     apply(m_thumbPressure, other.m_thumbPressure);
     apply(m_palmPressure, other.m_palmPressure);
     apply(m_lmrTapButtonMap, other.m_lmrTapButtonMap);
+    apply(m_grab, other.m_grab);
 }
 
 bool InputDeviceProperties::multiTouch() const
@@ -152,6 +153,16 @@ bool InputDeviceProperties::lmrTapButtonMap() const
 void InputDeviceProperties::setLmrTapButtonMap(bool value)
 {
     m_lmrTapButtonMap = value;
+}
+
+bool InputDeviceProperties::grab() const
+{
+    return m_grab.value_or(false);
+}
+
+void InputDeviceProperties::setGrab(bool value)
+{
+    m_grab = value;
 }
 
 }

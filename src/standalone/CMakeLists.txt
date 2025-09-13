@@ -5,7 +5,7 @@ pkg_search_module(WAYLAND_CLIENT REQUIRED wayland-client)
 find_package(XKB)
 
 set(inputactions_SOURCES
-    input/LibinputInputBackend.cpp
+    input/StandaloneInputBackend.cpp
     interfaces/EvdevInputEmitter.cpp
     interfaces/StandaloneInputEmitter.cpp
     interfaces/StandaloneWindowProvider.cpp
@@ -27,6 +27,7 @@ target_link_libraries(inputactions_standalone PRIVATE
     ${WAYLAND_CLIENT_LIBRARIES}
     XKB::XKB
 )
+target_include_directories(inputactions_standalone PUBLIC ${LIBEVDEV_INCLUDE_DIRS})
 
 function(wayland_protocol name)
     add_custom_command(

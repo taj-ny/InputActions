@@ -1414,6 +1414,9 @@ struct convert<InputDeviceProperties>
                 value.setPalmPressure(palmNode.as<uint32_t>());
             }
         }
+        if (const auto &grabNode = node["grab"]) {
+            value.setGrab(grabNode.as<bool>());
+        }
         return true;
     }
 };

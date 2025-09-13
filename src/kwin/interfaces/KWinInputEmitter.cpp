@@ -63,7 +63,7 @@ void KWinInputEmitter::keyboardClearModifiers()
     }
 }
 
-void KWinInputEmitter::keyboardKey(uint32_t key, bool state)
+void KWinInputEmitter::keyboardKey(uint32_t key, bool state, const libinputactions::InputDevice *target)
 {
     libinputactions::g_inputBackend->setIgnoreEvents(true);
     Q_EMIT m_device->keyChanged(key, state ? KeyboardKeyStatePressed : KeyboardKeyStateReleased, timestamp(), m_device.get());
@@ -92,7 +92,7 @@ void KWinInputEmitter::keyboardText(const QString &text)
     }
 }
 
-void KWinInputEmitter::mouseButton(uint32_t button, bool state)
+void KWinInputEmitter::mouseButton(uint32_t button, bool state, const libinputactions::InputDevice *target)
 {
     libinputactions::g_inputBackend->setIgnoreEvents(true);
     Q_EMIT m_device->pointerButtonChanged(button, state ? PointerButtonStatePressed : PointerButtonStateReleased, timestamp(), m_device.get());

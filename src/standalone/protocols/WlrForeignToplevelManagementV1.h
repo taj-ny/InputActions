@@ -20,7 +20,6 @@
 
 #include "WaylandProtocol.h"
 #include "wlr-foreign-toplevel-management-unstable-v1.h"
-
 #include <libinputactions/interfaces/Window.h>
 
 class WlrForeignToplevelManagementV1Window : public libinputactions::Window

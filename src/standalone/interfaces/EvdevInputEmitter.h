@@ -20,18 +20,22 @@
 
 #include <libinputactions/interfaces/InputEmitter.h>
 
+/**
+ * Keyboard keys must be registered before initialization.
+ */
 class EvdevInputEmitter : public libinputactions::InputEmitter
 {
 public:
+    EvdevInputEmitter();
     ~EvdevInputEmitter() override;
 
     void initialize() override;
     void reset() final;
 
     void keyboardClearModifiers() override;
-    void keyboardKey(uint32_t key, bool state) override;
+    void keyboardKey(uint32_t key, bool state, const libinputactions::InputDevice *target = nullptr) override;
 
-    void mouseButton(uint32_t button, bool state) override;
+    void mouseButton(uint32_t button, bool state, const libinputactions::InputDevice *target = nullptr) override;
     void mouseMoveRelative(const QPointF &pos) override;
 
 private:
@@ -42,6 +46,6 @@ private:
     static void uinputEmit(int fd, uint16_t type, uint16_t code, int32_t value = 0);
 
     int m_keyboardFd = -1;
-    int m_mouseFd = -1;
+    int m_pointerFd = -1;
     QPointF m_mouseDelta;
 };

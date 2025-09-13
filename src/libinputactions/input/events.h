@@ -58,7 +58,7 @@ public:
     virtual ~InputEvent() = default;
 
     const InputEventType &type() const;
-    const InputDevice *sender() const;
+    InputDevice *sender() const;
 
 protected:
     InputEvent(InputEventType type, InputDevice *sender);

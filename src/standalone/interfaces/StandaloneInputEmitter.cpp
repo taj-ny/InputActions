@@ -17,8 +17,6 @@
 */
 
 #include "StandaloneInputEmitter.h"
-
-#include <libinputactions/input/backends/InputBackend.h>
 #include <libinputactions/input/Keyboard.h>
 
 using namespace libinputactions;
@@ -33,7 +31,7 @@ StandaloneInputEmitter::StandaloneInputEmitter()
     }
 }
 
-void StandaloneInputEmitter::keyboardKey(uint32_t key, bool state)
+void StandaloneInputEmitter::keyboardKey(uint32_t key, bool state, const InputDevice *target)
 {
     if (m_virtualKeyboardUnstableV1Keyboard) {
         if (MODIFIERS.contains(key)) {
@@ -46,17 +44,17 @@ void StandaloneInputEmitter::keyboardKey(uint32_t key, bool state)
         }
         m_virtualKeyboardUnstableV1Keyboard->key(key, state);
     } else {
-        EvdevInputEmitter::keyboardKey(key, state);
+        EvdevInputEmitter::keyboardKey(key, state, target);
     }
 }
 
-void StandaloneInputEmitter::mouseButton(uint32_t button, bool state)
+void StandaloneInputEmitter::mouseButton(uint32_t button, bool state, const InputDevice *target)
 {
     if (m_wlrVirtualPointerUnstableV1Pointer) {
         m_wlrVirtualPointerUnstableV1Pointer->button(button, state);
         m_wlrVirtualPointerUnstableV1Pointer->frame();
     } else {
-        EvdevInputEmitter::mouseButton(button, state);
+        EvdevInputEmitter::mouseButton(button, state, target);
     }
 }
 

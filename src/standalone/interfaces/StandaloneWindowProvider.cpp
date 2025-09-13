@@ -17,7 +17,6 @@
 */
 
 #include "StandaloneWindowProvider.h"
-
 #include "protocols/WlrForeignToplevelManagementV1.h"
 
 std::shared_ptr<libinputactions::Window> StandaloneWindowProvider::activeWindow()

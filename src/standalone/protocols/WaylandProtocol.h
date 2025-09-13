@@ -18,12 +18,11 @@
 
 #pragma once
 
+#include <QString>
 #include <wayland-client.h>
 
-#include <QString>
-
-#define INPUTACTIONS_NOOP_2 [](auto, auto){}
-#define INPUTACTIONS_NOOP_3 [](auto, auto, auto){}
+#define INPUTACTIONS_NOOP_2 [](auto, auto) {}
+#define INPUTACTIONS_NOOP_3 [](auto, auto, auto) {}
 
 class WaylandProtocol
 {

@@ -60,7 +60,6 @@ set(libinputactions_SRCS
     libinputactions/InputActions.cpp
     libinputactions/InterpolatedString.cpp
     libinputactions/Range.cpp
-    libinputactions/Resettable.h
     libinputactions/Value.cpp
 )
 

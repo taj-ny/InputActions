@@ -48,10 +48,10 @@ public:
     ~HyprlandInputEmitter() override;
 
     void keyboardClearModifiers() override;
-    void keyboardKey(uint32_t key, bool state) override;
+    void keyboardKey(uint32_t key, bool state, const libinputactions::InputDevice *target = nullptr) override;
     void keyboardText(const QString &text) override;
 
-    void mouseButton(uint32_t button, bool state) override;
+    void mouseButton(uint32_t button, bool state, const libinputactions::InputDevice *target = nullptr) override;
     void mouseMoveRelative(const QPointF &pos) override;
 
     void touchpadPinchBegin(uint8_t fingers) override;

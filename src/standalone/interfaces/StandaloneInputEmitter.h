@@ -19,7 +19,6 @@
 #pragma once
 
 #include "EvdevInputEmitter.h"
-
 #include "protocols/VirtualKeyboardUnstableV1.h"
 #include "protocols/WlrVirtualPointerUnstableV1.h"
 
@@ -28,9 +27,9 @@ class StandaloneInputEmitter : public EvdevInputEmitter
 public:
     StandaloneInputEmitter();
 
-    void keyboardKey(uint32_t key, bool state) override;
+    void keyboardKey(uint32_t key, bool state, const libinputactions::InputDevice *target = nullptr) override;
 
-    void mouseButton(uint32_t button, bool state) override;
+    void mouseButton(uint32_t button, bool state, const libinputactions::InputDevice *target = nullptr) override;
     void mouseMoveRelative(const QPointF &delta) override;
 
 private:

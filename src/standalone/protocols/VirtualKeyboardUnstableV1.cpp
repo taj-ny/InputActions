@@ -102,12 +102,10 @@ void VirtualKeyboardUnstableV1Keyboard::key(uint32_t key, bool state)
 
 void VirtualKeyboardUnstableV1Keyboard::modifiers(Qt::KeyboardModifiers modifiers)
 {
-    static const std::unordered_map<Qt::KeyboardModifier, QString> xkbModifiers{
-        {Qt::KeyboardModifier::AltModifier, "Alt"},
-        {Qt::KeyboardModifier::ControlModifier, "Control"},
-        {Qt::KeyboardModifier::MetaModifier, "Super"},
-        {Qt::KeyboardModifier::ShiftModifier, "Shift"}
-    };
+    static const std::unordered_map<Qt::KeyboardModifier, QString> xkbModifiers{{Qt::KeyboardModifier::AltModifier, "Alt"},
+                                                                                {Qt::KeyboardModifier::ControlModifier, "Control"},
+                                                                                {Qt::KeyboardModifier::MetaModifier, "Super"},
+                                                                                {Qt::KeyboardModifier::ShiftModifier, "Shift"}};
     uint32_t mask{};
     for (const auto &[modifier, name] : xkbModifiers) {
         if (modifiers & modifier) {

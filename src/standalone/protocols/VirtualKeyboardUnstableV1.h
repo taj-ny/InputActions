@@ -19,9 +19,7 @@
 #pragma once
 
 #include "WaylandProtocol.h"
-
 #include "virtual-keyboard-unstable-v1.h"
-
 #include <xkbcommon/xkbcommon.h>
 
 class VirtualKeyboardUnstableV1Keyboard

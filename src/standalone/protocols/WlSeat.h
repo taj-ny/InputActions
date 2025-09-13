@@ -19,7 +19,6 @@
 #pragma once
 
 #include "WaylandProtocol.h"
-
 #include <wayland-client-protocol.h>
 
 class WlSeat : public WaylandProtocol
