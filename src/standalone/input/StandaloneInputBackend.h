@@ -109,6 +109,8 @@ private:
          * Absolute path of outputDevice.
          */
         std::string outputDevicePath;
+
+        bool touchpadBlocked{};
     };
     std::vector<std::pair<std::unique_ptr<libinputactions::InputDevice>, std::unique_ptr<ExtraDeviceData>>> m_devices;
 };
