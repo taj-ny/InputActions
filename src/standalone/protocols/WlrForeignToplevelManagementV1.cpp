@@ -35,13 +35,13 @@ std::shared_ptr<WlrForeignToplevelManagementV1Window> WlrForeignToplevelManageme
     return m_activeWindow;
 }
 
-void WlrForeignToplevelManagementV1::bind(wl_registry *registry, uint32_t name)
+void WlrForeignToplevelManagementV1::bind(wl_registry *registry, uint32_t name, uint32_t version)
 {
-    WaylandProtocol::bind(registry, name);
+    WaylandProtocol::bind(registry, name, version);
 
     static const zwlr_foreign_toplevel_manager_v1_listener listener(&WlrForeignToplevelManagementV1::handleToplevel);
 
-    m_manager = static_cast<zwlr_foreign_toplevel_manager_v1 *>(wl_registry_bind(registry, name, &zwlr_foreign_toplevel_manager_v1_interface, 3));
+    m_manager = static_cast<zwlr_foreign_toplevel_manager_v1 *>(wl_registry_bind(registry, name, &zwlr_foreign_toplevel_manager_v1_interface, version));
     zwlr_foreign_toplevel_manager_v1_add_listener(m_manager, &listener, this);
 }
 
@@ -108,6 +108,11 @@ void WlrForeignToplevelManagementV1::handleClosed(void *data, zwlr_foreign_tople
     if (self->m_activeWindow.get() == window) {
         self->m_activeWindow = {};
     }
+}
+
+std::shared_ptr<libinputactions::Window> WlrForeignToplevelManagementV1WindowProvider::activeWindow()
+{
+    return g_wlrForeignToplevelManagementV1->activeWindow();
 }
 
 std::optional<QString> WlrForeignToplevelManagementV1Window::title()

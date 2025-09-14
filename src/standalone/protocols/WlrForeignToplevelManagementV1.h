@@ -21,6 +21,7 @@
 #include "WaylandProtocol.h"
 #include "wlr-foreign-toplevel-management-unstable-v1.h"
 #include <libinputactions/interfaces/Window.h>
+#include <libinputactions/interfaces/WindowProvider.h>
 
 class WlrForeignToplevelManagementV1Window : public libinputactions::Window
 {
@@ -41,6 +42,12 @@ private:
     friend class WlrForeignToplevelManagementV1;
 };
 
+class WlrForeignToplevelManagementV1WindowProvider : public libinputactions::WindowProvider
+{
+public:
+    std::shared_ptr<libinputactions::Window> activeWindow() override;
+};
+
 class WlrForeignToplevelManagementV1 : public WaylandProtocol
 {
 public:
@@ -50,7 +57,7 @@ public:
     std::shared_ptr<WlrForeignToplevelManagementV1Window> activeWindow();
 
 protected:
-    void bind(wl_registry *registry, uint32_t name) override;
+    void bind(wl_registry *registry, uint32_t name, uint32_t version) override;
 
 private:
     static void handleToplevel(void *data, zwlr_foreign_toplevel_manager_v1 *manager, zwlr_foreign_toplevel_handle_v1 *toplevel);

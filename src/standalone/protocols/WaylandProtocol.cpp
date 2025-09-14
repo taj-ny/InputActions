@@ -24,7 +24,7 @@ WaylandProtocol::WaylandProtocol(QString name)
 {
 }
 
-void WaylandProtocol::bind(wl_registry *registry, uint32_t name)
+void WaylandProtocol::bind(wl_registry *registry, uint32_t name, uint32_t version)
 {
     m_supported = true;
 }

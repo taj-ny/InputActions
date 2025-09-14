@@ -17,19 +17,52 @@
 */
 
 #include "input/StandaloneInputBackend.h"
+#include "interfaces/DBusInterfaceCollection.h"
 #include "interfaces/StandaloneInputEmitter.h"
-#include "interfaces/StandaloneWindowProvider.h"
 #include "protocols/VirtualKeyboardUnstableV1.h"
 #include "protocols/WaylandProtocolManager.h"
 #include "protocols/WlSeat.h"
 #include "protocols/WlrForeignToplevelManagementV1.h"
 #include "protocols/WlrVirtualPointerUnstableV1.h"
 #include <QCoreApplication>
+#include <QDir>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QtEnvironmentVariables>
 #include <libinputactions/InputActions.h>
 #include <libinputactions/config/Config.h>
 #include <print>
 
 using namespace libinputactions;
+
+static const QDir GNOME_EXTENSION_DIR = QDir::homePath() + "/.local/share/gnome-shell/extensions/inputactions@inputactions.org";
+static const auto GNOME_EXTENSION_EXTENSIONJS_PATH = GNOME_EXTENSION_DIR.path() + "/extension.js";
+static const auto GNOME_EXTENSION_METADATAJSON_PATH = GNOME_EXTENSION_DIR.path() + "/metadata.json";
+static const uint32_t GNOME_EXTENSION_VERSION = 1;
+
+void installGnomeExtension()
+{
+    QFile extensionFile(GNOME_EXTENSION_EXTENSIONJS_PATH);
+    QFile metadataFile(GNOME_EXTENSION_METADATAJSON_PATH);
+
+    if (GNOME_EXTENSION_DIR.exists()) {
+        if (metadataFile.exists()) {
+            metadataFile.open(QIODeviceBase::ReadOnly);
+            const auto jsonDocument = QJsonDocument::fromJson(metadataFile.readAll());
+            const auto jsonObject = jsonDocument.object();
+            if (jsonObject["version"].toDouble() == GNOME_EXTENSION_VERSION) {
+                return;
+            }
+        }
+    } else {
+        GNOME_EXTENSION_DIR.mkpath(".");
+    }
+
+    extensionFile.remove();
+    metadataFile.remove();
+    QFile::copy(":/extensions/gnome/extension.js", GNOME_EXTENSION_EXTENSIONJS_PATH);
+    QFile::copy(":/extensions/gnome/metadata.json", GNOME_EXTENSION_METADATAJSON_PATH);
+}
 
 int main()
 {
@@ -38,6 +71,10 @@ int main()
 
     static int argc = 0;
     QCoreApplication app(argc, nullptr);
+
+    if (qEnvironmentVariable("XDG_CURRENT_DESKTOP").toLower().contains("gnome")) {
+        installGnomeExtension();
+    }
 
     g_virtualKeyboardUnstableV1 = std::make_unique<VirtualKeyboardUnstableV1>();
     g_wlrForeignToplevelManagementV1 = std::make_unique<WlrForeignToplevelManagementV1>();
@@ -54,8 +91,14 @@ int main()
     wl_display_roundtrip(display);
 
     InputActions inputActions(std::make_unique<StandaloneInputBackend>());
+    auto dbusInterfaceCollection = std::make_shared<DBusInterfaceCollection>();
+    if (g_wlrForeignToplevelManagementV1->supported()) {
+        g_windowProvider = std::make_shared<WlrForeignToplevelManagementV1WindowProvider>();
+    } else {
+        g_windowProvider = dbusInterfaceCollection;
+    }
+    g_pointerPositionGetter = dbusInterfaceCollection;
     g_inputEmitter = std::make_shared<StandaloneInputEmitter>();
-    g_windowProvider = std::make_shared<StandaloneWindowProvider>();
 
     g_config->load(false);
 

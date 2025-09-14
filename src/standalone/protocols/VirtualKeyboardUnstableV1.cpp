@@ -42,10 +42,10 @@ std::unique_ptr<VirtualKeyboardUnstableV1Keyboard> VirtualKeyboardUnstableV1::cr
     return keyboard;
 }
 
-void VirtualKeyboardUnstableV1::bind(wl_registry *registry, uint32_t name)
+void VirtualKeyboardUnstableV1::bind(wl_registry *registry, uint32_t name, uint32_t version)
 {
-    WaylandProtocol::bind(registry, name);
-    m_manager = static_cast<zwp_virtual_keyboard_manager_v1 *>(wl_registry_bind(registry, name, &zwp_virtual_keyboard_manager_v1_interface, 1));
+    WaylandProtocol::bind(registry, name, version);
+    m_manager = static_cast<zwp_virtual_keyboard_manager_v1 *>(wl_registry_bind(registry, name, &zwp_virtual_keyboard_manager_v1_interface, version));
 }
 
 VirtualKeyboardUnstableV1Keyboard::VirtualKeyboardUnstableV1Keyboard(zwp_virtual_keyboard_manager_v1 *manager)

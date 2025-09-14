@@ -29,7 +29,7 @@ public:
 
     wl_seat *seat();
 
-    void bind(wl_registry *registry, uint32_t name);
+    void bind(wl_registry *registry, uint32_t name, uint32_t version);
 
 private:
     wl_seat *m_seat{};

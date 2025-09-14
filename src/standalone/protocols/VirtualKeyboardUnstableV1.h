@@ -51,7 +51,7 @@ public:
     std::unique_ptr<VirtualKeyboardUnstableV1Keyboard> createKeyboard();
 
 protected:
-    void bind(wl_registry *registry, uint32_t name) override;
+    void bind(wl_registry *registry, uint32_t name, uint32_t version) override;
 
 private:
     zwp_virtual_keyboard_manager_v1 *m_manager{};

@@ -146,7 +146,7 @@ void EvdevInputEmitter::uinputEmit(int fd, uint16_t type, uint16_t code, int32_t
     input_event event{
         .time = {
             .tv_sec = 0,
-            .tv_usec = 0
+            .tv_usec = 0,
         },
         .type = type,
         .code = code,

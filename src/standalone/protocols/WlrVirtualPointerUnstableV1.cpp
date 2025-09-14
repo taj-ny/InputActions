@@ -30,10 +30,10 @@ WlrVirtualPointerUnstableV1::~WlrVirtualPointerUnstableV1()
     }
 }
 
-void WlrVirtualPointerUnstableV1::bind(wl_registry *registry, uint32_t name)
+void WlrVirtualPointerUnstableV1::bind(wl_registry *registry, uint32_t name, uint32_t version)
 {
-    WaylandProtocol::bind(registry, name);
-    m_manager = static_cast<zwlr_virtual_pointer_manager_v1 *>(wl_registry_bind(registry, name, &zwlr_virtual_pointer_manager_v1_interface, 2));
+    WaylandProtocol::bind(registry, name, version);
+    m_manager = static_cast<zwlr_virtual_pointer_manager_v1 *>(wl_registry_bind(registry, name, &zwlr_virtual_pointer_manager_v1_interface, version));
 }
 
 std::unique_ptr<WlrVirtualPointerUnstableV1Pointer> WlrVirtualPointerUnstableV1::createPointer()

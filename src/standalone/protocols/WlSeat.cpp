@@ -35,7 +35,7 @@ wl_seat *WlSeat::seat()
     return m_seat;
 }
 
-void WlSeat::bind(wl_registry *registry, uint32_t name)
+void WlSeat::bind(wl_registry *registry, uint32_t name, uint32_t version)
 {
-    m_seat = static_cast<wl_seat *>(wl_registry_bind(registry, name, &wl_seat_interface, 9));
+    m_seat = static_cast<wl_seat *>(wl_registry_bind(registry, name, &wl_seat_interface, version));
 }

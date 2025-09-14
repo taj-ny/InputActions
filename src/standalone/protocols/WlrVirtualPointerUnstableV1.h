@@ -45,7 +45,7 @@ public:
     std::unique_ptr<WlrVirtualPointerUnstableV1Pointer> createPointer();
 
 protected:
-    void bind(wl_registry *registry, uint32_t name) override;
+    void bind(wl_registry *registry, uint32_t name, uint32_t version) override;
 
     zwlr_virtual_pointer_manager_v1 *m_manager{};
 };

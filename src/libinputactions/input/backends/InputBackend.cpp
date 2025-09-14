@@ -108,7 +108,11 @@ void InputBackend::deviceRemoved(const InputDevice *device)
 
 bool InputBackend::isDeviceBlacklisted(const QString &name)
 {
-    static const std::set<QString> blacklist = {QStringLiteral("inputactions"), QStringLiteral("InputActions Virtual Keyboard"), QStringLiteral("InputActions Virtual Pointer")};
+    static const std::set<QString> blacklist = {
+        QStringLiteral("inputactions"),
+        QStringLiteral("InputActions Virtual Keyboard"),
+        QStringLiteral("InputActions Virtual Pointer"),
+    };
     return blacklist.contains(name);
 }
 

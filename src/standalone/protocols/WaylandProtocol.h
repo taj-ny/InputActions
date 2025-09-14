@@ -29,7 +29,7 @@ class WaylandProtocol
 public:
     virtual ~WaylandProtocol() = default;
 
-    virtual void bind(wl_registry *registry, uint32_t name);
+    virtual void bind(wl_registry *registry, uint32_t name, uint32_t vesion);
 
     const QString &name() const;
     bool supported() const;

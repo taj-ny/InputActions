@@ -34,7 +34,7 @@ void WaylandProtocolManager::handleGlobal(void *data, wl_registry *registry, uin
     auto *self = static_cast<WaylandProtocolManager *>(data);
     for (auto *protocol : self->m_protocols) {
         if (strcmp(interface, protocol->name().toStdString().c_str()) == 0) {
-            protocol->bind(registry, name);
+            protocol->bind(registry, name, version);
             return;
         }
     }
