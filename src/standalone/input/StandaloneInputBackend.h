@@ -48,10 +48,15 @@ private slots:
     void inotifyRead();
 
 private:
+    struct ExtraDeviceData;
+
     void evdevDeviceAdded(const QString &path);
     void evdevDeviceRemoved(const QString &path);
 
     bool handleEvent(libinputactions::InputDevice *sender, libinput_event *event);
+    bool handleLibinputEvents(libinputactions::InputDevice *device, libinput *libinput);
+
+    static void resetTouchpad(const libinputactions::InputDevice *device, const ExtraDeviceData *data);
 
     libinput_interface m_libinputBlockingInterface;
     libinput_interface m_libinputNonBlockingInterface;
@@ -111,6 +116,8 @@ private:
         std::string outputDevicePath;
 
         bool touchpadBlocked{};
+        bool touchpadNeutral = true;
+        QTimer touchpadStateResetTimer;
     };
     std::vector<std::pair<std::unique_ptr<libinputactions::InputDevice>, std::unique_ptr<ExtraDeviceData>>> m_devices;
 };

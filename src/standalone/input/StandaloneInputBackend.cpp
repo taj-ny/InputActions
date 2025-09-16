@@ -141,6 +141,10 @@ void StandaloneInputBackend::evdevDeviceAdded(const QString &path)
 
         if (deviceType == InputDeviceType::Touchpad) {
             LibevdevComplementaryInputBackend::addDevice(device.get(), data->libevdev, false);
+
+            connect(&data->touchpadStateResetTimer, &QTimer::timeout, this, [device = device.get(), data = data.get()]() {
+                resetTouchpad(device, data);
+            });
         }
     } else {
         LibevdevComplementaryInputBackend::deviceAdded(device.get());
@@ -236,7 +240,11 @@ bool StandaloneInputBackend::handleEvent(InputDevice *sender, libinput_event *ev
                 case LIBINPUT_EVENT_GESTURE_HOLD_END:
                     return touchpadHoldEnd(sender, cancelled);
                 case LIBINPUT_EVENT_GESTURE_PINCH_BEGIN:
-                    return touchpadPinchBegin(sender, fingers);
+                    touchpadPinchBegin(sender, fingers);
+                    // Resetting the touchpad state one frame before libinput recognizes a pinch gesture messes up the state machine, probably a libinput bug.
+                    // Resetting it one frame before a pinch update event does not trigger the bug, and the gesture is still blocked, since clients and
+                    // compositors only start executing actions after the first update event.
+                    return false;
                 case LIBINPUT_EVENT_GESTURE_PINCH_UPDATE: {
                     const auto scale = libinput_event_gesture_get_scale(gestureEvent);
                     const auto angleDelta = libinput_event_gesture_get_angle_delta(gestureEvent);
@@ -285,27 +293,56 @@ bool StandaloneInputBackend::handleEvent(InputDevice *sender, libinput_event *ev
     return false;
 }
 
+bool StandaloneInputBackend::handleLibinputEvents(InputDevice *device, libinput *libinput)
+{
+    libinput_dispatch(libinput);
+
+    // FIXME: One evdev frame can result in multiple libinput events, but one blocked libinput event will block the entire evdev frame.
+    bool block{};
+    while (auto *libinputEvent = libinput_get_event(libinput)) {
+        block = handleEvent(device, libinputEvent) || block;
+        libinput_event_destroy(libinputEvent);
+    }
+    return block;
+}
+
+void StandaloneInputBackend::resetTouchpad(const InputDevice *device, const ExtraDeviceData *data)
+{
+    // Reverse order so that ABS_MT_SLOT is equal to 0 after
+    for (int i = device->m_touchPoints.size() - 1; i >= 0; i--) {
+        libevdev_uinput_write_event(data->outputDevice, EV_ABS, ABS_MT_SLOT, i);
+        libevdev_uinput_write_event(data->outputDevice, EV_ABS, ABS_MT_TRACKING_ID, -1);
+    }
+
+    libevdev_uinput_write_event(data->outputDevice, EV_KEY, BTN_TOOL_QUINTTAP, 0);
+    libevdev_uinput_write_event(data->outputDevice, EV_KEY, BTN_TOOL_QUADTAP, 0);
+    libevdev_uinput_write_event(data->outputDevice, EV_KEY, BTN_TOOL_TRIPLETAP, 0);
+    libevdev_uinput_write_event(data->outputDevice, EV_KEY, BTN_TOUCH, 0);
+    libevdev_uinput_write_event(data->outputDevice, EV_KEY, BTN_TOOL_DOUBLETAP, 0);
+    libevdev_uinput_write_event(data->outputDevice, EV_KEY, BTN_TOOL_FINGER, 0);
+    libevdev_uinput_write_event(data->outputDevice, EV_ABS, ABS_PRESSURE, 0);
+    libevdev_uinput_write_event(data->outputDevice, EV_SYN, SYN_REPORT, 0);
+}
+
 void StandaloneInputBackend::poll()
 {
     LibevdevComplementaryInputBackend::poll();
 
-    input_event evdevEvent{};
     std::vector<input_event> frame;
     for (auto &[device, data] : m_devices) {
         if (!device->properties().grab()) {
-            libinput_dispatch(data->libinput);
-            while (auto *libinputEvent = libinput_get_event(data->libinput)) {
-                handleEvent(device.get(), libinputEvent);
-                libinput_event_destroy(libinputEvent);
-            }
+            handleLibinputEvents(device.get(), data->libinput);
             continue;
         }
 
         int status{};
         while (true) {
+            input_event evdevEvent{};
             auto flags = status == LIBEVDEV_READ_STATUS_SYNC ? LIBEVDEV_READ_FLAG_SYNC : LIBEVDEV_READ_FLAG_NORMAL;
             status = libevdev_next_event(data->libevdev, flags, &evdevEvent);
             if (status != LIBEVDEV_READ_STATUS_SUCCESS && status != LIBEVDEV_READ_STATUS_SYNC) {
+                // Handle events generated after a delay, e.g. pointer button after tapping
+                handleLibinputEvents(device.get(), data->libinput);
                 break;
             }
 
@@ -316,53 +353,34 @@ void StandaloneInputBackend::poll()
                 continue;
             }
 
-            if (device->validTouchPoints().empty()) {
-                data->touchpadBlocked = false;
-            }
-
             for (const auto &event : frame) {
                 libevdev_uinput_write_event(data->libinputEventInjectionDevice, event.type, event.code, event.value);
             }
-            libinput_dispatch(data->libinput);
+            const auto block = handleLibinputEvents(device.get(), data->libinput);
 
-            // FIXME: One evdev frame can result in multiple libinput events, but one blocked libinput event will block the entire evdev frame.
-            bool block{};
-            while (auto *libinputEvent = libinput_get_event(data->libinput)) {
-                block = handleEvent(device.get(), libinputEvent) || block;
-                libinput_event_destroy(libinputEvent);
-            }
-
-            // TODO: This works for motion gestures (though a few pinch and pointer motion events get through for some reason), tap, click and hold gestures
-            // are not blocked yet
+            // Touchpad gestures are blocked by blocking the current and all next frames until all fingers are lifted, and changing the state of the output
+            // device to neutral after 200ms. The delay is required to block tap gestures, but doesn't affect motion gesture blocking negatively.
             if (block && device->type() == InputDeviceType::Touchpad && !data->touchpadBlocked) {
                 data->touchpadBlocked = true;
-
-                for (size_t i = 0; i < device->m_touchPoints.size(); i++) {
-                    if (!device->m_touchPoints[i].active) {
-                        continue;
-                    }
-
-                    libevdev_uinput_write_event(data->outputDevice, EV_ABS, ABS_MT_SLOT, i);
-                    libevdev_uinput_write_event(data->outputDevice, EV_ABS, ABS_MT_TRACKING_ID, -1);
-                }
-                libevdev_uinput_write_event(data->outputDevice, EV_KEY, BTN_TOOL_QUINTTAP, 0);
-                libevdev_uinput_write_event(data->outputDevice, EV_KEY, BTN_TOOL_QUADTAP, 0);
-                libevdev_uinput_write_event(data->outputDevice, EV_KEY, BTN_TOOL_TRIPLETAP, 0);
-                libevdev_uinput_write_event(data->outputDevice, EV_KEY, BTN_TOOL_DOUBLETAP, 0);
-                libevdev_uinput_write_event(data->outputDevice, EV_KEY, BTN_TOOL_FINGER, 0);
-                libevdev_uinput_write_event(data->outputDevice, EV_KEY, BTN_TOUCH, 0);
-                libevdev_uinput_write_event(data->outputDevice, EV_ABS, ABS_PRESSURE, 0);
-                libevdev_uinput_write_event(data->outputDevice, EV_ABS, ABS_MT_SLOT, 0);
-                libevdev_uinput_write_event(data->outputDevice, EV_SYN, SYN_REPORT, 0);
+                data->touchpadStateResetTimer.start(200);
+            } else if (data->touchpadNeutral && data->touchpadStateResetTimer.isActive()) {
+                data->touchpadStateResetTimer.stop();
+                resetTouchpad(device.get(), data.get());
             }
 
-            // TODO: Touchpad event filtering
             if (!block && !data->touchpadBlocked) {
                 for (const auto &event : frame) {
                     libevdev_uinput_write_event(data->outputDevice, event.type, event.code, event.value);
                 }
             }
             frame.clear();
+
+            data->touchpadNeutral = false;
+        }
+
+        if (device->validTouchPoints().empty()) {
+            data->touchpadNeutral = true;
+            data->touchpadBlocked = false;
         }
     }
 }
