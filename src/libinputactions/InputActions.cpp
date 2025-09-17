@@ -5,6 +5,7 @@
 #include "input/backends/InputBackend.h"
 #include "interfaces/CursorShapeProvider.h"
 #include "interfaces/InputEmitter.h"
+#include "interfaces/NotificationManager.h"
 #include "interfaces/OnScreenMessageManager.h"
 #include "interfaces/PointerPositionGetter.h"
 #include "interfaces/PointerPositionSetter.h"
@@ -23,6 +24,7 @@ InputActions::InputActions(std::unique_ptr<InputBackend> inputBackend)
 
     g_cursorShapeProvider = std::make_shared<CursorShapeProvider>();
     g_inputEmitter = std::make_shared<InputEmitter>();
+    g_notificationManager = std::make_shared<NotificationManager>();
     g_onScreenMessageManager = std::make_shared<OnScreenMessageManager>();
     g_pointerPositionGetter = std::make_shared<PointerPositionGetter>();
     g_pointerPositionSetter = std::make_shared<PointerPositionSetter>();
@@ -38,8 +40,10 @@ InputActions::InputActions(std::unique_ptr<InputBackend> inputBackend)
 
 InputActions::~InputActions()
 {
+    // Release as many resources as possible when the compositor plugin is disabled (KWin doesn't unload plugins from the address space)
     g_cursorShapeProvider.reset();
     g_inputEmitter.reset();
+    g_notificationManager.reset();
     g_onScreenMessageManager.reset();
     g_pointerPositionGetter.reset();
     g_pointerPositionSetter.reset();

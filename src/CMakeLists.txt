@@ -35,6 +35,7 @@ set(libinputactions_SRCS
     libinputactions/input/Keyboard.cpp
     libinputactions/interfaces/CursorShapeProvider.h
     libinputactions/interfaces/InputEmitter.h
+    libinputactions/interfaces/NotificationManager.cpp
     libinputactions/interfaces/OnScreenMessageManager.h
     libinputactions/interfaces/PointerPositionGetter.h
     libinputactions/interfaces/PointerPositionSetter.h

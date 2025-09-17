@@ -18,39 +18,20 @@
 
 #pragma once
 
-#include <QObject>
-#include <QTimer>
+#include <QString>
 
 namespace libinputactions
 {
 
-class Config : public QObject
+class NotificationManager
 {
-    Q_OBJECT
-
 public:
-    Config();
-    ~Config() override;
+    NotificationManager() = default;
+    virtual ~NotificationManager() = default;
 
-    /**
-     * @return std::nullopt if loaded successfully, otherwise the error message.
-     */
-    std::optional<QString> load(bool firstLoad = false);
-
-private:
-    void initWatchers();
-    void readEvents();
-
-    QString m_path;
-    QString m_lastContents;
-    int m_inotifyFd;
-    std::vector<int> m_inotifyWds;
-    QTimer m_readEventsTimer;
-
-    bool m_autoReload = true;
-    bool m_sendNotificationOnError{};
+    void sendNotification(const QString &title, const QString &content);
 };
 
-inline std::unique_ptr<Config> g_config;
+inline std::shared_ptr<NotificationManager> g_notificationManager;
 
 }
