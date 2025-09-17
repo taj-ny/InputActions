@@ -21,6 +21,7 @@
 #include <QPointF>
 #include <libinputactions/globals.h>
 #include <memory>
+#include <set>
 
 namespace libinputactions
 {
