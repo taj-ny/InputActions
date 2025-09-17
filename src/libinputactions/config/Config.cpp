@@ -23,6 +23,7 @@
 #include <QStandardPaths>
 #include <fcntl.h>
 #include <libinputactions/input/backends/LibevdevComplementaryInputBackend.h>
+#include <libinputactions/interfaces/NotificationManager.h>
 #include <sys/inotify.h>
 
 namespace libinputactions
@@ -93,13 +94,34 @@ Config::~Config()
 
 std::optional<QString> Config::load(bool firstLoad)
 {
-    qCDebug(INPUTACTIONS, "Reloading config");
     std::optional<QString> error;
+    auto sendNotificationOnError = true;
+
     if (!QFile::exists(CRASH_PREVENTION_FILE) || !firstLoad) {
         QFile(CRASH_PREVENTION_FILE).open(QIODevice::WriteOnly);
         try {
-            const auto config = YAML::LoadFile(m_path.toStdString());
+            QFile configFile(m_path);
+            if (!configFile.open(QIODevice::ReadOnly)) {
+                error = "Failed to open the configuration file";
+                goto END;
+            }
+            const auto contents = QTextStream(&configFile).readAll();
+            if (contents == m_lastContents) {
+                // No change, don't spam the user
+                sendNotificationOnError = false;
+            }
+            m_lastContents = contents;
+            qCDebug(INPUTACTIONS, "Reloading config");
+
+            const auto config = YAML::Load(contents.toStdString());
             m_autoReload = config["autoreload"].as<bool>(true);
+
+            m_sendNotificationOnError = true;
+            if (const auto &notificationsNode = config["notifications"]) {
+                if (const auto &configErrorNode = notificationsNode["config_error"]) {
+                    m_sendNotificationOnError = configErrorNode.as<bool>();
+                }
+            }
 
             auto eventHandlers = config.as<std::vector<std::unique_ptr<InputEventHandler>>>();
             std::map<QString, InputDeviceProperties> customDeviceProperties;
@@ -129,13 +151,19 @@ std::optional<QString> Config::load(bool firstLoad)
             }
             g_inputBackend->initialize();
         } catch (const YAML::Exception &e) {
-            const auto message = QString("Failed to load configuration: %1 (line %2, column %3)")
-                                     .arg(QString::fromStdString(e.msg), QString::number(e.mark.line), QString::number(e.mark.column));
-            qCritical(INPUTACTIONS) << message;
-            error = message;
+            error = QString("Failed to load configuration: %1 (line %2, column %3)")
+                        .arg(QString::fromStdString(e.msg), QString::number(e.mark.line), QString::number(e.mark.column));
         }
     } else {
-        qCWarning(INPUTACTIONS) << "Configuration was not loaded automatically due to a crash.";
+        error = "Configuration was not loaded automatically due to a crash.";
+    }
+
+END:
+    if (error) {
+        qCCritical(INPUTACTIONS).noquote() << error.value();
+        if (sendNotificationOnError && m_sendNotificationOnError) {
+            g_notificationManager->sendNotification("Failed to load configuration", error.value());
+        }
     }
     QFile::remove(CRASH_PREVENTION_FILE);
     return error;
