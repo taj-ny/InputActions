@@ -1,8 +1,8 @@
 #pragma once
 
 #include <QTest>
-#include <libinputactions/input/InputDevice.h>
 #include <libinputactions/handlers/PointerTriggerHandler.h>
+#include <libinputactions/input/InputDevice.h>
 
 namespace libinputactions
 {

@@ -17,34 +17,21 @@
 */
 
 #include "KWinInputBackend.h"
-#include "globals.h"
-#include "utils.h"
+#include "input_event.h"
 #include <libinputactions/input/events.h>
 #include <libinputactions/interfaces/InputEmitter.h>
 #include <libinputactions/triggers/StrokeTrigger.h>
 
-#ifndef KWIN_6_3_OR_GREATER
-#include "core/inputdevice.h"
-#endif
-#include "input_event.h"
-#include "input_event_spy.h"
-
 using namespace libinputactions;
 
 KWinInputBackend::KWinInputBackend()
-#ifdef KWIN_6_2_OR_GREATER
-    : KWin::InputEventFilter(KWin::InputFilterOrder::TabBox)
-#endif
+    : InputEventFilter(KWin::InputFilterOrder::TabBox)
 {
     auto *input = KWin::input();
     connect(input, &KWin::InputRedirection::deviceAdded, this, &KWinInputBackend::kwinDeviceAdded);
     connect(input, &KWin::InputRedirection::deviceRemoved, this, &KWinInputBackend::kwinDeviceRemoved);
 
-#ifdef KWIN_6_2_OR_GREATER
-    KWin::input()->installInputEventFilter(this);
-#else
-    KWin::input()->prependInputEventFilter(this);
-#endif
+    input->installInputEventFilter(this);
 }
 
 KWinInputBackend::~KWinInputBackend()
@@ -126,10 +113,13 @@ bool KWinInputBackend::pinchGestureCancelled(std::chrono::microseconds time)
     return touchpadPinchEnd(currentTouchpad(), true);
 }
 
-#ifdef KWIN_6_3_OR_GREATER
-bool KWinInputBackend::pointerMotion(KWin::PointerMotionEvent *event)
+bool KWinInputBackend::pointerAxis(KWin::PointerAxisEvent *event)
 {
-    return LibinputCompositorInputBackend::pointerMotion(findInputActionsDevice(event->device), event->delta, event->deltaUnaccelerated);
+    auto delta = event->orientation == Qt::Orientation::Horizontal ? QPointF(event->delta, 0) : QPointF(0, event->delta);
+    if (event->inverted) {
+        delta *= -1;
+    }
+    return LibinputCompositorInputBackend::pointerAxis(findInputActionsDevice(event->device), delta);
 }
 
 bool KWinInputBackend::pointerButton(KWin::PointerButtonEvent *event)
@@ -137,36 +127,19 @@ bool KWinInputBackend::pointerButton(KWin::PointerButtonEvent *event)
     return LibinputCompositorInputBackend::pointerButton(findInputActionsDevice(event->device),
                                                          event->button,
                                                          event->nativeButton,
-                                                         event->state == PointerButtonStatePressed);
+                                                         event->state == KWin::PointerButtonState::Pressed);
+}
+
+bool KWinInputBackend::pointerMotion(KWin::PointerMotionEvent *event)
+{
+    return LibinputCompositorInputBackend::pointerMotion(findInputActionsDevice(event->device), event->delta, event->deltaUnaccelerated);
 }
 
 bool KWinInputBackend::keyboardKey(KWin::KeyboardKeyEvent *event)
 {
-    return LibinputCompositorInputBackend::keyboardKey(findInputActionsDevice(event->device), event->nativeScanCode, event->state == KeyboardKeyStatePressed);
-}
-#endif
-
-#ifdef KWIN_6_3_OR_GREATER
-bool KWinInputBackend::pointerAxis(KWin::PointerAxisEvent *event)
-{
-    const auto device = event->device;
-    const auto eventDelta = event->delta;
-    const auto orientation = event->orientation;
-    const auto inverted = event->inverted;
-#else
-bool KWinInputBackend::wheelEvent(KWin::WheelEvent *event)
-{
-    const auto device = event->device();
-    const auto eventDelta = event->delta();
-    const auto orientation = event->orientation();
-    const auto inverted = event->inverted();
-#endif
-
-    auto delta = orientation == Qt::Orientation::Horizontal ? QPointF(eventDelta, 0) : QPointF(0, eventDelta);
-    if (inverted) {
-        delta *= -1;
-    }
-    return LibinputCompositorInputBackend::pointerAxis(findInputActionsDevice(device), delta);
+    return LibinputCompositorInputBackend::keyboardKey(findInputActionsDevice(event->device),
+                                                       event->nativeScanCode,
+                                                       event->state == KWin::KeyboardKeyState::Pressed);
 }
 
 void KWinInputBackend::kwinDeviceAdded(KWin::InputDevice *kwinDevice)
