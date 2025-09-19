@@ -11,7 +11,7 @@ on:
     - cron: "0 0 * * *"
 
 jobs:
-  build:
+  build_hyprland:
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
@@ -25,8 +25,22 @@ jobs:
       - name: Update flake.lock
         run: nix flake update
 
-      - name: Build (Hyprland)
+      - name: Build
         run: nix build -L .#inputactions-hyprland
 
-      - name: Build (KWin)
+  build_kwin:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v27
+        with:
+          nix_path: nixpkgs=channel:nixos-unstable
+
+      - name: Update flake.lock
+        run: nix flake update
+
+      - name: Build
         run: nix build -L .#inputactions-kwin

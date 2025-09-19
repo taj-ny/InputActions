@@ -11,7 +11,7 @@ on:
     - cron: "0 0 * * *"
 
 jobs:
-  build:
+  build_kwin:
     runs-on: ubuntu-latest
     container:
       image: fedora:40
@@ -25,7 +25,7 @@ jobs:
         run: dnf -y install cmake extra-cmake-modules gcc-g++ qt6-qtbase-devel kwin-devel kf6-ki18n-devel kf6-kguiaddons-devel kf6-kcmutils-devel kf6-kconfigwidgets-devel qt6-qtbase kf6-kguiaddons kf6-ki18n wayland-devel yaml-cpp yaml-cpp-devel libepoxy-devel libevdev libevdev-devel libdrm-devel
 
       - name: Configure CMake
-        run: cmake -B ${{github.workspace}}/build
+        run: cmake -B ${{github.workspace}}/build -DINPUTACTIONS_BUILD_KWIN=ON
 
       - name: Build
         run: cmake --build ${{github.workspace}}/build -j

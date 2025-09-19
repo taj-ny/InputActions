@@ -17,7 +17,6 @@
 */
 
 #include "KWinInputEmitter.h"
-#include "globals.h"
 #include "utils.h"
 #include <kwin/input_event_spy.h>
 #include <kwin/wayland/seat.h>
@@ -66,7 +65,7 @@ void KWinInputEmitter::keyboardClearModifiers()
 void KWinInputEmitter::keyboardKey(uint32_t key, bool state)
 {
     libinputactions::g_inputBackend->setIgnoreEvents(true);
-    Q_EMIT m_device->keyChanged(key, state ? KeyboardKeyStatePressed : KeyboardKeyStateReleased, timestamp(), m_device.get());
+    Q_EMIT m_device->keyChanged(key, state ? KWin::KeyboardKeyState::Pressed : KWin::KeyboardKeyState::Released, timestamp(), m_device.get());
     libinputactions::g_inputBackend->setIgnoreEvents(false);
 }
 
@@ -95,7 +94,7 @@ void KWinInputEmitter::keyboardText(const QString &text)
 void KWinInputEmitter::mouseButton(uint32_t button, bool state)
 {
     libinputactions::g_inputBackend->setIgnoreEvents(true);
-    Q_EMIT m_device->pointerButtonChanged(button, state ? PointerButtonStatePressed : PointerButtonStateReleased, timestamp(), m_device.get());
+    Q_EMIT m_device->pointerButtonChanged(button, state ? KWin::PointerButtonState::Pressed : KWin::PointerButtonState::Released, timestamp(), m_device.get());
     Q_EMIT m_device->pointerFrame(m_device.get());
     libinputactions::g_inputBackend->setIgnoreEvents(false);
 }
@@ -192,19 +191,3 @@ bool InputDevice::isLidSwitch() const
 {
     return false;
 }
-
-#ifndef KWIN_6_3_OR_GREATER
-QString InputDevice::sysName() const
-{
-    return name();
-}
-
-KWin::LEDs InputDevice::leds() const
-{
-    return KWin::LEDs::fromInt(0);
-}
-
-void InputDevice::setLeds(KWin::LEDs leds)
-{
-}
-#endif

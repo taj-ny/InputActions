@@ -20,7 +20,6 @@
 
 #include "core/inputdevice.h"
 #include "input.h"
-#include "kwin/input.h"
 #include <libinputactions/interfaces/InputEmitter.h>
 
 namespace libinputactions
@@ -42,12 +41,6 @@ public:
     bool isTabletPad() const override;
     bool isTabletModeSwitch() const override;
     bool isLidSwitch() const override;
-
-#ifndef KWIN_6_3_OR_GREATER
-    QString sysName() const override;
-    KWin::LEDs leds() const override;
-    void setLeds(KWin::LEDs leds) override;
-#endif
 };
 
 class KWinInputEmitter : public libinputactions::InputEmitter
