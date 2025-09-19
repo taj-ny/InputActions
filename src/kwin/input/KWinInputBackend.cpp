@@ -58,57 +58,112 @@ void KWinInputBackend::reset()
     LibinputCompositorInputBackend::reset();
 }
 
+#ifdef KWIN_6_5_OR_GREATER
+bool KWinInputBackend::holdGestureBegin(KWin::PointerHoldGestureBeginEvent *event)
+{
+    const auto fingerCount = event->fingerCount;
+#else
 bool KWinInputBackend::holdGestureBegin(int fingerCount, std::chrono::microseconds time)
 {
+#endif
     return touchpadHoldBegin(currentTouchpad(), fingerCount);
 }
 
+#ifdef KWIN_6_5_OR_GREATER
+bool KWinInputBackend::holdGestureEnd(KWin::PointerHoldGestureEndEvent *event)
+#else
 bool KWinInputBackend::holdGestureEnd(std::chrono::microseconds time)
+#endif
 {
     return touchpadHoldEnd(currentTouchpad(), false);
 }
 
+#ifdef KWIN_6_5_OR_GREATER
+bool KWinInputBackend::holdGestureCancelled(KWin::PointerHoldGestureCancelEvent *event)
+#else
 bool KWinInputBackend::holdGestureCancelled(std::chrono::microseconds time)
+#endif
 {
     return touchpadHoldEnd(currentTouchpad(), true);
 }
 
+#ifdef KWIN_6_5_OR_GREATER
+bool KWinInputBackend::swipeGestureBegin(KWin::PointerSwipeGestureBeginEvent *event)
+{
+    const auto fingerCount = event->fingerCount;
+#else
 bool KWinInputBackend::swipeGestureBegin(int fingerCount, std::chrono::microseconds time)
 {
+#endif
     return touchpadSwipeBegin(currentTouchpad(), fingerCount);
 }
 
+#ifdef KWIN_6_5_OR_GREATER
+bool KWinInputBackend::swipeGestureUpdate(KWin::PointerSwipeGestureUpdateEvent *event)
+{
+    const auto &delta = event->delta;
+#else
 bool KWinInputBackend::swipeGestureUpdate(const QPointF &delta, std::chrono::microseconds time)
 {
+#endif
     return touchpadSwipeUpdate(currentTouchpad(), delta);
 }
 
+#ifdef KWIN_6_5_OR_GREATER
+bool KWinInputBackend::swipeGestureEnd(KWin::PointerSwipeGestureEndEvent *event)
+#else
 bool KWinInputBackend::swipeGestureEnd(std::chrono::microseconds time)
+#endif
 {
     return touchpadSwipeEnd(currentTouchpad(), false);
 }
 
+#ifdef KWIN_6_5_OR_GREATER
+bool KWinInputBackend::swipeGestureCancelled(KWin::PointerSwipeGestureCancelEvent *event)
+#else
 bool KWinInputBackend::swipeGestureCancelled(std::chrono::microseconds time)
+#endif
 {
     return touchpadSwipeEnd(currentTouchpad(), true);
 }
 
+#ifdef KWIN_6_5_OR_GREATER
+bool KWinInputBackend::pinchGestureBegin(KWin::PointerPinchGestureBeginEvent *event)
+{
+    const auto fingerCount = event->fingerCount;
+#else
 bool KWinInputBackend::pinchGestureBegin(int fingerCount, std::chrono::microseconds time)
 {
+#endif
     return touchpadPinchBegin(currentTouchpad(), fingerCount);
 }
 
+#ifdef KWIN_6_5_OR_GREATER
+bool KWinInputBackend::pinchGestureUpdate(KWin::PointerPinchGestureUpdateEvent *event)
+{
+    const auto scale = event->scale;
+    const auto angleDelta = event->angleDelta;
+#else
 bool KWinInputBackend::pinchGestureUpdate(qreal scale, qreal angleDelta, const QPointF &delta, std::chrono::microseconds time)
 {
+#endif
     return touchpadPinchUpdate(currentTouchpad(), scale, angleDelta);
 }
 
+#ifdef KWIN_6_5_OR_GREATER
+bool KWinInputBackend::pinchGestureEnd(KWin::PointerPinchGestureEndEvent *event)
+#else
 bool KWinInputBackend::pinchGestureEnd(std::chrono::microseconds time)
+#endif
 {
     return touchpadPinchEnd(currentTouchpad(), false);
 }
 
+#ifdef KWIN_6_5_OR_GREATER
+bool KWinInputBackend::pinchGestureCancelled(KWin::PointerPinchGestureCancelEvent *event)
+#else
 bool KWinInputBackend::pinchGestureCancelled(std::chrono::microseconds time)
+#endif
 {
     return touchpadPinchEnd(currentTouchpad(), true);
 }
