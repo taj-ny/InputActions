@@ -3,16 +3,19 @@
   extra-cmake-modules,
   lib,
   libevdev,
+  libinput,
   pkg-config,
   qttools,
   stdenv,
+  wayland,
+  wayland-scanner,
   wrapQtAppsHook,
   yaml-cpp,
   ...
 }:
 
 stdenv.mkDerivation rec {
-  pname = "inputactions-standalone";
+  pname = "inputactions";
   version = "0.8.1";
 
   src = ./..;
@@ -20,13 +23,16 @@ stdenv.mkDerivation rec {
   nativeBuildInputs = [
     cmake
     extra-cmake-modules
+    wayland-scanner
     wrapQtAppsHook
   ];
 
   buildInputs = [
     qttools
     libevdev
+    libinput
     pkg-config
+    wayland
     yaml-cpp
   ];
 
