@@ -44,3 +44,20 @@ jobs:
 
       - name: Build
         run: nix build -L .#inputactions-kwin
+
+  build_standalone:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v27
+        with:
+          nix_path: nixpkgs=channel:nixos-unstable
+
+      - name: Update flake.lock
+        run: nix flake update
+
+      - name: Build
+        run: nix build -L .#inputactions

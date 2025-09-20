@@ -23,6 +23,7 @@
 #include <QStandardPaths>
 #include <fcntl.h>
 #include <libinputactions/input/backends/LibevdevComplementaryInputBackend.h>
+#include <libinputactions/interfaces/InputEmitter.h>
 #include <libinputactions/interfaces/NotificationManager.h>
 #include <sys/inotify.h>
 
@@ -124,11 +125,26 @@ std::optional<QString> Config::load(bool firstLoad)
             }
 
             auto eventHandlers = config.as<std::vector<std::unique_ptr<InputEventHandler>>>();
-            std::map<QString, InputDeviceProperties> customDeviceProperties;
+            std::map<std::pair<QString, InputDeviceType>, InputDeviceProperties> customDeviceProperties;
+            std::vector<YAML::Node> deviceNodes;
+            if (const auto &touchpadNode = config["keyboard"]) {
+                if (const auto &devicesNode = touchpadNode["devices"]) {
+                    for (auto it = devicesNode.begin(); it != devicesNode.end(); it++) {
+                        customDeviceProperties[std::make_pair(it->first.as<QString>(), InputDeviceType::Keyboard)] = it->second.as<InputDeviceProperties>();
+                    }
+                }
+            }
+            if (const auto &touchpadNode = config["mouse"]) {
+                if (const auto &devicesNode = touchpadNode["devices"]) {
+                    for (auto it = devicesNode.begin(); it != devicesNode.end(); it++) {
+                        customDeviceProperties[std::make_pair(it->first.as<QString>(), InputDeviceType::Mouse)] = it->second.as<InputDeviceProperties>();
+                    }
+                }
+            }
             if (const auto &touchpadNode = config["touchpad"]) {
                 if (const auto &devicesNode = touchpadNode["devices"]) {
                     for (auto it = devicesNode.begin(); it != devicesNode.end(); it++) {
-                        customDeviceProperties[it->first.as<QString>()] = it->second.as<InputDeviceProperties>();
+                        customDeviceProperties[std::make_pair(it->first.as<QString>(), InputDeviceType::Touchpad)] = it->second.as<InputDeviceProperties>();
                     }
                 }
             }
@@ -143,12 +159,16 @@ std::optional<QString> Config::load(bool firstLoad)
             }
 
             g_inputBackend->reset();
+            g_inputEmitter->reset();
+
             for (auto &eventHandler : eventHandlers) {
                 g_inputBackend->addEventHandler(std::move(eventHandler));
             }
-            for (auto &[device, properties] : customDeviceProperties) {
-                g_inputBackend->addCustomDeviceProperties(device, properties);
+            for (auto &[pair, properties] : customDeviceProperties) {
+                g_inputBackend->addCustomDeviceProperties(pair.first, pair.second, properties);
             }
+
+            g_inputEmitter->initialize();
             g_inputBackend->initialize();
         } catch (const YAML::Exception &e) {
             error = QString("Failed to load configuration: %1 (line %2, column %3)")

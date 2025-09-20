@@ -19,6 +19,7 @@
 #pragma once
 
 #include <QPointF>
+#include <memory>
 
 namespace libinputactions
 {

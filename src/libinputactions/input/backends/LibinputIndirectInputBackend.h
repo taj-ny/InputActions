@@ -23,12 +23,14 @@ namespace libinputactions
 {
 
 /**
- * Input backend for compositors that use libinput. Uses libevdev backend.
+ * Input backend that doesn't use libinput directly. Uses libevdev backend.
+ *
+ * May contain workarounds for libinput issues. All events must come from libinput.
  */
-class LibinputCompositorInputBackend : public LibevdevComplementaryInputBackend
+class LibinputIndirectInputBackend : public LibevdevComplementaryInputBackend
 {
 protected:
-    LibinputCompositorInputBackend() = default;
+    LibinputIndirectInputBackend() = default;
 
     /**
      * @param sender The event will be ignored if nullptr.

@@ -32,7 +32,7 @@ const InputEventType &InputEvent::type() const
     return m_type;
 }
 
-const InputDevice *InputEvent::sender() const
+InputDevice *InputEvent::sender() const
 {
     return m_sender;
 }

@@ -19,7 +19,7 @@
 #pragma once
 
 #include "input.h"
-#include <libinputactions/input/backends/LibinputCompositorInputBackend.h>
+#include <libinputactions/input/backends/LibinputIndirectInputBackend.h>
 
 struct KWinInputDevice
 {
@@ -34,7 +34,7 @@ struct KWinInputDevice
  */
 class KWinInputBackend
     : public QObject
-    , public libinputactions::LibinputCompositorInputBackend
+    , public libinputactions::LibinputIndirectInputBackend
     , public KWin::InputEventFilter
 {
 public:

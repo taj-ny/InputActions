@@ -19,10 +19,12 @@
 #pragma once
 
 #include <QTimer>
+#include <set>
 
 namespace libinputactions
 {
 
+enum class InputDeviceType;
 class InputDevice;
 class InputDeviceProperties;
 class InputEvent;
@@ -61,7 +63,9 @@ public:
      * @param properties Custom properties that will override the ones that were detected automatically.
      * @remark Custom properties will not be applied to devices that have already been added to the backend.
      */
-    void addCustomDeviceProperties(const QString &name, const InputDeviceProperties &properties);
+    void addCustomDeviceProperties(const QString &name, InputDeviceType type, const InputDeviceProperties &properties);
+    void applyCustomDeviceProperties(InputDevice *device);
+    InputDeviceProperties customDeviceProperties(const InputDevice *device) const;
 
     /**
      * Detects and adds devices.
@@ -80,6 +84,8 @@ public:
      */
     virtual void reset();
 
+    std::set<InputDevice *> devices();
+
 protected:
     InputBackend();
 
@@ -88,6 +94,7 @@ protected:
      */
     virtual void deviceAdded(InputDevice *device);
     virtual void deviceRemoved(const InputDevice *device);
+    bool isDeviceBlacklisted(const QString &name);
 
     /**
      * Events with a nullptr sender will be ignored.
@@ -107,8 +114,8 @@ protected:
 private:
     std::function<void(const Stroke &stroke)> m_strokeCallback;
 
-    std::vector<std::unique_ptr<InputDevice>> m_devices;
-    std::map<QString, InputDeviceProperties> m_customDeviceProperties;
+    std::set<InputDevice *> m_devices;
+    std::map<std::pair<QString, InputDeviceType>, InputDeviceProperties> m_customDeviceProperties;
 };
 
 inline std::unique_ptr<InputBackend> g_inputBackend;

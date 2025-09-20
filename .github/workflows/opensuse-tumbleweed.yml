@@ -32,3 +32,25 @@ jobs:
 
       - name: Build
         run: cmake --build ${{github.workspace}}/build -j
+
+  build_standalone:
+    runs-on: ubuntu-latest
+    container:
+      image: opensuse/tumbleweed
+      options: --user root
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Refresh Packages
+        run: zypper ref
+
+      - name: Install Dependencies
+        run: zypper in -y cmake-full gcc-c++ kf6-extra-cmake-modules "cmake(Qt6Core)" "cmake(Qt6DBus)" yaml-cpp-devel libevdev-devel libudev-devel libinput-devel wayland-devel libxkbcommon-devel
+
+      - name: Configure CMake
+        run: cmake -B ${{github.workspace}}/build -DINPUTACTIONS_BUILD_STANDALONE=ON
+
+      - name: Build
+        run: cmake --build ${{github.workspace}}/build -j

@@ -55,7 +55,7 @@ void KWinInputBackend::reset()
         deviceRemoved(device.libinputactionsDevice.get());
     }
     m_devices.clear();
-    LibinputCompositorInputBackend::reset();
+    LibinputIndirectInputBackend::reset();
 }
 
 #ifdef KWIN_6_5_OR_GREATER
@@ -174,27 +174,27 @@ bool KWinInputBackend::pointerAxis(KWin::PointerAxisEvent *event)
     if (event->inverted) {
         delta *= -1;
     }
-    return LibinputCompositorInputBackend::pointerAxis(findInputActionsDevice(event->device), delta);
+    return LibinputIndirectInputBackend::pointerAxis(findInputActionsDevice(event->device), delta);
 }
 
 bool KWinInputBackend::pointerButton(KWin::PointerButtonEvent *event)
 {
-    return LibinputCompositorInputBackend::pointerButton(findInputActionsDevice(event->device),
-                                                         event->button,
-                                                         event->nativeButton,
-                                                         event->state == KWin::PointerButtonState::Pressed);
+    return LibinputIndirectInputBackend::pointerButton(findInputActionsDevice(event->device),
+                                                       event->button,
+                                                       event->nativeButton,
+                                                       event->state == KWin::PointerButtonState::Pressed);
 }
 
 bool KWinInputBackend::pointerMotion(KWin::PointerMotionEvent *event)
 {
-    return LibinputCompositorInputBackend::pointerMotion(findInputActionsDevice(event->device), event->delta, event->deltaUnaccelerated);
+    return LibinputIndirectInputBackend::pointerMotion(findInputActionsDevice(event->device), event->delta, event->deltaUnaccelerated);
 }
 
 bool KWinInputBackend::keyboardKey(KWin::KeyboardKeyEvent *event)
 {
-    return LibinputCompositorInputBackend::keyboardKey(findInputActionsDevice(event->device),
-                                                       event->nativeScanCode,
-                                                       event->state == KWin::KeyboardKeyState::Pressed);
+    return LibinputIndirectInputBackend::keyboardKey(findInputActionsDevice(event->device),
+                                                     event->nativeScanCode,
+                                                     event->state == KWin::KeyboardKeyState::Pressed);
 }
 
 void KWinInputBackend::kwinDeviceAdded(KWin::InputDevice *kwinDevice)

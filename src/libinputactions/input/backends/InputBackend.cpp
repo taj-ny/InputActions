@@ -52,9 +52,24 @@ void InputBackend::poll()
 {
 }
 
-void InputBackend::addCustomDeviceProperties(const QString &name, const InputDeviceProperties &properties)
+void InputBackend::addCustomDeviceProperties(const QString &name, InputDeviceType type, const InputDeviceProperties &properties)
 {
-    m_customDeviceProperties[name] = properties;
+    m_customDeviceProperties[std::make_pair(name, type)] = properties;
+}
+
+void InputBackend::applyCustomDeviceProperties(InputDevice *device)
+{
+    device->properties().apply(customDeviceProperties(device));
+}
+
+InputDeviceProperties InputBackend::customDeviceProperties(const InputDevice *device) const
+{
+    for (const auto &[key, properties] : m_customDeviceProperties) {
+        if (key.first == device->name() && key.second == device->type()) {
+            return properties;
+        }
+    }
+    return {};
 }
 
 void InputBackend::initialize()
@@ -73,20 +88,32 @@ void InputBackend::reset()
     m_customDeviceProperties.clear();
 }
 
+std::set<InputDevice *> InputBackend::devices()
+{
+    return m_devices;
+}
+
 void InputBackend::deviceAdded(InputDevice *device)
 {
     qCDebug(INPUTACTIONS).noquote().nospace() << "Device added (name: " << device->name() << ")";
-    for (const auto &[name, properties] : m_customDeviceProperties) {
-        if (name == device->name()) {
-            device->properties().apply(properties);
-            break;
-        }
-    }
+    m_devices.insert(device);
+    applyCustomDeviceProperties(device);
 }
 
 void InputBackend::deviceRemoved(const InputDevice *device)
 {
     qCDebug(INPUTACTIONS).noquote().nospace() << "Device removed (name: " << device->name() << ")";
+    m_devices.erase(const_cast<InputDevice *>(device));
+}
+
+bool InputBackend::isDeviceBlacklisted(const QString &name)
+{
+    static const std::set<QString> blacklist = {
+        QStringLiteral("inputactions"),
+        QStringLiteral("InputActions Virtual Keyboard"),
+        QStringLiteral("InputActions Virtual Pointer"),
+    };
+    return blacklist.contains(name);
 }
 
 bool InputBackend::handleEvent(const InputEvent &event)
@@ -96,7 +123,17 @@ bool InputBackend::handleEvent(const InputEvent &event)
     }
 
     if (event.type() == InputEventType::KeyboardKey) {
-        g_keyboard->handleEvent(static_cast<const KeyboardKeyEvent &>(event));
+        const auto &keyboardEvent = static_cast<const KeyboardKeyEvent &>(event);
+        g_keyboard->handleEvent(keyboardEvent);
+
+        if (MODIFIERS.contains(keyboardEvent.nativeKey())) {
+            auto modifier = MODIFIERS.at(keyboardEvent.nativeKey());
+            if (keyboardEvent.state()) {
+                event.sender()->m_modifiers |= modifier;
+            } else {
+                event.sender()->m_modifiers &= ~modifier;
+            }
+        }
     }
     if (event.sender()->type() != InputDeviceType::Keyboard) {
         g_variableManager->getVariable(BuiltinVariables::DeviceName)->set(event.sender()->name());

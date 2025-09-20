@@ -89,6 +89,14 @@ public:
      */
     void setLmrTapButtonMap(bool value);
 
+    bool grab() const;
+    /**
+     * @param value Whether to grab the device. Only available in the standalone version.
+     *
+     * Not allowed to be set by input backends.
+     */
+    void setGrab(bool value);
+
 private:
     std::optional<bool> m_multiTouch;
     std::optional<QSizeF> m_size;
@@ -99,6 +107,8 @@ private:
     std::optional<uint32_t> m_palmPressure;
 
     std::optional<bool> m_lmrTapButtonMap;
+
+    std::optional<bool> m_grab;
 };
 
 enum TouchPointType
@@ -150,6 +160,8 @@ public:
      */
     std::vector<TouchPoint> m_touchPoints;
     std::vector<const TouchPoint *> validTouchPoints() const;
+
+    Qt::KeyboardModifiers m_modifiers{};
 
 private:
     InputDeviceType m_type;
