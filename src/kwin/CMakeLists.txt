@@ -7,15 +7,14 @@ find_package(Qt6 ${QT_MIN_VERSION} CONFIG REQUIRED COMPONENTS
 find_package(KWin REQUIRED COMPONENTS
     kwineffects
 )
+if(${KWin_VERSION} VERSION_LESS 6.2.90)
+    message(FATAL_ERROR "InputActions requires Plasma 6.3 or later (installed: ${KWin_VERSION}). See https://wiki.inputactions.org/main/getting-started/installation/kwin for more information.")
+endif()
+if(${KWin_VERSION} VERSION_GREATER_EQUAL 6.4.80)
+    add_compile_definitions(KWIN_6_5_OR_GREATER)
+endif()
 
 find_package(XKB REQUIRED)
-
-if(${KWin_VERSION} VERSION_GREATER_EQUAL 6.1.90)
-    add_compile_definitions(KWIN_6_2_OR_GREATER)
-endif()
-if(${KWin_VERSION} VERSION_GREATER_EQUAL 6.2.90)
-    add_compile_definitions(KWIN_6_3_OR_GREATER)
-endif()
 
 set(kwin_gestures_SOURCES
     input/KWinInputBackend.cpp
@@ -26,7 +25,6 @@ set(kwin_gestures_SOURCES
     interfaces/KWinWindow.cpp
     interfaces/KWinWindowProvider.cpp
     Effect.cpp
-    globals.h
     main.cpp
     utils.h
 )

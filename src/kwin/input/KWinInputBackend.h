@@ -29,11 +29,6 @@ struct KWinInputDevice
 
 /**
  * Installed before GlobalShortcutFilter, which is responsible for handling touchpad gestures.
- *
- * @remark If KWin version <=6.1.90, this filter is installed as the first one. For this reason, all methods that
- * process events must not do anything if the session is locked and must pass the event to the next filter. On later
- * versions, it's installed right before GlobalShortcutFilter.
- *
  * @returns All methods that process events should return @c true to stop further event processing, @c false to pass to
  * next filter.
  */
@@ -49,6 +44,21 @@ public:
     void initialize() override;
     void reset() final;
 
+#ifdef KWIN_6_5_OR_GREATER
+    bool holdGestureBegin(KWin::PointerHoldGestureBeginEvent *event) override;
+    bool holdGestureEnd(KWin::PointerHoldGestureEndEvent *event) override;
+    bool holdGestureCancelled(KWin::PointerHoldGestureCancelEvent *event) override;
+
+    bool swipeGestureBegin(KWin::PointerSwipeGestureBeginEvent *event) override;
+    bool swipeGestureUpdate(KWin::PointerSwipeGestureUpdateEvent *event) override;
+    bool swipeGestureEnd(KWin::PointerSwipeGestureEndEvent *event) override;
+    bool swipeGestureCancelled(KWin::PointerSwipeGestureCancelEvent *event) override;
+
+    bool pinchGestureBegin(KWin::PointerPinchGestureBeginEvent *event) override;
+    bool pinchGestureUpdate(KWin::PointerPinchGestureUpdateEvent *event) override;
+    bool pinchGestureEnd(KWin::PointerPinchGestureEndEvent *event) override;
+    bool pinchGestureCancelled(KWin::PointerPinchGestureCancelEvent *event) override;
+#else
     bool holdGestureBegin(int fingerCount, std::chrono::microseconds time) override;
     bool holdGestureEnd(std::chrono::microseconds time) override;
     bool holdGestureCancelled(std::chrono::microseconds time) override;
@@ -62,16 +72,13 @@ public:
     bool pinchGestureUpdate(qreal scale, qreal angleDelta, const QPointF &delta, std::chrono::microseconds time) override;
     bool pinchGestureEnd(std::chrono::microseconds time) override;
     bool pinchGestureCancelled(std::chrono::microseconds time) override;
+#endif
 
-#ifdef KWIN_6_3_OR_GREATER
-    bool pointerMotion(KWin::PointerMotionEvent *event) override;
-    bool pointerButton(KWin::PointerButtonEvent *event) override;
     bool pointerAxis(KWin::PointerAxisEvent *event) override;
+    bool pointerButton(KWin::PointerButtonEvent *event) override;
+    bool pointerMotion(KWin::PointerMotionEvent *event) override;
 
     bool keyboardKey(KWin::KeyboardKeyEvent *event) override;
-#else
-    bool wheelEvent(KWin::WheelEvent *event) override;
-#endif
 
 private:
     void kwinDeviceAdded(KWin::InputDevice *kwinDevice);
