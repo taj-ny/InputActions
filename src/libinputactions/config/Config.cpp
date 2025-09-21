@@ -30,8 +30,6 @@ namespace libinputactions
 {
 
 static const QDir INPUTACTIONS_DIR = QStandardPaths::writableLocation(QStandardPaths::ConfigLocation) + "/inputactions";
-static const QString CONFIG_PATH = INPUTACTIONS_DIR.path() + "/config.yaml";
-static const QString LEGACY_CONFIG_PATH = QStandardPaths::writableLocation(QStandardPaths::ConfigLocation) + "/kwingestures.yml";
 
 /**
  * Used to detect and prevent infinite compositor crash loops when loading the configuration.
@@ -43,16 +41,13 @@ Config::Config()
     if (!INPUTACTIONS_DIR.exists()) {
         INPUTACTIONS_DIR.mkpath(".");
     }
-    if (QFile::exists(LEGACY_CONFIG_PATH) && !QFile::exists(CONFIG_PATH)) {
-        QFile::copy(LEGACY_CONFIG_PATH, CONFIG_PATH);
-    }
 
     // pair<path, create>
     std::vector<std::pair<QString, bool>> candidates;
 #ifdef DEBUG
     candidates.emplace_back(INPUTACTIONS_DIR.path() + "/config-debug.yaml", false);
 #endif
-    candidates.emplace_back(CONFIG_PATH, true);
+    candidates.emplace_back(INPUTACTIONS_DIR.path() + "/config.yaml", true);
 
     for (const auto &candidate : candidates) {
         const auto &path = candidate.first;
