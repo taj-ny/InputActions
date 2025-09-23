@@ -19,6 +19,7 @@
 #pragma once
 
 #include "input.h"
+#include "input_event_spy.h"
 #include <libinputactions/input/backends/LibinputCompositorInputBackend.h>
 
 struct KWinInputDevice
@@ -92,4 +93,9 @@ private:
     bool isMouse(const KWin::InputDevice *device) const;
 
     std::vector<KWinInputDevice> m_devices;
+
+    class KeyboardModifierSpy : public KWin::InputEventSpy
+    {
+        void keyboardKey(KWin::KeyboardKeyEvent *event) override;
+    } m_keyboardModifierSpy;
 };
