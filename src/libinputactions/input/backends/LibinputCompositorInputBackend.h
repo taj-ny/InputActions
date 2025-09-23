@@ -31,6 +31,7 @@ protected:
     LibinputCompositorInputBackend() = default;
 
     /**
+     * Keyboard::updateModifiers must be called prior to this method.
      * @param sender The event will be ignored if nullptr.
      * @returns Whether to block the event.
      */

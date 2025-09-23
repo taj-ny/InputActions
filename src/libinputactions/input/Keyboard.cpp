@@ -22,17 +22,17 @@
 namespace libinputactions
 {
 
-void Keyboard::handleEvent(const KeyboardKeyEvent &event)
+void Keyboard::updateModifiers(uint32_t key, bool state)
 {
     Qt::KeyboardModifier modifier{};
-    if (MODIFIERS.contains(event.nativeKey())) {
-        modifier = MODIFIERS.at(event.nativeKey());
+    if (MODIFIERS.contains(key)) {
+        modifier = MODIFIERS.at(key);
     }
     if (!modifier) {
         return;
     }
 
-    if (event.state()) {
+    if (state) {
         m_modifiers |= modifier;
     } else {
         m_modifiers &= ~modifier;

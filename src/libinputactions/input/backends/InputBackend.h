@@ -35,6 +35,8 @@ class Stroke;
  * Primary backends are responsible for managing (adding and removing) devices. Complementary backends are only allowed to set properties when a device is
  * being added.
  *
+ * On keyboard key events, the backend must call Keyboard::updateModifiers before InputBackend::handleEvent.
+ *
  * Backends must ignore events when m_ignoreEvents is set to true.
  *
  * To re-initialize the backend, call reset() and then initialize().

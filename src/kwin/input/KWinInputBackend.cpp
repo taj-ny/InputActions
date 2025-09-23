@@ -18,8 +18,8 @@
 
 #include "KWinInputBackend.h"
 #include "input_event.h"
+#include <libinputactions/input/Keyboard.h>
 #include <libinputactions/input/events.h>
-#include <libinputactions/interfaces/InputEmitter.h>
 #include <libinputactions/triggers/StrokeTrigger.h>
 
 using namespace libinputactions;
@@ -32,6 +32,7 @@ KWinInputBackend::KWinInputBackend()
     connect(input, &KWin::InputRedirection::deviceRemoved, this, &KWinInputBackend::kwinDeviceRemoved);
 
     input->installInputEventFilter(this);
+    input->installInputEventSpy(&m_keyboardModifierSpy);
 }
 
 KWinInputBackend::~KWinInputBackend()
@@ -255,4 +256,12 @@ libinputactions::InputDevice *KWinInputBackend::currentTouchpad()
 bool KWinInputBackend::isMouse(const KWin::InputDevice *device) const
 {
     return device->isPointer() && !device->isTouch() && !device->isTouchpad();
+}
+
+void KWinInputBackend::KeyboardModifierSpy::keyboardKey(KWin::KeyboardKeyEvent *event)
+{
+    if (dynamic_cast<KWinInputBackend *>(g_inputBackend.get())->m_ignoreEvents) {
+        return;
+    }
+    g_keyboard->updateModifiers(event->nativeScanCode, event->state == KWin::KeyboardKeyState::Pressed);
 }

@@ -45,7 +45,10 @@ public:
     Keyboard() = default;
     virtual ~Keyboard() = default;
 
-    void handleEvent(const KeyboardKeyEvent &event);
+    /**
+     * Non-modifier key events will be ignored.
+     */
+    void updateModifiers(uint32_t key, bool state);
 
     /**
      * @return Currently pressed keyboard modifiers

@@ -19,7 +19,6 @@
 #include "InputBackend.h"
 #include <QObject>
 #include <libinputactions/input/InputEventHandler.h>
-#include <libinputactions/input/Keyboard.h>
 #include <libinputactions/interfaces/SessionLock.h>
 #include <libinputactions/triggers/StrokeTrigger.h>
 #include <libinputactions/variables/Variable.h>
@@ -95,9 +94,6 @@ bool InputBackend::handleEvent(const InputEvent &event)
         return false;
     }
 
-    if (event.type() == InputEventType::KeyboardKey) {
-        g_keyboard->handleEvent(static_cast<const KeyboardKeyEvent &>(event));
-    }
     if (event.sender()->type() != InputDeviceType::Keyboard) {
         g_variableManager->getVariable(BuiltinVariables::DeviceName)->set(event.sender()->name());
     }
