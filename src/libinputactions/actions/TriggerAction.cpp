@@ -48,7 +48,7 @@ void TriggerAction::triggerUpdated(qreal delta, const QPointF &deltaPointMultipl
     if (auto *inputAction = dynamic_cast<InputAction *>(m_action.get())) {
         inputAction->m_deltaMultiplied = deltaPointMultiplied;
     }
-    if (std::signbit(m_accumulatedDelta) != std::signbit(delta)) {
+    if (delta != 0 && std::signbit(m_accumulatedDelta) != std::signbit(delta)) {
         // Direction changed
         m_accumulatedDelta = delta;
         qCDebug(INPUTACTIONS_ACTION).noquote() << QString("Gesture direction changed (id: %1)").arg(m_action->m_id);
