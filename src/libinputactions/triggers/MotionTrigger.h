@@ -51,6 +51,10 @@ public:
 
     bool hasSpeed() const;
 
+    /**
+     * Lock the pointer while this trigger is active. Only applies to mouse triggers.
+     */
+    bool m_lockPointer{};
     TriggerSpeed m_speed = TriggerSpeed::Any;
 
 protected:

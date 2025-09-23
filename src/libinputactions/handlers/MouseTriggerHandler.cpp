@@ -174,13 +174,13 @@ bool MouseTriggerHandler::handleMotionEvent(const MotionEvent &event)
 
     if (m_pressTimeoutTimer.isActive()) {
         qCDebug(INPUTACTIONS_HANDLER_MOUSE, "Event processed (type: PointerMotion, status: PressingButtons)");
-        return true;
+        return false;
     }
 
     m_mouseMotionSinceButtonPress += std::hypot(delta.x(), delta.y());
     if (m_mouseMotionSinceButtonPress < 5) {
         qCDebug(INPUTACTIONS_HANDLER_MOUSE).nospace() << "Event processed (type: PointerMotion, status: InsufficientMotion, delta: " << delta << ")";
-        return true;
+        return false;
     }
 
     // Don't activate triggers if there already had been one since the last press, unless there is an active press trigger, in which case motion should cancel
@@ -203,7 +203,10 @@ bool MouseTriggerHandler::handleMotionEvent(const MotionEvent &event)
         // Swipe gesture cancelled due to wrong speed or direction
         pressBlockedMouseButtons();
     }
-    return block;
+    const auto lockPointer = std::ranges::any_of(activeTriggers(TriggerType::StrokeSwipe), [](const auto *trigger) {
+        return dynamic_cast<const MotionTrigger *>(trigger)->m_lockPointer;
+    });
+    return block && lockPointer;
 }
 
 bool MouseTriggerHandler::handleWheelEvent(const MotionEvent &event)

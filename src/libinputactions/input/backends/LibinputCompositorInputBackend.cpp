@@ -86,8 +86,7 @@ bool LibinputCompositorInputBackend::pointerMotion(InputDevice *sender, const QP
     }
 
     const auto isTouchpad = sender->type() == InputDeviceType::Touchpad;
-    // Don't block mouse motion for now, more changes are required
-    auto block = handleEvent(MotionEvent(sender, InputEventType::PointerMotion, isTouchpad ? deltaUnaccelerated : delta)) && isTouchpad;
+    auto block = handleEvent(MotionEvent(sender, InputEventType::PointerMotion, isTouchpad ? deltaUnaccelerated : delta));
     if (block && m_previousPointerPosition) {
         g_pointerPositionSetter->setGlobalPointerPosition(m_previousPointerPosition.value());
     }

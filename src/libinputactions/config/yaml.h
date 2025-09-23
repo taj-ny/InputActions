@@ -937,6 +937,7 @@ struct convert<std::unique_ptr<Trigger>>
         loadMember(trigger->m_setLastTrigger, node["set_last_trigger"]);
         loadMember(trigger->m_threshold, node["threshold"]);
         if (auto *motionTrigger = dynamic_cast<MotionTrigger *>(trigger.get())) {
+            loadMember(motionTrigger->m_lockPointer, node["lock_pointer"]);
             loadMember(motionTrigger->m_speed, node["speed"]);
         }
 
