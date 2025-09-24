@@ -32,6 +32,8 @@ void TestTouchpadTriggerHandler::click_withoutLibinputButton()
     m_handler->handleEvent(TouchpadClickEvent(m_touchpad.get(), false));
     QCOMPARE(m_endingTriggersSpy->count(), 1);
     QCOMPARE(m_endingTriggersSpy->at(0).at(0).value<TriggerTypes>(), TriggerType::Click);
+
+    QCOMPARE(m_handler->m_state, MultiTouchMotionTriggerHandler::State::None);
 }
 
 void TestTouchpadTriggerHandler::click_withLibinputButton_data()
@@ -60,6 +62,8 @@ void TestTouchpadTriggerHandler::click_withLibinputButton()
     QCOMPARE(m_handler->handleEvent(PointerButtonEvent(m_touchpad.get(), button, nativeButton, false)), true);
     QCOMPARE(m_endingTriggersSpy->count(), 1);
     QCOMPARE(m_endingTriggersSpy->at(0).at(0).value<TriggerTypes>(), TriggerType::Click);
+
+    QCOMPARE(m_handler->m_state, MultiTouchMotionTriggerHandler::State::None);
 }
 
 void TestTouchpadTriggerHandler::press1_notDelayedOrBlocked()
@@ -72,6 +76,8 @@ void TestTouchpadTriggerHandler::press1_notDelayedOrBlocked()
     QCOMPARE(m_activatingTriggersSpy->at(0).at(0).value<TriggerTypes>(), TriggerType::Press);
 
     QCOMPARE(m_handler->handleEvent(TouchpadGestureLifecyclePhaseEvent(m_touchpad.get(), TouchpadGestureLifecyclePhase::End, TriggerType::Press)), false);
+
+    QCOMPARE(m_handler->m_state, MultiTouchMotionTriggerHandler::State::None);
 }
 
 void TestTouchpadTriggerHandler::press1_hasClickTrigger_delayed()
@@ -86,6 +92,8 @@ void TestTouchpadTriggerHandler::press1_hasClickTrigger_delayed()
 
     QCOMPARE(m_activatingTriggersSpy->count(), 1);
     QCOMPARE(m_activatingTriggersSpy->at(0).at(0).value<TriggerTypes>(), TriggerType::Press);
+
+    QCOMPARE(m_handler->m_state, MultiTouchMotionTriggerHandler::State::None);
 }
 
 void TestTouchpadTriggerHandler::press1_hasTapTrigger_delayed()
@@ -100,6 +108,8 @@ void TestTouchpadTriggerHandler::press1_hasTapTrigger_delayed()
 
     QCOMPARE(m_activatingTriggersSpy->count(), 1);
     QCOMPARE(m_activatingTriggersSpy->at(0).at(0).value<TriggerTypes>(), TriggerType::Press);
+
+    QCOMPARE(m_handler->m_state, MultiTouchMotionTriggerHandler::State::None);
 }
 
 void TestTouchpadTriggerHandler::press1_clickedDuringPress_pressCancelledAndClickActivated()
@@ -120,6 +130,10 @@ void TestTouchpadTriggerHandler::press1_clickedDuringPress_pressCancelledAndClic
     QCOMPARE(m_endingTriggersSpy->count(), 0);
     QCOMPARE(m_activatingTriggersSpy->count(), 2);
     QCOMPARE(m_activatingTriggersSpy->at(1).at(0).value<TriggerTypes>(), TriggerType::Click);
+
+    m_handler->handleEvent(TouchpadClickEvent(m_touchpad.get(), false));
+
+    QCOMPARE(m_handler->m_state, MultiTouchMotionTriggerHandler::State::None);
 }
 
 void TestTouchpadTriggerHandler::press2_notDelayedOrBlocked()
@@ -132,6 +146,8 @@ void TestTouchpadTriggerHandler::press2_notDelayedOrBlocked()
     QCOMPARE(m_activatingTriggersSpy->at(0).at(0).value<TriggerTypes>(), TriggerType::Press);
 
     QCOMPARE(m_handler->handleEvent(TouchpadGestureLifecyclePhaseEvent(m_touchpad.get(), TouchpadGestureLifecyclePhase::End, TriggerType::Press)), false);
+
+    QCOMPARE(m_handler->m_state, MultiTouchMotionTriggerHandler::State::None);
 }
 
 void TestTouchpadTriggerHandler::press3_blocked()
@@ -140,6 +156,8 @@ void TestTouchpadTriggerHandler::press3_blocked()
 
     QCOMPARE(m_handler->handleEvent(TouchpadGestureLifecyclePhaseEvent(m_touchpad.get(), TouchpadGestureLifecyclePhase::Begin, TriggerType::Press, 3)), true);
     QCOMPARE(m_handler->handleEvent(TouchpadGestureLifecyclePhaseEvent(m_touchpad.get(), TouchpadGestureLifecyclePhase::End, TriggerType::Press)), true);
+
+    QCOMPARE(m_handler->m_state, MultiTouchMotionTriggerHandler::State::None);
 }
 
 void TestTouchpadTriggerHandler::swipe1()
@@ -156,6 +174,8 @@ void TestTouchpadTriggerHandler::swipe1()
     removePoints();
     QCOMPARE(m_endingTriggersSpy->count(), 1);
     QVERIFY(m_endingTriggersSpy->at(0).at(0).value<TriggerTypes>() & TriggerType::StrokeSwipe);
+
+    QCOMPARE(m_handler->m_state, MultiTouchMotionTriggerHandler::State::None);
 }
 
 void TestTouchpadTriggerHandler::swipe2()
@@ -174,6 +194,8 @@ void TestTouchpadTriggerHandler::swipe2()
     QCOMPARE(m_handler->handleScrollEvent(MotionEvent(m_touchpad.get(), InputEventType::PointerScroll, {0, 0})), false);
     QCOMPARE(m_endingTriggersSpy->count(), 1);
     QCOMPARE(m_endingTriggersSpy->at(0).at(0).value<TriggerTypes>(), TriggerType::StrokeSwipe);
+
+    QCOMPARE(m_handler->m_state, MultiTouchMotionTriggerHandler::State::None);
 }
 
 void TestTouchpadTriggerHandler::tap1()
@@ -196,6 +218,20 @@ void TestTouchpadTriggerHandler::tap1()
 
     QCOMPARE(m_handler->handleEvent(PointerButtonEvent(m_touchpad.get(), Qt::MouseButton::LeftButton, BTN_LEFT, true)), false);
     QCOMPARE(m_handler->handleEvent(PointerButtonEvent(m_touchpad.get(), Qt::MouseButton::LeftButton, BTN_LEFT, false)), false);
+
+    QCOMPARE(m_handler->m_state, MultiTouchMotionTriggerHandler::State::None);
+}
+
+void TestTouchpadTriggerHandler::tap1_noPointerButtonEvent_stateReset()
+{
+    m_handler->addTrigger(std::make_unique<Trigger>(TriggerType::Tap));
+
+    addPoint();
+    removePoints();
+
+    QCOMPARE(m_handler->m_state, MultiTouchMotionTriggerHandler::State::LibinputTapBegin);
+    QTest::qWait(500);
+    QCOMPARE(m_handler->m_state, MultiTouchMotionTriggerHandler::State::None);
 }
 
 void TestTouchpadTriggerHandler::tap1_tappedAgainBeforeLibinputButtonReleased()
@@ -223,6 +259,8 @@ void TestTouchpadTriggerHandler::tap1_tappedAgainBeforeLibinputButtonReleased()
     QCOMPARE(m_handler->handleEvent(PointerButtonEvent(m_touchpad.get(), Qt::MouseButton::LeftButton, BTN_LEFT, false)), true);
     QCOMPARE(m_endingTriggersSpy->count(), 2);
     QCOMPARE(m_endingTriggersSpy->at(1).at(0).value<TriggerTypes>(), TriggerType::Tap);
+
+    QCOMPARE(m_handler->m_state, MultiTouchMotionTriggerHandler::State::None);
 }
 
 void TestTouchpadTriggerHandler::tap2_variablesSetDuringActivation()
@@ -253,6 +291,8 @@ void TestTouchpadTriggerHandler::tap2_variablesSetDuringActivation()
     m_handler->handleEvent(PointerButtonEvent(m_touchpad.get(), Qt::MouseButton::LeftButton, BTN_LEFT, false));
     QVERIFY(!finger1Position->get().has_value());
     QVERIFY(!finger2Position->get().has_value());
+
+    QCOMPARE(m_handler->m_state, MultiTouchMotionTriggerHandler::State::None);
 }
 
 void TestTouchpadTriggerHandler::tap4()
@@ -266,6 +306,8 @@ void TestTouchpadTriggerHandler::tap4()
     QCOMPARE(m_activatingTriggersSpy->at(0).at(0).value<TriggerTypes>(), TriggerType::Tap);
     QCOMPARE(m_endingTriggersSpy->count(), 1);
     QCOMPARE(m_endingTriggersSpy->at(0).at(0).value<TriggerTypes>(), TriggerType::Tap);
+
+    QCOMPARE(m_handler->m_state, MultiTouchMotionTriggerHandler::State::None);
 }
 
 void TestTouchpadTriggerHandler::tap4_moved()
@@ -277,6 +319,8 @@ void TestTouchpadTriggerHandler::tap4_moved()
     removePoints();
 
     QCOMPARE(m_activatingTriggersSpy->count(), 0);
+
+    QCOMPARE(m_handler->m_state, MultiTouchMotionTriggerHandler::State::None);
 }
 
 void TestTouchpadTriggerHandler::tap4_slow()
@@ -288,6 +332,8 @@ void TestTouchpadTriggerHandler::tap4_slow()
     removePoints();
 
     QCOMPARE(m_activatingTriggersSpy->count(), 0);
+
+    QCOMPARE(m_handler->m_state, MultiTouchMotionTriggerHandler::State::None);
 }
 
 void TestTouchpadTriggerHandler::tap4_clicked()
@@ -302,6 +348,8 @@ void TestTouchpadTriggerHandler::tap4_clicked()
 
     QCOMPARE(m_activatingTriggersSpy->count(), 1);
     QCOMPARE(m_activatingTriggersSpy->at(0).at(0).value<TriggerTypes>(), TriggerType::Click);
+
+    QCOMPARE(m_handler->m_state, MultiTouchMotionTriggerHandler::State::None);
 }
 
 void TestTouchpadTriggerHandler::tap_fingerCount_data()
@@ -348,6 +396,8 @@ void TestTouchpadTriggerHandler::tap_fingerCount()
     }
 
     QCOMPARE(m_activatingTriggerSpy->count(), activated);
+
+    QCOMPARE(m_handler->m_state, MultiTouchMotionTriggerHandler::State::None);
 }
 
 TouchPoint &TestTouchpadTriggerHandler::addPoint(const QPointF &position)

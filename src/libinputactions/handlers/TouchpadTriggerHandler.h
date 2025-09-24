@@ -40,6 +40,12 @@ public:
      */
     std::chrono::milliseconds m_clickTimeout{200};
 
+protected:
+    void setState(State state) override;
+
+private slots:
+    void onLibinputTapTimeout();
+
 private:
     /**
      * Treated as single-finger motion.
@@ -59,6 +65,7 @@ private:
     bool m_gestureBeginBlocked{};
 
     QTimer m_clickTimeoutTimer;
+    QTimer m_libinputTapTimeoutTimer;
 
     friend class TestTouchpadTriggerHandler;
 };

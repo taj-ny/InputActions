@@ -27,6 +27,7 @@ private slots:
     void swipe2();
 
     void tap1();
+    void tap1_noPointerButtonEvent_stateReset();
     void tap1_tappedAgainBeforeLibinputButtonReleased();
     void tap2_variablesSetDuringActivation();
     void tap4();
