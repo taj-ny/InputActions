@@ -88,6 +88,7 @@ private slots:
 private:
     Axis m_currentSwipeAxis = Axis::None;
     QPointF m_currentSwipeDelta;
+    uint32_t m_currentSwipeDeltaCount{};
 
     bool m_isDeterminingSpeed = false;
     uint8_t m_sampledInputEvents = 0;
