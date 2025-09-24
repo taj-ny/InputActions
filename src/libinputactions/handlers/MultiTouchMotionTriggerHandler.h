@@ -55,7 +55,10 @@ protected:
 
     void reset() override;
 
-    static void updateVariables(const InputDevice *device);
+    /*
+     * @param device If nullptr, variables will be unset.
+     */
+    static void updateVariables(const InputDevice *device = {});
 
     enum State
     {
@@ -100,6 +103,7 @@ protected:
         LibinputTapBegin
     } m_state
         = State::None;
+    virtual void setState(State state);
 
 private:
     void handleTouchDownEvent(const TouchEvent &event);

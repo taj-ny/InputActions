@@ -23,10 +23,38 @@
 namespace libinputactions
 {
 
+static const std::chrono::milliseconds LIBINPUT_TAP_TIMEOUT(300L);
+
 TouchpadTriggerHandler::TouchpadTriggerHandler()
 {
     m_clickTimeoutTimer.setTimerType(Qt::TimerType::PreciseTimer);
     m_clickTimeoutTimer.setSingleShot(true);
+
+    m_libinputTapTimeoutTimer.setTimerType(Qt::TimerType::PreciseTimer);
+    m_libinputTapTimeoutTimer.setSingleShot(true);
+    connect(&m_libinputTapTimeoutTimer, &QTimer::timeout, this, &TouchpadTriggerHandler::onLibinputTapTimeout);
+}
+
+void TouchpadTriggerHandler::setState(State state)
+{
+    switch (m_state) {
+        case State::LibinputTapBegin:
+            m_libinputTapTimeoutTimer.stop();
+            break;
+    }
+    switch (state) {
+        case State::LibinputTapBegin:
+            m_libinputTapTimeoutTimer.start(LIBINPUT_TAP_TIMEOUT);
+            break;
+    }
+    MultiTouchMotionTriggerHandler::setState(state);
+}
+
+void TouchpadTriggerHandler::onLibinputTapTimeout()
+{
+    if (m_state == State::LibinputTapBegin) {
+        setState(State::None);
+    }
 }
 
 bool TouchpadTriggerHandler::handleEvent(const InputEvent &event)
@@ -65,7 +93,7 @@ bool TouchpadTriggerHandler::handleEvent(const MotionEvent &event)
         case State::Touch:
         case State::TouchIdle:
             g_variableManager->getVariable(BuiltinVariables::Fingers)->set(1);
-            m_state = activateTriggers(TriggerType::StrokeSwipe) ? State::MotionTrigger : State::MotionNoTrigger;
+            setState(activateTriggers(TriggerType::StrokeSwipe) ? State::MotionTrigger : State::MotionNoTrigger);
             [[fallthrough]];
         case State::MotionTrigger:
             return handleMotion(event.delta());
@@ -97,7 +125,7 @@ bool TouchpadTriggerHandler::handleEvent(const PointerButtonEvent &event)
                     block = true;
                 }
                 updateVariables(event.sender());
-                m_state = State::None;
+                setState(State::None);
             }
             break;
         case State::TouchpadButtonDownClickTrigger:
@@ -118,9 +146,9 @@ void TouchpadTriggerHandler::handleEvent(const TouchpadClickEvent &event)
 {
     if (event.state()) {
         cancelTriggers(TriggerType::Press);
-        m_state = activateTriggers(TriggerType::Click) ? State::TouchpadButtonDownClickTrigger : State::TouchpadButtonDown;
+        setState(activateTriggers(TriggerType::Click) ? State::TouchpadButtonDownClickTrigger : State::TouchpadButtonDown);
     } else if (m_state == State::TouchpadButtonDown || m_state == State::TouchpadButtonDownClickTrigger) {
-        m_state = event.sender()->validTouchPoints().empty() ? State::None : State::Touch;
+        setState(event.sender()->validTouchPoints().empty() ? State::None : State::Touch);
         endTriggers(TriggerType::Click);
     }
 
@@ -182,13 +210,13 @@ bool TouchpadTriggerHandler::handleScrollEvent(const MotionEvent &event)
         case State::Touch:
         case State::TouchIdle:
             g_variableManager->getVariable(BuiltinVariables::Fingers)->set(2);
-            m_state = State::Scrolling;
+            setState(State::Scrolling);
             activateTriggers(TriggerType::StrokeSwipe);
             [[fallthrough]];
         case State::Scrolling:
             if (event.delta().isNull()) {
                 endTriggers(TriggerType::StrokeSwipe);
-                m_state = State::None;
+                setState(State::None);
                 return false; // Blocking a (0,0) event breaks kinetic scrolling
             }
 
