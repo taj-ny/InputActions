@@ -65,6 +65,7 @@ bool MotionTriggerHandler::handleMotion(const QPointF &delta)
         m_stroke.push_back(delta);
     }
     m_currentSwipeDelta += delta;
+    m_currentSwipeDeltaCount++;
 
     const auto deltaHypot = std::hypot(delta.x(), delta.y());
     TriggerSpeed speed{};
@@ -78,26 +79,18 @@ bool MotionTriggerHandler::handleMotion(const QPointF &delta)
     MotionTriggerUpdateEvent strokeEvent;
 
     if (hasActiveTriggers(TriggerType::Swipe)) {
-        SwipeDirection direction; // Overall direction
-        Axis swipeAxis;
+        if (m_currentSwipeDeltaCount < 2) {
+            // One delta may not be enough to determine the direction
+            return true;
+        }
 
-        // Pick an axis for gestures so horizontal ones don't change to vertical ones without lifting fingers
+        // Pick an axis for triggers so horizontal ones don't change to vertical ones without lifting fingers
         if (m_currentSwipeAxis == Axis::None) {
-            if (std::abs(m_currentSwipeDelta.x()) >= std::abs(m_currentSwipeDelta.y()))
-                swipeAxis = Axis::Horizontal;
-            else
-                swipeAxis = Axis::Vertical;
+            m_currentSwipeAxis = std::abs(m_currentSwipeDelta.x()) >= std::abs(m_currentSwipeDelta.y()) ? Axis::Horizontal : Axis::Vertical;
+        }
 
-            if (std::abs(m_currentSwipeDelta.x()) >= 5 || std::abs(m_currentSwipeDelta.y()) >= 5) {
-                // only lock in a direction if the delta is big enough
-                // to prevent accidentally choosing the wrong direction
-                m_currentSwipeAxis = swipeAxis;
-            }
-        } else
-            swipeAxis = m_currentSwipeAxis;
-
-        // Find the current swipe direction
-        switch (swipeAxis) {
+        SwipeDirection direction{};
+        switch (m_currentSwipeAxis) {
             case Axis::Vertical:
                 direction = m_currentSwipeDelta.y() < 0 ? SwipeDirection::Up : SwipeDirection::Down;
                 break;
@@ -108,7 +101,7 @@ bool MotionTriggerHandler::handleMotion(const QPointF &delta)
                 Q_UNREACHABLE();
         }
 
-        swipeEvent.m_delta = swipeAxis == Axis::Vertical ? delta.y() : delta.x();
+        swipeEvent.m_delta = m_currentSwipeAxis == Axis::Vertical ? delta.y() : delta.x();
         swipeEvent.m_direction = static_cast<TriggerDirection>(direction);
         swipeEvent.m_deltaMultiplied = delta * m_swipeDeltaMultiplier;
         swipeEvent.m_speed = speed;
@@ -169,6 +162,7 @@ void MotionTriggerHandler::reset()
     TriggerHandler::reset();
     m_currentSwipeAxis = Axis::None;
     m_currentSwipeDelta = {};
+    m_currentSwipeDeltaCount = {};
     m_speed = {};
     m_isDeterminingSpeed = false;
     m_sampledInputEvents = 0;
