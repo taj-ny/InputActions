@@ -88,7 +88,7 @@ private slots:
 private:
     Axis m_currentSwipeAxis = Axis::None;
     QPointF m_currentSwipeDelta;
-    uint32_t m_currentSwipeDeltaCount{};
+    QPointF m_averageSwipeDelta;
 
     bool m_isDeterminingSpeed = false;
     uint8_t m_sampledInputEvents = 0;
@@ -96,7 +96,7 @@ private:
     std::optional<TriggerSpeed> m_speed;
     std::vector<TriggerSpeedThreshold> m_speedThresholds;
 
-    std::vector<QPointF> m_stroke;
+    std::vector<QPointF> m_deltas;
 };
 
 }
