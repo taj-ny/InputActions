@@ -45,39 +45,20 @@ void TriggerAction::triggerStarted()
 
 void TriggerAction::triggerUpdated(qreal delta, const QPointF &deltaPointMultiplied)
 {
+    if (m_on == On::Tick) {
+        return;
+    }
+
     if (auto *inputAction = dynamic_cast<InputAction *>(m_action.get())) {
         inputAction->m_deltaMultiplied = deltaPointMultiplied;
     }
-    if (delta != 0 && std::signbit(m_accumulatedDelta) != std::signbit(delta)) {
-        // Direction changed
-        m_accumulatedDelta = delta;
-        qCDebug(INPUTACTIONS_ACTION).noquote() << QString("Gesture direction changed (id: %1)").arg(m_action->m_id);
-    } else {
-        m_accumulatedDelta += delta;
-        m_absoluteAccumulatedDelta += std::abs(delta);
-    }
-    qCDebug(INPUTACTIONS_ACTION()).noquote()
-        << QString("Action updated (id: %1, accumulatedDelta: %2)").arg(m_action->m_id, QString::number(m_accumulatedDelta));
+    update(delta);
+}
 
-    if (m_on != On::Update) {
-        return;
-    }
-    const auto interval = m_interval.value();
-    if (interval == 0) {
-        if (m_interval.matches(delta)) {
-            tryExecute();
-        }
-        return;
-    }
-
-    // Keep executing action until accumulated delta no longer exceeds the interval
-    while (m_interval.matches(m_accumulatedDelta) && std::abs(m_accumulatedDelta / interval) >= 1) {
-        tryExecute();
-        if (std::signbit(m_accumulatedDelta) != std::signbit(interval)) {
-            m_accumulatedDelta += interval;
-        } else {
-            m_accumulatedDelta -= interval;
-        }
+void TriggerAction::triggerTick(qreal delta)
+{
+    if (m_on == On::Tick) {
+        update(delta);
     }
 }
 
@@ -107,6 +88,41 @@ void TriggerAction::tryExecute()
 bool TriggerAction::canExecute() const
 {
     return m_action->canExecute() && (!m_threshold || m_threshold->contains(m_absoluteAccumulatedDelta));
+}
+
+void TriggerAction::update(qreal delta)
+{
+    if (delta != 0 && std::signbit(m_accumulatedDelta) != std::signbit(delta)) {
+        // Direction changed
+        m_accumulatedDelta = delta;
+        qCDebug(INPUTACTIONS_ACTION).noquote() << QString("Gesture direction changed (id: %1)").arg(m_action->m_id);
+    } else {
+        m_accumulatedDelta += delta;
+        m_absoluteAccumulatedDelta += std::abs(delta);
+    }
+    qCDebug(INPUTACTIONS_ACTION()).noquote()
+        << QString("Action updated (id: %1, accumulatedDelta: %2)").arg(m_action->m_id, QString::number(m_accumulatedDelta));
+
+    if (m_on != On::Update && m_on != On::Tick) {
+        return;
+    }
+    const auto interval = m_interval.value();
+    if (interval == 0) {
+        if (m_interval.matches(delta)) {
+            tryExecute();
+        }
+        return;
+    }
+
+    // Keep executing action until accumulated delta no longer exceeds the interval
+    while (m_interval.matches(m_accumulatedDelta) && std::abs(m_accumulatedDelta / interval) >= 1) {
+        tryExecute();
+        if (std::signbit(m_accumulatedDelta) != std::signbit(interval)) {
+            m_accumulatedDelta += interval;
+        } else {
+            m_accumulatedDelta -= interval;
+        }
+    }
 }
 
 void TriggerAction::reset()

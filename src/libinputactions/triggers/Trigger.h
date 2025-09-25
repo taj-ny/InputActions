@@ -19,6 +19,7 @@
 #pragma once
 
 #include <QLoggingCategory>
+#include <QTimer>
 #include <QString>
 #include <libinputactions/actions/TriggerAction.h>
 #include <libinputactions/conditions/Condition.h>
@@ -178,12 +179,16 @@ protected:
 
     virtual void updateActions(const TriggerUpdateEvent &event);
 
+private slots:
+    void onTick();
+
 private:
     void reset();
 
     TriggerType m_type{0};
     std::vector<std::unique_ptr<TriggerAction>> m_actions;
     bool m_started = false;
+    QTimer m_tickTimer;
 
     bool m_withinThreshold = false;
     qreal m_absoluteAccumulatedDelta = 0;
