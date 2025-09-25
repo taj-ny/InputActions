@@ -45,6 +45,7 @@ Plugin::Plugin(void *handle)
     g_inputEmitter = std::make_shared<HyprlandInputEmitter>();
     g_onScreenMessageManager = std::make_shared<HyprlandOnScreenMessageManager>();
     g_pointerPositionGetter = pointer;
+    g_pointerPositionSetter = pointer;
     g_sessionLock = std::make_shared<HyprlandSessionLock>();
     g_windowProvider = std::make_shared<HyprlandWindowProvider>();
 

@@ -20,12 +20,10 @@
 #include <hyprland/src/Compositor.hpp>
 #include <hyprland/src/helpers/Monitor.hpp>
 #include <hyprland/src/managers/PointerManager.hpp>
-#include <hyprland/src/managers/input/InputManager.hpp>
 #include <hyprland/src/plugins/HookSystem.hpp>
-#include <hyprland/src/plugins/PluginAPI.hpp>
 #undef HANDLE
-
 #include <QRectF>
+#include <libinputactions/input/backends/InputBackend.h>
 
 using namespace libinputactions;
 
@@ -56,6 +54,13 @@ std::optional<QPointF> HyprlandPointer::screenPointerPosition()
     const QRectF geometry(monitor->m_position.x, monitor->m_position.y, monitor->m_size.x, monitor->m_size.y);
     const auto translatedPosition = globalPointerPosition().value() - geometry.topLeft();
     return QPointF(translatedPosition.x() / geometry.width(), translatedPosition.y() / geometry.height());
+}
+
+void HyprlandPointer::setGlobalPointerPosition(const QPointF &value)
+{
+    g_inputBackend->setIgnoreEvents(true);
+    g_pPointerManager->warpTo({value.x(), value.y()});
+    g_inputBackend->setIgnoreEvents(false);
 }
 
 void HyprlandPointer::setCursorFromNameHook(void *thisPtr, const std::string &name)

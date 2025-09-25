@@ -21,10 +21,12 @@
 #include "utils/HyprlandFunctionHook.h"
 #include <libinputactions/interfaces/CursorShapeProvider.h>
 #include <libinputactions/interfaces/PointerPositionGetter.h>
+#include <libinputactions/interfaces/PointerPositionSetter.h>
 
 class HyprlandPointer
     : public libinputactions::CursorShapeProvider
     , public libinputactions::PointerPositionGetter
+    , public libinputactions::PointerPositionSetter
 {
 public:
     HyprlandPointer(void *handle);
@@ -33,6 +35,8 @@ public:
 
     std::optional<QPointF> globalPointerPosition() override;
     std::optional<QPointF> screenPointerPosition() override;
+
+    void setGlobalPointerPosition(const QPointF &value) override;
 
 private:
     static void setCursorFromNameHook(void *thisPtr, const std::string &name);
