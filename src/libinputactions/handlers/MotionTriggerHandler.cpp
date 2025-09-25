@@ -24,6 +24,11 @@ Q_LOGGING_CATEGORY(INPUTACTIONS_HANDLER_MOTION, "inputactions.handler.motion", Q
 namespace libinputactions
 {
 
+/**
+ * Minimum amount of deltas required to accurately detect axis changes.
+ */
+static const size_t AXIS_CHANGE_MIN_DELTA_COUNT = 10;
+
 MotionTriggerHandler::MotionTriggerHandler()
 {
     connect(this, &TriggerHandler::activatingTrigger, this, &MotionTriggerHandler::onActivatingTrigger);
@@ -60,12 +65,9 @@ bool MotionTriggerHandler::handleMotion(const QPointF &delta)
 
     qCDebug(INPUTACTIONS_HANDLER_MOTION).nospace() << "Event (type: Motion, delta: " << delta << ")";
 
-    const auto hasStroke = hasActiveTriggers(TriggerType::Stroke);
-    if (hasStroke) {
-        m_stroke.push_back(delta);
-    }
+    m_deltas.push_back(delta);
     m_currentSwipeDelta += delta;
-    m_currentSwipeDeltaCount++;
+    m_averageSwipeDelta = (m_deltas.size() * m_averageSwipeDelta + QPointF(std::abs(delta.x()), std::abs(delta.y()))) / (m_deltas.size() + 1);
 
     const auto deltaHypot = std::hypot(delta.x(), delta.y());
     TriggerSpeed speed{};
@@ -77,16 +79,30 @@ bool MotionTriggerHandler::handleMotion(const QPointF &delta)
     std::map<TriggerType, const TriggerUpdateEvent *> events;
     DirectionalMotionTriggerUpdateEvent swipeEvent;
     MotionTriggerUpdateEvent strokeEvent;
+    bool axisChanged{};
 
     if (hasActiveTriggers(TriggerType::Swipe)) {
-        if (m_currentSwipeDeltaCount < 2) {
+        if (m_deltas.size() < 2) {
             // One delta may not be enough to determine the direction
             return true;
         }
 
-        // Pick an axis for triggers so horizontal ones don't change to vertical ones without lifting fingers
         if (m_currentSwipeAxis == Axis::None) {
             m_currentSwipeAxis = std::abs(m_currentSwipeDelta.x()) >= std::abs(m_currentSwipeDelta.y()) ? Axis::Horizontal : Axis::Vertical;
+        } else if (m_deltas.size() >= AXIS_CHANGE_MIN_DELTA_COUNT) { // Make sure we have enough data to detect axis change
+            const std::vector<QPointF> lastDeltas(m_deltas.end() - AXIS_CHANGE_MIN_DELTA_COUNT, m_deltas.end());
+            QPointF sum;
+            for (const auto &delta : lastDeltas) {
+                sum += {std::abs(delta.x()), std::abs(delta.y())};
+            }
+
+            if (std::min(sum.x(), sum.y()) / std::max(sum.x(), sum.y()) <= 0.2 // Must be a sharp turn
+                && ((m_currentSwipeAxis == Axis::Horizontal && sum.y() > sum.x())
+                    || (m_currentSwipeAxis == Axis::Vertical && sum.x() > sum.y()))) {
+                m_currentSwipeAxis = m_currentSwipeAxis == Axis::Horizontal ? Axis::Vertical : Axis::Horizontal;
+                axisChanged = true;
+                qCDebug(INPUTACTIONS_HANDLER_MOTION, "Swipe axis changed");
+            }
         }
 
         SwipeDirection direction{};
@@ -108,15 +124,18 @@ bool MotionTriggerHandler::handleMotion(const QPointF &delta)
         events[TriggerType::Swipe] = &swipeEvent;
     }
 
-    if (hasStroke) {
+    if (hasActiveTriggers(TriggerType::Stroke)) {
         strokeEvent.m_delta = deltaHypot;
         strokeEvent.m_speed = speed;
         events[TriggerType::Stroke] = &strokeEvent;
     }
 
-    const auto hasTriggers = updateTriggers(events);
-    qCDebug(INPUTACTIONS_HANDLER_MOTION).nospace() << "Event processed (type: Motion, hasTriggers: " << hasTriggers << ")";
-    return hasTriggers;
+    const auto block = updateTriggers(events);
+    if (axisChanged && !block) {
+        activateTriggers(TriggerType::Swipe);
+        return handleMotion(delta);
+    }
+    return block;
 }
 
 bool MotionTriggerHandler::determineSpeed(TriggerType type, qreal delta, TriggerSpeed &speed, TriggerDirection direction)
@@ -162,12 +181,12 @@ void MotionTriggerHandler::reset()
     TriggerHandler::reset();
     m_currentSwipeAxis = Axis::None;
     m_currentSwipeDelta = {};
-    m_currentSwipeDeltaCount = {};
+    m_averageSwipeDelta = {};
     m_speed = {};
     m_isDeterminingSpeed = false;
     m_sampledInputEvents = 0;
     m_accumulatedAbsoluteSampledDelta = 0;
-    m_stroke.clear();
+    m_deltas.clear();
 }
 
 void MotionTriggerHandler::onActivatingTrigger(const Trigger *trigger)
@@ -182,13 +201,13 @@ void MotionTriggerHandler::onActivatingTrigger(const Trigger *trigger)
 
 void MotionTriggerHandler::onEndingTriggers(TriggerTypes types)
 {
-    if (m_stroke.empty() || !(types & TriggerType::Stroke)) {
+    if (m_deltas.empty() || !(types & TriggerType::Stroke)) {
         return;
     }
 
-    const Stroke stroke(m_stroke);
+    const Stroke stroke(m_deltas);
     qCDebug(INPUTACTIONS_HANDLER_MOTION).noquote()
-        << QString("Stroke constructed (points: %1, deltas: %2)").arg(QString::number(stroke.points().size()), QString::number(m_stroke.size()));
+        << QString("Stroke constructed (points: %1, deltas: %2)").arg(QString::number(stroke.points().size()), QString::number(m_deltas.size()));
 
     Trigger *best = nullptr;
     double bestScore = 0;
