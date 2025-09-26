@@ -624,6 +624,29 @@ static bool isEnum(const std::type_index &type)
     return enums.contains(type);
 }
 
+/**
+ * @param arguments x and y, size must be 2
+ */
+static QPointF parseMouseInputActionPoint(const Node &node, const QStringList &arguments)
+{
+    if (arguments.length() != 2) {
+        throw Exception(node.Mark(), "Invalid point (wrong argument count)");
+    }
+
+    bool ok1{};
+    bool ok2{};
+    const QPointF point(arguments[0].toDouble(&ok1), arguments[1].toDouble(&ok2));
+
+    if (!ok1) {
+        throw Exception(node.Mark(), "Invalid point (argument 1 is not a number)");
+    }
+    if (!ok2) {
+        throw Exception(node.Mark(), "Invalid point (argument 2 is not a number)");
+    }
+
+    return point;
+}
+
 template<typename T>
 struct convert<Range<T>>
 {
@@ -1319,14 +1342,17 @@ struct convert<std::vector<InputAction::Item>>
                 }
             } else if (device["mouse"].IsDefined()) {
                 for (auto &actionRaw : device["mouse"].as<QStringList>()) {
-                    actionRaw = actionRaw.toUpper();
-                    if (actionRaw.startsWith("+") || actionRaw.startsWith("-")) {
-                        const auto button = actionRaw.mid(1);
+                    const auto split = actionRaw.split(' ');
+                    const auto action = split[0].toUpper();
+                    const auto arguments = split.mid(1);
+
+                    if (action.startsWith("+") || action.startsWith("-")) {
+                        const auto button = action.mid(1);
                         if (!MOUSE.contains(button)) {
                             throw Exception(node.Mark(), ("Invalid mouse button ('" + button + "')").toStdString());
                         }
 
-                        if (actionRaw[0] == '+') {
+                        if (action[0] == '+') {
                             value.push_back({
                                 .mousePress = MOUSE.at(button),
                             });
@@ -1335,23 +1361,21 @@ struct convert<std::vector<InputAction::Item>>
                                 .mouseRelease = MOUSE.at(button),
                             });
                         }
-                    } else if (actionRaw.startsWith("MOVE_BY_DELTA")) {
+                    } else if (action.startsWith("MOVE_BY_DELTA")) {
                         value.push_back({
                             .mouseMoveRelativeByDelta = true,
                         });
-                    } else if (actionRaw.startsWith("MOVE_BY")) {
-                        const auto split = actionRaw.split(" ");
+                    } else if (action.startsWith("MOVE_BY")) {
                         value.push_back({
-                            .mouseMoveRelative = QPointF(split[1].toFloat(), split[2].toFloat()),
+                            .mouseMoveRelative = parseMouseInputActionPoint(node, arguments)
                         });
-                    } else if (actionRaw.startsWith("MOVE_TO")) {
-                        const auto split = actionRaw.split(" ");
+                    } else if (action.startsWith("MOVE_TO")) {
                         value.push_back({
-                            .mouseMoveAbsolute = QPointF(split[1].toFloat(), split[2].toFloat()),
+                            .mouseMoveAbsolute = parseMouseInputActionPoint(node, arguments),
                         });
                     } else {
                         std::vector<uint32_t> buttons;
-                        for (const auto &buttonRaw : actionRaw.split("+")) {
+                        for (const auto &buttonRaw : action.split("+")) {
                             if (!MOUSE.contains(buttonRaw)) {
                                 throw Exception(node.Mark(), ("Invalid mouse button ('" + buttonRaw + "')").toStdString());
                             }
