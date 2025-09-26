@@ -41,6 +41,7 @@ public:
         uint32_t mousePress{};
         uint32_t mouseRelease{};
 
+        QPointF mouseAxis;
         QPointF mouseMoveAbsolute;
         QPointF mouseMoveRelative;
         bool mouseMoveRelativeByDelta{};

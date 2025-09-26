@@ -46,6 +46,8 @@ void InputAction::executeImpl()
                     g_inputEmitter->mouseButton(item.mousePress, true);
                 } else if (item.mouseRelease) {
                     g_inputEmitter->mouseButton(item.mouseRelease, false);
+                } else if (!item.mouseAxis.isNull()) {
+                    g_inputEmitter->mouseAxis(item.mouseAxis);
                 } else if (!item.mouseMoveAbsolute.isNull()) {
                     g_pointerPositionSetter->setGlobalPointerPosition(item.mouseMoveAbsolute);
                 } else if (!item.mouseMoveRelative.isNull()) {

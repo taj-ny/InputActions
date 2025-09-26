@@ -53,6 +53,7 @@ public:
     void keyboardKey(uint32_t key, bool state) override;
     void keyboardText(const QString &text) override;
 
+    void mouseAxis(const QPointF &delta) override;
     void mouseButton(uint32_t button, bool state) override;
     void mouseMoveRelative(const QPointF &pos) override;
 

@@ -30,23 +30,27 @@ public:
     InputEmitter() = default;
     virtual ~InputEmitter() = default;
 
-    virtual void keyboardClearModifiers() {};
+    virtual void keyboardClearModifiers() {}
     /**
      * @param key <linux/input-event-codes.h>
      * @param state True - press, false - release
      */
-    virtual void keyboardKey(uint32_t key, bool state) {};
-    virtual void keyboardText(const QString &text) {};
+    virtual void keyboardKey(uint32_t key, bool state) {}
+    virtual void keyboardText(const QString &text) {}
 
+    /**
+     * @param delta Both X and Y values may be specified.
+     */
+    virtual void mouseAxis(const QPointF &delta) {}
     /**
      * @param button <linux/input-event-codes.h>
      * @param state True - press, false - release
      */
-    virtual void mouseButton(uint32_t button, bool state) {};
-    virtual void mouseMoveRelative(const QPointF &pos) {};
+    virtual void mouseButton(uint32_t button, bool state) {}
+    virtual void mouseMoveRelative(const QPointF &pos) {}
 
-    virtual void touchpadPinchBegin(uint8_t fingers) {};
-    virtual void touchpadSwipeBegin(uint8_t fingers) {};
+    virtual void touchpadPinchBegin(uint8_t fingers) {}
+    virtual void touchpadSwipeBegin(uint8_t fingers) {}
 };
 
 inline std::shared_ptr<InputEmitter> g_inputEmitter;
