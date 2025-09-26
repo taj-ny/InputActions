@@ -1373,6 +1373,10 @@ struct convert<std::vector<InputAction::Item>>
                         value.push_back({
                             .mouseMoveAbsolute = parseMouseInputActionPoint(node, arguments),
                         });
+                    } else if (action.startsWith("WHEEL")) {
+                        value.push_back({
+                            .mouseAxis = parseMouseInputActionPoint(node, arguments),
+                        });
                     } else {
                         std::vector<uint32_t> buttons;
                         for (const auto &buttonRaw : action.split("+")) {
