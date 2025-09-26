@@ -41,6 +41,7 @@ enum class On
     Cancel,
     End,
     EndCancel,
+    Tick,
     Update
 };
 
@@ -114,6 +115,11 @@ public:
      * Called by the trigger.
      * @internal
      */
+    void triggerTick(qreal delta);
+    /**
+     * Called by the trigger.
+     * @internal
+     */
     void triggerEnded();
     /**
      * Called by the trigger.
@@ -149,6 +155,8 @@ public:
     std::optional<Range<qreal>> m_threshold;
 
 private:
+    void update(qreal delta);
+
     /**
      * Resets member variables that hold information about the performed input action.
      */

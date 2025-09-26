@@ -1200,10 +1200,11 @@ struct convert<std::unique_ptr<TouchpadTriggerHandler>>
 ENUM_DECODER(On, "action event (on)",
              (std::unordered_map<QString, On>{
                  {"begin", On::Begin},
-                 {"update", On::Update},
                  {"cancel", On::Cancel},
                  {"end", On::End},
                  {"end_cancel", On::EndCancel},
+                 {"tick", On::Tick},
+                 {"update", On::Update},
              }))
 ENUM_DECODER(CursorShape, "cursor shape", CURSOR_SHAPES)
 ENUM_DECODER(Qt::MouseButton, "mouse button",

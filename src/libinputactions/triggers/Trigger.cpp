@@ -26,9 +26,13 @@ Q_LOGGING_CATEGORY(INPUTACTIONS_TRIGGER, "inputactions.trigger", QtWarningMsg)
 namespace libinputactions
 {
 
+static const std::chrono::milliseconds TICK_INTERVAL{5L};
+
 Trigger::Trigger(TriggerType type)
     : m_type(type)
 {
+    m_tickTimer.setTimerType(Qt::TimerType::PreciseTimer);
+    connect(&m_tickTimer, &QTimer::timeout, this, &Trigger::onTick);
 }
 
 void Trigger::addAction(std::unique_ptr<TriggerAction> action)
@@ -79,6 +83,7 @@ void Trigger::update(const TriggerUpdateEvent &event)
     if (!m_started) {
         qCDebug(INPUTACTIONS_TRIGGER).noquote() << QString("Trigger started (id: %1)").arg(m_id);
         m_started = true;
+        m_tickTimer.start(TICK_INTERVAL);
 
         if (m_clearModifiers && *m_clearModifiers) {
             qCDebug(INPUTACTIONS_TRIGGER).noquote() << QString("Clearing keyboard modifiers (trigger: %1)").arg(m_id);
@@ -185,11 +190,23 @@ const TriggerType &Trigger::type() const
     return m_type;
 }
 
+void Trigger::onTick()
+{
+    if (!m_withinThreshold) {
+        return;
+    }
+
+    for (const auto &action : m_actions) {
+        action->triggerTick(TICK_INTERVAL.count());
+    }
+}
+
 void Trigger::reset()
 {
     m_started = false;
     m_absoluteAccumulatedDelta = 0;
     m_withinThreshold = false;
+    m_tickTimer.stop();
 }
 
 }
