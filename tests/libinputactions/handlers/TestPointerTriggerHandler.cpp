@@ -1,6 +1,7 @@
 #include "TestPointerTriggerHandler.h"
 #include <QSignalSpy>
 #include <libinputactions/conditions/CustomCondition.h>
+#include <libinputactions/input/events.h>
 #include <libinputactions/triggers/HoverTrigger.h>
 
 namespace libinputactions

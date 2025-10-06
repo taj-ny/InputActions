@@ -19,8 +19,6 @@ private slots:
 
     void activateTriggers_cancelsAllTriggers();
 
-    void keyboardKey();
-
 private:
     MockTrigger *makeTrigger(TriggerType type, bool activatable);
 

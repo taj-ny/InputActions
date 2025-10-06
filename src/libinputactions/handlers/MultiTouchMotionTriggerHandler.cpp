@@ -17,6 +17,7 @@
 */
 
 #include "MultiTouchMotionTriggerHandler.h"
+#include <libinputactions/input/events.h>
 #include <libinputactions/variables/VariableManager.h>
 
 Q_LOGGING_CATEGORY(INPUTACTIONS_HANDLER_MULTITOUCH, "inputactions.handler.multitouch", QtWarningMsg)
@@ -24,23 +25,81 @@ Q_LOGGING_CATEGORY(INPUTACTIONS_HANDLER_MULTITOUCH, "inputactions.handler.multit
 namespace libinputactions
 {
 
-bool MultiTouchMotionTriggerHandler::handleEvent(const InputEvent &event)
+bool MultiTouchMotionTriggerHandler::touchChanged(const TouchChangedEvent &event)
 {
-    if (TriggerHandler::handleEvent(event)) {
-        return true;
+    switch (m_state) {
+        case State::LibinputTapBegin:
+            return false;
+        case State::Touch:
+        case State::TouchIdle:
+            const auto diff = event.point().position - event.point().initialPosition;
+            if (std::hypot(diff.x(), diff.y()) >= 0.02) {
+                setState(State::Motion);
+            }
+            break;
     }
 
-    switch (event.type()) {
-        case InputEventType::TouchDown:
-            handleTouchDownEvent(static_cast<const TouchEvent &>(event));
+    updateVariables(event.sender());
+    return false;
+}
+
+bool MultiTouchMotionTriggerHandler::touchDown(const TouchEvent &event)
+{
+    switch (m_state) {
+        case State::LibinputTapBegin:
+            setState(State::TouchIdle);
             break;
-        case InputEventType::TouchChanged:
-            handleEvent(static_cast<const TouchChangedEvent &>(event));
-            break;
-        case InputEventType::TouchUp:
-            handleTouchUpEvent(static_cast<const TouchEvent &>(event));
+        case State::None:
+            setState(State::TouchIdle);
+            m_firstTouchPoint = event.point();
             break;
     }
+
+    updateVariables(event.sender());
+    return false;
+}
+
+bool MultiTouchMotionTriggerHandler::touchUp(const TouchEvent &event)
+{
+    switch (m_state) {
+        case State::TapBegin:
+        case State::TouchIdle:
+            // 1-3 finger touchpad tap gestures are detected by listening for pointer button events, as it's more reliable. The child class should reset the
+            // state in case no pointer button events occur.
+            if (m_state == State::TouchIdle && event.sender()->type() == InputDeviceType::Touchpad
+                && g_variableManager->getVariable(BuiltinVariables::Fingers)->get() <= 3) {
+                setState(State::LibinputTapBegin);
+                break;
+            }
+
+            if (canTap()) {
+                if (m_state == State::TouchIdle) {
+                    setState(activateTriggers(TriggerType::Tap) ? State::TapBegin : State::Touch);
+                }
+                if (m_state == State::TapBegin && event.sender()->validTouchPoints().empty()) {
+                    updateTriggers(TriggerType::Tap);
+                    endTriggers(TriggerType::Tap);
+                    setState(State::None);
+                }
+                break;
+            }
+            if (m_state == State::TapBegin) {
+                cancelTriggers(TriggerType::Tap);
+            }
+            setState(State::Touch);
+            break;
+    }
+
+    if (m_state == State::LibinputTapBegin) {
+        return false;
+    }
+
+    updateVariables(event.sender());
+    if (event.sender()->validTouchPoints().empty()) {
+        setState(State::None);
+        endTriggers(TriggerType::All);
+    }
+
     return false;
 }
 
@@ -163,79 +222,6 @@ void MultiTouchMotionTriggerHandler::setState(State state)
         case State::None:
             updateVariables();
             break;
-    }
-}
-
-void MultiTouchMotionTriggerHandler::handleTouchDownEvent(const TouchEvent &event)
-{
-    switch (m_state) {
-        case State::LibinputTapBegin:
-            setState(State::TouchIdle);
-            break;
-        case State::None:
-            setState(State::TouchIdle);
-            m_firstTouchPoint = event.point();
-            break;
-    }
-    updateVariables(event.sender());
-}
-
-void MultiTouchMotionTriggerHandler::handleEvent(const TouchChangedEvent &event)
-{
-    switch (m_state) {
-        case State::LibinputTapBegin:
-            return;
-        case State::Touch:
-        case State::TouchIdle:
-            const auto diff = event.point().position - event.point().initialPosition;
-            if (std::hypot(diff.x(), diff.y()) >= 0.02) {
-                setState(State::Motion);
-            }
-            break;
-    }
-
-    updateVariables(event.sender());
-}
-
-void MultiTouchMotionTriggerHandler::handleTouchUpEvent(const TouchEvent &event)
-{
-    switch (m_state) {
-        case State::TapBegin:
-        case State::TouchIdle:
-            // 1-3 finger touchpad tap gestures are detected by listening for pointer button events, as it's more reliable. The child class should reset the
-            // state in case no pointer button events occur.
-            if (m_state == State::TouchIdle && event.sender()->type() == InputDeviceType::Touchpad
-                && g_variableManager->getVariable(BuiltinVariables::Fingers)->get() <= 3) {
-                setState(State::LibinputTapBegin);
-                break;
-            }
-
-            if (canTap()) {
-                if (m_state == State::TouchIdle) {
-                    setState(activateTriggers(TriggerType::Tap) ? State::TapBegin : State::Touch);
-                }
-                if (m_state == State::TapBegin && event.sender()->validTouchPoints().empty()) {
-                    updateTriggers(TriggerType::Tap);
-                    endTriggers(TriggerType::Tap);
-                    setState(State::None);
-                }
-                break;
-            }
-            if (m_state == State::TapBegin) {
-                cancelTriggers(TriggerType::Tap);
-            }
-            setState(State::Touch);
-            break;
-    }
-
-    if (m_state == State::LibinputTapBegin) {
-        return;
-    }
-
-    updateVariables(event.sender());
-    if (event.sender()->validTouchPoints().empty()) {
-        setState(State::None);
-        endTriggers(TriggerType::All);
     }
 }
 
