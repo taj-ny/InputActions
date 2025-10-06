@@ -98,10 +98,12 @@ void KWinInputEmitter::mouseAxis(const QPointF &delta)
 {
     libinputactions::g_inputBackend->setIgnoreEvents(true);
     if (delta.x()) {
-        Q_EMIT m_device->pointerAxisChanged(KWin::PointerAxis::Horizontal, delta.x(), delta.x(), KWin::PointerAxisSource::Wheel, false, timestamp(), m_device.get());
+        Q_EMIT m_device
+            ->pointerAxisChanged(KWin::PointerAxis::Horizontal, delta.x(), delta.x(), KWin::PointerAxisSource::Wheel, false, timestamp(), m_device.get());
     }
     if (delta.y()) {
-        Q_EMIT m_device->pointerAxisChanged(KWin::PointerAxis::Vertical, delta.y(), delta.y(), KWin::PointerAxisSource::Wheel, false, timestamp(), m_device.get());
+        Q_EMIT m_device
+            ->pointerAxisChanged(KWin::PointerAxis::Vertical, delta.y(), delta.y(), KWin::PointerAxisSource::Wheel, false, timestamp(), m_device.get());
     }
     Q_EMIT m_device->pointerFrame(m_device.get());
     libinputactions::g_inputBackend->setIgnoreEvents(false);
@@ -182,9 +184,7 @@ bool InputDevice::isEnabled() const
     return true;
 }
 
-void InputDevice::setEnabled(bool enabled)
-{
-}
+void InputDevice::setEnabled(bool enabled) {}
 
 bool InputDevice::isKeyboard() const
 {

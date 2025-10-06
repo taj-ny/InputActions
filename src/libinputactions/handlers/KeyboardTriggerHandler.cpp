@@ -18,23 +18,20 @@
 
 #include "KeyboardTriggerHandler.h"
 #include <libinputactions/input/Keyboard.h>
+#include <libinputactions/input/events.h>
 
 namespace libinputactions
 {
 
-bool KeyboardTriggerHandler::handleEvent(const InputEvent &event)
+KeyboardTriggerHandler::KeyboardTriggerHandler()
 {
-    TriggerHandler::handleEvent(event);
-    switch (event.type()) {
-        case InputEventType::KeyboardKey:
-            return handleEvent(static_cast<const KeyboardKeyEvent &>(event));
-        default:
-            return false;
-    }
+    setDeviceTypes(InputDeviceType::Keyboard);
 }
 
-bool KeyboardTriggerHandler::handleEvent(const KeyboardKeyEvent &event)
+bool KeyboardTriggerHandler::keyboardKey(const KeyboardKeyEvent &event)
 {
+    InputTriggerHandler::keyboardKey(event);
+
     const auto isModifier = MODIFIERS.contains(event.nativeKey());
     if (event.state()) {
         m_keys.insert(event.nativeKey());

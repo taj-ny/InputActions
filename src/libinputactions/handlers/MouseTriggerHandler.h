@@ -33,13 +33,13 @@ namespace libinputactions
  * triggers instant as well.
  * @see setMotionTimeout
  * @see PressTrigger::setInstant
+ *
+ * Can handle multiple devices simultaneously. A single instance is shared by all devices.
  */
 class MouseTriggerHandler : public MotionTriggerHandler
 {
 public:
     MouseTriggerHandler();
-
-    bool handleEvent(const InputEvent &event) override;
 
     /**
      * The amount of time in the handler will wait for motion to be performed (wheel is considered motion as well) before attempting to activate press triggers.
@@ -56,6 +56,12 @@ public:
     bool m_unblockButtonsOnTimeout = true;
 
 protected:
+    bool keyboardKey(const KeyboardKeyEvent &event) override;
+
+    bool pointerAxis(const MotionEvent &event) override;
+    bool pointerButton(const PointerButtonEvent &event) override;
+    bool pointerMotion(const MotionEvent &event) override;
+
     /**
      * This implementation sets mouse buttons.
      * @see TriggerHandler::createActivationEvent
@@ -66,10 +72,6 @@ private slots:
     void onActivatingTrigger(const Trigger *trigger);
 
 private:
-    bool handleEvent(const PointerButtonEvent &event);
-    bool handleMotionEvent(const MotionEvent &event);
-    bool handleWheelEvent(const MotionEvent &event);
-
     /**
      * Checks whether there is an activatable trigger that uses the specified button. Mouse buttons are ignored when
      * checking activatibility. If a trigger has multiple buttons, all of them will be blocked, even if only one was
