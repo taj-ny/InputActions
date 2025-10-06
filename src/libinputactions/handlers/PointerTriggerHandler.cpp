@@ -21,16 +21,12 @@
 namespace libinputactions
 {
 
-bool PointerTriggerHandler::handleEvent(const InputEvent &event)
+bool PointerTriggerHandler::pointerMotion(const MotionEvent &event)
 {
-    switch (event.type()) {
-        case InputEventType::PointerMotion:
-            if (hasActiveTriggers(TriggerType::Hover)) {
-                updateTriggers(TriggerType::Hover);
-            } else {
-                activateTriggers(TriggerType::Hover);
-            }
-            break;
+    if (hasActiveTriggers(TriggerType::Hover)) {
+        updateTriggers(TriggerType::Hover);
+    } else {
+        activateTriggers(TriggerType::Hover);
     }
     return false;
 }

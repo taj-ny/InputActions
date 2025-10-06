@@ -29,6 +29,16 @@ enum class ComparisonOperator
     Regex
 };
 
+enum class InputDeviceType
+{
+    Unknown = 0,
+    Keyboard = 1u << 0,
+    Mouse = 1u << 1,
+    Touchpad = 1u << 2
+};
+Q_DECLARE_FLAGS(InputDeviceTypes, InputDeviceType)
+Q_DECLARE_OPERATORS_FOR_FLAGS(InputDeviceTypes)
+
 enum class TriggerSpeed
 {
     Any,

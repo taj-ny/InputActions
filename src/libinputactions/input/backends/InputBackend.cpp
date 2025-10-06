@@ -18,7 +18,13 @@
 
 #include "InputBackend.h"
 #include <QObject>
+#include <libinputactions/handlers/KeyboardTriggerHandler.h>
+#include <libinputactions/handlers/MotionTriggerHandler.h>
+#include <libinputactions/handlers/MouseTriggerHandler.h>
+#include <libinputactions/handlers/PointerTriggerHandler.h>
+#include <libinputactions/handlers/TouchpadTriggerHandler.h>
 #include <libinputactions/input/InputEventHandler.h>
+#include <libinputactions/input/events.h>
 #include <libinputactions/interfaces/SessionLock.h>
 #include <libinputactions/triggers/StrokeTrigger.h>
 #include <libinputactions/variables/Variable.h>
@@ -37,28 +43,19 @@ InputBackend::InputBackend()
 
 InputBackend::~InputBackend() = default;
 
-void InputBackend::addEventHandler(std::unique_ptr<InputEventHandler> handler)
-{
-    m_handlers.push_back(std::move(handler));
-}
-
 void InputBackend::setIgnoreEvents(bool value)
 {
     m_ignoreEvents = value;
 }
 
-void InputBackend::poll()
-{
-}
+void InputBackend::poll() {}
 
 void InputBackend::addCustomDeviceProperties(const QString &name, const InputDeviceProperties &properties)
 {
     m_customDeviceProperties[name] = properties;
 }
 
-void InputBackend::initialize()
-{
-}
+void InputBackend::initialize() {}
 
 void InputBackend::recordStroke(const std::function<void(const Stroke &stroke)> &callback)
 {
@@ -68,8 +65,12 @@ void InputBackend::recordStroke(const std::function<void(const Stroke &stroke)> 
 
 void InputBackend::reset()
 {
-    m_handlers.clear();
     m_customDeviceProperties.clear();
+    m_keyboardTriggerHandler = {};
+    m_mouseTriggerHandler = {};
+    m_pointerTriggerHandler = {};
+    m_touchpadTriggerHandlerFactory = {};
+    m_eventHandlerChain.clear();
 }
 
 void InputBackend::deviceAdded(InputDevice *device)
@@ -81,11 +82,39 @@ void InputBackend::deviceAdded(InputDevice *device)
             break;
         }
     }
+
+    if (device->type() == InputDeviceType::Touchpad && m_touchpadTriggerHandlerFactory) {
+        device->m_touchpadTriggerHandler = m_touchpadTriggerHandlerFactory(device);
+    }
+
+    m_devices.push_back(device);
+    createEventHandlerChain();
 }
 
 void InputBackend::deviceRemoved(const InputDevice *device)
 {
     qCDebug(INPUTACTIONS).noquote().nospace() << "Device removed (name: " << device->name() << ")";
+    std::erase(m_devices, device);
+    createEventHandlerChain();
+}
+
+void InputBackend::createEventHandlerChain()
+{
+    const auto pushToChain = [this](const auto &handler) {
+        if (handler) {
+            m_eventHandlerChain.push_back(handler.get());
+        }
+    };
+
+    m_eventHandlerChain.clear();
+    pushToChain(m_keyboardTriggerHandler);
+    pushToChain(m_mouseTriggerHandler);
+    for (const auto &device : m_devices) {
+        if (const auto &touchpadTriggerHandler = device->m_touchpadTriggerHandler) {
+            m_eventHandlerChain.push_back(touchpadTriggerHandler.get());
+        }
+    }
+    pushToChain(m_pointerTriggerHandler);
 }
 
 bool InputBackend::handleEvent(const InputEvent &event)
@@ -98,7 +127,7 @@ bool InputBackend::handleEvent(const InputEvent &event)
         g_variableManager->getVariable(BuiltinVariables::DeviceName)->set(event.sender()->name());
     }
 
-    for (const auto &handler : m_handlers) {
+    for (auto *handler : m_eventHandlerChain) {
         if (handler->handleEvent(event)) {
             return true;
         }

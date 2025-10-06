@@ -19,16 +19,12 @@
 #pragma once
 
 #include <QTimer>
-#include <libinputactions/input/events.h>
 #include <libinputactions/triggers/Trigger.h>
 
 Q_DECLARE_LOGGING_CATEGORY(INPUTACTIONS_HANDLER_TRIGGER)
 
 namespace libinputactions
 {
-
-struct InputEvent;
-struct KeyboardKeyEvent;
 
 /**
  * Base class of all handlers.
@@ -39,9 +35,6 @@ class TriggerHandler : public QObject
 
 public:
     void addTrigger(std::unique_ptr<Trigger> trigger);
-
-    virtual bool handleEvent(const InputEvent &event);
-    void handleEvent(const KeyboardKeyEvent &event);
 
     /**
      * @param value The interval (in milliseconds) and delta used for updating time-based triggers.

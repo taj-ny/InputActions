@@ -35,10 +35,7 @@ public:
     /**
      * @return May be empty.
      */
-    virtual std::any get() const
-    {
-        return {};
-    };
+    virtual std::any get() const { return {}; };
     /**
      * @param value Must be the same as the variable's type or empty.
      */

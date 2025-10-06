@@ -19,6 +19,7 @@ set(libinputactions_SRCS
     libinputactions/conditions/ConditionGroup.cpp
     libinputactions/conditions/CustomCondition.cpp
     libinputactions/conditions/VariableCondition.cpp
+    libinputactions/handlers/InputTriggerHandler.cpp
     libinputactions/handlers/KeyboardTriggerHandler.cpp
     libinputactions/handlers/MotionTriggerHandler.cpp
     libinputactions/handlers/MouseTriggerHandler.cpp

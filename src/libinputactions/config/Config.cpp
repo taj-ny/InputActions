@@ -118,7 +118,17 @@ std::optional<QString> Config::load(bool firstLoad)
                 }
             }
 
-            auto eventHandlers = config.as<std::vector<std::unique_ptr<InputEventHandler>>>();
+            auto keyboardTriggerHandler = config["keyboard"].as<std::unique_ptr<KeyboardTriggerHandler>>(nullptr);
+            auto mouseTriggerHandler = config["mouse"].as<std::unique_ptr<MouseTriggerHandler>>(nullptr);
+            auto pointerTriggerHandler = config["pointer"].as<std::unique_ptr<PointerTriggerHandler>>(nullptr);
+            std::function<std::unique_ptr<TouchpadTriggerHandler>(InputDevice * device)> touchpadTriggerHandlerFactory;
+            if (const auto &touchpadNode = config["touchpad"]) {
+                touchpadTriggerHandlerFactory = [touchpadNode](auto *device) {
+                    return YAML::asTouchpadTriggerHandler(touchpadNode, device);
+                };
+                touchpadTriggerHandlerFactory(nullptr); // Make sure it doesn't throw
+            }
+
             std::map<QString, InputDeviceProperties> customDeviceProperties;
             if (const auto &touchpadNode = config["touchpad"]) {
                 if (const auto &devicesNode = touchpadNode["devices"]) {
@@ -138,9 +148,10 @@ std::optional<QString> Config::load(bool firstLoad)
             }
 
             g_inputBackend->reset();
-            for (auto &eventHandler : eventHandlers) {
-                g_inputBackend->addEventHandler(std::move(eventHandler));
-            }
+            g_inputBackend->m_keyboardTriggerHandler = std::move(keyboardTriggerHandler);
+            g_inputBackend->m_mouseTriggerHandler = std::move(mouseTriggerHandler);
+            g_inputBackend->m_pointerTriggerHandler = std::move(pointerTriggerHandler);
+            g_inputBackend->m_touchpadTriggerHandlerFactory = std::move(touchpadTriggerHandlerFactory);
             for (auto &[device, properties] : customDeviceProperties) {
                 g_inputBackend->addCustomDeviceProperties(device, properties);
             }

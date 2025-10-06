@@ -3,6 +3,7 @@
 #include <QTest>
 #include <libinputactions/conditions/VariableCondition.h>
 #include <libinputactions/handlers/TouchpadTriggerHandler.h>
+#include <libinputactions/input/events.h>
 #include <libinputactions/variables/VariableManager.h>
 #include <linux/input-event-codes.h>
 #include <ranges>
@@ -12,13 +13,13 @@ namespace libinputactions
 
 void TestTouchpadTriggerHandler::init()
 {
-    m_handler = std::make_unique<TouchpadTriggerHandler>();
+    m_touchpad = std::make_unique<InputDevice>(InputDeviceType::Touchpad);
+    m_touchpad->m_touchPoints = std::vector<TouchPoint>(5);
+    m_handler = std::make_unique<TouchpadTriggerHandler>(m_touchpad.get());
     m_activatingTriggerSpy = std::make_unique<QSignalSpy>(m_handler.get(), &TriggerHandler::activatingTrigger);
     m_activatingTriggersSpy = std::make_unique<QSignalSpy>(m_handler.get(), &TriggerHandler::activatingTriggers);
     m_cancellingTriggersSpy = std::make_unique<QSignalSpy>(m_handler.get(), &TriggerHandler::cancellingTriggers);
     m_endingTriggersSpy = std::make_unique<QSignalSpy>(m_handler.get(), &TriggerHandler::endingTriggers);
-    m_touchpad = std::make_unique<InputDevice>(InputDeviceType::Touchpad);
-    m_touchpad->m_touchPoints = std::vector<TouchPoint>(5);
 }
 
 void TestTouchpadTriggerHandler::click_withoutLibinputButton()
@@ -188,10 +189,10 @@ void TestTouchpadTriggerHandler::swipe2()
     movePoints({0.05, 0});
     movePoints({0.05, 0});
     movePoints({0.05, 0});
-    QCOMPARE(m_handler->handleScrollEvent(MotionEvent(m_touchpad.get(), InputEventType::PointerScroll, {10, 0})), true);
+    QCOMPARE(m_handler->handleEvent(MotionEvent(m_touchpad.get(), InputEventType::PointerAxis, {10, 0})), true);
     QCOMPARE(m_activatingTriggerSpy->count(), 1);
 
-    QCOMPARE(m_handler->handleScrollEvent(MotionEvent(m_touchpad.get(), InputEventType::PointerScroll, {0, 0})), false);
+    QCOMPARE(m_handler->handleEvent(MotionEvent(m_touchpad.get(), InputEventType::PointerAxis, {0, 0})), false);
     QCOMPARE(m_endingTriggersSpy->count(), 1);
     QCOMPARE(m_endingTriggersSpy->at(0).at(0).value<TriggerTypes>(), TriggerType::StrokeSwipe);
 

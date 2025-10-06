@@ -21,19 +21,13 @@
 #include <QPointF>
 #include <QRegularExpression>
 #include <QSizeF>
-#include <libinputactions/Range.h>
+#include <libinputactions/globals.h>
 #include <optional>
 
 namespace libinputactions
 {
 
-enum class InputDeviceType
-{
-    Keyboard,
-    Mouse,
-    Touchpad,
-    Unknown
-};
+class TouchpadTriggerHandler;
 
 class InputDeviceProperties
 {
@@ -138,6 +132,7 @@ public:
      * @param sysName Name of the device in /dev/input (e.g. event6).
      */
     InputDevice(InputDeviceType type, QString name = {}, QString sysName = {});
+    ~InputDevice();
 
     const InputDeviceType &type() const;
     const QString &name() const;
@@ -150,6 +145,8 @@ public:
      */
     std::vector<TouchPoint> m_touchPoints;
     std::vector<const TouchPoint *> validTouchPoints() const;
+
+    std::unique_ptr<TouchpadTriggerHandler> m_touchpadTriggerHandler;
 
 private:
     InputDeviceType m_type;

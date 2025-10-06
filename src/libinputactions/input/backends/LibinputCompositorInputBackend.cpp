@@ -42,7 +42,7 @@ bool LibinputCompositorInputBackend::pointerAxis(InputDevice *sender, const QPoi
     }
 
     if (sender->type() == InputDeviceType::Mouse) {
-        return handleEvent(MotionEvent(sender, InputEventType::PointerScroll, delta));
+        return handleEvent(MotionEvent(sender, InputEventType::PointerAxis, delta));
     }
 
     if (m_isRecordingStroke) {
@@ -57,7 +57,7 @@ bool LibinputCompositorInputBackend::pointerAxis(InputDevice *sender, const QPoi
     if (delta.isNull() && sender->type() == InputDeviceType::Touchpad) {
         LibevdevComplementaryInputBackend::poll(); // Update clicked state, clicking cancels scrolling and generates a (0,0) event
     }
-    return handleEvent(MotionEvent(sender, InputEventType::PointerScroll, delta));
+    return handleEvent(MotionEvent(sender, InputEventType::PointerAxis, delta));
 }
 
 bool LibinputCompositorInputBackend::pointerButton(InputDevice *sender, Qt::MouseButton button, uint32_t nativeButton, bool state)

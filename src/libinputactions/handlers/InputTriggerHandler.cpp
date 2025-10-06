@@ -16,32 +16,36 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#pragma once
-
 #include "InputTriggerHandler.h"
+#include <libinputactions/input/InputDevice.h>
+#include <libinputactions/input/events.h>
 
 namespace libinputactions
 {
 
-/**
- * Can handle multiple devices simultaneously. A single instance is shared by all devices.
- */
-class KeyboardTriggerHandler : public InputTriggerHandler
+void InputTriggerHandler::setDevice(InputDevice *device)
 {
-public:
-    KeyboardTriggerHandler();
+    m_device = device;
+}
 
-protected:
-    bool keyboardKey(const KeyboardKeyEvent &event) override;
+void InputTriggerHandler::setDeviceTypes(InputDeviceTypes types)
+{
+    m_types = types;
+}
 
-    std::unique_ptr<TriggerActivationEvent> createActivationEvent() const override;
+bool InputTriggerHandler::acceptsEvent(const InputEvent &event)
+{
+    return (!m_device && !m_types) || (m_device && event.sender() == m_device) || (m_types && m_types & event.sender()->type())
+        || event.type() == InputEventType::KeyboardKey;
+}
 
-private:
-    bool m_block{};
-    std::set<uint32_t> m_keys;
-    uint32_t m_firstKey{};
-
-    friend class TestKeyboardTriggerHandler;
-};
+bool InputTriggerHandler::keyboardKey(const KeyboardKeyEvent &event)
+{
+    // Lazy way of detecting modifier release during mouse gestures
+    if (!event.state()) {
+        endTriggers(TriggerType::All);
+    }
+    return false;
+}
 
 }
