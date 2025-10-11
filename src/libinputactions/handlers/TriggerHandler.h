@@ -124,11 +124,6 @@ signals:
 
 private:
     /**
-     * Whether conflicting triggers have been cancelled since activation.
-     */
-    bool m_conflictsResolved = false;
-
-    /**
      * Updates timed triggers. Stops itself if no triggers are active.
      */
     QTimer m_timedTriggerUpdateTimer;

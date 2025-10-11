@@ -126,13 +126,12 @@ bool TriggerHandler::updateTriggers(const std::map<TriggerType, const TriggerUpd
         hasTriggers = true;
         trigger->update(*event);
 
-        if (!m_conflictsResolved && m_activeTriggers.size() > 1) {
+        if (m_activeTriggers.size() > 1) {
             qCDebug(INPUTACTIONS_TRIGGER, "Cancelling conflicting triggers");
-            m_conflictsResolved = true;
             if (trigger->overridesOtherTriggersOnUpdate()) {
                 cancelTriggers(trigger);
                 break;
-            } else if (types & TriggerType::Stroke) { // TODO This should be in MotionTriggerHandler
+            } else if (types & TriggerType::Stroke && hasActiveTriggers(TriggerType::Swipe)) { // TODO This should be in MotionTriggerHandler
                 cancelTriggers(TriggerType::Swipe);
                 break;
             }
@@ -283,7 +282,6 @@ std::unique_ptr<TriggerActivationEvent> TriggerHandler::createActivationEvent() 
 
 void TriggerHandler::reset()
 {
-    m_conflictsResolved = false;
 }
 
 }
