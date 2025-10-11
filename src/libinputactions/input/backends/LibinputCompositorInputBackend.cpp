@@ -54,6 +54,9 @@ bool LibinputCompositorInputBackend::pointerAxis(InputDevice *sender, const QPoi
         return true;
     }
 
+    if (delta.isNull() && sender->type() == InputDeviceType::Touchpad) {
+        LibevdevComplementaryInputBackend::poll(); // Update clicked state, clicking cancels scrolling and generates a (0,0) event
+    }
     return handleEvent(MotionEvent(sender, InputEventType::PointerScroll, delta));
 }
 
