@@ -97,8 +97,7 @@ bool MotionTriggerHandler::handleMotion(const QPointF &delta)
             }
 
             if (std::min(sum.x(), sum.y()) / std::max(sum.x(), sum.y()) <= 0.2 // Must be a sharp turn
-                && ((m_currentSwipeAxis == Axis::Horizontal && sum.y() > sum.x())
-                    || (m_currentSwipeAxis == Axis::Vertical && sum.x() > sum.y()))) {
+                && ((m_currentSwipeAxis == Axis::Horizontal && sum.y() > sum.x()) || (m_currentSwipeAxis == Axis::Vertical && sum.x() > sum.y()))) {
                 m_currentSwipeAxis = m_currentSwipeAxis == Axis::Horizontal ? Axis::Vertical : Axis::Horizontal;
                 axisChanged = true;
                 qCDebug(INPUTACTIONS_HANDLER_MOTION, "Swipe axis changed");

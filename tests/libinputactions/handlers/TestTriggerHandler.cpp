@@ -1,6 +1,5 @@
 #include "TestTriggerHandler.h"
 #include <QSignalSpy>
-#include <linux/input-event-codes.h>
 
 using namespace ::testing;
 
@@ -56,20 +55,6 @@ void TestTriggerHandler::activateTriggers_cancelsAllTriggers()
     for (const auto &args : spy) {
         QCOMPARE(args.at(0).value<TriggerTypes>(), TriggerType::All);
     }
-}
-
-void TestTriggerHandler::keyboardKey()
-{
-    QSignalSpy spy(m_handler.get(), &TriggerHandler::endingTriggers);
-    InputDevice device(InputDeviceType::Keyboard);
-    m_handler->addTrigger(std::make_unique<Trigger>(TriggerType::Press));
-
-    m_handler->activateTriggers(TriggerType::Press);
-    m_handler->handleEvent(KeyboardKeyEvent(&device, KEY_LEFTCTRL, true));
-    QCOMPARE(spy.count(), 0);
-
-    m_handler->handleEvent(KeyboardKeyEvent(&device, KEY_LEFTCTRL, false));
-    QCOMPARE(spy.count(), 1);
 }
 
 MockTrigger *TestTriggerHandler::makeTrigger(TriggerType type, bool activatable)

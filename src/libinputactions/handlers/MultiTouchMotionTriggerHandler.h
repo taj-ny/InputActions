@@ -20,6 +20,7 @@
 
 #include "MotionTriggerHandler.h"
 #include <chrono>
+#include <libinputactions/input/InputDevice.h>
 
 Q_DECLARE_LOGGING_CATEGORY(INPUTACTIONS_HANDLER_MULTITOUCH)
 
@@ -42,11 +43,11 @@ enum class PinchType
 class MultiTouchMotionTriggerHandler : public MotionTriggerHandler
 {
 public:
-    bool handleEvent(const InputEvent &event) override;
+    bool touchChanged(const TouchChangedEvent &event) override;
+    bool touchDown(const TouchEvent &event) override;
+    bool touchUp(const TouchEvent &event) override;
 
 protected:
-    MultiTouchMotionTriggerHandler() = default;
-
     /**
      * Does nothing if there are no active pinch or rotate triggers.
      * @return Whether there are any active pinch or rotate triggers.
@@ -106,10 +107,6 @@ protected:
     virtual void setState(State state);
 
 private:
-    void handleTouchDownEvent(const TouchEvent &event);
-    void handleEvent(const TouchChangedEvent &event);
-    void handleTouchUpEvent(const TouchEvent &event);
-
     bool canTap();
 
     TouchPoint m_firstTouchPoint;

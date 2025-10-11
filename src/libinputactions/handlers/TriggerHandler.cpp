@@ -40,27 +40,6 @@ void TriggerHandler::addTrigger(std::unique_ptr<Trigger> trigger)
     m_triggers.push_back(std::move(trigger));
 }
 
-void TriggerHandler::handleEvent(const KeyboardKeyEvent &event)
-{
-    // Lazy way of detecting modifier release during mouse gestures
-    if (event.state()) {
-        return;
-    }
-    endTriggers(TriggerType::All);
-}
-
-bool TriggerHandler::handleEvent(const InputEvent &event)
-{
-    switch (event.type()) {
-        case InputEventType::KeyboardKey:
-            handleEvent(static_cast<const KeyboardKeyEvent &>(event));
-            break;
-        default:
-            return false;
-    }
-    return false;
-}
-
 void TriggerHandler::setTimedTriggerUpdateDelta(uint32_t value)
 {
     m_timedTriggerUpdateDelta = value;

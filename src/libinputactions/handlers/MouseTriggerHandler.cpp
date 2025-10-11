@@ -18,6 +18,7 @@
 
 #include "MouseTriggerHandler.h"
 #include <libinputactions/input/Keyboard.h>
+#include <libinputactions/input/events.h>
 #include <libinputactions/interfaces/InputEmitter.h>
 #include <libinputactions/triggers/PressTrigger.h>
 #include <libinputactions/triggers/WheelTrigger.h>
@@ -29,8 +30,9 @@ namespace libinputactions
 {
 
 MouseTriggerHandler::MouseTriggerHandler()
-    : MotionTriggerHandler()
 {
+    setDeviceTypes(InputDeviceType::Mouse);
+
     connect(this, &TriggerHandler::activatingTrigger, this, &MouseTriggerHandler::onActivatingTrigger);
 
     m_pressTimeoutTimer.setTimerType(Qt::TimerType::PreciseTimer);
@@ -40,37 +42,56 @@ MouseTriggerHandler::MouseTriggerHandler()
     m_motionTimeoutTimer.setSingleShot(true);
 }
 
-bool MouseTriggerHandler::handleEvent(const InputEvent &event)
+bool MouseTriggerHandler::keyboardKey(const KeyboardKeyEvent &event)
 {
-    MotionTriggerHandler::handleEvent(event);
-    switch (event.type()) {
-        case InputEventType::KeyboardKey:
-            // If a modifier is released before mouse button, this will mess up blocking
-            if (m_blockedMouseButtons.empty()) {
-                m_hadTriggerSincePress = false;
-            }
-            return false;
-        case InputEventType::PointerButton:
-            if (event.sender()->type() != InputDeviceType::Mouse) {
-                return false;
-            }
-            return handleEvent(static_cast<const PointerButtonEvent &>(event));
-        case InputEventType::PointerMotion:
-            if (event.sender()->type() != InputDeviceType::Mouse) {
-                return false;
-            }
-            return handleMotionEvent(static_cast<const MotionEvent &>(event));
-        case InputEventType::PointerScroll:
-            if (event.sender()->type() != InputDeviceType::Mouse) {
-                return false;
-            }
-            return handleWheelEvent(static_cast<const MotionEvent &>(event));
-        default:
-            return false;
+    MotionTriggerHandler::keyboardKey(event);
+
+    // If a modifier is released before mouse button, this will mess up blocking
+    if (m_blockedMouseButtons.empty()) {
+        m_hadTriggerSincePress = false;
     }
+    return false;
 }
 
-bool MouseTriggerHandler::handleEvent(const PointerButtonEvent &event)
+bool MouseTriggerHandler::pointerAxis(const MotionEvent &event)
+{
+    const auto &delta = event.delta();
+    qCDebug(INPUTACTIONS_HANDLER_MOUSE).nospace() << "Event (type: Wheel, delta: " << delta << ")";
+
+    if (!hasActiveTriggers(TriggerType::Wheel) && !activateTriggers(TriggerType::Wheel)) {
+        qCDebug(INPUTACTIONS_HANDLER_MOUSE, "Event processed (type: Wheel, status: NoGestures)");
+        return false;
+    }
+
+    SwipeDirection direction = SwipeDirection::Left;
+    if (delta.x() > 0) {
+        direction = SwipeDirection::Right;
+    } else if (delta.y() > 0) {
+        direction = SwipeDirection::Down;
+    } else if (delta.y() < 0) {
+        direction = SwipeDirection::Up;
+    }
+    DirectionalMotionTriggerUpdateEvent updateEvent;
+    updateEvent.m_delta = delta.x() != 0 ? delta.x() : delta.y();
+    updateEvent.m_direction = static_cast<TriggerDirection>(direction);
+
+    const auto hasTriggers = updateTriggers(TriggerType::Wheel, updateEvent);
+    bool continuous = false;
+    for (const auto &trigger : activeTriggers(TriggerType::Wheel)) {
+        if (static_cast<WheelTrigger *>(trigger)->continuous()) {
+            continuous = true;
+        }
+    }
+    if (!continuous || (m_buttons.empty() && !g_keyboard->modifiers())) {
+        qCDebug(INPUTACTIONS_HANDLER_MOUSE, "Wheel trigger will end immediately");
+        endTriggers(TriggerType::Wheel);
+    }
+
+    qCDebug(INPUTACTIONS_HANDLER_MOUSE).noquote().nospace() << "Event processed (type: Wheel, hasGestures: " << hasTriggers << ")";
+    return hasTriggers;
+}
+
+bool MouseTriggerHandler::pointerButton(const PointerButtonEvent &event)
 {
     const auto &button = event.button();
     const auto &nativeButton = event.nativeButton();
@@ -167,7 +188,7 @@ bool MouseTriggerHandler::handleEvent(const PointerButtonEvent &event)
     return false;
 }
 
-bool MouseTriggerHandler::handleMotionEvent(const MotionEvent &event)
+bool MouseTriggerHandler::pointerMotion(const MotionEvent &event)
 {
     const auto &delta = event.delta();
     qCDebug(INPUTACTIONS_HANDLER_MOUSE).nospace() << "Event (type: PointerMotion, delta: " << delta << ")";
@@ -207,44 +228,6 @@ bool MouseTriggerHandler::handleMotionEvent(const MotionEvent &event)
         return dynamic_cast<const MotionTrigger *>(trigger)->m_lockPointer;
     });
     return block && lockPointer;
-}
-
-bool MouseTriggerHandler::handleWheelEvent(const MotionEvent &event)
-{
-    const auto &delta = event.delta();
-    qCDebug(INPUTACTIONS_HANDLER_MOUSE).nospace() << "Event (type: Wheel, delta: " << delta << ")";
-
-    if (!hasActiveTriggers(TriggerType::Wheel) && !activateTriggers(TriggerType::Wheel)) {
-        qCDebug(INPUTACTIONS_HANDLER_MOUSE, "Event processed (type: Wheel, status: NoGestures)");
-        return false;
-    }
-
-    SwipeDirection direction = SwipeDirection::Left;
-    if (delta.x() > 0) {
-        direction = SwipeDirection::Right;
-    } else if (delta.y() > 0) {
-        direction = SwipeDirection::Down;
-    } else if (delta.y() < 0) {
-        direction = SwipeDirection::Up;
-    }
-    DirectionalMotionTriggerUpdateEvent updateEvent;
-    updateEvent.m_delta = delta.x() != 0 ? delta.x() : delta.y();
-    updateEvent.m_direction = static_cast<TriggerDirection>(direction);
-
-    const auto hasTriggers = updateTriggers(TriggerType::Wheel, updateEvent);
-    bool continuous = false;
-    for (const auto &trigger : activeTriggers(TriggerType::Wheel)) {
-        if (static_cast<WheelTrigger *>(trigger)->continuous()) {
-            continuous = true;
-        }
-    }
-    if (!continuous || (m_buttons.empty() && !g_keyboard->modifiers())) {
-        qCDebug(INPUTACTIONS_HANDLER_MOUSE, "Wheel trigger will end immediately");
-        endTriggers(TriggerType::Wheel);
-    }
-
-    qCDebug(INPUTACTIONS_HANDLER_MOUSE).noquote().nospace() << "Event processed (type: Wheel, hasGestures: " << hasTriggers << ")";
-    return hasTriggers;
 }
 
 void MouseTriggerHandler::onActivatingTrigger(const Trigger *trigger)

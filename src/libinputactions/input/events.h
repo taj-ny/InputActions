@@ -30,9 +30,9 @@ enum class InputEventType
 {
     KeyboardKey,
 
+    PointerAxis,
     PointerButton,
     PointerMotion,
-    PointerScroll,
 
     TouchDown,
     TouchChanged,

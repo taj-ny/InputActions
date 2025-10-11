@@ -17,18 +17,48 @@
 */
 
 #include "InputEventHandler.h"
+#include "events.h"
 
 namespace libinputactions
 {
 
-InputEventHandler::InputEventHandler(std::unique_ptr<TriggerHandler> triggerHandler)
-    : m_triggerHandler(std::move(triggerHandler))
-{
-}
-
 bool InputEventHandler::handleEvent(const InputEvent &event)
 {
-    return m_triggerHandler->handleEvent(event);
+    if (!acceptsEvent(event)) {
+        return false;
+    }
+
+    switch (event.type()) {
+        case InputEventType::KeyboardKey:
+            return keyboardKey(dynamic_cast<const KeyboardKeyEvent &>(event));
+        case InputEventType::PointerAxis:
+            return pointerAxis(dynamic_cast<const MotionEvent &>(event));
+        case InputEventType::PointerButton:
+            return pointerButton(dynamic_cast<const PointerButtonEvent &>(event));
+        case InputEventType::PointerMotion:
+            return pointerMotion(dynamic_cast<const MotionEvent &>(event));
+        case InputEventType::TouchChanged:
+            return touchChanged(dynamic_cast<const TouchChangedEvent &>(event));
+        case InputEventType::TouchDown:
+            return touchDown(dynamic_cast<const TouchEvent &>(event));
+        case InputEventType::TouchUp:
+            return touchUp(dynamic_cast<const TouchEvent &>(event));
+        case InputEventType::TouchpadClick:
+            return touchpadClick(dynamic_cast<const TouchpadClickEvent &>(event));
+        case InputEventType::TouchpadGestureLifecyclePhase:
+            return touchpadGestureLifecyclePhase(dynamic_cast<const TouchpadGestureLifecyclePhaseEvent &>(event));
+        case InputEventType::TouchpadSwipe:
+            return touchpadSwipe(dynamic_cast<const MotionEvent &>(event));
+        case InputEventType::TouchpadPinch:
+            return touchpadPinch(dynamic_cast<const TouchpadPinchEvent &>(event));
+        default:
+            return false;
+    }
+}
+
+bool InputEventHandler::acceptsEvent(const InputEvent &event)
+{
+    return true;
 }
 
 }
