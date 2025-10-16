@@ -32,6 +32,7 @@ void ActionExecutor::execute(const std::shared_ptr<Action> &action, ActionThread
     const auto execute = [action = action]() { // copy action in case config gets reloaded while actions are scheduled
         action->execute();
     };
+    action->aboutToExecute();
     switch (thread) {
         case ActionThread::Auto:
             if (action->async() || m_sharedActionThreadPool.activeThreadCount()) {

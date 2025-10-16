@@ -38,6 +38,7 @@ TriggerAction::~TriggerAction() = default;
 
 void TriggerAction::triggerStarted()
 {
+    m_action->reset(); // Reset execution count in case the action was executed asynchronously on end/cancel
     if (m_on == On::Begin) {
         tryExecute();
     }

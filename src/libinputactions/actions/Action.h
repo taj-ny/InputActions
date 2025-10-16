@@ -26,6 +26,9 @@ namespace libinputactions
 
 class Condition;
 
+/**
+ * Actions must be executed using an ActionExecutor.
+ */
 class Action
 {
 public:
@@ -34,8 +37,15 @@ public:
 
     bool canExecute() const;
     /**
+     * Called by ActionExecutor when the action is scheduled for execution at some point in the future. It is not guaranteed that the action will actually be
+     * executed. May not be called from the main thread.
+     * @internal
+     */
+    void aboutToExecute();
+    /**
      * Do not call directly, use ActionExecutor instead.
      * @see executeImpl
+     * @internal
      */
     void execute();
     /**

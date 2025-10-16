@@ -31,11 +31,15 @@ bool Action::canExecute() const
     return (!m_condition || m_condition->satisfied()) && (!m_executionLimit || m_executions < m_executionLimit);
 }
 
+void Action::aboutToExecute()
+{
+    m_executions++;
+}
+
 void Action::execute()
 {
     qCDebug(INPUTACTIONS) << QString("Executing action \"%1\"").arg(m_id);
     executeImpl();
-    m_executions++;
 }
 
 bool Action::async() const
