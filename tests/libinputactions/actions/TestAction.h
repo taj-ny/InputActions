@@ -17,7 +17,7 @@ private slots:
     void canExecute_withLimit();
 
 private:
-    Action m_action;
+    std::shared_ptr<Action> m_action;
 };
 
 }
