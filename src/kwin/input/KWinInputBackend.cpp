@@ -25,7 +25,7 @@
 using namespace libinputactions;
 
 KWinInputBackend::KWinInputBackend()
-    : InputEventFilter(KWin::InputFilterOrder::TabBox)
+    : InputEventFilter(KWin::InputFilterOrder::ScreenEdge)
 {
     auto *input = KWin::input();
     connect(input, &KWin::InputRedirection::deviceAdded, this, &KWinInputBackend::kwinDeviceAdded);
