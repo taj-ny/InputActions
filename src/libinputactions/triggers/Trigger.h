@@ -19,8 +19,8 @@
 #pragma once
 
 #include <QLoggingCategory>
-#include <QTimer>
 #include <QString>
+#include <QTimer>
 #include <libinputactions/actions/TriggerAction.h>
 #include <libinputactions/conditions/Condition.h>
 #include <libinputactions/globals.h>

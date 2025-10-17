@@ -29,34 +29,13 @@ class Window
 public:
     virtual ~Window() = default;
 
-    virtual std::optional<QString> id()
-    {
-        return {};
-    };
-    virtual std::optional<QRectF> geometry()
-    {
-        return {};
-    };
-    virtual std::optional<QString> title()
-    {
-        return {};
-    };
-    virtual std::optional<QString> resourceClass()
-    {
-        return {};
-    };
-    virtual std::optional<QString> resourceName()
-    {
-        return {};
-    };
-    virtual std::optional<bool> maximized()
-    {
-        return {};
-    };
-    virtual std::optional<bool> fullscreen()
-    {
-        return {};
-    };
+    virtual std::optional<QString> id() { return {}; };
+    virtual std::optional<QRectF> geometry() { return {}; };
+    virtual std::optional<QString> title() { return {}; };
+    virtual std::optional<QString> resourceClass() { return {}; };
+    virtual std::optional<QString> resourceName() { return {}; };
+    virtual std::optional<bool> maximized() { return {}; };
+    virtual std::optional<bool> fullscreen() { return {}; };
 
 protected:
     Window() = default;
