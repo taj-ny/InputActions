@@ -10,16 +10,21 @@ on:
   schedule:
     - cron: "0 0 * * *"
 
+permissions: {}
+
 jobs:
   build_kwin:
+    name: Build (KWin)
     runs-on: ubuntu-latest
     container:
-      image: opensuse/tumbleweed
+      image: opensuse/tumbleweed # zizmor: ignore[unpinned-images]
       options: --user root
 
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          persist-credentials: false
 
       - name: Refresh Packages
         run: zypper ref
@@ -28,7 +33,7 @@ jobs:
         run: zypper in -y cmake-full gcc-c++ kf6-extra-cmake-modules kf6-kguiaddons-devel kf6-kconfigwidgets-devel kf6-ki18n-devel kf6-kcmutils-devel "cmake(KF6I18n)" "cmake(KF6KCMUtils)" "cmake(KF6WindowSystem)" "cmake(Qt6Core)" "cmake(Qt6DBus)" "cmake(Qt6Quick)" "cmake(Qt6Widgets)" libepoxy-devel kwin6-devel yaml-cpp-devel libxkbcommon-devel libevdev-devel
 
       - name: Configure CMake
-        run: cmake -B ${{github.workspace}}/build -DINPUTACTIONS_BUILD_KWIN=ON
+        run: cmake -B "${GITHUB_WORKSPACE}/build" -DINPUTACTIONS_BUILD_KWIN=ON
 
       - name: Build
-        run: cmake --build ${{github.workspace}}/build -j
+        run: cmake --build "${GITHUB_WORKSPACE}/build" -j
