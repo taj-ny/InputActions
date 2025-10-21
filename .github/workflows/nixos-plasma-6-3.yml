@@ -10,20 +10,25 @@ on:
   schedule:
     - cron: "0 0 * * *"
 
+permissions: {}
+
 jobs:
   build_kwin:
+    name: Build (KWin)
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          persist-credentials: false
 
       - name: Install Nix
-        uses: cachix/install-nix-action@v27
+        uses: cachix/install-nix-action@fd24c48048070c1be9acd18c9d369a83f0fe94d7 # v31.8.1
         with:
           nix_path: nixpkgs=channel:56e3ac24f80cecab5416f104f4289cb0f8eb84c0
 
       - name: Patch flake.nix
-        run: sed -i 's/nixos-unstable/56e3ac24f80cecab5416f104f4289cb0f8eb84c0/g' flake.nix
+        run: sed -i -e 's/nixos-unstable/56e3ac24f80cecab5416f104f4289cb0f8eb84c0/g' flake.nix
 
       - name: Update flake.lock
         run: nix flake update

@@ -2,11 +2,14 @@ name: Test
 
 on: [push]
 
+permissions: {}
+
 jobs:
   test:
+    name: Tests
     runs-on: ubuntu-latest
     container:
-      image: archlinux:base-devel
+      image: archlinux:base-devel # zizmor: ignore[unpinned-images]
       options: --user root
 
     steps:
@@ -17,13 +20,15 @@ jobs:
         run: pacman -S --needed --noconfirm base-devel git extra-cmake-modules qt6-tools kwin yaml-cpp gtest
 
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          persist-credentials: false
 
       - name: Configure CMake
-        run: cmake -B ${{github.workspace}}/build -DBUILD_KWIN_EFFECT=OFF -DBUILD_TESTS=ON
+        run: cmake -B "${GITHUB_WORKSPACE}/build" -DBUILD_KWIN_EFFECT=OFF -DBUILD_TESTS=ON
 
       - name: Build
-        run: cmake --build ${{github.workspace}}/build -j $(nproc)
+        run: cmake --build "${GITHUB_WORKSPACE}/build" -j $(nproc)
 
       - name: Run tests
-        run: ctest --test-dir ${{github.workspace}}/build --output-on-failure --verbose
+        run: ctest --test-dir "${GITHUB_WORKSPACE}/build" --output-on-failure --verbose
