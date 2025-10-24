@@ -18,6 +18,7 @@
 
 #include "CommandAction.h"
 #include <QProcess>
+#include <libinputactions/variables/VariableManager.h>
 
 namespace libinputactions
 {
@@ -34,8 +35,8 @@ bool CommandAction::async() const
 
 void CommandAction::executeImpl()
 {
-    const auto commandValue = m_command.get();
-    if (!commandValue) {
+    const auto command = m_command.get().value_or("");
+    if (command.isEmpty()) {
         return;
     }
 
@@ -44,7 +45,8 @@ void CommandAction::executeImpl()
         process->deleteLater();
     });
     process->setProgram("/bin/sh");
-    process->setArguments({"-c", commandValue.value()});
+    process->setArguments({"-c", command});
+    g_variableManager->setProcessEnvironment(*process);
     process->start();
     if (m_wait) {
         process->waitForFinished();

@@ -59,7 +59,6 @@ set(libinputactions_SRCS
     libinputactions/DBusInterface.cpp
     libinputactions/globals.cpp
     libinputactions/InputActions.cpp
-    libinputactions/InterpolatedString.cpp
     libinputactions/Range.cpp
     libinputactions/Value.cpp
 )

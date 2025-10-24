@@ -21,7 +21,6 @@
 #include "yaml-cpp/yaml.h"
 #include <QRegularExpression>
 #include <QVector>
-#include <libinputactions/InterpolatedString.h>
 #include <libinputactions/Value.h>
 #include <libinputactions/actions/ActionGroup.h>
 #include <libinputactions/actions/CommandAction.h>
@@ -1516,8 +1515,6 @@ struct convert<libinputactions::Value<T>>
             const auto variableName = raw.mid(1); // remove $
             if (g_variableManager->hasVariable(variableName)) {
                 value = libinputactions::Value<T>::variable(variableName);
-            } else if constexpr (typeid(T) == typeid(QString)) { // String with possible variable references (too lazy to check)
-                value = InterpolatedString(raw);
             } else {
                 value = libinputactions::Value<T>(node.as<T>());
             }
