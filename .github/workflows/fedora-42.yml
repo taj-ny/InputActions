@@ -34,3 +34,7 @@ jobs:
 
       - name: Build
         run: cmake --build "${GITHUB_WORKSPACE}/build" -j
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
