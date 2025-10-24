@@ -152,12 +152,12 @@ VariableManager::VariableManager()
 
 VariableManager::~VariableManager() = default;
 
-bool VariableManager::hasVariable(const QString &name)
+bool VariableManager::hasVariable(const QString &name) const
 {
     return m_variables.contains(name);
 }
 
-Variable *VariableManager::getVariable(const QString &name)
+Variable *VariableManager::getVariable(const QString &name) const
 {
     if (!m_variables.contains(name)) {
         qCDebug(INPUTACTIONS_VARIABLE_MANAGER).noquote() << QString("Variable %1 not found").arg(name);
@@ -170,6 +170,36 @@ void VariableManager::registerVariable(const QString &name, std::unique_ptr<Vari
 {
     variable->m_hidden = hidden;
     m_variables[name] = std::move(variable);
+}
+
+void VariableManager::setProcessEnvironment(QProcess &process) const
+{
+    auto environment = QProcessEnvironment::systemEnvironment();
+    for (const auto &argument : process.arguments()) {
+        static const QRegularExpression variableReferenceRegex("\\$([a-zA-Z0-9_])+");
+        auto it = variableReferenceRegex.globalMatch(argument);
+        while (it.hasNext()) {
+            const auto match = it.next();
+            const auto variableName = match.captured(0).mid(1);
+
+            if (const auto *variable = getVariable(variableName)) {
+                const auto value = variable->get();
+                if (!value.has_value()) {
+                    continue;
+                }
+
+                if (variable->type() == typeid(bool)) {
+                    if (std::any_cast<bool>(value)) {
+                        environment.insert(variableName, "1");
+                    }
+                    continue;
+                }
+
+                environment.insert(variableName, variable->operations()->toString(value));
+            }
+        }
+    }
+    process.setProcessEnvironment(environment);
 }
 
 std::map<QString, const Variable *> VariableManager::variables() const

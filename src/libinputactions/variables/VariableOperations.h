@@ -45,6 +45,10 @@ public:
      * @return A string representation of the variable's value or an empty string if not supported.
      */
     QString toString() const;
+    /**
+     * @return A string representation of the specified value of the same type as the variable or an empty string if not supported.
+     */
+    virtual QString toString(const std::any &value) const;
 
     static std::unique_ptr<VariableOperationsBase> create(Variable *variable);
 
@@ -55,7 +59,6 @@ protected:
      * The operators NotEqualTo, OneOf and Between are not handled here.
      */
     virtual bool compare(const std::any &left, const std::any &right, ComparisonOperator comparisonOperator) const;
-    virtual QString toString(const std::any &value) const;
 
 private:
     Variable *m_variable;
@@ -67,13 +70,12 @@ class VariableOperations : public VariableOperationsBase
 public:
     VariableOperations(Variable *variable);
 
-public:
     static bool compare(const T &left, const T &right, ComparisonOperator comparisonOperator);
     static QString toString(const T &value);
+    QString toString(const std::any &value) const override;
 
 protected:
     bool compare(const std::any &left, const std::any &right, ComparisonOperator comparisonOperator) const override;
-    QString toString(const std::any &value) const override;
 };
 
 }

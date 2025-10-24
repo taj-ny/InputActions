@@ -62,6 +62,7 @@ Value<T> Value<T>::command(Value<QString> command)
         QProcess process;
         process.setProgram("/bin/sh");
         process.setArguments({"-c", commandValue.value()});
+        g_variableManager->setProcessEnvironment(process);
         process.start();
         process.waitForFinished();
         return fromString<T>(process.readAllStandardOutput());

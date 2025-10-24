@@ -22,6 +22,7 @@
 #include "RemoteVariable.h"
 #include "VariableWrapper.h"
 #include <QPointF>
+#include <QProcess>
 #include <QString>
 #include <map>
 #include <memory>
@@ -67,7 +68,7 @@ public:
     ~VariableManager();
 
     template<typename T>
-    std::optional<VariableWrapper<T>> getVariable(const VariableInfo<T> &variable)
+    std::optional<VariableWrapper<T>> getVariable(const VariableInfo<T> &variable) const
     {
         return getVariable<T>(variable.name);
     }
@@ -76,7 +77,7 @@ public:
      * @return A statically-typed wrapper for the specified variable, nullptr if not found or type doesn't match.
      */
     template<typename T>
-    std::optional<VariableWrapper<T>> getVariable(const QString &name)
+    std::optional<VariableWrapper<T>> getVariable(const QString &name) const
     {
         auto *variable = getVariable(name);
         if (!variable) {
@@ -90,11 +91,11 @@ public:
         return VariableWrapper<T>(getVariable(name));
     }
 
-    bool hasVariable(const QString &name);
+    bool hasVariable(const QString &name) const;
     /**
      * @return The variable with the specified name or nullptr if not found.
      */
-    Variable *getVariable(const QString &name);
+    Variable *getVariable(const QString &name) const;
 
     void registerVariable(const QString &name, std::unique_ptr<Variable> variable, bool hidden = false);
     template<typename T>
@@ -119,6 +120,13 @@ public:
         };
         registerVariable(name, std::make_unique<RemoteVariable>(typeid(T), anyGetter), hidden);
     }
+
+    /**
+     * Reads the specified process' arguments, and adds any referenced variables to environment variables.
+     *
+     * The environment variable will only be set if the variable has a value. For boolean variables, the environment variable will be set to 1 if true.
+     */
+    void setProcessEnvironment(QProcess &process) const;
 
     std::map<QString, const Variable *> variables() const;
 
