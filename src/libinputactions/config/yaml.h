@@ -918,6 +918,7 @@ struct convert<std::unique_ptr<Trigger>>
             throw Exception(node.Mark(), "Invalid trigger type");
         }
 
+        loadMember(trigger->m_blockEvents, node["block_events"]);
         loadMember(trigger->m_clearModifiers, node["clear_modifiers"]);
         loadMember(trigger->m_endCondition, node["end_conditions"]);
         loadMember(trigger->m_id, node["id"]);

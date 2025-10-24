@@ -131,6 +131,11 @@ public:
     std::shared_ptr<Condition> m_endCondition;
 
     /**
+     * Whether this trigger should block all input events required to perform it while active. Only one active trigger needs this member set to true in order
+     * for events to be blocked.
+     */
+    bool m_blockEvents = true;
+    /**
      * Whether keyboard modifiers should be cleared when this trigger starts. By default true if the trigger has an input action, otherwise false.
      */
     std::optional<bool> m_clearModifiers;

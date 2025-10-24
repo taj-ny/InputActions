@@ -46,7 +46,7 @@ void TriggerHandler::setTimedTriggerUpdateDelta(uint32_t value)
     m_timedTriggerUpdateTimer.setInterval(value);
 }
 
-bool TriggerHandler::activateTriggers(TriggerTypes types, const TriggerActivationEvent &event)
+TriggerManagementOperationResult TriggerHandler::activateTriggers(TriggerTypes types, const TriggerActivationEvent &event)
 {
     qCDebug(INPUTACTIONS_HANDLER_TRIGGER).noquote().nospace() << "Triggers activating (types: " << types << ")";
     cancelTriggers(TriggerType::All);
@@ -54,26 +54,29 @@ bool TriggerHandler::activateTriggers(TriggerTypes types, const TriggerActivatio
 
     Q_EMIT activatingTriggers(types);
 
+    TriggerManagementOperationResult result{};
     for (auto &trigger : triggers(types, event)) {
         Q_EMIT activatingTrigger(trigger);
         Q_EMIT trigger->activated();
         m_activeTriggers.push_back(trigger);
         qCDebug(INPUTACTIONS_HANDLER_TRIGGER).noquote() << QString("Trigger activated (id: %1)").arg(trigger->m_id);
+
+        result.success = true;
+        result.block = result.block || trigger->m_blockEvents;
     }
     m_timedTriggerUpdateTimer.start();
 
-    const auto triggerCount = m_activeTriggers.size();
-    qCDebug(INPUTACTIONS_HANDLER_TRIGGER).noquote().nospace() << "Triggers activated (count: " << triggerCount << ")";
-    return triggerCount != 0;
+    qCDebug(INPUTACTIONS_HANDLER_TRIGGER).noquote().nospace() << "Triggers activated (count: " << m_activeTriggers.size() << ")";
+    return result;
 }
 
-bool TriggerHandler::activateTriggers(TriggerTypes types)
+TriggerManagementOperationResult TriggerHandler::activateTriggers(TriggerTypes types)
 {
     auto event = createActivationEvent();
     return activateTriggers(types, *event.get());
 }
 
-bool TriggerHandler::updateTriggers(const std::map<TriggerType, const TriggerUpdateEvent *> &events)
+TriggerManagementOperationResult TriggerHandler::updateTriggers(const std::map<TriggerType, const TriggerUpdateEvent *> &events)
 {
     TriggerTypes types{};
     for (const auto &[type, _] : events) {
@@ -82,7 +85,7 @@ bool TriggerHandler::updateTriggers(const std::map<TriggerType, const TriggerUpd
 
     qCDebug(INPUTACTIONS_HANDLER_TRIGGER).noquote().nospace() << "Updating gestures (types: " << types << ")";
 
-    auto hasTriggers = false;
+    TriggerManagementOperationResult result{};
     for (auto it = m_activeTriggers.begin(); it != m_activeTriggers.end();) {
         auto trigger = *it;
         const auto &type = trigger->type();
@@ -102,7 +105,8 @@ bool TriggerHandler::updateTriggers(const std::map<TriggerType, const TriggerUpd
             continue;
         }
 
-        hasTriggers = true;
+        result.success = true;
+        result.block = result.block || trigger->m_blockEvents;
         trigger->update(*event);
 
         if (m_activeTriggers.size() > 1) {
@@ -118,18 +122,19 @@ bool TriggerHandler::updateTriggers(const std::map<TriggerType, const TriggerUpd
 
         it++;
     }
-    return hasTriggers;
+    return result;
 }
 
-bool TriggerHandler::updateTriggers(TriggerType type, const TriggerUpdateEvent &event)
+TriggerManagementOperationResult TriggerHandler::updateTriggers(TriggerType type, const TriggerUpdateEvent &event)
 {
     return updateTriggers({{type, &event}});
 }
 
-bool TriggerHandler::endTriggers(TriggerTypes types)
+TriggerManagementOperationResult TriggerHandler::endTriggers(TriggerTypes types)
 {
+    TriggerManagementOperationResult result{};
     if (!hasActiveTriggers(types)) {
-        return false;
+        return result;
     }
 
     qCDebug(INPUTACTIONS_HANDLER_TRIGGER).nospace() << "Ending gestures (types: " << types << ")";
@@ -142,6 +147,9 @@ bool TriggerHandler::endTriggers(TriggerTypes types)
             it++;
             continue;
         }
+
+        result.success = true;
+        result.block = result.block || trigger->m_blockEvents;
 
         it = m_activeTriggers.erase(it);
         if (!trigger->canEnd()) {
@@ -158,13 +166,14 @@ bool TriggerHandler::endTriggers(TriggerTypes types)
 
         trigger->end();
     }
-    return true;
+    return result;
 }
 
-bool TriggerHandler::cancelTriggers(TriggerTypes types)
+TriggerManagementOperationResult TriggerHandler::cancelTriggers(TriggerTypes types)
 {
+    TriggerManagementOperationResult result{};
     if (!hasActiveTriggers(types)) {
-        return false;
+        return result;
     }
 
     Q_EMIT cancellingTriggers(types);
@@ -177,10 +186,13 @@ bool TriggerHandler::cancelTriggers(TriggerTypes types)
             continue;
         }
 
+        result.success = true;
+        result.block = result.block || trigger->m_blockEvents;
+
         trigger->cancel();
         it = m_activeTriggers.erase(it);
     }
-    return true;
+    return result;
 }
 
 void TriggerHandler::cancelTriggers(Trigger *except)
@@ -246,7 +258,7 @@ void TriggerHandler::updateTimedTriggers()
     }
 
     qCDebug(INPUTACTIONS_HANDLER_TRIGGER).nospace() << "Event (type: Time, delta: " << m_timedTriggerUpdateDelta << ")";
-    const auto hasTriggers = updateTriggers(events);
+    const auto hasTriggers = updateTriggers(events).success;
     qCDebug(INPUTACTIONS_HANDLER_TRIGGER).nospace() << "Event processed (type: Time, hasTriggers: " << hasTriggers << ")";
 
     for (auto &[_, event] : events) {

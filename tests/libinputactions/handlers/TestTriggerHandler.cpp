@@ -36,7 +36,7 @@ void TestTriggerHandler::triggers()
     TriggerActivationEvent event;
 
     QCOMPARE(m_handler->triggers(type, event).size(), size);
-    QCOMPARE(m_handler->activateTriggers(type, event), size != 0);
+    QCOMPARE(m_handler->activateTriggers(type, event).success, size != 0);
     QCOMPARE(m_handler->activeTriggers(type).size(), size);
 }
 

@@ -74,7 +74,7 @@ bool MultiTouchMotionTriggerHandler::touchUp(const TouchEvent &event)
 
             if (canTap()) {
                 if (m_state == State::TouchIdle) {
-                    setState(activateTriggers(TriggerType::Tap) ? State::TapBegin : State::Touch);
+                    setState(activateTriggers(TriggerType::Tap).success ? State::TapBegin : State::Touch);
                 }
                 if (m_state == State::TapBegin && event.sender()->validTouchPoints().empty()) {
                     updateTriggers(TriggerType::Tap);
@@ -159,10 +159,10 @@ bool MultiTouchMotionTriggerHandler::handlePinch(qreal scale, qreal angleDelta)
     event.m_delta = delta;
     event.m_direction = direction;
     event.m_speed = speed;
-    const auto hasGestures = updateTriggers(type, event);
+    const auto result = updateTriggers(type, event);
 
-    qCDebug(INPUTACTIONS_HANDLER_MULTITOUCH).nospace() << "Event processed (type: Pinch, hasGestures: " << hasGestures << ")";
-    return hasGestures;
+    qCDebug(INPUTACTIONS_HANDLER_MULTITOUCH).nospace() << "Event processed (type: Pinch, hasGestures: " << result.success << ")";
+    return result.block;
 }
 
 void MultiTouchMotionTriggerHandler::reset()
