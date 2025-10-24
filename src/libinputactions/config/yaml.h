@@ -34,7 +34,6 @@
 #include <libinputactions/handlers/MouseTriggerHandler.h>
 #include <libinputactions/handlers/PointerTriggerHandler.h>
 #include <libinputactions/handlers/TouchpadTriggerHandler.h>
-#include <libinputactions/input/InputEventHandler.h>
 #include <libinputactions/input/Keyboard.h>
 #include <libinputactions/interfaces/CursorShapeProvider.h>
 #include <libinputactions/triggers/HoverTrigger.h>
@@ -734,10 +733,7 @@ struct convert<std::shared_ptr<VariableCondition>>
 template<>
 struct convert<std::shared_ptr<Condition>>
 {
-    static bool isLegacy(const Node &node)
-    {
-        return node.IsMap() && (node["negate"] || node["window_class"] || node["window_state"]);
-    }
+    static bool isLegacy(const Node &node) { return node.IsMap() && (node["negate"] || node["window_class"] || node["window_state"]); }
 
     static bool decode(const Node &node, std::shared_ptr<Condition> &condition)
     {
@@ -827,35 +823,6 @@ struct convert<std::set<T>>
     {
         for (const auto &child : node) {
             set.insert(child.as<T>());
-        }
-        return true;
-    }
-};
-
-template<>
-struct convert<std::vector<std::unique_ptr<InputEventHandler>>>
-{
-    static bool decode(const Node &node, std::vector<std::unique_ptr<InputEventHandler>> &handlers)
-    {
-        if (const auto &mouseNode = node["keyboard"]) {
-            for (const auto &keyboardHandler : asSequence(mouseNode)) {
-                handlers.push_back(std::make_unique<InputEventHandler>(keyboardHandler.as<std::unique_ptr<KeyboardTriggerHandler>>()));
-            }
-        }
-        if (const auto &mouseNode = node["mouse"]) {
-            for (const auto &mouseHandler : asSequence(mouseNode)) {
-                handlers.push_back(std::make_unique<InputEventHandler>(mouseHandler.as<std::unique_ptr<MouseTriggerHandler>>()));
-            }
-        }
-        if (const auto &touchpadNode = node["touchpad"]) {
-            for (const auto &touchpadHandler : asSequence(touchpadNode)) {
-                handlers.push_back(std::make_unique<InputEventHandler>(touchpadHandler.as<std::unique_ptr<TouchpadTriggerHandler>>()));
-            }
-        }
-        if (const auto &pointerNode = node["pointer"]) {
-            for (const auto &pointerHandler : asSequence(pointerNode)) {
-                handlers.push_back(std::make_unique<InputEventHandler>(pointerHandler.as<std::unique_ptr<PointerTriggerHandler>>()));
-            }
         }
         return true;
     }
@@ -1171,21 +1138,14 @@ struct convert<std::unique_ptr<PointerTriggerHandler>>
     }
 };
 
-template<>
-struct convert<std::unique_ptr<TouchpadTriggerHandler>>
+std::unique_ptr<TouchpadTriggerHandler> asTouchpadTriggerHandler(const Node &node, InputDevice *device)
 {
-    static bool decode(const Node &node, std::unique_ptr<TouchpadTriggerHandler> &handler)
-    {
-        auto *touchpadTriggerHandler = new TouchpadTriggerHandler;
-        handler.reset(touchpadTriggerHandler);
-        decodeMultiTouchMotionTriggerHandler(node, handler.get());
-
-        loadMember(touchpadTriggerHandler->m_clickTimeout, node["click_timeout"]);
-        loadMember(touchpadTriggerHandler->m_swipeDeltaMultiplier, node["delta_multiplier"]);
-
-        return true;
-    }
-};
+    auto handler = std::make_unique<TouchpadTriggerHandler>(device);
+    decodeMultiTouchMotionTriggerHandler(node, handler.get());
+    loadMember(handler->m_clickTimeout, node["click_timeout"]);
+    loadMember(handler->m_swipeDeltaMultiplier, node["delta_multiplier"]);
+    return handler;
+}
 
 #define ENUM_DECODER(type, error, map)                                                                    \
     template<>                                                                                            \
@@ -1366,7 +1326,7 @@ struct convert<std::vector<InputAction::Item>>
                         });
                     } else if (action.startsWith("MOVE_BY")) {
                         value.push_back({
-                            .mouseMoveRelative = parseMouseInputActionPoint(node, arguments)
+                            .mouseMoveRelative = parseMouseInputActionPoint(node, arguments),
                         });
                     } else if (action.startsWith("MOVE_TO")) {
                         value.push_back({

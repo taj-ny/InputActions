@@ -27,10 +27,14 @@ class InputDevice;
 class InputDeviceProperties;
 class InputEvent;
 class InputEventHandler;
+class KeyboardTriggerHandler;
+class MouseTriggerHandler;
+class PointerTriggerHandler;
 class Stroke;
+class TouchpadTriggerHandler;
 
 /**
- * Collects input events and forwards them to event handlers.
+ * Collects input events and forwards them to event handlers. Handlers can only be set before initialization.
  *
  * Primary backends are responsible for managing (adding and removing) devices. Complementary backends are only allowed to set properties when a device is
  * being added.
@@ -48,7 +52,6 @@ class InputBackend
 public:
     virtual ~InputBackend();
 
-    void addEventHandler(std::unique_ptr<InputEventHandler> handler);
     /**
      * This method should be used in order to prevent feedback loops when input is being emitted.
      * @param value Whether to ignore all input events.
@@ -82,6 +85,12 @@ public:
      */
     virtual void reset();
 
+    std::unique_ptr<KeyboardTriggerHandler> m_keyboardTriggerHandler;
+    std::unique_ptr<MouseTriggerHandler> m_mouseTriggerHandler;
+    std::unique_ptr<PointerTriggerHandler> m_pointerTriggerHandler;
+
+    std::function<std::unique_ptr<TouchpadTriggerHandler>(InputDevice *device)> m_touchpadTriggerHandlerFactory;
+
 protected:
     InputBackend();
 
@@ -90,6 +99,7 @@ protected:
      */
     virtual void deviceAdded(InputDevice *device);
     virtual void deviceRemoved(const InputDevice *device);
+    void createEventHandlerChain();
 
     /**
      * Events with a nullptr sender will be ignored.
@@ -99,7 +109,6 @@ protected:
 
     void finishStrokeRecording();
 
-    std::vector<std::unique_ptr<InputEventHandler>> m_handlers;
     bool m_ignoreEvents = false;
 
     bool m_isRecordingStroke = false;
@@ -109,7 +118,9 @@ protected:
 private:
     std::function<void(const Stroke &stroke)> m_strokeCallback;
 
-    std::vector<std::unique_ptr<InputDevice>> m_devices;
+    std::vector<InputEventHandler *> m_eventHandlerChain;
+
+    std::vector<InputDevice *> m_devices;
     std::map<QString, InputDeviceProperties> m_customDeviceProperties;
 };
 

@@ -26,13 +26,13 @@ namespace libinputactions
 
 /**
  * Handles touchpad triggers: click, pinch, press, rotate, stroke, swipe, tap.
+ *
+ * Can handle one device. Each device has its own instance.
  */
 class TouchpadTriggerHandler : public MultiTouchMotionTriggerHandler
 {
 public:
-    TouchpadTriggerHandler();
-
-    bool handleEvent(const InputEvent &event) override;
+    TouchpadTriggerHandler(InputDevice *device);
 
     /**
      * The time for the user to perform a click once a press gesture had been detected by libinput. If the click is not performed, the press trigger is
@@ -41,26 +41,27 @@ public:
     std::chrono::milliseconds m_clickTimeout{200};
 
 protected:
+    /**
+     * Treated as two-finger motion.
+     */
+    bool pointerAxis(const MotionEvent &event) override;
+    bool pointerButton(const PointerButtonEvent &event) override;
+    /**
+     * Treated as single-finger motion.
+     */
+    bool pointerMotion(const MotionEvent &event) override;
+
+    bool touchpadClick(const TouchpadClickEvent &event) override;
+    bool touchpadGestureLifecyclePhase(const TouchpadGestureLifecyclePhaseEvent &event) override;
+    bool touchpadPinch(const TouchpadPinchEvent &event) override;
+    bool touchpadSwipe(const MotionEvent &event) override;
+
     void setState(State state) override;
 
 private slots:
     void onLibinputTapTimeout();
 
 private:
-    /**
-     * Treated as single-finger motion.
-     */
-    bool handleEvent(const MotionEvent &event);
-    bool handleEvent(const PointerButtonEvent &event);
-    void handleEvent(const TouchpadClickEvent &event);
-    bool handleEvent(const TouchpadGestureLifecyclePhaseEvent &event);
-    bool handleEvent(const TouchpadPinchEvent &event);
-    /**
-     * Treated as two-finger motion.
-     */
-    bool handleScrollEvent(const MotionEvent &event);
-    bool handleSwipeEvent(const MotionEvent &event);
-
     std::set<uint32_t> m_blockedButtons;
     bool m_gestureBeginBlocked{};
 

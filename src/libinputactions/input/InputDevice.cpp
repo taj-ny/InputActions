@@ -17,6 +17,7 @@
 */
 
 #include "InputDevice.h"
+#include <libinputactions/handlers/TouchpadTriggerHandler.h>
 
 namespace libinputactions
 {
@@ -27,6 +28,8 @@ InputDevice::InputDevice(InputDeviceType type, QString name, QString sysName)
     , m_sysName(std::move(sysName))
 {
 }
+
+InputDevice::~InputDevice() = default;
 
 const InputDeviceType &InputDevice::type() const
 {

@@ -41,10 +41,7 @@ struct VariableInfo
 {
     QString name;
 
-    operator QString() const
-    {
-        return name;
-    }
+    operator QString() const { return name; }
 };
 
 struct BuiltinVariables

@@ -5,7 +5,7 @@ ColumnLimit: 160
 IndentWidth: 4
 
 AllowShortBlocksOnASingleLine: Never
-AllowShortFunctionsOnASingleLine: None
+AllowShortFunctionsOnASingleLine: Inline
 AllowShortLambdasOnASingleLine: Empty
 
 AlignAfterOpenBracket: Align

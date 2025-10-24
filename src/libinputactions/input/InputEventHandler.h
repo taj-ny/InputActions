@@ -18,29 +18,51 @@
 
 #pragma once
 
-#include <QString>
-#include <libinputactions/handlers/TriggerHandler.h>
-#include <memory>
-#include <set>
-
 namespace libinputactions
 {
 
+class KeyboardKeyEvent;
+class InputEvent;
+class MotionEvent;
+class PointerButtonEvent;
+class TouchChangedEvent;
+class TouchEvent;
+class TouchpadClickEvent;
+class TouchpadGestureLifecyclePhaseEvent;
+class TouchpadPinchEvent;
+
 /**
- * The point of this class is to remove the need to rewrite everything if remapping is added.
+ * All methods return whether the event should be blocked.
  */
 class InputEventHandler
 {
 public:
-    InputEventHandler(std::unique_ptr<TriggerHandler> triggerHandler);
+    virtual ~InputEventHandler() = default;
 
     /**
-     * @return Whether the event should be blocked.
+     * Forwards the specified event to the appropriate virtual method if acceptsEvent returns true.
      */
     bool handleEvent(const InputEvent &event);
 
-private:
-    std::unique_ptr<TriggerHandler> m_triggerHandler;
+protected:
+    InputEventHandler() = default;
+
+    virtual bool acceptsEvent(const InputEvent &event);
+
+    virtual bool keyboardKey(const KeyboardKeyEvent &event) { return false; }
+
+    virtual bool pointerAxis(const MotionEvent &event) { return false; }
+    virtual bool pointerButton(const PointerButtonEvent &event) { return false; }
+    virtual bool pointerMotion(const MotionEvent &event) { return false; }
+
+    virtual bool touchChanged(const TouchChangedEvent &event) { return false; }
+    virtual bool touchDown(const TouchEvent &event) { return false; }
+    virtual bool touchUp(const TouchEvent &event) { return false; }
+
+    virtual bool touchpadClick(const TouchpadClickEvent &event) { return false; }
+    virtual bool touchpadGestureLifecyclePhase(const TouchpadGestureLifecyclePhaseEvent &event) { return false; }
+    virtual bool touchpadPinch(const TouchpadPinchEvent &event) { return false; }
+    virtual bool touchpadSwipe(const MotionEvent &event) { return false; }
 };
 
 }

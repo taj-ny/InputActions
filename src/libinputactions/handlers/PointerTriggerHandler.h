@@ -18,17 +18,21 @@
 
 #pragma once
 
-#include "TriggerHandler.h"
+#include "InputTriggerHandler.h"
 
 namespace libinputactions
 {
 
-class PointerTriggerHandler : public TriggerHandler
+/**
+ * Can handle multiple devices simultaneously. A single instance is shared by all devices.
+ */
+class PointerTriggerHandler : public InputTriggerHandler
 {
 public:
     PointerTriggerHandler() = default;
 
-    bool handleEvent(const InputEvent &event) override;
+protected:
+    bool pointerMotion(const MotionEvent &event) override;
 
     friend class TestPointerTriggerHandler;
 };
