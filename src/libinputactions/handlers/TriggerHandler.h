@@ -26,6 +26,18 @@ Q_DECLARE_LOGGING_CATEGORY(INPUTACTIONS_HANDLER_TRIGGER)
 namespace libinputactions
 {
 
+struct TriggerManagementOperationResult
+{
+    /**
+     * Whether the operation was performed on at least one trigger.
+     */
+    bool success{};
+    /**
+     * Whether the event corresponding to the operation should be blocked, if possible.
+     */
+    bool block{};
+};
+
 /**
  * Base class of all handlers.
  */
@@ -46,38 +58,34 @@ protected:
 
     /**
      * Cancels all active triggers and activates triggers of the specified types eligible for activation.
-     * @return Whether any triggers have been activated.
      */
-    bool activateTriggers(TriggerTypes types, const TriggerActivationEvent &event);
+    TriggerManagementOperationResult activateTriggers(TriggerTypes types, const TriggerActivationEvent &event);
     /**
      * @see activateTriggers(const TriggerTypes &, const TriggerActivationEvent *)
      */
-    bool activateTriggers(TriggerTypes types);
+    TriggerManagementOperationResult activateTriggers(TriggerTypes types);
 
     /**
      * Updates triggers of multiple types in order as added to the handler.
-     * @return Whether there are any active triggers.
      */
-    bool updateTriggers(const std::map<TriggerType, const TriggerUpdateEvent *> &events);
+    TriggerManagementOperationResult updateTriggers(const std::map<TriggerType, const TriggerUpdateEvent *> &events);
     /**
      * Updates triggers of a single type.
      * @warning Do not use this to update multiple trigger types, as it will prevent conflict resolution from working
      * correctly.
      * @see updateTriggers(const std::map<TriggerType, const TriggerUpdateEvent *> &events)
      */
-    bool updateTriggers(TriggerType type, const TriggerUpdateEvent &event = {});
+    TriggerManagementOperationResult updateTriggers(TriggerType type, const TriggerUpdateEvent &event = {});
 
     /**
      * Ends the specified types of triggers.
-     * @return Whether there were any active triggers of the specified types.
      */
-    TEST_VIRTUAL bool endTriggers(TriggerTypes types);
+    TriggerManagementOperationResult endTriggers(TriggerTypes types);
 
     /**
      * Cancels the specified types of triggers.
-     * @return Whether there were any active triggers of the specified types.
      */
-    TEST_VIRTUAL bool cancelTriggers(TriggerTypes types);
+    TriggerManagementOperationResult cancelTriggers(TriggerTypes types);
     /**
      * Cancels all triggers leaving only the specified one.
      */

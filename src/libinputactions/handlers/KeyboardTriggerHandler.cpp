@@ -43,7 +43,7 @@ bool KeyboardTriggerHandler::keyboardKey(const KeyboardKeyEvent &event)
             return false;
         }
 
-        m_block = activateTriggers(TriggerType::KeyboardShortcut);
+        m_block = activateTriggers(TriggerType::KeyboardShortcut).block;
         return m_block && !isModifier;
     }
 

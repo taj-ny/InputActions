@@ -81,10 +81,10 @@ bool TouchpadTriggerHandler::pointerButton(const PointerButtonEvent &event)
                     break;
                 }
                 g_variableManager->getVariable(BuiltinVariables::Fingers)->set(fingers);
-                if (activateTriggers(TriggerType::Tap)) {
+                if (const auto result = activateTriggers(TriggerType::Tap); result.success) {
                     updateTriggers(TriggerType::Tap);
                     endTriggers(TriggerType::Tap);
-                    block = true;
+                    block = result.block;
                 }
                 updateVariables(event.sender());
                 setState(State::None);
@@ -112,7 +112,7 @@ bool TouchpadTriggerHandler::pointerMotion(const MotionEvent &event)
         case State::Touch:
         case State::TouchIdle:
             g_variableManager->getVariable(BuiltinVariables::Fingers)->set(1);
-            setState(activateTriggers(TriggerType::StrokeSwipe) ? State::MotionTrigger : State::MotionNoTrigger);
+            setState(activateTriggers(TriggerType::StrokeSwipe).success ? State::MotionTrigger : State::MotionNoTrigger);
             [[fallthrough]];
         case State::MotionTrigger:
             return handleMotion(event.delta());
@@ -124,7 +124,7 @@ bool TouchpadTriggerHandler::touchpadClick(const TouchpadClickEvent &event)
 {
     if (event.state()) {
         cancelTriggers(TriggerType::Press);
-        setState(activateTriggers(TriggerType::Click) ? State::TouchpadButtonDownClickTrigger : State::TouchpadButtonDown);
+        setState(activateTriggers(TriggerType::Click).success ? State::TouchpadButtonDownClickTrigger : State::TouchpadButtonDown);
     } else if (m_state == State::TouchpadButtonDown || m_state == State::TouchpadButtonDownClickTrigger) {
         setState(event.sender()->validTouchPoints().empty() ? State::None : State::Touch);
         endTriggers(TriggerType::Click);
@@ -158,18 +158,18 @@ bool TouchpadTriggerHandler::touchpadGestureLifecyclePhase(const TouchpadGesture
                 return m_gestureBeginBlocked;
             }
 
-            return activateTriggers(event.triggers()) && m_gestureBeginBlocked;
+            return activateTriggers(event.triggers()).block && m_gestureBeginBlocked;
         }
         case TouchpadGestureLifecyclePhase::Cancel:
             m_clickTimeoutTimer.stop();
-            return cancelTriggers(event.triggers()) && m_gestureBeginBlocked;
+            return cancelTriggers(event.triggers()).block && m_gestureBeginBlocked;
         case TouchpadGestureLifecyclePhase::End:
             m_clickTimeoutTimer.stop();
             // Libinput ends hold gestures when the touchpad is clicked instead of cancelling
             if ((m_state == State::TouchpadButtonDown || m_state == State::TouchpadButtonDownClickTrigger) && event.triggers() == TriggerType::Press) {
-                return cancelTriggers(event.triggers()) && m_gestureBeginBlocked;
+                return cancelTriggers(event.triggers()).block && m_gestureBeginBlocked;
             }
-            return endTriggers(event.triggers()) && m_gestureBeginBlocked;
+            return endTriggers(event.triggers()).block && m_gestureBeginBlocked;
         default:
             return false;
     }

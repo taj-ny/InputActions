@@ -129,12 +129,12 @@ bool MotionTriggerHandler::handleMotion(const QPointF &delta)
         events[TriggerType::Stroke] = &strokeEvent;
     }
 
-    const auto block = updateTriggers(events);
-    if (axisChanged && !block) {
+    const auto result = updateTriggers(events);
+    if (axisChanged && !result.success) {
         activateTriggers(TriggerType::Swipe);
         return handleMotion(delta);
     }
-    return block;
+    return result.block;
 }
 
 bool MotionTriggerHandler::determineSpeed(TriggerType type, qreal delta, TriggerSpeed &speed, TriggerDirection direction)
