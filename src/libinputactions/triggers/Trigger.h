@@ -188,6 +188,7 @@ private slots:
     void onTick();
 
 private:
+    void setLastTrigger();
     void reset();
 
     TriggerType m_type{0};

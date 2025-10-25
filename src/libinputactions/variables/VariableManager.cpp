@@ -47,6 +47,7 @@ VariableManager::VariableManager()
         value = g_keyboard->modifiers();
     });
     registerLocalVariable(BuiltinVariables::LastTriggerId);
+    registerLocalVariable(BuiltinVariables::LastTriggerTimestamp, true);
     registerRemoteVariable<QPointF>("pointer_position_screen_percentage", [](auto &value) {
         value = g_pointerPositionGetter->screenPointerPosition();
     });
@@ -67,6 +68,10 @@ VariableManager::VariableManager()
     registerLocalVariable(BuiltinVariables::ThumbInitialPositionPercentage);
     registerLocalVariable(BuiltinVariables::ThumbPositionPercentage);
     registerLocalVariable(BuiltinVariables::ThumbPresent);
+    registerRemoteVariable<qreal>("time_since_last_trigger", [this](auto &value) {
+        value = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count()
+              - getVariable(BuiltinVariables::LastTriggerTimestamp)->get().value_or(0);
+    });
     registerRemoteVariable<QString>("window_class", [](auto &value) {
         if (const auto window = g_windowProvider->activeWindow()) {
             value = window->resourceClass();
