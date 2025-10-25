@@ -64,9 +64,9 @@ protected:
     {
         TouchpadButtonDown,
         /**
-         * TouchpadButtonDown but a click trigger is active.
+         * TouchpadButtonDown but the press event was blocked.
          */
-        TouchpadButtonDownClickTrigger,
+        TouchpadButtonDownBlocked,
 
         None,
         Scrolling,
