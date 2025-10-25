@@ -18,6 +18,7 @@
 
 #include "VariableOperations.h"
 #include "Variable.h"
+#include <QLocale>
 #include <QLoggingCategory>
 #include <QPointF>
 #include <QRegularExpression>
@@ -187,7 +188,7 @@ QString VariableOperations<bool>::toString(const bool &value)
 template<>
 QString VariableOperations<qreal>::toString(const qreal &value)
 {
-    return QString::number(value);
+    return QString::number(value, 'f', QLocale::FloatingPointShortest);
 }
 
 template<>

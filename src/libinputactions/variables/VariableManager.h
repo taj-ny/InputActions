@@ -50,6 +50,7 @@ struct BuiltinVariables
     inline static const VariableInfo<qreal> Fingers{QStringLiteral("fingers")};
     inline static const VariableInfo<Qt::KeyboardModifiers> KeyboardModifiers{QStringLiteral("keyboard_modifiers")};
     inline static const VariableInfo<QString> LastTriggerId{QStringLiteral("last_trigger_id")};
+    inline static const VariableInfo<qreal> LastTriggerTimestamp{QStringLiteral("last_trigger_timestamp")};
     inline static const VariableInfo<QPointF> ThumbInitialPositionPercentage{QStringLiteral("thumb_initial_position_percentage")};
     inline static const VariableInfo<QPointF> ThumbPositionPercentage{QStringLiteral("thumb_position_percentage")};
     inline static const VariableInfo<bool> ThumbPresent{QStringLiteral("thumb_present")};
@@ -96,14 +97,14 @@ public:
 
     void registerVariable(const QString &name, std::unique_ptr<Variable> variable, bool hidden = false);
     template<typename T>
-    void registerLocalVariable(const QString &name)
+    void registerLocalVariable(const QString &name, bool hidden = false)
     {
-        registerVariable(name, std::make_unique<LocalVariable>(typeid(T)));
+        registerVariable(name, std::make_unique<LocalVariable>(typeid(T)), hidden);
     }
     template<typename T>
-    void registerLocalVariable(const VariableInfo<T> &variable)
+    void registerLocalVariable(const VariableInfo<T> &variable, bool hidden = false)
     {
-        registerLocalVariable<T>(variable.name);
+        registerLocalVariable<T>(variable.name, hidden);
     }
     template<typename T>
     void registerRemoteVariable(const QString &name, const std::function<void(std::optional<T> &value)> getter, bool hidden = false)

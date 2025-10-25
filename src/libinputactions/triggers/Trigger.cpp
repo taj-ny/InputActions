@@ -95,9 +95,7 @@ void Trigger::update(const TriggerUpdateEvent &event)
         }
     }
 
-    if (m_setLastTrigger) {
-        g_variableManager->getVariable(BuiltinVariables::LastTriggerId)->set(m_id);
-    }
+    setLastTrigger();
     updateActions(event);
 }
 
@@ -114,9 +112,7 @@ void Trigger::end()
     }
 
     qCDebug(INPUTACTIONS_TRIGGER).noquote() << QString("Trigger ended (id: %1)").arg(m_id);
-    if (m_setLastTrigger) {
-        g_variableManager->getVariable(BuiltinVariables::LastTriggerId)->set(m_id);
-    }
+    setLastTrigger();
     for (const auto &action : m_actions) {
         action->triggerEnded();
     }
@@ -198,6 +194,15 @@ void Trigger::onTick()
 
     for (const auto &action : m_actions) {
         action->triggerTick(TICK_INTERVAL.count());
+    }
+}
+
+void Trigger::setLastTrigger()
+{
+    if (m_setLastTrigger) {
+        g_variableManager->getVariable(BuiltinVariables::LastTriggerId)->set(m_id);
+        g_variableManager->getVariable(BuiltinVariables::LastTriggerTimestamp)
+            ->set(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count());
     }
 }
 
