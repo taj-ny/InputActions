@@ -27,12 +27,13 @@ namespace libinputactions
 class CustomCondition : public Condition
 {
 public:
-    CustomCondition(std::function<bool()> function);
+    CustomCondition(std::function<ConditionEvaluationResult()> function);
+
+protected:
+    ConditionEvaluationResult evaluateImpl() override;
 
 private:
-    bool satisfiedInternal() const override;
-
-    std::function<bool()> m_function;
+    std::function<ConditionEvaluationResult()> m_function;
 };
 
 }

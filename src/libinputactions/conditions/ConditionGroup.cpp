@@ -27,26 +27,41 @@ ConditionGroup::ConditionGroup(ConditionGroupMode mode)
 {
 }
 
-bool ConditionGroup::satisfiedInternal() const
+ConditionEvaluationResult ConditionGroup::evaluateImpl()
 {
-    const auto begin = m_conditions.begin();
-    const auto end = m_conditions.end();
-    const auto pred = [](const auto &condition) {
-        return condition->satisfied();
+    bool error{};
+    const auto pred = [&error](auto &condition) {
+        const auto result = condition->evaluate();
+        if (result == ConditionEvaluationResult::Error) {
+            error = true;
+        }
+        return result == ConditionEvaluationResult::Satisfied;
     };
+
+    bool result{};
     switch (m_mode) {
         case ConditionGroupMode::All:
-            return std::all_of(begin, end, pred);
+            result = std::ranges::all_of(m_conditions, pred);
+            break;
         case ConditionGroupMode::Any:
-            return std::any_of(begin, end, pred);
+            result = std::ranges::any_of(m_conditions, pred);
+            if (error && result) {
+                error = false;
+            }
+            break;
         case ConditionGroupMode::None:
-            return std::none_of(begin, end, pred);
+            result = std::ranges::none_of(m_conditions, pred);
+            break;
         default:
-            return false;
+            return ConditionEvaluationResult::NotSatisfied;
     }
+    if (error) {
+        return ConditionEvaluationResult::Error;
+    }
+    return result ? ConditionEvaluationResult::Satisfied : ConditionEvaluationResult::NotSatisfied;
 }
 
-void ConditionGroup::add(const std::shared_ptr<const Condition> &condition)
+void ConditionGroup::add(const std::shared_ptr<Condition> &condition)
 {
     m_conditions.push_back(condition);
 }

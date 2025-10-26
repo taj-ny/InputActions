@@ -21,14 +21,24 @@
 namespace libinputactions
 {
 
-bool Condition::satisfied() const
+bool Condition::satisfied()
 {
-    return satisfiedInternal() == !m_negate;
+    return evaluate() == ConditionEvaluationResult::Satisfied;
 }
 
-bool Condition::satisfiedInternal() const
+ConditionEvaluationResult Condition::evaluate()
 {
-    return true;
+    const auto result = evaluateImpl();
+    if (result == ConditionEvaluationResult::Error) {
+        return result;
+    }
+
+    return result == ConditionEvaluationResult::Satisfied == !m_negate ? ConditionEvaluationResult::Satisfied : ConditionEvaluationResult::NotSatisfied;
+}
+
+ConditionEvaluationResult Condition::evaluateImpl()
+{
+    return ConditionEvaluationResult::Satisfied;
 }
 
 }
