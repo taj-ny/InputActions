@@ -38,10 +38,6 @@ bool KeyboardTriggerHandler::keyboardKey(const KeyboardKeyEvent &event)
         if (m_keys.size() == 1) {
             m_firstKey = event.nativeKey();
         }
-        if (!MODIFIERS.contains(m_firstKey)) {
-            m_block = false;
-            return false;
-        }
 
         m_block = activateTriggers(TriggerType::KeyboardShortcut).block;
         return m_block && !isModifier;
@@ -56,6 +52,7 @@ std::unique_ptr<TriggerActivationEvent> KeyboardTriggerHandler::createActivation
 {
     auto event = TriggerHandler::createActivationEvent();
     event->keyboardKeys = {m_keys.begin(), m_keys.end()};
+    event->keyboardFirstKey = m_firstKey;
     return event;
 }
 
