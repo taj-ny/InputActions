@@ -28,9 +28,6 @@ namespace libinputactions
 
 enum class ComparisonOperator;
 
-/**
- * If a non-existent variable is used, the condition will always be satisfied.
- */
 class VariableCondition : public Condition
 {
 public:
@@ -38,7 +35,7 @@ public:
     VariableCondition(const QString &variableName, const Value<std::any> &value, ComparisonOperator comparisonOperator);
 
 protected:
-    bool satisfiedInternal() const override;
+    ConditionEvaluationResult evaluateImpl() override;
 
 private:
     QString m_variableName;

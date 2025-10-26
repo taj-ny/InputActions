@@ -21,17 +21,28 @@
 namespace libinputactions
 {
 
+enum class ConditionEvaluationResult
+{
+    Satisfied,
+    NotSatisfied,
+    Error
+};
+
 class Condition
 {
 public:
     virtual ~Condition() = default;
 
-    bool satisfied() const;
+    /**
+     * @return evaluate() == ConditionEvaluationResult::Satisfied
+     */
+    bool satisfied();
+    ConditionEvaluationResult evaluate();
 
     bool m_negate{};
 
-private:
-    virtual bool satisfiedInternal() const;
+protected:
+    virtual ConditionEvaluationResult evaluateImpl();
 };
 
 }

@@ -1,6 +1,6 @@
 #include "TestPointerTriggerHandler.h"
+#include "utils.h"
 #include <QSignalSpy>
-#include <libinputactions/conditions/CustomCondition.h>
 #include <libinputactions/input/events.h>
 #include <libinputactions/triggers/HoverTrigger.h>
 
@@ -15,9 +15,7 @@ void TestPointerTriggerHandler::init()
 void TestPointerTriggerHandler::hover_conditionNotSatisfied_triggerNotActivated()
 {
     auto trigger = std::make_unique<HoverTrigger>();
-    trigger->m_activationCondition = std::make_shared<CustomCondition>([]() {
-        return false;
-    });
+    trigger->m_activationCondition = FALSE_CONDITION;
     QSignalSpy activatedSpy(trigger.get(), &Trigger::activated);
 
     PointerTriggerHandler handler;
@@ -42,10 +40,8 @@ void TestPointerTriggerHandler::hover_conditionSatisfied_triggerActivated()
 void TestPointerTriggerHandler::hover_conditionNoLongerSatisfied_triggerEnded()
 {
     auto trigger = std::make_unique<HoverTrigger>();
-    bool satisfied = true;
-    trigger->m_activationCondition = std::make_shared<CustomCondition>([&satisfied]() {
-        return satisfied;
-    });
+    auto conditionResult = ConditionEvaluationResult::Satisfied;
+    trigger->m_activationCondition = referenceCondition(conditionResult);
     QSignalSpy endedSpy(trigger.get(), &Trigger::ended);
 
     PointerTriggerHandler handler;
@@ -55,7 +51,7 @@ void TestPointerTriggerHandler::hover_conditionNoLongerSatisfied_triggerEnded()
     handler.updateTriggers(TriggerType::Hover);
     QCOMPARE(endedSpy.count(), 0);
 
-    satisfied = false;
+    conditionResult = ConditionEvaluationResult::NotSatisfied;
     QVERIFY(!handler.handleEvent(MotionEvent(m_device.get(), InputEventType::PointerMotion, {1, 0})));
     QCOMPARE(endedSpy.count(), 1);
 }
@@ -63,10 +59,8 @@ void TestPointerTriggerHandler::hover_conditionNoLongerSatisfied_triggerEnded()
 void TestPointerTriggerHandler::hover_conditionNoLongerSatisfiedNoMotionEvent_triggerEnded()
 {
     auto trigger = std::make_unique<HoverTrigger>();
-    bool satisfied = true;
-    trigger->m_activationCondition = std::make_shared<CustomCondition>([&satisfied]() {
-        return satisfied;
-    });
+    auto conditionResult = ConditionEvaluationResult::Satisfied;
+    trigger->m_activationCondition = referenceCondition(conditionResult);
     QSignalSpy endedSpy(trigger.get(), &Trigger::ended);
 
     PointerTriggerHandler handler;
@@ -76,7 +70,7 @@ void TestPointerTriggerHandler::hover_conditionNoLongerSatisfiedNoMotionEvent_tr
     handler.updateTriggers(TriggerType::Hover);
     QCOMPARE(endedSpy.count(), 0);
 
-    satisfied = false;
+    conditionResult = ConditionEvaluationResult::NotSatisfied;
     handler.updateTriggers(TriggerType::Hover);
     QCOMPARE(endedSpy.count(), 1);
 }

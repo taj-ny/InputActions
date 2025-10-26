@@ -18,36 +18,32 @@
 
 #pragma once
 
-#include <libinputactions/conditions/Condition.h>
-#include <memory>
-#include <vector>
+#include "Condition.h"
+#include <QString>
 
 namespace libinputactions
 {
 
-enum class ConditionGroupMode
-{
-    All,
-    Any,
-    None
-};
+enum class ComparisonOperator;
 
 /**
- * Contains multiple conditions. Checks whether all, any or none of them are satisfied, depending on the specified
- * mode.
+ * A condition that is constructed right before evaluation. If the construction fails, the condition fails to evaluate and construction will be attempted again
+ * on further evaluations.
  */
-class ConditionGroup : public Condition
+class LazyCondition : public Condition
 {
 public:
-    ConditionGroup(ConditionGroupMode mode = ConditionGroupMode::All);
-
-    void add(const std::shared_ptr<Condition> &condition);
+    LazyCondition(std::function<std::shared_ptr<Condition>()> constructor, QString errorMessage = "");
 
 protected:
     ConditionEvaluationResult evaluateImpl() override;
 
-    std::vector<std::shared_ptr<Condition>> m_conditions;
-    ConditionGroupMode m_mode;
+private:
+    std::function<std::shared_ptr<Condition>()> m_constructor;
+    std::shared_ptr<Condition> m_condition;
+
+    QString m_errorMessage;
+    bool m_errorNotificationShown{};
 };
 
 }

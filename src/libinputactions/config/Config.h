@@ -37,6 +37,8 @@ public:
      */
     std::optional<QString> load(bool firstLoad = false);
 
+    bool m_sendNotificationOnError{};
+
 private:
     void initWatchers();
     void readEvents();
@@ -48,7 +50,6 @@ private:
     QTimer m_readEventsTimer;
 
     bool m_autoReload = true;
-    bool m_sendNotificationOnError{};
 };
 
 inline std::unique_ptr<Config> g_config;
