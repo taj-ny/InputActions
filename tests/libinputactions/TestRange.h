@@ -1,12 +1,12 @@
 #pragma once
 
-#include <QTest>
+#include "Test.h"
 #include <libinputactions/Range.h>
 
 namespace libinputactions
 {
 
-class TestRange : public QObject
+class TestRange : public Test
 {
     Q_OBJECT
 

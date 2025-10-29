@@ -1,13 +1,13 @@
 #pragma once
 
+#include "Test.h"
 #include "mocks/MockTrigger.h"
-#include <QTest>
 #include <libinputactions/handlers/TriggerHandler.h>
 
 namespace libinputactions
 {
 
-class TestTriggerHandler : public QObject
+class TestTriggerHandler : public Test
 {
     Q_OBJECT
 

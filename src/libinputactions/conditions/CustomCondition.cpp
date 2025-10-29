@@ -21,14 +21,14 @@
 namespace libinputactions
 {
 
-CustomCondition::CustomCondition(std::function<ConditionEvaluationResult()> function)
+CustomCondition::CustomCondition(std::function<bool(const ConditionEvaluationArguments &arguments)> function)
     : m_function(std::move(function))
 {
 }
 
-ConditionEvaluationResult CustomCondition::evaluateImpl()
+bool CustomCondition::evaluateImpl(const ConditionEvaluationArguments &arguments)
 {
-    return m_function();
+    return m_function(arguments);
 }
 
 }

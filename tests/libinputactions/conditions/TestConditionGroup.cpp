@@ -5,6 +5,13 @@
 namespace libinputactions
 {
 
+enum class ConditionEvaluationResult
+{
+    Satisfied,
+    NotSatisfied,
+    Error
+};
+
 void TestConditionGroup::evaluate_data()
 {
     QTest::addColumn<ConditionGroupMode>("mode");
@@ -58,7 +65,12 @@ void TestConditionGroup::evaluate()
     for (const auto &condition : conditions) {
         conditionGroup.add(condition);
     }
-    QCOMPARE(conditionGroup.evaluate(), result);
+
+    if (result == ConditionEvaluationResult::Error) {
+        QVERIFY_THROWS_EXCEPTION(std::exception, conditionGroup.evaluate());
+    } else {
+        QCOMPARE(conditionGroup.evaluate(), result == ConditionEvaluationResult::Satisfied);
+    }
 }
 
 }

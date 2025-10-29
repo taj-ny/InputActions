@@ -32,8 +32,9 @@
 using namespace libinputactions;
 
 Effect::Effect()
-    : InputActions(std::make_unique<KWinInputBackend>())
 {
+    g_inputBackend = std::make_unique<KWinInputBackend>();
+
     auto pointer = std::make_shared<KWinPointer>();
     g_cursorShapeProvider = pointer;
     g_inputEmitter = std::make_shared<KWinInputEmitter>();

@@ -8,16 +8,16 @@ namespace libinputactions
 void TestLazyCondition::evaluate()
 {
     bool canConstruct{};
-    LazyCondition condition([&canConstruct]() {
+    LazyCondition condition([&canConstruct](const auto &arguments) {
         return canConstruct ? TRUE_CONDITION : nullptr;
     });
 
-    QCOMPARE(condition.evaluate(), ConditionEvaluationResult::Error);
-    QCOMPARE(condition.evaluate(), ConditionEvaluationResult::Error);
+    QVERIFY_THROWS_EXCEPTION(std::exception, condition.evaluate());
+    QVERIFY_THROWS_EXCEPTION(std::exception, condition.evaluate());
     canConstruct = true;
-    QCOMPARE(condition.evaluate(), ConditionEvaluationResult::Satisfied);
+    QVERIFY(condition.evaluate());
     canConstruct = false;
-    QCOMPARE(condition.evaluate(), ConditionEvaluationResult::Satisfied);
+    QVERIFY(condition.evaluate());
 }
 
 }

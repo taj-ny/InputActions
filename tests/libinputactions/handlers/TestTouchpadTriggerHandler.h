@@ -1,11 +1,11 @@
+#include "Test.h"
 #include <QSignalSpy>
-#include <QTest>
 #include <libinputactions/handlers/TouchpadTriggerHandler.h>
 
 namespace libinputactions
 {
 
-class TestTouchpadTriggerHandler : public QObject
+class TestTouchpadTriggerHandler : public Test
 {
     Q_OBJECT
 

@@ -83,6 +83,8 @@ std::unique_ptr<VariableOperationsBase> VariableOperationsBase::create(Variable 
         return std::make_unique<VariableOperations<CursorShape>>(variable);
     } else if (type == typeid(Qt::KeyboardModifiers)) {
         return std::make_unique<VariableOperations<Qt::KeyboardModifiers>>(variable);
+    } else if (type == typeid(InputDeviceTypes)) {
+        return std::make_unique<VariableOperations<InputDeviceTypes>>(variable);
     } else if (type == typeid(Qt::MouseButtons)) {
         return std::make_unique<VariableOperations<Qt::MouseButtons>>(variable);
     } else if (type == typeid(QPointF)) {
@@ -156,6 +158,7 @@ bool VariableOperations<qreal>::compare(const qreal &left, const qreal &right, C
     }
 
 VARIABLEOPERATIONS_COMPARE_QFLAGS(Qt::KeyboardModifier)
+VARIABLEOPERATIONS_COMPARE_QFLAGS(InputDeviceType)
 
 template<>
 bool VariableOperations<QPointF>::compare(const QPointF &left, const QPointF &right, ComparisonOperator comparisonOperator)

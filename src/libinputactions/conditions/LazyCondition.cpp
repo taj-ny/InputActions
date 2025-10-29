@@ -17,36 +17,28 @@
 */
 
 #include "LazyCondition.h"
-#include <QRegularExpression>
 #include <libinputactions/config/Config.h>
 #include <libinputactions/globals.h>
-#include <libinputactions/interfaces/NotificationManager.h>
 
 namespace libinputactions
 {
 
-LazyCondition::LazyCondition(std::function<std::shared_ptr<Condition>()> constructor, QString errorMessage)
+LazyCondition::LazyCondition(std::function<std::shared_ptr<Condition>(const ConditionEvaluationArguments &arguments)> constructor)
     : m_constructor(std::move(constructor))
-    , m_errorMessage(std::move(errorMessage))
 {
 }
 
-ConditionEvaluationResult LazyCondition::evaluateImpl()
+bool LazyCondition::evaluateImpl(const ConditionEvaluationArguments &arguments)
 {
     if (m_constructor) {
-        m_condition = m_constructor();
+        m_condition = m_constructor(arguments);
     }
     if (!m_condition) {
-        qWarning(INPUTACTIONS).noquote() << m_errorMessage;
-        if (g_config && g_config->m_sendNotificationOnError && !m_errorNotificationShown) {
-            g_notificationManager->sendNotification("Failed to evaluate condition", m_errorMessage);
-            m_errorNotificationShown = true;
-        }
-        return ConditionEvaluationResult::Error;
+        throw std::runtime_error("Failed to construct condition (unknown error)");
     }
 
     m_constructor = {};
-    return m_condition->evaluate();
+    return m_condition->evaluate(arguments);
 }
 
 }

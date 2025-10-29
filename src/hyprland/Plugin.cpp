@@ -38,8 +38,9 @@ using namespace libinputactions;
 static const auto TICK_INTERVAL = std::chrono::milliseconds(static_cast<uint32_t>(1));
 
 Plugin::Plugin(void *handle)
-    : InputActions(std::make_unique<HyprlandInputBackend>(handle))
 {
+    g_inputBackend = std::make_unique<HyprlandInputBackend>(handle);
+
     auto pointer = std::make_shared<HyprlandPointer>(handle);
     g_cursorShapeProvider = pointer;
     g_inputEmitter = std::make_shared<HyprlandInputEmitter>();

@@ -19,16 +19,15 @@
 #pragma once
 
 #include "DBusInterface.h"
-#include <memory>
 
 namespace libinputactions
 {
 
-class InputBackend;
-
 class InputActions
 {
 public:
+    InputActions();
+
     /**
      * Runs the specified function on the main thread. If the current thread is the main thread, the function is executed immediately. Blocking calls introduce
      * action latency and should be used as little as possible.
@@ -36,10 +35,11 @@ public:
     static void runOnMainThread(std::function<void()> &&function, bool block = true);
 
 protected:
-    InputActions(std::unique_ptr<InputBackend> inputBackend);
     virtual ~InputActions();
 
 private:
+    void registerGlobalVariables();
+
     DBusInterface m_dbusInterface;
 };
 

@@ -17,28 +17,45 @@
 */
 
 #include "Condition.h"
+#include <libinputactions/config/Config.h>
+#include <libinputactions/interfaces/NotificationManager.h>
+#include <libinputactions/variables/VariableManager.h>
 
 namespace libinputactions
 {
 
-bool Condition::satisfied()
+ConditionEvaluationArguments::ConditionEvaluationArguments()
+    : variableManager(g_variableManager.get())
 {
-    return evaluate() == ConditionEvaluationResult::Satisfied;
 }
 
-ConditionEvaluationResult Condition::evaluate()
+bool Condition::satisfied(const ConditionEvaluationArguments &arguments)
 {
-    const auto result = evaluateImpl();
-    if (result == ConditionEvaluationResult::Error) {
-        return result;
+    try {
+        return evaluate(arguments);
+    } catch (const std::exception &) {
+        return false;
     }
-
-    return result == ConditionEvaluationResult::Satisfied == !m_negate ? ConditionEvaluationResult::Satisfied : ConditionEvaluationResult::NotSatisfied;
 }
 
-ConditionEvaluationResult Condition::evaluateImpl()
+bool Condition::evaluate(const ConditionEvaluationArguments &arguments)
 {
-    return ConditionEvaluationResult::Satisfied;
+    try {
+        return evaluateImpl(arguments) == !m_negate;
+    } catch (const std::exception &e) {
+        qWarning(INPUTACTIONS).noquote() << "Failed to evaluate condition: " << e.what();
+        if (g_config && g_config->m_sendNotificationOnError && !m_exceptionNotificationShown) {
+            g_notificationManager->sendNotification("Failed to evaluate condition", e.what());
+            m_exceptionNotificationShown = true;
+        }
+
+        throw;
+    }
+}
+
+bool Condition::evaluateImpl(const ConditionEvaluationArguments &arguments)
+{
+    return true;
 }
 
 }

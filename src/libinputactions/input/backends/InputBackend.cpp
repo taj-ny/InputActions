@@ -18,17 +18,20 @@
 
 #include "InputBackend.h"
 #include <QObject>
+#include <libinputactions/conditions/Condition.h>
 #include <libinputactions/handlers/KeyboardTriggerHandler.h>
 #include <libinputactions/handlers/MotionTriggerHandler.h>
 #include <libinputactions/handlers/MouseTriggerHandler.h>
 #include <libinputactions/handlers/PointerTriggerHandler.h>
 #include <libinputactions/handlers/TouchpadTriggerHandler.h>
+#include <libinputactions/input/InputDeviceRule.h>
 #include <libinputactions/input/InputEventHandler.h>
 #include <libinputactions/input/events.h>
 #include <libinputactions/interfaces/SessionLock.h>
 #include <libinputactions/triggers/StrokeTrigger.h>
 #include <libinputactions/variables/Variable.h>
 #include <libinputactions/variables/VariableManager.h>
+#include <ranges>
 
 namespace libinputactions
 {
@@ -50,11 +53,6 @@ void InputBackend::setIgnoreEvents(bool value)
 
 void InputBackend::poll() {}
 
-void InputBackend::addCustomDeviceProperties(const QString &name, const InputDeviceProperties &properties)
-{
-    m_customDeviceProperties[name] = properties;
-}
-
 void InputBackend::initialize() {}
 
 void InputBackend::recordStroke(const std::function<void(const Stroke &stroke)> &callback)
@@ -65,7 +63,7 @@ void InputBackend::recordStroke(const std::function<void(const Stroke &stroke)> 
 
 void InputBackend::reset()
 {
-    m_customDeviceProperties.clear();
+    m_deviceRules.clear();
     m_keyboardTriggerHandler = {};
     m_mouseTriggerHandler = {};
     m_pointerTriggerHandler = {};
@@ -76,10 +74,20 @@ void InputBackend::reset()
 void InputBackend::deviceAdded(InputDevice *device)
 {
     qCDebug(INPUTACTIONS).noquote().nospace() << "Device added (name: " << device->name() << ")";
-    for (const auto &[name, properties] : m_customDeviceProperties) {
-        if (name == device->name()) {
-            device->properties().apply(properties);
-            break;
+    for (const auto &rule : m_deviceRules | std::ranges::views::reverse) {
+        if (!rule.m_condition) {
+            device->properties().apply(rule.m_properties);
+            continue;
+        }
+
+        VariableManager manager;
+        manager.registerLocalVariable<QString>("name").set(device->name());
+        manager.registerLocalVariable<InputDeviceTypes>("types").set(device->type());
+
+        ConditionEvaluationArguments arguments;
+        arguments.variableManager = &manager;
+        if (rule.m_condition->satisfied(arguments)) {
+            device->properties().apply(rule.m_properties);
         }
     }
 
@@ -119,7 +127,7 @@ void InputBackend::createEventHandlerChain()
 
 bool InputBackend::handleEvent(const InputEvent &event)
 {
-    if (!event.sender() || g_sessionLock->sessionLocked()) {
+    if (!event.sender() || g_sessionLock->sessionLocked() || event.sender()->properties().ignore()) {
         return false;
     }
 

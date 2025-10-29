@@ -21,11 +21,16 @@
 namespace libinputactions
 {
 
-enum class ConditionEvaluationResult
+class VariableManager;
+
+struct ConditionEvaluationArguments
 {
-    Satisfied,
-    NotSatisfied,
-    Error
+    ConditionEvaluationArguments();
+
+    /**
+     * Set to the global manager by default.
+     */
+    VariableManager *variableManager;
 };
 
 class Condition
@@ -34,15 +39,27 @@ public:
     virtual ~Condition() = default;
 
     /**
-     * @return evaluate() == ConditionEvaluationResult::Satisfied
+     * @returns True if the condition is satisfied, false if not or an exception is thrown.
      */
-    bool satisfied();
-    ConditionEvaluationResult evaluate();
+    bool satisfied(const ConditionEvaluationArguments &arguments = {});
+    /**
+     * @throws std::exception Evaluation of the condition failed.
+     * @returns Whether the condition is satisfied.
+     */
+    bool evaluate(const ConditionEvaluationArguments &arguments = {});
 
     bool m_negate{};
 
 protected:
-    virtual ConditionEvaluationResult evaluateImpl();
+    Condition() = default;
+
+    /**
+     * @see evaluate
+     */
+    virtual bool evaluateImpl(const ConditionEvaluationArguments &arguments);
+
+private:
+    bool m_exceptionNotificationShown{};
 };
 
 }

@@ -16,24 +16,12 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#pragma once
-
-#include "Condition.h"
-#include <functional>
+#include "InputDeviceRule.h"
 
 namespace libinputactions
 {
 
-class CustomCondition : public Condition
-{
-public:
-    CustomCondition(std::function<bool(const ConditionEvaluationArguments &arguments)> function);
-
-protected:
-    bool evaluateImpl(const ConditionEvaluationArguments &arguments) override;
-
-private:
-    std::function<bool(const ConditionEvaluationArguments &arguments)> m_function;
-};
+InputDeviceRule::InputDeviceRule() = default;
+InputDeviceRule::~InputDeviceRule() = default;
 
 }

@@ -24,8 +24,6 @@
 namespace libinputactions
 {
 
-enum class ComparisonOperator;
-
 /**
  * A condition that is constructed right before evaluation. If the construction fails, the condition fails to evaluate and construction will be attempted again
  * on further evaluations.
@@ -33,17 +31,17 @@ enum class ComparisonOperator;
 class LazyCondition : public Condition
 {
 public:
-    LazyCondition(std::function<std::shared_ptr<Condition>()> constructor, QString errorMessage = "");
+    /**
+     * @param constructor Can return nullptr or throw an exception if construction fails.
+     */
+    LazyCondition(std::function<std::shared_ptr<Condition>(const ConditionEvaluationArguments &arguments)> constructor);
 
 protected:
-    ConditionEvaluationResult evaluateImpl() override;
+    bool evaluateImpl(const ConditionEvaluationArguments &arguments) override;
 
 private:
-    std::function<std::shared_ptr<Condition>()> m_constructor;
+    std::function<std::shared_ptr<Condition>(const ConditionEvaluationArguments &arguments)> m_constructor;
     std::shared_ptr<Condition> m_condition;
-
-    QString m_errorMessage;
-    bool m_errorNotificationShown{};
 };
 
 }

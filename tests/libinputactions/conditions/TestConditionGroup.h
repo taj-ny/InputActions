@@ -1,11 +1,11 @@
 #pragma once
 
-#include <QTest>
+#include "Test.h"
 
 namespace libinputactions
 {
 
-class TestConditionGroup : public QObject
+class TestConditionGroup : public Test
 {
     Q_OBJECT
 

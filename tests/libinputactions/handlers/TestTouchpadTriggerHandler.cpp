@@ -1,6 +1,6 @@
 #include "TestTouchpadTriggerHandler.h"
+#include "Test.h"
 #include <QSignalSpy>
-#include <QTest>
 #include <libinputactions/conditions/VariableCondition.h>
 #include <libinputactions/handlers/TouchpadTriggerHandler.h>
 #include <libinputactions/input/events.h>

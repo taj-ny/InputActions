@@ -27,15 +27,10 @@ ConditionGroup::ConditionGroup(ConditionGroupMode mode)
 {
 }
 
-ConditionEvaluationResult ConditionGroup::evaluateImpl()
+bool ConditionGroup::evaluateImpl(const ConditionEvaluationArguments &arguments)
 {
-    bool error{};
-    const auto pred = [&error](auto &condition) {
-        const auto result = condition->evaluate();
-        if (result == ConditionEvaluationResult::Error) {
-            error = true;
-        }
-        return result == ConditionEvaluationResult::Satisfied;
+    const auto pred = [&arguments](auto &condition) {
+        return condition->evaluate(arguments);
     };
 
     bool result{};
@@ -43,22 +38,32 @@ ConditionEvaluationResult ConditionGroup::evaluateImpl()
         case ConditionGroupMode::All:
             result = std::ranges::all_of(m_conditions, pred);
             break;
-        case ConditionGroupMode::Any:
-            result = std::ranges::any_of(m_conditions, pred);
-            if (error && result) {
-                error = false;
+        case ConditionGroupMode::Any: {
+            const std::exception *exception{};
+            for (const auto &condition : m_conditions) {
+                try {
+                    if (pred(condition)) {
+                        result = true;
+                        break;
+                    }
+                } catch (const std::exception &e) {
+                    exception = &e;
+                }
             }
+
+            if (exception && !result) {
+                throw *exception;
+            }
+
             break;
+        }
         case ConditionGroupMode::None:
             result = std::ranges::none_of(m_conditions, pred);
             break;
         default:
-            return ConditionEvaluationResult::NotSatisfied;
+            return false;
     }
-    if (error) {
-        return ConditionEvaluationResult::Error;
-    }
-    return result ? ConditionEvaluationResult::Satisfied : ConditionEvaluationResult::NotSatisfied;
+    return result;
 }
 
 void ConditionGroup::add(const std::shared_ptr<Condition> &condition)

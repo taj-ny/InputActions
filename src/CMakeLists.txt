@@ -32,6 +32,7 @@ set(libinputactions_SRCS
     libinputactions/input/backends/LibevdevComplementaryInputBackend.cpp
     libinputactions/input/backends/LibinputCompositorInputBackend.cpp
     libinputactions/input/InputDevice.cpp
+    libinputactions/input/InputDeviceRule.cpp
     libinputactions/input/events.cpp
     libinputactions/input/InputEventHandler.cpp
     libinputactions/input/Keyboard.cpp

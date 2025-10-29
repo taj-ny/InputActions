@@ -78,6 +78,7 @@ void InputDeviceProperties::apply(const InputDeviceProperties &other)
         }
     };
 
+    apply(m_ignore, other.m_ignore);
     apply(m_multiTouch, other.m_multiTouch);
     apply(m_size, other.m_size);
     apply(m_buttonPad, other.m_buttonPad);
@@ -85,6 +86,16 @@ void InputDeviceProperties::apply(const InputDeviceProperties &other)
     apply(m_thumbPressure, other.m_thumbPressure);
     apply(m_palmPressure, other.m_palmPressure);
     apply(m_lmrTapButtonMap, other.m_lmrTapButtonMap);
+}
+
+bool InputDeviceProperties::ignore() const
+{
+    return m_ignore.value_or(false);
+}
+
+void InputDeviceProperties::setIgnore(bool value)
+{
+    m_ignore = value;
 }
 
 bool InputDeviceProperties::multiTouch() const

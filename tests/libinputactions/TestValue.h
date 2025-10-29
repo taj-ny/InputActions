@@ -1,11 +1,11 @@
 #pragma once
 
-#include <QTest>
+#include "Test.h"
 
 namespace libinputactions
 {
 
-class TestValue : public QObject
+class TestValue : public Test
 {
     Q_OBJECT
 

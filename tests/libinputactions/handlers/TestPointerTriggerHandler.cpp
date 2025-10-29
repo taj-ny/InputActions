@@ -40,8 +40,8 @@ void TestPointerTriggerHandler::hover_conditionSatisfied_triggerActivated()
 void TestPointerTriggerHandler::hover_conditionNoLongerSatisfied_triggerEnded()
 {
     auto trigger = std::make_unique<HoverTrigger>();
-    auto conditionResult = ConditionEvaluationResult::Satisfied;
-    trigger->m_activationCondition = referenceCondition(conditionResult);
+    auto satisfied = true;
+    trigger->m_activationCondition = referenceCondition(satisfied);
     QSignalSpy endedSpy(trigger.get(), &Trigger::ended);
 
     PointerTriggerHandler handler;
@@ -51,7 +51,7 @@ void TestPointerTriggerHandler::hover_conditionNoLongerSatisfied_triggerEnded()
     handler.updateTriggers(TriggerType::Hover);
     QCOMPARE(endedSpy.count(), 0);
 
-    conditionResult = ConditionEvaluationResult::NotSatisfied;
+    satisfied = false;
     QVERIFY(!handler.handleEvent(MotionEvent(m_device.get(), InputEventType::PointerMotion, {1, 0})));
     QCOMPARE(endedSpy.count(), 1);
 }
@@ -59,8 +59,8 @@ void TestPointerTriggerHandler::hover_conditionNoLongerSatisfied_triggerEnded()
 void TestPointerTriggerHandler::hover_conditionNoLongerSatisfiedNoMotionEvent_triggerEnded()
 {
     auto trigger = std::make_unique<HoverTrigger>();
-    auto conditionResult = ConditionEvaluationResult::Satisfied;
-    trigger->m_activationCondition = referenceCondition(conditionResult);
+    auto satisfied = true;
+    trigger->m_activationCondition = referenceCondition(satisfied);
     QSignalSpy endedSpy(trigger.get(), &Trigger::ended);
 
     PointerTriggerHandler handler;
@@ -70,7 +70,7 @@ void TestPointerTriggerHandler::hover_conditionNoLongerSatisfiedNoMotionEvent_tr
     handler.updateTriggers(TriggerType::Hover);
     QCOMPARE(endedSpy.count(), 0);
 
-    conditionResult = ConditionEvaluationResult::NotSatisfied;
+    satisfied = false;
     handler.updateTriggers(TriggerType::Hover);
     QCOMPARE(endedSpy.count(), 1);
 }

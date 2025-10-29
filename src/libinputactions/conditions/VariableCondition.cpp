@@ -39,12 +39,11 @@ VariableCondition::VariableCondition(const QString &variableName, const Value<st
 {
 }
 
-ConditionEvaluationResult VariableCondition::evaluateImpl()
+bool VariableCondition::evaluateImpl(const ConditionEvaluationArguments &arguments)
 {
-    const auto variable = g_variableManager->getVariable(m_variableName);
+    const auto variable = arguments.variableManager->getVariable(m_variableName);
     if (!variable) {
-        qCWarning(INPUTACTIONS_CONDITION_VARIABLE).noquote() << QString("Failed to get variable %1.").arg(m_variableName);
-        return ConditionEvaluationResult::Error;
+        throw std::runtime_error(std::format("Variable {} does not exist.", m_variableName.toStdString()));
     }
 
     std::vector<std::any> values;
@@ -52,10 +51,10 @@ ConditionEvaluationResult VariableCondition::evaluateImpl()
         if (const auto value = valueProvider.get()) {
             values.push_back(value.value());
         } else {
-            return ConditionEvaluationResult::NotSatisfied;
+            return false;
         }
     }
-    return variable->operations()->compare(values, m_comparisonOperator) ? ConditionEvaluationResult::Satisfied : ConditionEvaluationResult::NotSatisfied;
+    return variable->operations()->compare(values, m_comparisonOperator);
 }
 
 }

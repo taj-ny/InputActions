@@ -4,19 +4,20 @@
 namespace libinputactions
 {
 
-std::shared_ptr<Condition> ERROR_CONDITION = std::make_shared<CustomCondition>([]() {
-    return ConditionEvaluationResult::Error;
+std::shared_ptr<Condition> ERROR_CONDITION = std::make_shared<CustomCondition>([](const auto &arguments) -> bool {
+    throw std::runtime_error("test error");
 });
-std::shared_ptr<Condition> FALSE_CONDITION = std::make_shared<CustomCondition>([]() {
-    return ConditionEvaluationResult::NotSatisfied;
+std::shared_ptr<Condition> FALSE_CONDITION = std::make_shared<CustomCondition>([](const auto &arguments) {
+    return false;
 });
-std::shared_ptr<Condition> TRUE_CONDITION = std::make_shared<CustomCondition>([]() {
-    return ConditionEvaluationResult::Satisfied;
+std::shared_ptr<Condition> TRUE_CONDITION = std::make_shared<CustomCondition>([](const auto &arguments) {
+    return true;
+    ;
 });
 
-std::shared_ptr<Condition> referenceCondition(ConditionEvaluationResult &result)
+std::shared_ptr<Condition> referenceCondition(bool &result)
 {
-    return std::make_shared<CustomCondition>([&result]() {
+    return std::make_shared<CustomCondition>([&result](const auto &arguments) {
         return result;
     });
 }
