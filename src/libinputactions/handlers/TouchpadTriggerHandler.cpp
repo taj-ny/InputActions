@@ -21,7 +21,7 @@
 #include <libinputactions/variables/VariableManager.h>
 #include <linux/input-event-codes.h>
 
-namespace libinputactions
+namespace InputActions
 {
 
 static const std::chrono::milliseconds LIBINPUT_TAP_TIMEOUT(300L);

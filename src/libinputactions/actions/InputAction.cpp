@@ -22,12 +22,20 @@
 #include <libinputactions/interfaces/InputEmitter.h>
 #include <libinputactions/interfaces/PointerPositionSetter.h>
 
-namespace libinputactions
+namespace InputActions
 {
 
 InputAction::InputAction(std::vector<Item> sequence)
     : m_sequence(std::move(sequence))
 {
+    for (const auto &item : m_sequence) {
+        if (item.keyboardPress) {
+            g_inputEmitter->m_keyboardRequiredKeys.insert(item.keyboardPress);
+        }
+        if (item.keyboardRelease) {
+            g_inputEmitter->m_keyboardRequiredKeys.insert(item.keyboardRelease);
+        }
+    }
 }
 
 void InputAction::executeImpl()

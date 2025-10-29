@@ -23,7 +23,7 @@
 #include <any>
 #include <typeindex>
 
-namespace libinputactions
+namespace InputActions
 {
 
 class Variable

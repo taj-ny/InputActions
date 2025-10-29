@@ -3,7 +3,7 @@
 #include "Test.h"
 #include <libinputactions/actions/Action.h>
 
-namespace libinputactions
+namespace InputActions
 {
 
 class TestAction : public Test

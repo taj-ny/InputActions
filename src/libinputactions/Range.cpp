@@ -20,7 +20,7 @@
 #include <QPointF>
 #include <limits>
 
-namespace libinputactions
+namespace InputActions
 {
 
 template<typename T>

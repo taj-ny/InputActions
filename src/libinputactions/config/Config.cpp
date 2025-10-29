@@ -17,6 +17,7 @@
 */
 
 #include "Config.h"
+#include "interfaces/InputEmitter.h"
 #include "yaml.h"
 #include <QDir>
 #include <QFile>
@@ -26,7 +27,7 @@
 #include <libinputactions/interfaces/NotificationManager.h>
 #include <sys/inotify.h>
 
-namespace libinputactions
+namespace InputActions
 {
 
 static const QDir INPUTACTIONS_DIR = QStandardPaths::writableLocation(QStandardPaths::ConfigLocation) + "/inputactions";
@@ -140,11 +141,15 @@ std::optional<QString> Config::load(bool firstLoad)
             }
 
             g_inputBackend->reset();
+            g_inputEmitter->reset(); // Okay because required keys are not cleared
+
             g_inputBackend->m_keyboardTriggerHandler = std::move(keyboardTriggerHandler);
             g_inputBackend->m_mouseTriggerHandler = std::move(mouseTriggerHandler);
             g_inputBackend->m_pointerTriggerHandler = std::move(pointerTriggerHandler);
             g_inputBackend->m_touchpadTriggerHandlerFactory = std::move(touchpadTriggerHandlerFactory);
             g_inputBackend->m_deviceRules = std::move(deviceRules);
+
+            g_inputEmitter->initialize();
             g_inputBackend->initialize();
         } catch (const std::exception &e) {
             error = QString("Failed to load configuration: %1").arg(QString::fromStdString(e.what()));

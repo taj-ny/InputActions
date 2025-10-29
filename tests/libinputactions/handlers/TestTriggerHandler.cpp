@@ -3,7 +3,7 @@
 
 using namespace ::testing;
 
-namespace libinputactions
+namespace InputActions
 {
 
 void TestTriggerHandler::init()
@@ -66,5 +66,5 @@ MockTrigger *TestTriggerHandler::makeTrigger(TriggerType type, bool activatable)
 
 }
 
-QTEST_MAIN(libinputactions::TestTriggerHandler)
+QTEST_MAIN(InputActions::TestTriggerHandler)
 #include "TestTriggerHandler.moc"

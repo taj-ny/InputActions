@@ -18,7 +18,7 @@
 
 #include "RemoteVariable.h"
 
-namespace libinputactions
+namespace InputActions
 {
 
 RemoteVariable::RemoteVariable(std::type_index type, std::function<void(std::any &value)> getter)

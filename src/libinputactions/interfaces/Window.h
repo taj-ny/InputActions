@@ -21,7 +21,7 @@
 #include <QRectF>
 #include <QString>
 
-namespace libinputactions
+namespace InputActions
 {
 
 class Window

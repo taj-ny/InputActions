@@ -38,7 +38,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-namespace libinputactions
+namespace InputActions
 {
 
 StrokeTrigger::StrokeTrigger(std::vector<Stroke> strokes)

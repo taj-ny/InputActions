@@ -23,7 +23,7 @@
 
 class Effect
     : public KWin::Effect
-    , public libinputactions::InputActions
+    , public InputActions::InputActions
 {
 public:
     Effect();

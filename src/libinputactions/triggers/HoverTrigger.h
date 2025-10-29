@@ -20,7 +20,7 @@
 
 #include "Trigger.h"
 
-namespace libinputactions
+namespace InputActions
 {
 
 class HoverTrigger : public Trigger

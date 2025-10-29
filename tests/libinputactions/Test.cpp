@@ -1,7 +1,7 @@
 #include "Test.h"
 #include <libinputactions/InputActions.h>
 
-namespace libinputactions
+namespace InputActions
 {
 
 void Test::initMain()

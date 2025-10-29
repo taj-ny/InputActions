@@ -27,7 +27,7 @@
 
 Q_LOGGING_CATEGORY(INPUTACTIONS_VARIABLE_OPERATIONS, "inputactions.variable.operations")
 
-namespace libinputactions
+namespace InputActions
 {
 
 VariableOperationsBase::VariableOperationsBase(Variable *variable)

@@ -20,7 +20,7 @@
 #include <QProcess>
 #include <libinputactions/variables/VariableManager.h>
 
-namespace libinputactions
+namespace InputActions
 {
 
 CommandAction::CommandAction(Value<QString> command)

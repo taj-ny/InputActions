@@ -29,7 +29,7 @@
 #include <libinputactions/config/Config.h>
 #include <libinputactions/variables/VariableManager.h>
 
-using namespace libinputactions;
+using namespace InputActions;
 
 Effect::Effect()
 {

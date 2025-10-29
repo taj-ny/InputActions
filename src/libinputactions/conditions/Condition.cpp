@@ -21,7 +21,7 @@
 #include <libinputactions/interfaces/NotificationManager.h>
 #include <libinputactions/variables/VariableManager.h>
 
-namespace libinputactions
+namespace InputActions
 {
 
 ConditionEvaluationArguments::ConditionEvaluationArguments()

@@ -5,7 +5,7 @@
 
 Q_DECLARE_LOGGING_CATEGORY(INPUTACTIONS)
 
-namespace libinputactions
+namespace InputActions
 {
 Q_NAMESPACE
 

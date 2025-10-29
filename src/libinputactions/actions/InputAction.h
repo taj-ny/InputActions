@@ -23,7 +23,7 @@
 #include <chrono>
 #include <libinputactions/Value.h>
 
-namespace libinputactions
+namespace InputActions
 {
 
 class InputAction : public Action

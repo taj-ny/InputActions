@@ -20,7 +20,7 @@
 #include <libinputactions/config/Config.h>
 #include <libinputactions/globals.h>
 
-namespace libinputactions
+namespace InputActions
 {
 
 LazyCondition::LazyCondition(std::function<std::shared_ptr<Condition>(const ConditionEvaluationArguments &arguments)> constructor)

@@ -3,7 +3,7 @@
 #include "Test.h"
 #include <libinputactions/triggers/Trigger.h>
 
-namespace libinputactions
+namespace InputActions
 {
 
 class TestTrigger : public Test

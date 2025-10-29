@@ -21,7 +21,7 @@
 #include "Action.h"
 #include <chrono>
 
-namespace libinputactions
+namespace InputActions
 {
 
 class SleepAction : public Action

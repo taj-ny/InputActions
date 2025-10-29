@@ -21,7 +21,7 @@
 #include <QObject>
 #include <QTimer>
 
-namespace libinputactions
+namespace InputActions
 {
 
 class Config : public QObject

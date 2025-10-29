@@ -2,7 +2,7 @@
 #include "utils.h"
 #include <libinputactions/conditions/LazyCondition.h>
 
-namespace libinputactions
+namespace InputActions
 {
 
 void TestLazyCondition::evaluate()
@@ -22,5 +22,5 @@ void TestLazyCondition::evaluate()
 
 }
 
-QTEST_MAIN(libinputactions::TestLazyCondition)
+QTEST_MAIN(InputActions::TestLazyCondition)
 #include "TestLazyCondition.moc"

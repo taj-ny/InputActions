@@ -28,7 +28,7 @@
 #include <libinputactions/input/backends/InputBackend.h>
 #undef HANDLE
 
-using namespace libinputactions;
+using namespace InputActions;
 
 HyprlandInputEmitter::HyprlandInputEmitter()
     : m_keyboard(makeShared<VirtualKeyboard>())
@@ -52,7 +52,7 @@ void HyprlandInputEmitter::keyboardClearModifiers()
     const auto modifiers = g_keyboard->modifiers();
     for (auto &keyboard : g_pInputManager->m_keyboards) {
         if (auto aqKeyboard = keyboard->aq()) {
-            for (const auto &[key, modifier] : libinputactions::MODIFIERS) {
+            for (const auto &[key, modifier] : InputActions::MODIFIERS) {
                 if (modifiers & modifier) {
                     aqKeyboard->events.key.emit(Aquamarine::IKeyboard::SKeyEvent{
                         .key = key,
@@ -68,7 +68,7 @@ void HyprlandInputEmitter::keyboardClearModifiers()
     g_inputBackend->setIgnoreEvents(false);
 }
 
-void HyprlandInputEmitter::keyboardKey(uint32_t key, bool state)
+void HyprlandInputEmitter::keyboardKey(uint32_t key, bool state, const InputDevice *device)
 {
     g_inputBackend->setIgnoreEvents(true);
     if (const auto modifier = g_pKeybindManager->keycodeToModifier(key + 8)) {
@@ -106,7 +106,7 @@ void HyprlandInputEmitter::keyboardText(const QString &text)
     }
 }
 
-void HyprlandInputEmitter::mouseButton(uint32_t button, bool state)
+void HyprlandInputEmitter::mouseButton(uint32_t button, bool state, const InputDevice *device)
 {
     g_inputBackend->setIgnoreEvents(true);
     g_pInputManager->onMouseButton(IPointer::SButtonEvent{

@@ -20,7 +20,7 @@
 
 #include "InputDevice.h"
 
-namespace libinputactions
+namespace InputActions
 {
 
 class Condition;

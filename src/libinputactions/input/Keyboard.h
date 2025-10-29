@@ -23,7 +23,7 @@
 #include <map>
 #include <memory>
 
-namespace libinputactions
+namespace InputActions
 {
 
 static const std::map<uint32_t, Qt::KeyboardModifier> MODIFIERS{

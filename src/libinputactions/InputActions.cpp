@@ -16,7 +16,7 @@
 #include <QAbstractEventDispatcher>
 #include <QCoreApplication>
 
-namespace libinputactions
+namespace InputActions
 {
 
 InputActions::InputActions()

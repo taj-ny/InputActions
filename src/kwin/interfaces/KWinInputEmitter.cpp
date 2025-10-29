@@ -53,8 +53,8 @@ void KWinInputEmitter::keyboardClearModifiers()
         KWin::workspace()->disableGlobalShortcutsForClient(true);
     }
 
-    const auto modifiers = libinputactions::g_keyboard->modifiers(); // This is not the real state, but it's fine in this case.
-    for (const auto &[key, modifier] : libinputactions::MODIFIERS) {
+    const auto modifiers = InputActions::g_keyboard->modifiers(); // This is not the real state, but it's fine in this case.
+    for (const auto &[key, modifier] : InputActions::MODIFIERS) {
         if (modifiers & modifier) {
             keyboardKey(key, false);
         }
@@ -65,11 +65,11 @@ void KWinInputEmitter::keyboardClearModifiers()
     }
 }
 
-void KWinInputEmitter::keyboardKey(uint32_t key, bool state)
+void KWinInputEmitter::keyboardKey(uint32_t key, bool state, const InputActions::InputDevice *target)
 {
-    libinputactions::g_inputBackend->setIgnoreEvents(true);
+    InputActions::g_inputBackend->setIgnoreEvents(true);
     Q_EMIT m_device->keyChanged(key, state ? KWin::KeyboardKeyState::Pressed : KWin::KeyboardKeyState::Released, timestamp(), m_device.get());
-    libinputactions::g_inputBackend->setIgnoreEvents(false);
+    InputActions::g_inputBackend->setIgnoreEvents(false);
 }
 
 void KWinInputEmitter::keyboardText(const QString &text)
@@ -96,7 +96,7 @@ void KWinInputEmitter::keyboardText(const QString &text)
 
 void KWinInputEmitter::mouseAxis(const QPointF &delta)
 {
-    libinputactions::g_inputBackend->setIgnoreEvents(true);
+    InputActions::g_inputBackend->setIgnoreEvents(true);
     if (delta.x()) {
         Q_EMIT m_device
             ->pointerAxisChanged(KWin::PointerAxis::Horizontal, delta.x(), delta.x(), KWin::PointerAxisSource::Wheel, false, timestamp(), m_device.get());
@@ -106,28 +106,28 @@ void KWinInputEmitter::mouseAxis(const QPointF &delta)
             ->pointerAxisChanged(KWin::PointerAxis::Vertical, delta.y(), delta.y(), KWin::PointerAxisSource::Wheel, false, timestamp(), m_device.get());
     }
     Q_EMIT m_device->pointerFrame(m_device.get());
-    libinputactions::g_inputBackend->setIgnoreEvents(false);
+    InputActions::g_inputBackend->setIgnoreEvents(false);
 }
 
-void KWinInputEmitter::mouseButton(uint32_t button, bool state)
+void KWinInputEmitter::mouseButton(uint32_t button, bool state, const InputActions::InputDevice *device)
 {
-    libinputactions::g_inputBackend->setIgnoreEvents(true);
+    InputActions::g_inputBackend->setIgnoreEvents(true);
     Q_EMIT m_device->pointerButtonChanged(button, state ? KWin::PointerButtonState::Pressed : KWin::PointerButtonState::Released, timestamp(), m_device.get());
     Q_EMIT m_device->pointerFrame(m_device.get());
-    libinputactions::g_inputBackend->setIgnoreEvents(false);
+    InputActions::g_inputBackend->setIgnoreEvents(false);
 }
 
 void KWinInputEmitter::mouseMoveRelative(const QPointF &pos)
 {
-    libinputactions::g_inputBackend->setIgnoreEvents(true);
+    InputActions::g_inputBackend->setIgnoreEvents(true);
     Q_EMIT m_device->pointerMotion(pos, pos, timestamp(), m_device.get());
     Q_EMIT m_device->pointerFrame(m_device.get());
-    libinputactions::g_inputBackend->setIgnoreEvents(false);
+    InputActions::g_inputBackend->setIgnoreEvents(false);
 }
 
 void KWinInputEmitter::touchpadPinchBegin(uint8_t fingers)
 {
-    libinputactions::g_inputBackend->setIgnoreEvents(true);
+    InputActions::g_inputBackend->setIgnoreEvents(true);
     const auto time = timestamp();
 #ifdef KWIN_6_5_OR_GREATER
     KWin::PointerPinchGestureBeginEvent event{
@@ -144,12 +144,12 @@ void KWinInputEmitter::touchpadPinchBegin(uint8_t fingers)
         return filter->pinchGestureBegin(fingers, time);
     });
 #endif
-    libinputactions::g_inputBackend->setIgnoreEvents(false);
+    InputActions::g_inputBackend->setIgnoreEvents(false);
 }
 
 void KWinInputEmitter::touchpadSwipeBegin(uint8_t fingers)
 {
-    libinputactions::g_inputBackend->setIgnoreEvents(true);
+    InputActions::g_inputBackend->setIgnoreEvents(true);
     const auto time = timestamp();
 #ifdef KWIN_6_5_OR_GREATER
     KWin::PointerSwipeGestureBeginEvent event{
@@ -166,7 +166,7 @@ void KWinInputEmitter::touchpadSwipeBegin(uint8_t fingers)
         return filter->swipeGestureBegin(fingers, time);
     });
 #endif
-    libinputactions::g_inputBackend->setIgnoreEvents(false);
+    InputActions::g_inputBackend->setIgnoreEvents(false);
 }
 
 InputDevice *KWinInputEmitter::device() const

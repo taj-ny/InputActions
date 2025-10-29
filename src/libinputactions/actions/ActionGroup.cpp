@@ -21,7 +21,7 @@
 #include "InputActions.h"
 #include <libinputactions/conditions/Condition.h>
 
-namespace libinputactions
+namespace InputActions
 {
 
 ActionGroup::ActionGroup(std::vector<std::shared_ptr<Action>> actions, ExecutionMode mode)

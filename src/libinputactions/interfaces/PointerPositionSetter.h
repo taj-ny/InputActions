@@ -21,7 +21,7 @@
 #include <QPointF>
 #include <memory>
 
-namespace libinputactions
+namespace InputActions
 {
 
 class PointerPositionSetter

@@ -20,7 +20,7 @@
 #include <libinputactions/conditions/Condition.h>
 #include <libinputactions/globals.h>
 
-namespace libinputactions
+namespace InputActions
 {
 
 Action::Action() = default;

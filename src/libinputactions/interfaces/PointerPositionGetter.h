@@ -20,7 +20,7 @@
 
 #include <QPointF>
 
-namespace libinputactions
+namespace InputActions
 {
 
 class PointerPositionGetter

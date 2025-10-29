@@ -1,7 +1,7 @@
 #include "TestActionInterval.h"
 #include <libinputactions/actions/TriggerAction.h>
 
-namespace libinputactions
+namespace InputActions
 {
 
 void TestActionInterval::matches_data()
@@ -35,5 +35,5 @@ void TestActionInterval::matches()
 
 }
 
-QTEST_MAIN(libinputactions::TestActionInterval)
+QTEST_MAIN(InputActions::TestActionInterval)
 #include "TestActionInterval.moc"

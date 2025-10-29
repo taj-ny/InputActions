@@ -1,7 +1,7 @@
 #include "TestDirectionalMotionTrigger.h"
 #include <libinputactions/triggers/DirectionalMotionTrigger.h>
 
-namespace libinputactions
+namespace InputActions
 {
 
 void TestDirectionalMotionTrigger::canUpdate_data()
@@ -75,5 +75,5 @@ void TestDirectionalMotionTrigger::canUpdate()
 
 }
 
-QTEST_MAIN(libinputactions::TestDirectionalMotionTrigger)
+QTEST_MAIN(InputActions::TestDirectionalMotionTrigger)
 #include "TestDirectionalMotionTrigger.moc"
