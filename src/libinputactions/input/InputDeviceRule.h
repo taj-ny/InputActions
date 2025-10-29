@@ -18,22 +18,24 @@
 
 #pragma once
 
-#include "Condition.h"
-#include <functional>
+#include "InputDevice.h"
 
 namespace libinputactions
 {
 
-class CustomCondition : public Condition
+class Condition;
+
+/**
+ * Applies a set of properties to all devices that satisfy the condition (if present).
+ */
+class InputDeviceRule
 {
 public:
-    CustomCondition(std::function<bool(const ConditionEvaluationArguments &arguments)> function);
+    InputDeviceRule();
+    ~InputDeviceRule();
 
-protected:
-    bool evaluateImpl(const ConditionEvaluationArguments &arguments) override;
-
-private:
-    std::function<bool(const ConditionEvaluationArguments &arguments)> m_function;
+    std::shared_ptr<Condition> m_condition;
+    InputDeviceProperties m_properties;
 };
 
 }

@@ -24,7 +24,7 @@ namespace libinputactions
 {
 
 class InputDevice;
-class InputDeviceProperties;
+class InputDeviceRule;
 class InputEvent;
 class InputEventHandler;
 class KeyboardTriggerHandler;
@@ -50,6 +50,7 @@ class TouchpadTriggerHandler;
 class InputBackend
 {
 public:
+    InputBackend();
     virtual ~InputBackend();
 
     /**
@@ -61,12 +62,6 @@ public:
      * Polls and handles events from all devices until there are no events left in the queue.
      */
     virtual void poll();
-
-    /**
-     * @param properties Custom properties that will override the ones that were detected automatically.
-     * @remark Custom properties will not be applied to devices that have already been added to the backend.
-     */
-    void addCustomDeviceProperties(const QString &name, const InputDeviceProperties &properties);
 
     /**
      * Detects and adds devices.
@@ -85,6 +80,11 @@ public:
      */
     virtual void reset();
 
+    /**
+     * Rules are evaluated in reverse order when a device is added.
+     */
+    std::vector<InputDeviceRule> m_deviceRules;
+
     std::unique_ptr<KeyboardTriggerHandler> m_keyboardTriggerHandler;
     std::unique_ptr<MouseTriggerHandler> m_mouseTriggerHandler;
     std::unique_ptr<PointerTriggerHandler> m_pointerTriggerHandler;
@@ -92,8 +92,6 @@ public:
     std::function<std::unique_ptr<TouchpadTriggerHandler>(InputDevice *device)> m_touchpadTriggerHandlerFactory;
 
 protected:
-    InputBackend();
-
     /**
      * Backends should add device properties in this method.
      */
@@ -121,7 +119,6 @@ private:
     std::vector<InputEventHandler *> m_eventHandlerChain;
 
     std::vector<InputDevice *> m_devices;
-    std::map<QString, InputDeviceProperties> m_customDeviceProperties;
 };
 
 inline std::unique_ptr<InputBackend> g_inputBackend;

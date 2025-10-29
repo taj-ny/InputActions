@@ -35,6 +35,7 @@
 #include <libinputactions/handlers/MouseTriggerHandler.h>
 #include <libinputactions/handlers/PointerTriggerHandler.h>
 #include <libinputactions/handlers/TouchpadTriggerHandler.h>
+#include <libinputactions/input/InputDeviceRule.h>
 #include <libinputactions/input/Keyboard.h>
 #include <libinputactions/interfaces/CursorShapeProvider.h>
 #include <libinputactions/triggers/HoverTrigger.h>
@@ -607,6 +608,8 @@ static libinputactions::Value<std::any> asAny(const Node &node, const std::type_
         return node.as<libinputactions::Value<CursorShape>>();
     } else if (type == typeid(Qt::KeyboardModifiers)) {
         return libinputactions::Value<Qt::KeyboardModifiers>(asSequence(node).as<Qt::KeyboardModifiers>()); // TODO
+    } else if (type == typeid(InputDeviceTypes)) {
+        return libinputactions::Value<InputDeviceTypes>(asSequence(node).as<InputDeviceTypes>()); // TODO
     } else if (type == typeid(qreal)) {
         return node.as<libinputactions::Value<qreal>>();
     } else if (type == typeid(QPointF)) {
@@ -619,7 +622,7 @@ static libinputactions::Value<std::any> asAny(const Node &node, const std::type_
 
 static bool isEnum(const std::type_index &type)
 {
-    static const std::unordered_set<std::type_index> enums{typeid(Qt::KeyboardModifiers)};
+    static const std::unordered_set<std::type_index> enums{typeid(Qt::KeyboardModifiers), typeid(InputDeviceTypes)};
     return enums.contains(type);
 }
 
@@ -663,7 +666,7 @@ struct convert<Range<T>>
     }
 };
 
-static std::shared_ptr<Condition> asVariableCondition(const Node &node)
+static std::shared_ptr<Condition> asVariableCondition(const Node &node, std::optional<ConditionEvaluationArguments> constructionArguments = {})
 {
     auto raw = node.as<QString>();
     bool negate{};
@@ -677,16 +680,17 @@ static std::shared_ptr<Condition> asVariableCondition(const Node &node)
     const auto secondSpace = raw.indexOf(' ', firstSpace + 1);
 
     const auto variableName = raw.left(firstSpace);
-    const auto variable = g_variableManager->getVariable(variableName);
-    if (!variable) {
+    if (!constructionArguments) {
         // Variable type must be known in order to parse the right side of the condition
-        return std::make_shared<LazyCondition>(
-            [variableName, node = node]() {
-                return g_variableManager->getVariable(variableName) ? asVariableCondition(node) : nullptr;
-            },
-            QString("Variable %1 does not exist.").arg(variableName));
+        return std::make_shared<LazyCondition>([variableName, node = node](const ConditionEvaluationArguments &arguments) {
+            if (!arguments.variableManager->getVariable(variableName)) {
+                throw Exception(node.Mark(), std::format("Variable {} does not exist.", variableName.toStdString()));
+            }
+            return asVariableCondition(node, arguments);
+        });
     }
 
+    const auto variable = constructionArguments->variableManager->getVariable(variableName);
     ComparisonOperator comparisonOperator;
     std::vector<libinputactions::Value<std::any>> right;
     if (firstSpace == -1 && variable->type() == typeid(bool)) { // bool variable condition without operator
@@ -1249,6 +1253,12 @@ FLAGS_DECODER(Qt::KeyboardModifiers, "keyboard modifier",
                   {"meta", Qt::KeyboardModifier::MetaModifier},
                   {"shift", Qt::KeyboardModifier::ShiftModifier},
               }))
+FLAGS_DECODER(InputDeviceTypes, "input device type",
+              (std::unordered_map<QString, InputDeviceType>{
+                  {"keyboard", InputDeviceType::Keyboard},
+                  {"mouse", InputDeviceType::Mouse},
+                  {"touchpad", InputDeviceType::Touchpad},
+              }))
 
 template<>
 struct convert<std::vector<InputAction::Item>>
@@ -1385,12 +1395,45 @@ struct convert<KeyboardShortcut>
 };
 
 template<>
+struct convert<std::vector<InputDeviceRule>>
+{
+    static bool decode(const Node &node, std::vector<InputDeviceRule> &value)
+    {
+        for (const auto &ruleNode : node["device_rules"]) {
+            InputDeviceRule rule;
+            loadMember(rule.m_condition, ruleNode["conditions"]);
+            loadMember(rule.m_properties, ruleNode);
+            value.push_back(std::move(rule));
+        }
+
+        // Legacy
+        if (const auto &touchpadNode = node["touchpad"]) {
+            if (const auto &devicesNode = touchpadNode["devices"]) {
+                for (auto it = devicesNode.begin(); it != devicesNode.end(); ++it) {
+                    InputDeviceRule rule;
+                    rule.m_condition = std::make_shared<VariableCondition>("name",
+                                                                           libinputactions::Value(it->first.as<QString>()),
+                                                                           ComparisonOperator::EqualTo);
+                    loadMember(rule.m_properties, it->second);
+                    value.push_back(std::move(rule));
+                }
+            }
+        }
+
+        return true;
+    }
+};
+
+template<>
 struct convert<InputDeviceProperties>
 {
     static bool decode(const Node &node, InputDeviceProperties &value)
     {
         if (const auto &multiTouchNode = node["__multiTouch"]) {
             value.setMultiTouch(multiTouchNode.as<bool>());
+        }
+        if (const auto &ignoreNode = node["ignore"]) {
+            value.setIgnore(ignoreNode.as<bool>());
         }
         if (const auto &buttonPad = node["buttonpad"]) {
             value.setButtonPad(buttonPad.as<bool>());

@@ -1,11 +1,11 @@
 #pragma once
 
-#include <QTest>
+#include "Test.h"
 
 namespace libinputactions
 {
 
-class TestDirectionalMotionTrigger : public QObject
+class TestDirectionalMotionTrigger : public Test
 {
     Q_OBJECT
 

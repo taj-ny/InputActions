@@ -56,9 +56,6 @@ struct BuiltinVariables
     inline static const VariableInfo<bool> ThumbPresent{QStringLiteral("thumb_present")};
 };
 
-/**
- * Variables must be registered before loading the configuration file.
- */
 class VariableManager
 {
 public:
@@ -95,11 +92,11 @@ public:
      */
     Variable *getVariable(const QString &name) const;
 
-    void registerVariable(const QString &name, std::unique_ptr<Variable> variable, bool hidden = false);
+    Variable *registerVariable(const QString &name, std::unique_ptr<Variable> variable, bool hidden = false);
     template<typename T>
-    void registerLocalVariable(const QString &name, bool hidden = false)
+    VariableWrapper<T> registerLocalVariable(const QString &name, bool hidden = false)
     {
-        registerVariable(name, std::make_unique<LocalVariable>(typeid(T)), hidden);
+        return {registerVariable(name, std::make_unique<LocalVariable>(typeid(T)), hidden)};
     }
     template<typename T>
     void registerLocalVariable(const VariableInfo<T> &variable, bool hidden = false)
@@ -132,6 +129,6 @@ private:
     std::map<QString, std::unique_ptr<Variable>> m_variables;
 };
 
-inline auto g_variableManager = std::make_shared<VariableManager>();
+inline std::shared_ptr<VariableManager> g_variableManager;
 
 }

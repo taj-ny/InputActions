@@ -97,8 +97,7 @@ std::optional<QString> Config::load(bool firstLoad)
         try {
             QFile configFile(m_path);
             if (!configFile.open(QIODevice::ReadOnly)) {
-                error = "Failed to open the configuration file";
-                goto END;
+                throw std::runtime_error("Failed to open the configuration file");
             }
             const auto contents = QTextStream(&configFile).readAll();
             if (contents == m_lastContents) {
@@ -129,14 +128,7 @@ std::optional<QString> Config::load(bool firstLoad)
                 touchpadTriggerHandlerFactory(nullptr); // Make sure it doesn't throw
             }
 
-            std::map<QString, InputDeviceProperties> customDeviceProperties;
-            if (const auto &touchpadNode = config["touchpad"]) {
-                if (const auto &devicesNode = touchpadNode["devices"]) {
-                    for (auto it = devicesNode.begin(); it != devicesNode.end(); it++) {
-                        customDeviceProperties[it->first.as<QString>()] = it->second.as<InputDeviceProperties>();
-                    }
-                }
-            }
+            auto deviceRules = config.as<std::vector<InputDeviceRule>>();
 
             if (auto *libevdev = dynamic_cast<LibevdevComplementaryInputBackend *>(g_inputBackend.get())) {
                 if (const auto &pollingIntervalNode = config["__libevdev_polling_interval"]) {
@@ -152,19 +144,15 @@ std::optional<QString> Config::load(bool firstLoad)
             g_inputBackend->m_mouseTriggerHandler = std::move(mouseTriggerHandler);
             g_inputBackend->m_pointerTriggerHandler = std::move(pointerTriggerHandler);
             g_inputBackend->m_touchpadTriggerHandlerFactory = std::move(touchpadTriggerHandlerFactory);
-            for (auto &[device, properties] : customDeviceProperties) {
-                g_inputBackend->addCustomDeviceProperties(device, properties);
-            }
+            g_inputBackend->m_deviceRules = std::move(deviceRules);
             g_inputBackend->initialize();
-        } catch (const YAML::Exception &e) {
-            error = QString("Failed to load configuration: %1 (line %2, column %3)")
-                        .arg(QString::fromStdString(e.msg), QString::number(e.mark.line), QString::number(e.mark.column));
+        } catch (const std::exception &e) {
+            error = QString("Failed to load configuration: %1").arg(QString::fromStdString(e.what()));
         }
     } else {
         error = "Configuration was not loaded automatically due to a crash.";
     }
 
-END:
     if (error) {
         qCCritical(INPUTACTIONS).noquote() << error.value();
         if (sendNotificationOnError && m_sendNotificationOnError) {

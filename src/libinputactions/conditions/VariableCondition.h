@@ -35,7 +35,7 @@ public:
     VariableCondition(const QString &variableName, const Value<std::any> &value, ComparisonOperator comparisonOperator);
 
 protected:
-    ConditionEvaluationResult evaluateImpl() override;
+    bool evaluateImpl(const ConditionEvaluationArguments &arguments) override;
 
 private:
     QString m_variableName;

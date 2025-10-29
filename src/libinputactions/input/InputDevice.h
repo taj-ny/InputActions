@@ -39,6 +39,15 @@ public:
      */
     void apply(const InputDeviceProperties &other);
 
+    /**
+     * @returns Whether the device should be ignored completely.
+     */
+    bool ignore() const;
+    /**
+     * @see ignore
+     */
+    void setIgnore(bool value);
+
     bool multiTouch() const;
     /**
      * Only for testing.
@@ -84,6 +93,8 @@ public:
     void setLmrTapButtonMap(bool value);
 
 private:
+    std::optional<bool> m_ignore;
+
     std::optional<bool> m_multiTouch;
     std::optional<QSizeF> m_size;
 

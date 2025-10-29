@@ -44,7 +44,7 @@ public:
     void add(const std::shared_ptr<Condition> &condition);
 
 protected:
-    ConditionEvaluationResult evaluateImpl() override;
+    bool evaluateImpl(const ConditionEvaluationArguments &arguments) override;
 
     std::vector<std::shared_ptr<Condition>> m_conditions;
     ConditionGroupMode m_mode;

@@ -153,6 +153,7 @@ Value<T>::operator Value<std::any>() const
 template class Value<bool>;
 template class Value<CursorShape>;
 template class Value<Qt::KeyboardModifiers>;
+template class Value<InputDeviceTypes>;
 template class Value<qreal>;
 template class Value<QPointF>;
 template class Value<std::any>;

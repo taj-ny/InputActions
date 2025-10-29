@@ -20,141 +20,13 @@
 #include "Variable.h"
 #include <QLoggingCategory>
 #include <QRegularExpression>
-#include <libinputactions/input/Keyboard.h>
-#include <libinputactions/interfaces/CursorShapeProvider.h>
-#include <libinputactions/interfaces/PointerPositionGetter.h>
-#include <libinputactions/interfaces/Window.h>
-#include <libinputactions/interfaces/WindowProvider.h>
 
 Q_LOGGING_CATEGORY(INPUTACTIONS_VARIABLE_MANAGER, "inputactions.variable.manager", QtWarningMsg)
 
 namespace libinputactions
 {
 
-VariableManager::VariableManager()
-{
-    registerRemoteVariable<CursorShape>("cursor_shape", [](auto &value) {
-        value = g_cursorShapeProvider->cursorShape();
-    });
-    registerLocalVariable(BuiltinVariables::DeviceName);
-    for (auto i = 1; i <= s_fingerVariableCount; i++) {
-        registerLocalVariable<QPointF>(QString("finger_%1_initial_position_percentage").arg(i));
-        registerLocalVariable<QPointF>(QString("finger_%1_position_percentage").arg(i));
-        registerLocalVariable<qreal>(QString("finger_%1_pressure").arg(i));
-    }
-    registerLocalVariable(BuiltinVariables::Fingers);
-    registerRemoteVariable<Qt::KeyboardModifiers>(BuiltinVariables::KeyboardModifiers, [](auto &value) {
-        value = g_keyboard->modifiers();
-    });
-    registerLocalVariable(BuiltinVariables::LastTriggerId);
-    registerLocalVariable(BuiltinVariables::LastTriggerTimestamp, true);
-    registerRemoteVariable<QPointF>("pointer_position_screen_percentage", [](auto &value) {
-        value = g_pointerPositionGetter->screenPointerPosition();
-    });
-    registerRemoteVariable<QPointF>("pointer_position_window_percentage", [](auto &value) {
-        const auto window = g_windowProvider->windowUnderPointer();
-        if (!window) {
-            return;
-        }
-
-        const auto windowGeometry = window->geometry();
-        const auto pointerPos = g_pointerPositionGetter->globalPointerPosition();
-        if (!pointerPos || !windowGeometry) {
-            return;
-        }
-        const auto translatedPosition = pointerPos.value() - windowGeometry->topLeft();
-        value = QPointF(translatedPosition.x() / windowGeometry->width(), translatedPosition.y() / windowGeometry->height());
-    });
-    registerLocalVariable(BuiltinVariables::ThumbInitialPositionPercentage);
-    registerLocalVariable(BuiltinVariables::ThumbPositionPercentage);
-    registerLocalVariable(BuiltinVariables::ThumbPresent);
-    registerRemoteVariable<qreal>("time_since_last_trigger", [this](auto &value) {
-        value = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count()
-              - getVariable(BuiltinVariables::LastTriggerTimestamp)->get().value_or(0);
-    });
-    registerRemoteVariable<QString>("window_class", [](auto &value) {
-        if (const auto window = g_windowProvider->activeWindow()) {
-            value = window->resourceClass();
-        }
-    });
-    registerRemoteVariable<bool>("window_fullscreen", [](auto &value) {
-        if (const auto window = g_windowProvider->activeWindow()) {
-            value = window->fullscreen();
-        }
-    });
-    registerRemoteVariable<QString>("window_id", [](auto &value) {
-        if (const auto window = g_windowProvider->activeWindow()) {
-            value = window->id();
-        }
-    });
-    registerRemoteVariable<bool>("window_maximized", [](auto &value) {
-        if (const auto window = g_windowProvider->activeWindow()) {
-            value = window->maximized();
-        }
-    });
-    registerRemoteVariable<QString>("window_name", [](auto &value) {
-        if (const auto window = g_windowProvider->activeWindow()) {
-            value = window->resourceName();
-        }
-    });
-    registerRemoteVariable<QString>("window_title", [](auto &value) {
-        if (const auto window = g_windowProvider->activeWindow()) {
-            value = window->title();
-        }
-    });
-    registerRemoteVariable<QString>("window_under_class", [](auto &value) {
-        if (const auto window = g_windowProvider->windowUnderPointer()) {
-            value = window->resourceClass();
-        }
-    });
-    registerRemoteVariable<bool>("window_under_fullscreen", [](auto &value) {
-        if (const auto window = g_windowProvider->windowUnderPointer()) {
-            value = window->fullscreen();
-        }
-    });
-    registerRemoteVariable<QString>("window_under_id", [](auto &value) {
-        if (const auto window = g_windowProvider->windowUnderPointer()) {
-            value = window->id();
-        }
-    });
-    registerRemoteVariable<bool>("window_under_maximized", [](auto &value) {
-        if (const auto window = g_windowProvider->windowUnderPointer()) {
-            value = window->maximized();
-        }
-    });
-    registerRemoteVariable<QString>("window_under_name", [](auto &value) {
-        if (const auto window = g_windowProvider->windowUnderPointer()) {
-            value = window->resourceName();
-        }
-    });
-    registerRemoteVariable<QString>("window_under_title", [](auto &value) {
-        if (const auto window = g_windowProvider->windowUnderPointer()) {
-            value = window->title();
-        }
-    });
-
-    for (const auto &[name, variable] : m_variables) {
-        if (variable->type() == typeid(QPointF)) {
-            registerRemoteVariable<qreal>(
-                name + "_x",
-                [this, name](auto &value) {
-                    if (const auto point = getVariable<QPointF>(name)->get()) {
-                        value = point->x();
-                    }
-                },
-                true);
-            registerRemoteVariable<qreal>(
-                name + "_y",
-                [this, name](auto &value) {
-                    if (const auto point = getVariable<QPointF>(name)->get()) {
-                        value = point->y();
-                    }
-                },
-                true);
-        }
-    }
-}
-
+VariableManager::VariableManager() = default;
 VariableManager::~VariableManager() = default;
 
 bool VariableManager::hasVariable(const QString &name) const
@@ -171,10 +43,31 @@ Variable *VariableManager::getVariable(const QString &name) const
     return m_variables.at(name).get();
 }
 
-void VariableManager::registerVariable(const QString &name, std::unique_ptr<Variable> variable, bool hidden)
+Variable *VariableManager::registerVariable(const QString &name, std::unique_ptr<Variable> variable, bool hidden)
 {
     variable->m_hidden = hidden;
     m_variables[name] = std::move(variable);
+
+    if (m_variables[name]->type() == typeid(QPointF)) {
+        registerRemoteVariable<qreal>(
+            name + "_x",
+            [this, name](auto &value) {
+                if (const auto point = getVariable<QPointF>(name)->get()) {
+                    value = point->x();
+                }
+            },
+            true);
+        registerRemoteVariable<qreal>(
+            name + "_y",
+            [this, name](auto &value) {
+                if (const auto point = getVariable<QPointF>(name)->get()) {
+                    value = point->y();
+                }
+            },
+            true);
+    }
+
+    return m_variables[name].get();
 }
 
 void VariableManager::setProcessEnvironment(QProcess &process) const

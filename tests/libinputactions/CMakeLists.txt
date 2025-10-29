@@ -6,7 +6,7 @@ macro(libinputactions_add_test TARGET_NAME)
     set(multiValueArgs SOURCES)
     cmake_parse_arguments(TEST "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
-    qt_add_executable(${TARGET_NAME} ${TEST_SOURCES} utils.cpp)
+    qt_add_executable(${TARGET_NAME} ${TEST_SOURCES} Test.cpp utils.cpp)
     add_test(NAME "${TARGET_NAME}" COMMAND ${TARGET_NAME})
     target_link_libraries(${TARGET_NAME} PRIVATE
         libinputactions

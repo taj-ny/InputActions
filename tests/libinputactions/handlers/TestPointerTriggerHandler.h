@@ -1,13 +1,13 @@
 #pragma once
 
-#include <QTest>
+#include "Test.h"
 #include <libinputactions/handlers/PointerTriggerHandler.h>
 #include <libinputactions/input/InputDevice.h>
 
 namespace libinputactions
 {
 
-class TestPointerTriggerHandler : public QObject
+class TestPointerTriggerHandler : public Test
 {
     Q_OBJECT
 

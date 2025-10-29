@@ -1,11 +1,11 @@
 #pragma once
 
-#include <QTest>
+#include "Test.h"
 
 namespace libinputactions
 {
 
-class TestLazyCondition : public QObject
+class TestLazyCondition : public Test
 {
     Q_OBJECT
 
