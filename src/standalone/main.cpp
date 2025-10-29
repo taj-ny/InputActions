@@ -18,15 +18,11 @@
 
 #include "input/StandaloneInputBackend.h"
 #include "interfaces/DBusInterfaceCollection.h"
-#include "interfaces/StandaloneInputEmitter.h"
-#include "protocols/VirtualKeyboardUnstableV1.h"
+#include "interfaces/EvdevInputEmitter.h"
 #include "protocols/WaylandProtocolManager.h"
-#include "protocols/WlSeat.h"
 #include "protocols/WlrForeignToplevelManagementV1.h"
-#include "protocols/WlrVirtualPointerUnstableV1.h"
 #include <QCoreApplication>
 #include <QDir>
-#include <QJsonDocument>
 #include <QJsonObject>
 #include <QtEnvironmentVariables>
 #include <libinputactions/InputActions.h>
@@ -66,9 +62,6 @@ void installGnomeExtension()
 
 int main()
 {
-    std::println(PROJECT_NAME " v" PROJECT_VERSION);
-    std::println("Starting... ");
-
     static int argc = 0;
     QCoreApplication app(argc, nullptr);
 
@@ -76,18 +69,12 @@ int main()
         installGnomeExtension();
     }
 
-    g_virtualKeyboardUnstableV1 = std::make_unique<VirtualKeyboardUnstableV1>();
     g_wlrForeignToplevelManagementV1 = std::make_unique<WlrForeignToplevelManagementV1>();
-    g_wlrVirtualPointerUnstableV1 = std::make_unique<WlrVirtualPointerUnstableV1>();
-    g_wlSeat = std::make_unique<WlSeat>();
 
     auto *display = wl_display_connect(nullptr);
     auto *registry = wl_display_get_registry(display);
     WaylandProtocolManager protocolManager(registry);
-    protocolManager.addProtocol(g_virtualKeyboardUnstableV1.get());
     protocolManager.addProtocol(g_wlrForeignToplevelManagementV1.get());
-    protocolManager.addProtocol(g_wlrVirtualPointerUnstableV1.get());
-    protocolManager.addProtocol(g_wlSeat.get());
     wl_display_roundtrip(display);
 
     ::InputActions::InputActions inputActions;
@@ -100,11 +87,9 @@ int main()
         g_windowProvider = dbusInterfaceCollection;
     }
     g_pointerPositionGetter = dbusInterfaceCollection;
-    g_inputEmitter = std::make_shared<StandaloneInputEmitter>();
+    g_inputEmitter = std::make_shared<EvdevInputEmitter>();
 
     g_config->load(false);
-
-    std::println("done");
 
     while (true) {
         g_inputBackend->poll();
