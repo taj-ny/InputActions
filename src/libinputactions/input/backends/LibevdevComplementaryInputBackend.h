@@ -24,23 +24,8 @@
 #include <libinputactions/input/events.h>
 #include <map>
 
-namespace libinputactions
+namespace InputActions
 {
-
-struct LibevdevDevice
-{
-    ~LibevdevDevice();
-
-    libevdev *libevdevPtr = nullptr;
-    int fd = -1;
-    QString name;
-
-    uint8_t currentSlot{};
-    /**
-     * Absolute minimum values of ABS_X and ABS_Y.
-     */
-    QPoint absMin;
-};
 
 /**
  * Uses libevdev to get additional touchpad data that libinput does not provide.
@@ -66,13 +51,38 @@ public:
 
 protected:
     void deviceAdded(InputDevice *device) override;
+    void addDevice(InputDevice *device, libevdev *libevdev, bool owner);
+
     void deviceRemoved(const InputDevice *device) override;
 
+    void handleEvdevEvent(InputDevice *sender, const input_event &event);
+
 private:
-    std::unique_ptr<LibevdevDevice> openDevice(const QString &sysName);
+    libevdev *openDevice(const QString &sysName);
 
     bool m_enabled = true;
-    std::map<InputDevice *, std::unique_ptr<LibevdevDevice>> m_libevdevDevices;
     QTimer m_inputTimer;
+
+    struct ExtraDeviceData
+    {
+        ~ExtraDeviceData();
+
+        struct libevdev *libevdev{};
+        /**
+         * Whether libevdev is owned by this input backend.
+         */
+        bool owner{};
+
+        uint8_t currentSlot{};
+        /**
+         * Absolute minimum values of ABS_X and ABS_Y.
+         */
+        QPoint absMin;
+        /**
+         * Copy of touch points from the previous frame.
+         */
+        std::vector<TouchPoint> previousTouchPoints;
+    };
+    std::map<InputDevice *, std::unique_ptr<ExtraDeviceData>> m_devices;
 };
 }

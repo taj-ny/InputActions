@@ -22,7 +22,7 @@
 
 class CWindow;
 
-class HyprlandWindow : public libinputactions::Window
+class HyprlandWindow : public InputActions::Window
 {
 public:
     HyprlandWindow(CWindow *window);

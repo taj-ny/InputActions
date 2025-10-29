@@ -20,22 +20,20 @@
 
 #include "DBusInterface.h"
 
-namespace libinputactions
+namespace InputActions
 {
 
 class InputActions
 {
 public:
     InputActions();
+    virtual ~InputActions();
 
     /**
      * Runs the specified function on the main thread. If the current thread is the main thread, the function is executed immediately. Blocking calls introduce
      * action latency and should be used as little as possible.
      */
     static void runOnMainThread(std::function<void()> &&function, bool block = true);
-
-protected:
-    virtual ~InputActions();
 
 private:
     void registerGlobalVariables();

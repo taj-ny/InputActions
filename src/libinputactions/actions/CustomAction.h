@@ -21,7 +21,7 @@
 #include "Action.h"
 #include <QObject>
 
-namespace libinputactions
+namespace InputActions
 {
 
 class CustomAction : public Action

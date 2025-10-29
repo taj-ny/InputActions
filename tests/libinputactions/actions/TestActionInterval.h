@@ -2,7 +2,7 @@
 
 #include "Test.h"
 
-namespace libinputactions
+namespace InputActions
 {
 
 class TestActionInterval : public Test

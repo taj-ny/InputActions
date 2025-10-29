@@ -21,7 +21,7 @@
 #include <hyprland/src/managers/eventLoop/EventLoopTimer.hpp>
 #include <libinputactions/InputActions.h>
 
-class Plugin : public libinputactions::InputActions
+class Plugin : public InputActions::InputActions
 {
 public:
     Plugin(void *handle);

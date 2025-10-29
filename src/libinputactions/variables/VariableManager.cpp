@@ -23,7 +23,7 @@
 
 Q_LOGGING_CATEGORY(INPUTACTIONS_VARIABLE_MANAGER, "inputactions.variable.manager", QtWarningMsg)
 
-namespace libinputactions
+namespace InputActions
 {
 
 VariableManager::VariableManager() = default;

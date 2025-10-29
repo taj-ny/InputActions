@@ -20,7 +20,7 @@
 
 #include "InputTriggerHandler.h"
 
-namespace libinputactions
+namespace InputActions
 {
 
 /**

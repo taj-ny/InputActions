@@ -25,7 +25,7 @@ namespace KWin
 class Window;
 }
 
-class KWinWindow : public libinputactions::Window
+class KWinWindow : public InputActions::Window
 {
 public:
     KWinWindow(KWin::Window *window);

@@ -22,7 +22,7 @@
 
 Q_LOGGING_CATEGORY(INPUTACTIONS_ACTION, "inputactions.action", QtWarningMsg)
 
-namespace libinputactions
+namespace InputActions
 {
 
 TriggerAction::TriggerAction(std::shared_ptr<Action> action)

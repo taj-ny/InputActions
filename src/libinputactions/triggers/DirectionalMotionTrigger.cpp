@@ -18,7 +18,7 @@
 
 #include "DirectionalMotionTrigger.h"
 
-namespace libinputactions
+namespace InputActions
 {
 
 DirectionalMotionTrigger::DirectionalMotionTrigger(TriggerType type, TriggerDirection direction)

@@ -29,7 +29,7 @@
 
 Q_DECLARE_LOGGING_CATEGORY(INPUTACTIONS_VARIABLE_MANAGER)
 
-namespace libinputactions
+namespace InputActions
 {
 
 const static uint8_t s_fingerVariableCount = 5;

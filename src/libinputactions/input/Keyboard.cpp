@@ -19,7 +19,7 @@
 #include "Keyboard.h"
 #include "events.h"
 
-namespace libinputactions
+namespace InputActions
 {
 
 void Keyboard::updateModifiers(uint32_t key, bool state)

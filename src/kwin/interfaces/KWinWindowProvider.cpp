@@ -21,18 +21,18 @@
 #include "effect/effecthandler.h"
 #include "workspace.h"
 
-std::unique_ptr<libinputactions::Window> KWinWindowProvider::activeWindow()
+std::shared_ptr<InputActions::Window> KWinWindowProvider::activeWindow()
 {
     if (auto *window = KWin::effects->activeWindow()) {
-        return std::make_unique<KWinWindow>(window->window());
+        return std::make_shared<KWinWindow>(window->window());
     }
     return {};
 }
 
-std::unique_ptr<libinputactions::Window> KWinWindowProvider::windowUnderPointer()
+std::shared_ptr<InputActions::Window> KWinWindowProvider::windowUnderPointer()
 {
     if (auto *window = KWin::workspace()->windowUnderMouse(KWin::workspace()->activeOutput())) {
-        return std::make_unique<KWinWindow>(window);
+        return std::make_shared<KWinWindow>(window);
     }
     return {};
 }

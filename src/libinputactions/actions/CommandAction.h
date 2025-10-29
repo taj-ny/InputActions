@@ -22,7 +22,7 @@
 #include <QObject>
 #include <libinputactions/Value.h>
 
-namespace libinputactions
+namespace InputActions
 {
 
 /**

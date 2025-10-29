@@ -2,7 +2,7 @@
 #include <QSignalSpy>
 #include <libinputactions/handlers/TouchpadTriggerHandler.h>
 
-namespace libinputactions
+namespace InputActions
 {
 
 class TestTouchpadTriggerHandler : public Test

@@ -21,7 +21,7 @@
 #include "Condition.h"
 #include <QString>
 
-namespace libinputactions
+namespace InputActions
 {
 
 /**

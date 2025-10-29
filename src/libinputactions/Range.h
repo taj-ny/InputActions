@@ -20,7 +20,7 @@
 
 #include <optional>
 
-namespace libinputactions
+namespace InputActions
 {
 
 template<typename T>

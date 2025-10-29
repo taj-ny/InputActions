@@ -20,7 +20,7 @@
 
 #include <memory>
 
-namespace libinputactions
+namespace InputActions
 {
 
 class Window;
@@ -34,11 +34,11 @@ public:
     /**
      * @return The currently active window, or nullptr if not available.
      */
-    virtual std::unique_ptr<Window> activeWindow();
+    virtual std::shared_ptr<Window> activeWindow();
     /**
      * @return The window under the pointer, or nullptr if not available.
      */
-    virtual std::unique_ptr<Window> windowUnderPointer();
+    virtual std::shared_ptr<Window> windowUnderPointer();
 };
 
 inline std::shared_ptr<WindowProvider> g_windowProvider;

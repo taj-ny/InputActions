@@ -2,7 +2,7 @@
 #include <libinputactions/actions/Action.h>
 #include <libinputactions/actions/TriggerAction.h>
 
-namespace libinputactions
+namespace InputActions
 {
 
 void TestTriggerAction::triggerUpdated_intervals_data()
@@ -45,5 +45,5 @@ void TestTriggerAction::triggerUpdated_intervals()
 
 }
 
-QTEST_MAIN(libinputactions::TestTriggerAction)
+QTEST_MAIN(InputActions::TestTriggerAction)
 #include "TestTriggerAction.moc"

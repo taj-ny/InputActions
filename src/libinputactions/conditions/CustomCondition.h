@@ -21,7 +21,7 @@
 #include "Condition.h"
 #include <functional>
 
-namespace libinputactions
+namespace InputActions
 {
 
 class CustomCondition : public Condition

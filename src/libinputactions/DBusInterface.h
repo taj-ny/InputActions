@@ -20,7 +20,7 @@
 #include <QDBusMessage>
 #include <QObject>
 
-namespace libinputactions
+namespace InputActions
 {
 
 class DBusInterface : public QObject

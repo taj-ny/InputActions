@@ -18,7 +18,7 @@
 
 #include "PressTrigger.h"
 
-namespace libinputactions
+namespace InputActions
 {
 
 PressTrigger::PressTrigger()

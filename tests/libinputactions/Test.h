@@ -2,7 +2,7 @@
 
 #include <QTest>
 
-namespace libinputactions
+namespace InputActions
 {
 
 class Test : public QObject

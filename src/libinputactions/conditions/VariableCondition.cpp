@@ -24,7 +24,7 @@
 
 Q_LOGGING_CATEGORY(INPUTACTIONS_CONDITION_VARIABLE, "inputactions.condition.variable", QtWarningMsg)
 
-namespace libinputactions
+namespace InputActions
 {
 
 VariableCondition::VariableCondition(const QString &variableName, const std::vector<Value<std::any>> &values, ComparisonOperator comparisonOperator)

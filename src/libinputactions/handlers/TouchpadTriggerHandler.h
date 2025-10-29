@@ -21,7 +21,7 @@
 #include <chrono>
 #include <libinputactions/handlers/MultiTouchMotionTriggerHandler.h>
 
-namespace libinputactions
+namespace InputActions
 {
 
 /**

@@ -18,7 +18,7 @@
 
 #include "InputDeviceRule.h"
 
-namespace libinputactions
+namespace InputActions
 {
 
 InputDeviceRule::InputDeviceRule() = default;

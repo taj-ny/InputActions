@@ -21,7 +21,7 @@
 #include "TriggerHandler.h"
 #include <libinputactions/input/InputEventHandler.h>
 
-namespace libinputactions
+namespace InputActions
 {
 
 class InputDevice;

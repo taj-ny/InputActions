@@ -1,6 +1,6 @@
 #include "TestRange.h"
 
-namespace libinputactions
+namespace InputActions
 {
 
 void TestRange::contains_qreal_data()
@@ -38,5 +38,5 @@ void TestRange::contains_qreal()
 
 }
 
-QTEST_MAIN(libinputactions::TestRange)
+QTEST_MAIN(InputActions::TestRange)
 #include "TestRange.moc"

@@ -2,7 +2,7 @@
 #include <libinputactions/actions/Action.h>
 #include <libinputactions/actions/TriggerAction.h>
 
-namespace libinputactions
+namespace InputActions
 {
 
 void TestTrigger::init()
@@ -103,5 +103,5 @@ void TestTrigger::update_threshold()
 
 }
 
-QTEST_MAIN(libinputactions::TestTrigger)
+QTEST_MAIN(InputActions::TestTrigger)
 #include "TestTrigger.moc"
