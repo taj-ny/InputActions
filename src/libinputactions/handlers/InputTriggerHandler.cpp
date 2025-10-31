@@ -20,7 +20,7 @@
 #include <libinputactions/input/InputDevice.h>
 #include <libinputactions/input/events.h>
 
-namespace libinputactions
+namespace InputActions
 {
 
 void InputTriggerHandler::setDevice(InputDevice *device)

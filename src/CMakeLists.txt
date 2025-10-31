@@ -30,14 +30,14 @@ set(libinputactions_SRCS
     libinputactions/handlers/TriggerHandler.cpp
     libinputactions/input/backends/InputBackend.cpp
     libinputactions/input/backends/LibevdevComplementaryInputBackend.cpp
-    libinputactions/input/backends/LibinputCompositorInputBackend.cpp
+    libinputactions/input/backends/LibinputInputBackend.cpp
     libinputactions/input/InputDevice.cpp
     libinputactions/input/InputDeviceRule.cpp
     libinputactions/input/events.cpp
     libinputactions/input/InputEventHandler.cpp
     libinputactions/input/Keyboard.cpp
     libinputactions/interfaces/CursorShapeProvider.h
-    libinputactions/interfaces/InputEmitter.h
+    libinputactions/interfaces/InputEmitter.cpp
     libinputactions/interfaces/NotificationManager.cpp
     libinputactions/interfaces/OnScreenMessageManager.h
     libinputactions/interfaces/PointerPositionGetter.h
@@ -84,4 +84,7 @@ if (INPUTACTIONS_BUILD_HYPRLAND)
 endif()
 if (INPUTACTIONS_BUILD_KWIN)
     add_subdirectory(kwin)
+endif()
+if (INPUTACTIONS_BUILD_STANDALONE)
+    add_subdirectory(standalone)
 endif()

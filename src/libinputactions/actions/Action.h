@@ -21,7 +21,7 @@
 #include <QString>
 #include <memory>
 
-namespace libinputactions
+namespace InputActions
 {
 
 class Condition;

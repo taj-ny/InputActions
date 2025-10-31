@@ -20,7 +20,7 @@
 
 #include <memory>
 
-namespace libinputactions
+namespace InputActions
 {
 
 class SessionLock

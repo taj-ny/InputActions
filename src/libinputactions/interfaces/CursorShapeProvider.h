@@ -21,7 +21,7 @@
 #include <QString>
 #include <map>
 
-namespace libinputactions
+namespace InputActions
 {
 
 // https://wayland.app/protocols/cursor-shape-v1#wp_cursor_shape_device_v1:enum:shape

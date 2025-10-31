@@ -3,7 +3,7 @@
 #include <gmock/gmock.h>
 #include <libinputactions/triggers/Trigger.h>
 
-namespace libinputactions
+namespace InputActions
 {
 
 class MockTrigger : public Trigger

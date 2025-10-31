@@ -20,7 +20,7 @@
 
 #include "Variable.h"
 
-namespace libinputactions
+namespace InputActions
 {
 
 template<typename T>

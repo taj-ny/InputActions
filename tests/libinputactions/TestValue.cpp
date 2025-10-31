@@ -2,7 +2,7 @@
 #include <libinputactions/Value.h>
 #include <libinputactions/variables/VariableManager.h>
 
-namespace libinputactions
+namespace InputActions
 {
 
 void TestValue::init()
@@ -59,5 +59,5 @@ void TestValue::get_nonExistentVariable_returnsNullopt()
 
 }
 
-QTEST_MAIN(libinputactions::TestValue)
+QTEST_MAIN(InputActions::TestValue)
 #include "TestValue.moc"

@@ -26,7 +26,7 @@ Q_DECLARE_LOGGING_CATEGORY(INPUTACTIONS_HANDLER_MULTITOUCH)
 
 static const std::chrono::milliseconds TAP_TIMEOUT(200L);
 
-namespace libinputactions
+namespace InputActions
 {
 
 enum class PinchType

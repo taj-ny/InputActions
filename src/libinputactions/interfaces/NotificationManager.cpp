@@ -20,7 +20,7 @@
 #include <QDBusInterface>
 #include <QThreadPool>
 
-namespace libinputactions
+namespace InputActions
 {
 
 void NotificationManager::sendNotification(const QString &title, const QString &content)

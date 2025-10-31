@@ -20,12 +20,12 @@
 
 #include "input.h"
 #include "input_event_spy.h"
-#include <libinputactions/input/backends/LibinputCompositorInputBackend.h>
+#include <libinputactions/input/backends/LibinputInputBackend.h>
 
 struct KWinInputDevice
 {
     KWin::InputDevice *kwinDevice;
-    std::unique_ptr<libinputactions::InputDevice> libinputactionsDevice;
+    std::unique_ptr<InputActions::InputDevice> libinputactionsDevice;
 };
 
 /**
@@ -35,7 +35,7 @@ struct KWinInputDevice
  */
 class KWinInputBackend
     : public QObject
-    , public libinputactions::LibinputCompositorInputBackend
+    , public InputActions::LibinputInputBackend
     , public KWin::InputEventFilter
 {
 public:
@@ -84,11 +84,11 @@ public:
 private:
     void kwinDeviceAdded(KWin::InputDevice *kwinDevice);
     void kwinDeviceRemoved(const KWin::InputDevice *kwinDevice);
-    libinputactions::InputDevice *findInputActionsDevice(const KWin::InputDevice *kwinDevice);
+    InputActions::InputDevice *findInputActionsDevice(const KWin::InputDevice *kwinDevice);
     /**
      * @return The device that generated the last event.
      */
-    libinputactions::InputDevice *currentTouchpad();
+    InputActions::InputDevice *currentTouchpad();
 
     bool isMouse(const KWin::InputDevice *device) const;
 

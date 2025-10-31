@@ -24,7 +24,7 @@
 #include <libinputactions/globals.h>
 #include <optional>
 
-namespace libinputactions
+namespace InputActions
 {
 
 class TouchpadTriggerHandler;
@@ -38,6 +38,15 @@ public:
      * Applies set properties from the other specified properties onto this one.
      */
     void apply(const InputDeviceProperties &other);
+
+    /**
+     * @returns Whether the device should be grabbed (standalone only).
+     */
+    bool grab() const;
+    /**
+     * @see ignore
+     */
+    void setGrab(bool value);
 
     /**
      * @returns Whether the device should be ignored completely.
@@ -93,6 +102,7 @@ public:
     void setLmrTapButtonMap(bool value);
 
 private:
+    std::optional<bool> m_grab;
     std::optional<bool> m_ignore;
 
     std::optional<bool> m_multiTouch;
@@ -158,6 +168,8 @@ public:
     std::vector<const TouchPoint *> validTouchPoints() const;
 
     std::unique_ptr<TouchpadTriggerHandler> m_touchpadTriggerHandler;
+
+    Qt::KeyboardModifiers m_modifiers{};
 
 private:
     InputDeviceType m_type;

@@ -5,7 +5,7 @@
 #include <libinputactions/triggers/Trigger.h>
 #include <linux/input-event-codes.h>
 
-namespace libinputactions
+namespace InputActions
 {
 
 void TestInputTriggerHandler::keyboardKey()
@@ -26,5 +26,5 @@ void TestInputTriggerHandler::keyboardKey()
 
 }
 
-QTEST_MAIN(libinputactions::TestInputTriggerHandler)
+QTEST_MAIN(InputActions::TestInputTriggerHandler)
 #include "TestInputTriggerHandler.moc"

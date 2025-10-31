@@ -20,7 +20,7 @@
 
 #include <QString>
 
-namespace libinputactions
+namespace InputActions
 {
 
 class OnScreenMessageManager

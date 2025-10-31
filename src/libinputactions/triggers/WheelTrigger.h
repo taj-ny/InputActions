@@ -20,7 +20,7 @@
 
 #include "DirectionalMotionTrigger.h"
 
-namespace libinputactions
+namespace InputActions
 {
 
 /**

@@ -36,7 +36,7 @@
 
 #include "MotionTrigger.h"
 
-namespace libinputactions
+namespace InputActions
 {
 
 struct Point

@@ -21,7 +21,7 @@
 #include "Action.h"
 #include <vector>
 
-namespace libinputactions
+namespace InputActions
 {
 
 /**

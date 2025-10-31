@@ -18,7 +18,7 @@
 
 #pragma once
 
-namespace libinputactions
+namespace InputActions
 {
 
 class VariableManager;

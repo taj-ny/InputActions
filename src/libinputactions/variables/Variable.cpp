@@ -18,7 +18,7 @@
 
 #include "Variable.h"
 
-namespace libinputactions
+namespace InputActions
 {
 
 Variable::Variable(std::type_index type)

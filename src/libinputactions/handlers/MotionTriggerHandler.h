@@ -23,7 +23,7 @@
 
 Q_DECLARE_LOGGING_CATEGORY(INPUTACTIONS_HANDLER_MOTION)
 
-namespace libinputactions
+namespace InputActions
 {
 
 enum class Axis

@@ -18,7 +18,7 @@
 
 #include "LocalVariable.h"
 
-namespace libinputactions
+namespace InputActions
 {
 
 LocalVariable::LocalVariable(std::type_index type)

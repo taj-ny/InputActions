@@ -23,9 +23,9 @@
 #include <hyprland/src/devices/IPointer.hpp>
 #include <hyprland/src/plugins/HookSystem.hpp>
 #undef HANDLE
-#include <libinputactions/input/backends/LibinputCompositorInputBackend.h>
+#include <libinputactions/input/backends/LibinputInputBackend.h>
 
-namespace libinputactions
+namespace InputActions
 {
 class InputDevice;
 }
@@ -33,7 +33,7 @@ class InputDevice;
 struct HyprlandInputDevice
 {
     IHID *hyprlandDevice;
-    std::unique_ptr<libinputactions::InputDevice> libinputactionsDevice;
+    std::unique_ptr<InputActions::InputDevice> libinputactionsDevice;
     std::vector<CHyprSignalListener> listeners;
 };
 
@@ -42,7 +42,7 @@ struct HyprlandInputDevice
  */
 class HyprlandInputBackend
     : public QObject
-    , public libinputactions::LibinputCompositorInputBackend
+    , public InputActions::LibinputInputBackend
 {
 public:
     HyprlandInputBackend(void *handle);
@@ -73,7 +73,7 @@ private:
     void pointerMotion(SCallbackInfo &info, const std::any &data);
 
     HyprlandInputDevice *findDevice(IHID *hyprlandDevice);
-    libinputactions::InputDevice *findInputActionsDevice(IHID *hyprlandDevice);
+    InputActions::InputDevice *findInputActionsDevice(IHID *hyprlandDevice);
 
     std::vector<SP<HOOK_CALLBACK_FN>> m_events;
 
@@ -87,8 +87,8 @@ private:
     /**
      * Mouse or touchpad.
      */
-    libinputactions::InputDevice *m_currentPointingDevice{};
-    libinputactions::InputDevice *m_currentTouchpad{};
+    InputActions::InputDevice *m_currentPointingDevice{};
+    InputActions::InputDevice *m_currentTouchpad{};
 
     Vector2D m_previousPointerPosition;
 

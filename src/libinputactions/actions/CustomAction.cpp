@@ -18,7 +18,7 @@
 
 #include "CustomAction.h"
 
-namespace libinputactions
+namespace InputActions
 {
 
 CustomAction::CustomAction(std::function<void()> function, bool async)

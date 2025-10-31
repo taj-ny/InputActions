@@ -25,7 +25,7 @@
 #include <QRectF>
 #include <libinputactions/input/backends/InputBackend.h>
 
-using namespace libinputactions;
+using namespace InputActions;
 
 typedef void (*setCursorFromName)(void *thisPtr, const std::string &name);
 

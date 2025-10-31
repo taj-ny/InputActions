@@ -33,7 +33,7 @@
 #include <QCoreApplication>
 #include <chrono>
 
-using namespace libinputactions;
+using namespace InputActions;
 
 static const auto TICK_INTERVAL = std::chrono::milliseconds(static_cast<uint32_t>(1));
 

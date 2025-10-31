@@ -27,7 +27,7 @@
 
 Q_DECLARE_LOGGING_CATEGORY(INPUTACTIONS_ACTION)
 
-namespace libinputactions
+namespace InputActions
 {
 
 class Action;

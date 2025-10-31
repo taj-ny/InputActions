@@ -25,7 +25,7 @@
 #include <libinputactions/variables/Variable.h>
 #include <libinputactions/variables/VariableManager.h>
 
-namespace libinputactions
+namespace InputActions
 {
 
 static QString s_service = "org.inputactions";

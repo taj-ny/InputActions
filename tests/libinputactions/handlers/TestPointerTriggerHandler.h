@@ -4,7 +4,7 @@
 #include <libinputactions/handlers/PointerTriggerHandler.h>
 #include <libinputactions/input/InputDevice.h>
 
-namespace libinputactions
+namespace InputActions
 {
 
 class TestPointerTriggerHandler : public Test

@@ -18,7 +18,7 @@
 
 #include <libinputactions/interfaces/SessionLock.h>
 
-class HyprlandSessionLock : public libinputactions::SessionLock
+class HyprlandSessionLock : public InputActions::SessionLock
 {
 public:
     bool sessionLocked() override;

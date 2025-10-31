@@ -2,7 +2,7 @@
 #include <libinputactions/actions/CustomAction.h>
 #include <libinputactions/actions/SleepAction.h>
 
-namespace libinputactions
+namespace InputActions
 {
 
 void TestActionExecutor::init()
@@ -71,5 +71,5 @@ bool TestActionExecutor::isMainThread()
 
 }
 
-QTEST_MAIN(libinputactions::TestActionExecutor)
+QTEST_MAIN(InputActions::TestActionExecutor)
 #include "TestActionExecutor.moc"

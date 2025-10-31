@@ -22,7 +22,7 @@
 
 Q_DECLARE_LOGGING_CATEGORY(INPUTACTIONS_HANDLER_MOUSE)
 
-namespace libinputactions
+namespace InputActions
 {
 
 /**
@@ -81,7 +81,7 @@ private:
     /**
      * Presses all currently blocked mouse buttons without releasing them.
      */
-    void pressBlockedMouseButtons();
+    void pressBlockedMouseButtons(const InputDevice *target);
 
     /**
      * Used to wait until all mouse buttons have been pressed to avoid conflicts with gestures that require more than

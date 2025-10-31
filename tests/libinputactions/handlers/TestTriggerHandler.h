@@ -4,7 +4,7 @@
 #include "mocks/MockTrigger.h"
 #include <libinputactions/handlers/TriggerHandler.h>
 
-namespace libinputactions
+namespace InputActions
 {
 
 class TestTriggerHandler : public Test

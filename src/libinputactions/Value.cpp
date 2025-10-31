@@ -23,7 +23,7 @@
 #include <libinputactions/interfaces/CursorShapeProvider.h>
 #include <libinputactions/variables/VariableManager.h>
 
-namespace libinputactions
+namespace InputActions
 {
 
 template<typename T>

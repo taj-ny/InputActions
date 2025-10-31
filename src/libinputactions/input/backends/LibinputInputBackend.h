@@ -16,19 +16,20 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include <QPointF>
+#pragma once
+
 #include <libinputactions/input/backends/LibevdevComplementaryInputBackend.h>
 
-namespace libinputactions
+namespace InputActions
 {
 
 /**
- * Input backend for compositors that use libinput. Uses libevdev backend.
+ * Input backend that uses libinput events, but does not manage a libinput instance. Uses libevdev backend.
  */
-class LibinputCompositorInputBackend : public LibevdevComplementaryInputBackend
+class LibinputInputBackend : public LibevdevComplementaryInputBackend
 {
 protected:
-    LibinputCompositorInputBackend() = default;
+    LibinputInputBackend() = default;
 
     /**
      * Keyboard::updateModifiers must be called prior to this method.

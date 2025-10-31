@@ -23,7 +23,7 @@
 
 Q_DECLARE_LOGGING_CATEGORY(INPUTACTIONS_HANDLER_TRIGGER)
 
-namespace libinputactions
+namespace InputActions
 {
 
 struct TriggerManagementOperationResult

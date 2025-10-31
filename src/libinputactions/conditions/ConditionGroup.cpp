@@ -19,7 +19,7 @@
 #include "ConditionGroup.h"
 #include <algorithm>
 
-namespace libinputactions
+namespace InputActions
 {
 
 ConditionGroup::ConditionGroup(ConditionGroupMode mode)

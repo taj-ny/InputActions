@@ -18,7 +18,7 @@
 
 #include "HoverTrigger.h"
 
-namespace libinputactions
+namespace InputActions
 {
 
 HoverTrigger::HoverTrigger()

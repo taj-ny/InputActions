@@ -3,7 +3,7 @@
 #include "Test.h"
 #include <libinputactions/Range.h>
 
-namespace libinputactions
+namespace InputActions
 {
 
 class TestRange : public Test
