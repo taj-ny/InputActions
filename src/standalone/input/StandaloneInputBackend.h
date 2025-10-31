@@ -45,12 +45,19 @@ public:
     void waitForEvents(int timeout);
 
 private slots:
-    void inotifyRead();
+    void inotifyTimerTick();
+    void deviceInitializationRetryTimerTick();
 
 private:
     struct ExtraDeviceData;
 
     void evdevDeviceAdded(const QString &path);
+    /**
+     * ExtraDeviceData::libinputDevice may be nullptr and has to be initialized later when the newly created device can be opened.
+     * @return True if the device was added or rejected not as a result of an error, false if an error occurred.
+     */
+    bool tryAddEvdevDevice(const QString &path);
+    void finishLibinputDeviceInitialization(InputActions::InputDevice *device, ExtraDeviceData *data);
     void evdevDeviceRemoved(const QString &path);
 
     bool handleEvent(InputActions::InputDevice *sender, libinput_event *event);
@@ -63,6 +70,13 @@ private:
 
     int m_inotifyFd;
     QTimer m_inotifyTimer;
+
+    /**
+     * Contains devices that have failed to initialize due to the first open failing.
+     * <path, attempts>
+     */
+    std::map<QString, uint32_t> m_deviceInitializationQueue;
+    QTimer m_deviceInitializationRetryTimer;
 
     static int openRestricted(const char *path, int flags, void *data);
     static int openRestrictedGrab(const char *path, int flags, void *data);
@@ -77,6 +91,8 @@ private:
         ExtraDeviceData(ExtraDeviceData &&) = delete;
         ExtraDeviceData &operator=(const ExtraDeviceData &) = delete;
         ExtraDeviceData &operator=(ExtraDeviceData &&) = delete;
+
+        uint32_t initializationAttempts{};
 
         struct libevdev *libevdev{};
         /**

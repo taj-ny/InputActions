@@ -21,10 +21,11 @@
 #include <fcntl.h>
 #include <linux/uinput.h>
 #include <poll.h>
-#include <ranges>
 #include <sys/inotify.h>
 
 using namespace InputActions;
+
+static constexpr uint32_t MAX_INITIALIZATION_ATTEMPTS = 5;
 
 StandaloneInputBackend::StandaloneInputBackend()
 {
@@ -42,9 +43,13 @@ StandaloneInputBackend::StandaloneInputBackend()
     fcntl(m_inotifyFd, F_SETFL, fcntl(m_inotifyFd, F_GETFL, 0) | O_NONBLOCK);
     inotify_add_watch(m_inotifyFd, "/dev/input", IN_CREATE | IN_DELETE);
 
-    connect(&m_inotifyTimer, &QTimer::timeout, this, &StandaloneInputBackend::inotifyRead);
+    connect(&m_inotifyTimer, &QTimer::timeout, this, &StandaloneInputBackend::inotifyTimerTick);
     m_inotifyTimer.setInterval(1000);
     m_inotifyTimer.start();
+
+    connect(&m_deviceInitializationRetryTimer, &QTimer::timeout, this, &StandaloneInputBackend::deviceInitializationRetryTimerTick);
+    m_deviceInitializationRetryTimer.setInterval(1000);
+    m_deviceInitializationRetryTimer.start();
 }
 
 StandaloneInputBackend::~StandaloneInputBackend()
@@ -76,12 +81,20 @@ void StandaloneInputBackend::reset()
 
 void StandaloneInputBackend::evdevDeviceAdded(const QString &path)
 {
-    if (!path.contains("event")) {
+    if (!path.startsWith("/dev/input/event")) {
         return;
     }
+
+    if (!tryAddEvdevDevice(path)) {
+        m_deviceInitializationQueue[path] = 0;
+    }
+}
+
+bool StandaloneInputBackend::tryAddEvdevDevice(const QString &path)
+{
     for (const auto &[device, data] : m_devices) {
         if (path == data->libinputEventInjectionDevicePath || path == data->outputDevicePath) {
-            return;
+            return true;
         }
     }
 
@@ -90,7 +103,8 @@ void StandaloneInputBackend::evdevDeviceAdded(const QString &path)
     data->libinput = libinput_path_create_context(&m_libinputNonBlockingInterface, nullptr);
     data->libinputDevice = libinput_path_add_device(data->libinput, data->path.c_str());
     if (!data->libinputDevice) {
-        return;
+        // May fail if opened before the udev rule sets ACLs, initialization will be attempted again later.
+        return false;
     }
     libinput_device_ref(data->libinputDevice);
 
@@ -105,13 +119,13 @@ void StandaloneInputBackend::evdevDeviceAdded(const QString &path)
     } else if (udev_device_get_property_value(udevDevice, "ID_INPUT_TOUCHPAD")) {
         deviceType = InputDeviceType::Touchpad;
     } else {
-        return;
+        return true;
     }
     auto device = std::make_unique<InputDevice>(deviceType, name, sysName);
     const auto properties = deviceProperties(device.get());
 
     if (properties.ignore()) {
-        return;
+        return true;
     }
 
     if (properties.grab()) {
@@ -133,7 +147,10 @@ void StandaloneInputBackend::evdevDeviceAdded(const QString &path)
               fcntl(libevdev_uinput_get_fd(data->libinputEventInjectionDevice), F_GETFL, 0) & ~O_NONBLOCK);
         data->libinputEventInjectionDevicePath = libevdev_uinput_get_devnode(data->libinputEventInjectionDevice);
         data->libinputDevice = libinput_path_add_device(data->libinput, data->libinputEventInjectionDevicePath.c_str());
-        libinput_device_ref(data->libinputDevice);
+        if (data->libinputDevice) {
+            // Will almost always fail due to being opened before the udev rule sets ACLs, initialization will be attempted again later.
+            libinput_device_ref(data->libinputDevice);
+        }
 
         virtualDeviceName = name.toStdString() + " (InputActions output)";
         libevdev_set_name(data->libevdev, virtualDeviceName.c_str());
@@ -153,7 +170,18 @@ void StandaloneInputBackend::evdevDeviceAdded(const QString &path)
         LibevdevComplementaryInputBackend::deviceAdded(device.get());
     }
 
-    if (deviceType == InputDeviceType::Touchpad) {
+    if (data->libinputDevice) {
+        finishLibinputDeviceInitialization(device.get(), data.get());
+    }
+
+    InputBackend::deviceAdded(device.get());
+    m_devices.emplace_back(std::move(device), std::move(data));
+    return true;
+}
+
+void StandaloneInputBackend::finishLibinputDeviceInitialization(InputDevice *device, ExtraDeviceData *data)
+{
+    if (device->type() == InputDeviceType::Touchpad) {
         libinput_device_config_tap_set_enabled(data->libinputDevice, LIBINPUT_CONFIG_TAP_ENABLED);
     }
 
@@ -161,10 +189,6 @@ void StandaloneInputBackend::evdevDeviceAdded(const QString &path)
     while (auto *libinputEvent = libinput_get_event(data->libinput)) {
         libinput_event_destroy(libinputEvent);
     }
-
-    InputBackend::deviceAdded(device.get());
-
-    m_devices.emplace_back(std::move(device), std::move(data));
 }
 
 void StandaloneInputBackend::evdevDeviceRemoved(const QString &path)
@@ -197,7 +221,7 @@ void StandaloneInputBackend::waitForEvents(int timeout)
     ::poll(pollfds.data(), pollfds.size(), timeout);
 }
 
-void StandaloneInputBackend::inotifyRead()
+void StandaloneInputBackend::inotifyTimerTick()
 {
     std::array<int8_t, 16 * (sizeof(inotify_event) + NAME_MAX + 1)> buffer{};
     auto length = read(m_inotifyFd, &buffer, sizeof(buffer));
@@ -210,6 +234,41 @@ void StandaloneInputBackend::inotifyRead()
             evdevDeviceRemoved(path);
         }
         i += sizeof(inotify_event) + event->len;
+    }
+}
+
+void StandaloneInputBackend::deviceInitializationRetryTimerTick()
+{
+    for (auto it = m_deviceInitializationQueue.begin(); it != m_deviceInitializationQueue.end();) {
+        const auto &path = it->first;
+        auto &attempts = it->second;
+
+        if (tryAddEvdevDevice(path) || ++attempts == MAX_INITIALIZATION_ATTEMPTS) {
+            it = m_deviceInitializationQueue.erase(it);
+            continue;
+        }
+
+        ++it;
+    }
+
+    for (auto it = m_devices.begin(); it != m_devices.end();) {
+        const auto &device = it->first;
+        const auto &data = it->second;
+
+        if (!data->libinputDevice) {
+            data->libinputDevice = libinput_path_add_device(data->libinput, data->libinputEventInjectionDevicePath.c_str());
+            if (data->libinputDevice) {
+                libinput_device_ref(data->libinputDevice);
+                finishLibinputDeviceInitialization(device.get(), data.get());
+            } else {
+                if (++data->initializationAttempts == MAX_INITIALIZATION_ATTEMPTS) {
+                    it = m_devices.erase(it);
+                    continue;
+                }
+            }
+        }
+
+        ++it;
     }
 }
 
