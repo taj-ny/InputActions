@@ -40,6 +40,8 @@ stdenv.mkDerivation rec {
     "-DINPUTACTIONS_BUILD_STANDALONE=ON"
   ];
 
+  PKG_CONFIG_SYSTEMD_SYSTEMDSYSTEMUNITDIR = "${placeholder "out"}/lib/systemd/system";
+
   meta = with lib; {
     description = "Custom mouse and touchpad gestures for Plasma 6 Wayland";
     license = licenses.gpl3;
