@@ -28,12 +28,12 @@ file(MAKE_DIRECTORY ${PROTOCOL_OUTPUT_DIR})
 function(wayland_protocol name)
     add_custom_command(
         OUTPUT ${PROTOCOL_OUTPUT_DIR}/${name}.h
-        COMMAND wayland-scanner client-header ./wayland/protocols/xml/${name}.xml ${PROTOCOL_OUTPUT_DIR}/${name}.h
+        COMMAND wayland-scanner client-header ./wayland/protocols/${name}.xml ${PROTOCOL_OUTPUT_DIR}/${name}.h
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     )
     add_custom_command(
         OUTPUT ${PROTOCOL_OUTPUT_DIR}/${name}.c
-        COMMAND wayland-scanner private-code ./wayland/protocols/xml/${name}.xml ${PROTOCOL_OUTPUT_DIR}/${name}.c
+        COMMAND wayland-scanner private-code ./wayland/protocols/${name}.xml ${PROTOCOL_OUTPUT_DIR}/${name}.c
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     )
     target_sources(inputactions-client PRIVATE ${PROTOCOL_OUTPUT_DIR}/${name}.c ${PROTOCOL_OUTPUT_DIR}/${name}.h)
