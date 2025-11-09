@@ -68,7 +68,7 @@ void MessageSocketConnection::onReadyRead()
         }
 
         const auto json = QString::fromUtf8(m_buffer.left(newLineIndex));
-        qDebug(INPUTACTIONS_IPC).noquote().nospace() << "IN: " << json;
+        qCDebug(INPUTACTIONS_IPC).noquote().nospace() << "IN: " << json;
 
         m_buffer.remove(0, newLineIndex + 1);
         auto message = m_serializer.deserializeMessage(json);
@@ -113,7 +113,7 @@ void MessageSocketConnection::write(QString data)
         return;
     }
 
-    qDebug(INPUTACTIONS_IPC).noquote().nospace() << "OUT: " << data;
+    qCDebug(INPUTACTIONS_IPC).noquote().nospace() << "OUT: " << data;
     if (!data.endsWith('\n')) {
         data += '\n';
     }

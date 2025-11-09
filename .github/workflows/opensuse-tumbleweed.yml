@@ -55,7 +55,7 @@ jobs:
         run: zypper ref
 
       - name: Install Dependencies
-        run: zypper in -y cmake-full gcc-c++ kf6-extra-cmake-modules "cmake(Qt6Core)" "cmake(Qt6DBus)" yaml-cpp-devel libevdev-devel libudev-devel libinput-devel wayland-devel libxkbcommon-devel
+        run: zypper in -y cmake-full gcc-c++ kf6-extra-cmake-modules "cmake(Qt6Core)" "cmake(Qt6DBus)" "cmake(Qt6Network)" yaml-cpp-devel libevdev-devel libudev-devel libinput-devel wayland-devel libxkbcommon-devel
 
       - name: Configure CMake
         run: cmake -B "${GITHUB_WORKSPACE}/build" -DINPUTACTIONS_BUILD_STANDALONE=ON
