@@ -84,12 +84,9 @@ void SessionManager::beginSessionRequestMessage(const std::shared_ptr<const Begi
     setutent();
     utmp *entry;
     while ((entry = getutent()) != nullptr) {
-        if (entry->ut_type == USER_PROCESS) { // Only consider active user sessions
-            // Compare TTY name, but ut_line doesn't have "/dev/" prefix
-            if (message->tty() == entry->ut_line) {
-                ttyUser = entry->ut_user;
-                break;
-            }
+        if (entry->ut_type == USER_PROCESS && message->tty() == entry->ut_line) {
+            ttyUser = QString::fromLatin1(entry->ut_user, sizeof(entry->ut_user));
+            break;
         }
     }
     endutent();
