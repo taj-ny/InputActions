@@ -61,7 +61,7 @@ jobs:
         run: apt-get upgrade -y
 
       - name: Install Dependencies
-        run: apt-get install -y -f cmake g++ extra-cmake-modules qt6-tools-dev gettext libyaml-cpp-dev libxkbcommon-dev pkg-config libevdev-dev libudev-dev libinput-dev libwayland-dev libsystemd-dev
+        run: apt-get install -y -f cmake g++ extra-cmake-modules qt6-tools-dev gettext libyaml-cpp-dev libxkbcommon-dev pkg-config libevdev-dev libudev-dev libinput-dev libwayland-dev systemd-dev
 
       - name: Configure CMake
         run: cmake -B "${GITHUB_WORKSPACE}/build" -DINPUTACTIONS_BUILD_STANDALONE=ON
