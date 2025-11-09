@@ -1,7 +1,0 @@
-{
-    "uuid": "inputactions@inputactions.org",
-    "name": "InputActions",
-    "description": "Enables additional features of InputActions",
-    "version": 1,
-    "shell-version": ["48", "49"]
-}

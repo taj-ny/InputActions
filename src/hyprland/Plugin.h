@@ -21,13 +21,22 @@
 #include <hyprland/src/managers/eventLoop/EventLoopTimer.hpp>
 #include <libinputactions/InputActions.h>
 
-class Plugin : public InputActions::InputActions
+namespace InputActions
+{
+
+class Plugin : public InputActions
 {
 public:
     Plugin(void *handle);
+
+protected:
+    void registerGlobalVariables(VariableManager *variableManager, std::shared_ptr<PointerPositionGetter> pointerPositionGetter,
+                                 std::shared_ptr<WindowProvider> windowProvider) override;
 
 private:
     void tick();
 
     SP<CEventLoopTimer> m_eventLoopTimer;
 };
+
+}

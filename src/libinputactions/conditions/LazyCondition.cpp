@@ -17,7 +17,6 @@
 */
 
 #include "LazyCondition.h"
-#include <libinputactions/config/Config.h>
 #include <libinputactions/globals.h>
 
 namespace InputActions

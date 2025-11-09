@@ -1,6 +1,0 @@
-<RCC>
-    <qresource prefix="/">
-        <file>extensions/gnome/extension.js</file>
-        <file>extensions/gnome/metadata.json</file>
-    </qresource>
-</RCC>

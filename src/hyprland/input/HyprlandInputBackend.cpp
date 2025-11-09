@@ -210,9 +210,9 @@ void HyprlandInputBackend::pointerButton(SCallbackInfo &info, const std::any &da
 {
     const auto event = std::any_cast<IPointer::SButtonEvent>(data);
     info.cancelled = LibinputInputBackend::pointerButton(m_currentPointingDevice,
-                                                                   scanCodeToMouseButton(event.button),
-                                                                   event.button,
-                                                                   event.state == WL_POINTER_BUTTON_STATE_PRESSED);
+                                                         scanCodeToMouseButton(event.button),
+                                                         event.button,
+                                                         event.state == WL_POINTER_BUTTON_STATE_PRESSED);
 }
 
 void HyprlandInputBackend::pointerMotion(SCallbackInfo &info, const std::any &data)

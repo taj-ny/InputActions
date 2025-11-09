@@ -21,6 +21,8 @@
 #include <QProcess>
 #include <libinputactions/globals.h>
 #include <libinputactions/interfaces/CursorShapeProvider.h>
+#include <libinputactions/interfaces/ProcessRunner.h>
+#include <libinputactions/utils/ThreadUtils.h>
 #include <libinputactions/variables/VariableManager.h>
 
 namespace InputActions
@@ -59,13 +61,7 @@ Value<T> Value<T>::command(Value<QString> command)
             return {};
         }
 
-        QProcess process;
-        process.setProgram("/bin/sh");
-        process.setArguments({"-c", commandValue.value()});
-        g_variableManager->setProcessEnvironment(process);
-        process.start();
-        process.waitForFinished();
-        return fromString<T>(process.readAllStandardOutput());
+        return fromString<T>(g_processRunner->startProcessReadOutput("/bin/sh", {"-c", commandValue.value()}));
     });
     value.m_expensive = true;
     return value;
@@ -121,9 +117,9 @@ std::optional<T> Value<T>::get() const
         [this](const std::function<std::optional<T>()> &getter) {
             std::optional<T> value;
             if (m_mainThreadOnly) {
-                InputActions::runOnMainThread([&value, getter]() {
+                ThreadUtils::runOnThread(ThreadUtils::mainThread(), [&value, getter]() {
                     value = getter();
-                });
+                }, true);
             } else {
                 value = getter();
             }

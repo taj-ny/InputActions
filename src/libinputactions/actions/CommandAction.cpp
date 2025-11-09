@@ -17,8 +17,7 @@
 */
 
 #include "CommandAction.h"
-#include <QProcess>
-#include <libinputactions/variables/VariableManager.h>
+#include <libinputactions/interfaces/ProcessRunner.h>
 
 namespace InputActions
 {
@@ -40,17 +39,7 @@ void CommandAction::executeImpl()
         return;
     }
 
-    auto *process = new QProcess;
-    connect(process, &QProcess::finished, this, [process]() {
-        process->deleteLater();
-    });
-    process->setProgram("/bin/sh");
-    process->setArguments({"-c", command});
-    g_variableManager->setProcessEnvironment(*process);
-    process->start();
-    if (m_wait) {
-        process->waitForFinished();
-    }
+    g_processRunner->startProcess("/bin/sh", {"-c", command}, m_wait);
 }
 
 }

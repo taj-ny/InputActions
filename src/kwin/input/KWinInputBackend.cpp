@@ -183,9 +183,9 @@ bool KWinInputBackend::pointerAxis(KWin::PointerAxisEvent *event)
 bool KWinInputBackend::pointerButton(KWin::PointerButtonEvent *event)
 {
     return LibinputInputBackend::pointerButton(findInputActionsDevice(event->device),
-                                                         event->button,
-                                                         event->nativeButton,
-                                                         event->state == KWin::PointerButtonState::Pressed);
+                                               event->button,
+                                               event->nativeButton,
+                                               event->state == KWin::PointerButtonState::Pressed);
 }
 
 bool KWinInputBackend::pointerMotion(KWin::PointerMotionEvent *event)
@@ -195,9 +195,7 @@ bool KWinInputBackend::pointerMotion(KWin::PointerMotionEvent *event)
 
 bool KWinInputBackend::keyboardKey(KWin::KeyboardKeyEvent *event)
 {
-    return LibinputInputBackend::keyboardKey(findInputActionsDevice(event->device),
-                                                       event->nativeScanCode,
-                                                       event->state == KWin::KeyboardKeyState::Pressed);
+    return LibinputInputBackend::keyboardKey(findInputActionsDevice(event->device), event->nativeScanCode, event->state == KWin::KeyboardKeyState::Pressed);
 }
 
 void KWinInputBackend::kwinDeviceAdded(KWin::InputDevice *kwinDevice)

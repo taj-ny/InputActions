@@ -34,7 +34,9 @@ namespace InputActions
 
 const static uint8_t s_fingerVariableCount = 5;
 
+class PointerPositionGetter;
 class Variable;
+class WindowProvider;
 
 template<typename T>
 struct VariableInfo
@@ -117,11 +119,11 @@ public:
     }
 
     /**
-     * Reads the specified process' arguments, and adds any referenced variables to environment variables.
+     * Compiles a set of extra environment variables for the specified command.
      *
      * The environment variable will only be set if the variable has a value. For boolean variables, the environment variable will be set to 1 if true.
      */
-    void setProcessEnvironment(QProcess &process) const;
+    std::map<QString, QString> extraProcessEnvironment(const QString &command) const;
 
     std::map<QString, const Variable *> variables() const;
 

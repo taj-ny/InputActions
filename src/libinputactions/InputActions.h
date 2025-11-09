@@ -18,27 +18,68 @@
 
 #pragma once
 
-#include "DBusInterface.h"
+#include "dbus/IntegratedDBusInterface.h"
+#include <QObject>
 
 namespace InputActions
 {
 
-class InputActions
+class PointerPositionGetter;
+class VariableManager;
+class WindowProvider;
+
+class InputActions : public QObject
 {
+    Q_OBJECT
+
 public:
     InputActions();
-    virtual ~InputActions();
+    ~InputActions() override;
 
-    /**
-     * Runs the specified function on the main thread. If the current thread is the main thread, the function is executed immediately. Blocking calls introduce
-     * action latency and should be used as little as possible.
-     */
-    static void runOnMainThread(std::function<void()> &&function, bool block = true);
+    void setMissingImplementations();
+    void initialize();
+    void suspend();
+
+    virtual void registerGlobalVariables(VariableManager *variableManager, std::shared_ptr<PointerPositionGetter> pointerPositionGetter = {},
+                                         std::shared_ptr<WindowProvider> windowProvider = {});
+
+private slots:
+    void onConfigChanged(const QString &config);
 
 private:
-    void registerGlobalVariables();
+    template<typename T1, typename T2>
+    void setMissingImplementation(std::shared_ptr<T1> &member)
+    {
+        if (!member) {
+            member = std::make_shared<T2>();
+        }
+    }
 
-    DBusInterface m_dbusInterface;
+    template<typename T>
+    void setMissingImplementation(std::shared_ptr<T> &member)
+    {
+        if (!member) {
+            member = std::make_shared<T>();
+        }
+    }
+
+    template<typename T1, typename T2>
+    void setMissingImplementation(std::unique_ptr<T1> &member)
+    {
+        if (!member) {
+            member = std::make_unique<T2>();
+        }
+    }
+
+    template<typename T>
+    void setMissingImplementation(std::unique_ptr<T> &member)
+    {
+        if (!member) {
+            member = std::make_unique<T>();
+        }
+    }
+
+    IntegratedDBusInterface m_dbusInterface;
 };
 
 inline InputActions *g_inputActions;

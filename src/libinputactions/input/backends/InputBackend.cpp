@@ -58,7 +58,11 @@ void InputBackend::poll() {}
 void InputBackend::initialize()
 {
     InputDeviceRule ignoreOwnDevicesRule;
-    ignoreOwnDevicesRule.m_condition = std::make_shared<VariableCondition>("name", std::vector<Value<std::any>>{Value(QStringLiteral("inputactions")), Value(QStringLiteral("InputActions Virtual Keyboard")), Value(QStringLiteral("InputActions Virtual Pointer"))}, ComparisonOperator::OneOf);
+    ignoreOwnDevicesRule.m_condition = std::make_shared<VariableCondition>("name",
+                                                                           std::vector<Value<std::any>>{Value(QStringLiteral("inputactions")),
+                                                                                                        Value(QStringLiteral("InputActions Virtual Keyboard")),
+                                                                                                        Value(QStringLiteral("InputActions Virtual Mouse"))},
+                                                                           ComparisonOperator::OneOf);
     ignoreOwnDevicesRule.m_properties.setIgnore(true);
     m_deviceRules.push_back(std::move(ignoreOwnDevicesRule));
 }

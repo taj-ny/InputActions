@@ -70,34 +70,34 @@ Variable *VariableManager::registerVariable(const QString &name, std::unique_ptr
     return m_variables[name].get();
 }
 
-void VariableManager::setProcessEnvironment(QProcess &process) const
+std::map<QString, QString> VariableManager::extraProcessEnvironment(const QString &command) const
 {
-    auto environment = QProcessEnvironment::systemEnvironment();
-    for (const auto &argument : process.arguments()) {
-        static const QRegularExpression variableReferenceRegex("\\$([a-zA-Z0-9_])+");
-        auto it = variableReferenceRegex.globalMatch(argument);
-        while (it.hasNext()) {
-            const auto match = it.next();
-            const auto variableName = match.captured(0).mid(1);
+    static const QRegularExpression variableReferenceRegex("\\$([a-zA-Z0-9_])+");
 
-            if (const auto *variable = getVariable(variableName)) {
-                const auto value = variable->get();
-                if (!value.has_value()) {
-                    continue;
-                }
+    std::map<QString, QString> result;
+    auto it = variableReferenceRegex.globalMatch(command);
+    while (it.hasNext()) {
+        const auto match = it.next();
+        const auto variableName = match.captured(0).mid(1);
 
-                if (variable->type() == typeid(bool)) {
-                    if (std::any_cast<bool>(value)) {
-                        environment.insert(variableName, "1");
-                    }
-                    continue;
-                }
-
-                environment.insert(variableName, variable->operations()->toString(value));
+        if (const auto *variable = getVariable(variableName)) {
+            const auto value = variable->get();
+            if (!value.has_value()) {
+                continue;
             }
+
+            if (variable->type() == typeid(bool)) {
+                if (std::any_cast<bool>(value)) {
+                    result[variableName] = "1";
+                }
+                continue;
+            }
+
+            result[variableName] = variable->operations()->toString(value);
         }
     }
-    process.setProcessEnvironment(environment);
+
+    return result;
 }
 
 std::map<QString, const Variable *> VariableManager::variables() const

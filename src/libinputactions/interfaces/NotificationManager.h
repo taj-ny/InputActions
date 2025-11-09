@@ -29,7 +29,7 @@ public:
     NotificationManager() = default;
     virtual ~NotificationManager() = default;
 
-    void sendNotification(const QString &title, const QString &content);
+    virtual void sendNotification(const QString &title, const QString &content);
 };
 
 inline std::shared_ptr<NotificationManager> g_notificationManager;

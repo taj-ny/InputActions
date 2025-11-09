@@ -4,7 +4,7 @@
 
 #include <QCoreApplication>
 
-inline std::unique_ptr<Plugin> plugin;
+inline std::unique_ptr<InputActions::Plugin> plugin;
 
 static int argc = 0;
 inline QCoreApplication app(argc, nullptr);
@@ -22,7 +22,7 @@ APICALL EXPORT PLUGIN_DESCRIPTION_INFO PLUGIN_INIT(void *handle)
         throw std::runtime_error("[" PROJECT_NAME "] Version mismatch");
     }
 
-    plugin = std::make_unique<Plugin>(handle);
+    plugin = std::make_unique<InputActions::Plugin>(handle);
     return {PROJECT_NAME, "Custom mouse and touchpad gestures for Hyprland", "taj_ny", PROJECT_VERSION};
 }
 

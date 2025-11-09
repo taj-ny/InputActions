@@ -1411,9 +1411,7 @@ struct convert<std::vector<InputDeviceRule>>
             if (const auto &devicesNode = touchpadNode["devices"]) {
                 for (auto it = devicesNode.begin(); it != devicesNode.end(); ++it) {
                     InputDeviceRule rule;
-                    rule.m_condition = std::make_shared<VariableCondition>("name",
-                                                                           InputActions::Value(it->first.as<QString>()),
-                                                                           ComparisonOperator::EqualTo);
+                    rule.m_condition = std::make_shared<VariableCondition>("name", InputActions::Value(it->first.as<QString>()), ComparisonOperator::EqualTo);
                     loadMember(rule.m_properties, it->second);
                     value.push_back(std::move(rule));
                 }

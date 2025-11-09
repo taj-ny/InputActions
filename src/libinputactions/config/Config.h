@@ -18,40 +18,35 @@
 
 #pragma once
 
-#include <QObject>
-#include <QTimer>
+#include <QString>
+#include <memory>
 
 namespace InputActions
 {
 
-class Config : public QObject
+class Config
 {
-    Q_OBJECT
-
 public:
-    Config();
-    ~Config() override;
-
     /**
-     * @return std::nullopt if loaded successfully, otherwise the error message.
+     * @return Error message or std::nullopt on success.
      */
-    std::optional<QString> load(bool firstLoad = false);
+    std::optional<QString> load(const QString &config, bool preventCrashLoops = false);
+    /**
+     * @return Error message or std::nullopt on success.
+     */
+    std::optional<QString> load(bool preventCrashLoops = false);
 
-    bool m_sendNotificationOnError{};
+    bool autoReload() const { return m_autoReload; }
+    void setAutoReload(bool value) { m_autoReload = value; }
+
+    bool sendNotificationOnError() const { return m_sendNotificationOnError; }
+    void setSendNotificationOnError(bool value) { m_sendNotificationOnError = value; }
 
 private:
-    void initWatchers();
-    void readEvents();
-
-    QString m_path;
-    QString m_lastContents;
-    int m_inotifyFd;
-    std::vector<int> m_inotifyWds;
-    QTimer m_readEventsTimer;
-
     bool m_autoReload = true;
+    bool m_sendNotificationOnError = true;
 };
 
-inline std::unique_ptr<Config> g_config;
+inline std::shared_ptr<Config> g_config;
 
 }
