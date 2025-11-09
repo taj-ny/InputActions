@@ -44,7 +44,7 @@ public:
      */
     bool grab() const;
     /**
-     * @see ignore
+     * @see grab
      */
     void setGrab(bool value);
 

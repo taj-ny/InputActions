@@ -31,8 +31,8 @@ class Effect
 public:
     Effect();
 
-    static bool supported() { return true; };
-    static bool enabledByDefault() { return false; };
+    static bool supported() { return true; }
+    static bool enabledByDefault() { return false; }
 
     void reconfigure(ReconfigureFlags flags) override;
 

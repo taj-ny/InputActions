@@ -17,9 +17,8 @@
 */
 
 #include "InputBackend.h"
-#include "conditions/VariableCondition.h"
 #include <QObject>
-#include <libinputactions/conditions/Condition.h>
+#include <libinputactions/conditions/VariableCondition.h>
 #include <libinputactions/handlers/KeyboardTriggerHandler.h>
 #include <libinputactions/handlers/MotionTriggerHandler.h>
 #include <libinputactions/handlers/MouseTriggerHandler.h>
