@@ -22,6 +22,7 @@ option(INPUTACTIONS_BUILD_HYPRLAND "Build the Hyprland plugin" OFF)
 option(INPUTACTIONS_BUILD_IPC "Build the IPC components of libinputactions" OFF)
 option(INPUTACTIONS_BUILD_KWIN "Build the KWin plugin" OFF)
 option(INPUTACTIONS_BUILD_STANDALONE "Build the standalone version" OFF)
+option(INPUTACTIONS_SYSTEMD "Enable systemd support" ON)
 option(BUILD_TESTS "Build tests" OFF)
 
 if (INPUTACTIONS_BUILD_STANDALONE)
@@ -46,7 +47,6 @@ include(KDECMakeSettings)
 find_package(Qt6 ${QT_MIN_VERSION} CONFIG REQUIRED COMPONENTS
     Core
     DBus
-    Network
 )
 if (INPUTACTIONS_BUILD_IPC)
     find_package(Qt6 ${QT_MIN_VERSION} CONFIG REQUIRED COMPONENTS

@@ -18,7 +18,10 @@ target_link_libraries(inputactionsd PRIVATE
     ${LIBUDEV_LIBRARIES}
     Qt6::Network
 )
-target_include_directories(inputactionsd PUBLIC ${LIBEVDEV_INCLUDE_DIRS})
+target_include_directories(inputactionsd PUBLIC
+    ${LIBEVDEV_INCLUDE_DIRS}
+    ${LIBINPUT_INCLUDE_DIRS}
+)
 
 install(TARGETS inputactionsd)
 

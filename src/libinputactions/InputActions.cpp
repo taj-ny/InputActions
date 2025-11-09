@@ -43,6 +43,7 @@ InputActions::~InputActions()
 
     g_actionExecutor.reset();
     g_config.reset();
+    g_configProvider.reset();
     g_inputBackend.reset();
     g_keyboard.reset();
     g_variableManager.reset();

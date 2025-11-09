@@ -20,7 +20,10 @@ target_link_libraries(inputactions-client PRIVATE
     libinputactions
     ${WAYLAND_CLIENT_LIBRARIES}
 )
-target_include_directories(inputactions-client PRIVATE ..)
+target_include_directories(inputactions-client PRIVATE
+    ..
+    ${WAYLAND_CLIENT_INCLUDE_DIRS}
+)
 target_compile_definitions(inputactions-client PRIVATE INPUTACTIONS_DATA_DIR="${INPUTACTIONS_DATA_DIR}")
 
 set(PROTOCOL_OUTPUT_DIR ${CMAKE_CURRENT_BINARY_DIR}/protocols)
