@@ -39,7 +39,7 @@ jobs:
         run: cmake -B "${GITHUB_WORKSPACE}/build" -DINPUTACTIONS_BUILD_KWIN=ON
 
       - name: Build
-        run: cmake --build "${GITHUB_WORKSPACE}/build" -j
+        run: cmake --build "${GITHUB_WORKSPACE}/build" -j$(nproc)
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
