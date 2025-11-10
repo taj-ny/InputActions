@@ -20,7 +20,7 @@
 
 #include <memory>
 
-namespace libinputactions
+namespace InputActions
 {
 
 class SessionLock
@@ -32,7 +32,7 @@ public:
     /**
      * @returns Whether the current session is locked.
      */
-    virtual bool sessionLocked() { return false; };
+    virtual bool sessionLocked() { return false; }
 };
 
 inline std::shared_ptr<SessionLock> g_sessionLock;

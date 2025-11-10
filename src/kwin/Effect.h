@@ -21,15 +21,24 @@
 #include "effect/effect.h"
 #include <libinputactions/InputActions.h>
 
+namespace InputActions
+{
+
 class Effect
     : public KWin::Effect
-    , public libinputactions::InputActions
+    , public InputActions
 {
 public:
     Effect();
 
-    static bool supported() { return true; };
-    static bool enabledByDefault() { return false; };
+    static bool supported() { return true; }
+    static bool enabledByDefault() { return false; }
 
     void reconfigure(ReconfigureFlags flags) override;
+
+protected:
+    void registerGlobalVariables(VariableManager *variableManager, std::shared_ptr<PointerPositionGetter> pointerPositionGetter,
+                                 std::shared_ptr<WindowProvider> windowProvider) override;
 };
+
+}

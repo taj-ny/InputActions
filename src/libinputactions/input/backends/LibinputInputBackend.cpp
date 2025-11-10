@@ -16,17 +16,17 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include "LibinputCompositorInputBackend.h"
+#include "LibinputInputBackend.h"
 #include <libinputactions/interfaces/InputEmitter.h>
 #include <libinputactions/interfaces/PointerPositionGetter.h>
 #include <libinputactions/interfaces/PointerPositionSetter.h>
 
-namespace libinputactions
+namespace InputActions
 {
 
 static const uint32_t STROKE_RECORD_TIMEOUT = 250;
 
-bool LibinputCompositorInputBackend::keyboardKey(InputDevice *sender, uint32_t key, bool state)
+bool LibinputInputBackend::keyboardKey(InputDevice *sender, uint32_t key, bool state)
 {
     if (m_ignoreEvents || !sender) {
         return false;
@@ -35,7 +35,7 @@ bool LibinputCompositorInputBackend::keyboardKey(InputDevice *sender, uint32_t k
     return handleEvent(KeyboardKeyEvent(sender, key, state));
 }
 
-bool LibinputCompositorInputBackend::pointerAxis(InputDevice *sender, const QPointF &delta)
+bool LibinputInputBackend::pointerAxis(InputDevice *sender, const QPointF &delta)
 {
     if (m_ignoreEvents || !sender) {
         return false;
@@ -60,7 +60,7 @@ bool LibinputCompositorInputBackend::pointerAxis(InputDevice *sender, const QPoi
     return handleEvent(MotionEvent(sender, InputEventType::PointerAxis, delta));
 }
 
-bool LibinputCompositorInputBackend::pointerButton(InputDevice *sender, Qt::MouseButton button, uint32_t nativeButton, bool state)
+bool LibinputInputBackend::pointerButton(InputDevice *sender, Qt::MouseButton button, uint32_t nativeButton, bool state)
 {
     if (m_ignoreEvents || !sender) {
         return false;
@@ -72,7 +72,7 @@ bool LibinputCompositorInputBackend::pointerButton(InputDevice *sender, Qt::Mous
     return handleEvent(PointerButtonEvent(sender, button, nativeButton, state));
 }
 
-bool LibinputCompositorInputBackend::pointerMotion(InputDevice *sender, const QPointF &delta, QPointF deltaUnaccelerated)
+bool LibinputInputBackend::pointerMotion(InputDevice *sender, const QPointF &delta, QPointF deltaUnaccelerated)
 {
     if (m_ignoreEvents || !sender) {
         return false;
@@ -99,7 +99,7 @@ bool LibinputCompositorInputBackend::pointerMotion(InputDevice *sender, const QP
     return block;
 }
 
-bool LibinputCompositorInputBackend::touchpadHoldBegin(InputDevice *sender, uint8_t fingers)
+bool LibinputInputBackend::touchpadHoldBegin(InputDevice *sender, uint8_t fingers)
 {
     if (m_ignoreEvents || !sender) {
         return false;
@@ -111,7 +111,7 @@ bool LibinputCompositorInputBackend::touchpadHoldBegin(InputDevice *sender, uint
     return m_block;
 }
 
-bool LibinputCompositorInputBackend::touchpadHoldEnd(InputDevice *sender, bool cancelled)
+bool LibinputInputBackend::touchpadHoldEnd(InputDevice *sender, bool cancelled)
 {
     if (m_ignoreEvents || !sender) {
         return false;
@@ -124,7 +124,7 @@ bool LibinputCompositorInputBackend::touchpadHoldEnd(InputDevice *sender, bool c
     return m_block;
 }
 
-bool LibinputCompositorInputBackend::touchpadPinchBegin(InputDevice *sender, uint8_t fingers)
+bool LibinputInputBackend::touchpadPinchBegin(InputDevice *sender, uint8_t fingers)
 {
     if (m_ignoreEvents || !sender) {
         return false;
@@ -135,7 +135,7 @@ bool LibinputCompositorInputBackend::touchpadPinchBegin(InputDevice *sender, uin
     return m_block;
 }
 
-bool LibinputCompositorInputBackend::touchpadPinchUpdate(InputDevice *sender, qreal scale, qreal angleDelta)
+bool LibinputInputBackend::touchpadPinchUpdate(InputDevice *sender, qreal scale, qreal angleDelta)
 {
     if (m_ignoreEvents || !sender) {
         return false;
@@ -150,7 +150,7 @@ bool LibinputCompositorInputBackend::touchpadPinchUpdate(InputDevice *sender, qr
     return block;
 }
 
-bool LibinputCompositorInputBackend::touchpadPinchEnd(InputDevice *sender, bool cancelled)
+bool LibinputInputBackend::touchpadPinchEnd(InputDevice *sender, bool cancelled)
 {
     if (m_ignoreEvents || !sender) {
         return false;
@@ -161,7 +161,7 @@ bool LibinputCompositorInputBackend::touchpadPinchEnd(InputDevice *sender, bool 
                                                           TriggerType::PinchRotate));
 }
 
-bool LibinputCompositorInputBackend::touchpadSwipeBegin(InputDevice *sender, uint8_t fingers)
+bool LibinputInputBackend::touchpadSwipeBegin(InputDevice *sender, uint8_t fingers)
 {
     if (m_ignoreEvents || !sender) {
         return false;
@@ -174,7 +174,7 @@ bool LibinputCompositorInputBackend::touchpadSwipeBegin(InputDevice *sender, uin
     return m_block;
 }
 
-bool LibinputCompositorInputBackend::touchpadSwipeUpdate(InputDevice *sender, const QPointF &delta)
+bool LibinputInputBackend::touchpadSwipeUpdate(InputDevice *sender, const QPointF &delta)
 {
     if (m_ignoreEvents || !sender) {
         return false;
@@ -194,7 +194,7 @@ bool LibinputCompositorInputBackend::touchpadSwipeUpdate(InputDevice *sender, co
     return block;
 }
 
-bool LibinputCompositorInputBackend::touchpadSwipeEnd(InputDevice *sender, bool cancelled)
+bool LibinputInputBackend::touchpadSwipeEnd(InputDevice *sender, bool cancelled)
 {
     if (m_ignoreEvents || !sender) {
         return false;
@@ -210,7 +210,7 @@ bool LibinputCompositorInputBackend::touchpadSwipeEnd(InputDevice *sender, bool 
                                                           TriggerType::StrokeSwipe));
 }
 
-Qt::MouseButton LibinputCompositorInputBackend::scanCodeToMouseButton(uint32_t scanCode) const
+Qt::MouseButton LibinputInputBackend::scanCodeToMouseButton(uint32_t scanCode) const
 {
     static const std::map<uint32_t, Qt::MouseButton> buttons = {
         {BTN_LEFT, Qt::LeftButton},

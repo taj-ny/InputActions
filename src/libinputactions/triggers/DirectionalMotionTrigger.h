@@ -20,7 +20,7 @@
 
 #include "MotionTrigger.h"
 
-namespace libinputactions
+namespace InputActions
 {
 
 typedef uint32_t TriggerDirection;

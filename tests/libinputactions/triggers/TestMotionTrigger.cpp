@@ -1,7 +1,7 @@
 #include "TestMotionTrigger.h"
 #include <libinputactions/triggers/MotionTrigger.h>
 
-namespace libinputactions
+namespace InputActions
 {
 
 void TestMotionTrigger::canUpdate_speed_data()
@@ -37,5 +37,5 @@ void TestMotionTrigger::canUpdate_speed()
 
 }
 
-QTEST_MAIN(libinputactions::TestMotionTrigger)
+QTEST_MAIN(InputActions::TestMotionTrigger)
 #include "TestMotionTrigger.moc"

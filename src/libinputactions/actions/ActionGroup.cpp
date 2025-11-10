@@ -20,8 +20,9 @@
 #include "ActionExecutor.h"
 #include "InputActions.h"
 #include <libinputactions/conditions/Condition.h>
+#include <libinputactions/utils/ThreadUtils.h>
 
-namespace libinputactions
+namespace InputActions
 {
 
 ActionGroup::ActionGroup(std::vector<std::shared_ptr<Action>> actions, ExecutionMode mode)
@@ -36,12 +37,14 @@ void ActionGroup::executeImpl()
     const auto evaluateCondition = [](const auto &action) {
         auto satisfied = true;
         if (const auto &condition = action->m_condition) {
-            InputActions::runOnMainThread([&condition, &satisfied]() {
-                if (!condition->satisfied()) {
-                    satisfied = false;
-                    return;
-                }
-            });
+            ThreadUtils::runOnThread(
+                ThreadUtils::mainThread(),
+                [&condition, &satisfied]() {
+                    if (!condition->satisfied()) {
+                        satisfied = false;
+                    }
+                },
+                true);
         }
         return satisfied;
     };

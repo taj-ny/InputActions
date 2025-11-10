@@ -19,7 +19,7 @@
 #include "InputEventHandler.h"
 #include "events.h"
 
-namespace libinputactions
+namespace InputActions
 {
 
 bool InputEventHandler::handleEvent(const InputEvent &event)

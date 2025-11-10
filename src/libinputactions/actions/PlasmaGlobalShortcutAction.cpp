@@ -19,7 +19,7 @@
 #include "PlasmaGlobalShortcutAction.h"
 #include <QDBusInterface>
 
-namespace libinputactions
+namespace InputActions
 {
 
 PlasmaGlobalShortcutAction::PlasmaGlobalShortcutAction(QString component, QString shortcut)

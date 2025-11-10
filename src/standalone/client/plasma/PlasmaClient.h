@@ -16,37 +16,27 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include <QDBusConnection>
-#include <QDBusMessage>
-#include <QObject>
+#pragma once
 
-namespace libinputactions
+#include <QDBusInterface>
+
+namespace InputActions
 {
 
-class DBusInterface : public QObject
-{
-    Q_OBJECT
-    Q_CLASSINFO("D-Bus Interface", "org.inputactions")
+class Client;
 
+class PlasmaClient
+{
 public:
-    /**
-     * Registers the interface.
-     */
-    DBusInterface();
+    ~PlasmaClient();
 
     /**
-     * Unregisters the interface.
+     * @returns Whether the Plasma client was successfully initialized.
      */
-    ~DBusInterface() override;
-
-public slots:
-    Q_NOREPLY void recordStroke(const QDBusMessage &message);
-    QString reloadConfig();
-    QString variables(QString filter = "");
+    bool initialize();
 
 private:
-    QDBusConnection m_bus;
-    QDBusMessage m_reply;
+    std::unique_ptr<QDBusInterface> m_kwinScriptInterface;
 };
 
 }

@@ -22,7 +22,7 @@
 #include <libinputactions/input/events.h>
 #include <libinputactions/triggers/StrokeTrigger.h>
 
-using namespace libinputactions;
+using namespace InputActions;
 
 KWinInputBackend::KWinInputBackend()
     : InputEventFilter(KWin::InputFilterOrder::ScreenEdge)
@@ -45,6 +45,8 @@ KWinInputBackend::~KWinInputBackend()
 
 void KWinInputBackend::initialize()
 {
+    LibinputInputBackend::initialize();
+
     for (auto *device : KWin::input()->devices()) {
         kwinDeviceAdded(device);
     }
@@ -56,7 +58,7 @@ void KWinInputBackend::reset()
         deviceRemoved(device.libinputactionsDevice.get());
     }
     m_devices.clear();
-    LibinputCompositorInputBackend::reset();
+    LibinputInputBackend::reset();
 }
 
 #ifdef KWIN_6_5_OR_GREATER
@@ -175,27 +177,25 @@ bool KWinInputBackend::pointerAxis(KWin::PointerAxisEvent *event)
     if (event->inverted) {
         delta *= -1;
     }
-    return LibinputCompositorInputBackend::pointerAxis(findInputActionsDevice(event->device), delta);
+    return LibinputInputBackend::pointerAxis(findInputActionsDevice(event->device), delta);
 }
 
 bool KWinInputBackend::pointerButton(KWin::PointerButtonEvent *event)
 {
-    return LibinputCompositorInputBackend::pointerButton(findInputActionsDevice(event->device),
-                                                         event->button,
-                                                         event->nativeButton,
-                                                         event->state == KWin::PointerButtonState::Pressed);
+    return LibinputInputBackend::pointerButton(findInputActionsDevice(event->device),
+                                               event->button,
+                                               event->nativeButton,
+                                               event->state == KWin::PointerButtonState::Pressed);
 }
 
 bool KWinInputBackend::pointerMotion(KWin::PointerMotionEvent *event)
 {
-    return LibinputCompositorInputBackend::pointerMotion(findInputActionsDevice(event->device), event->delta, event->deltaUnaccelerated);
+    return LibinputInputBackend::pointerMotion(findInputActionsDevice(event->device), event->delta, event->deltaUnaccelerated);
 }
 
 bool KWinInputBackend::keyboardKey(KWin::KeyboardKeyEvent *event)
 {
-    return LibinputCompositorInputBackend::keyboardKey(findInputActionsDevice(event->device),
-                                                       event->nativeScanCode,
-                                                       event->state == KWin::KeyboardKeyState::Pressed);
+    return LibinputInputBackend::keyboardKey(findInputActionsDevice(event->device), event->nativeScanCode, event->state == KWin::KeyboardKeyState::Pressed);
 }
 
 void KWinInputBackend::kwinDeviceAdded(KWin::InputDevice *kwinDevice)
@@ -213,7 +213,7 @@ void KWinInputBackend::kwinDeviceAdded(KWin::InputDevice *kwinDevice)
 
     KWinInputDevice device{
         .kwinDevice = kwinDevice,
-        .libinputactionsDevice = std::make_unique<libinputactions::InputDevice>(type, kwinDevice->name(), kwinDevice->property("sysName").toString()),
+        .libinputactionsDevice = std::make_unique<InputActions::InputDevice>(type, kwinDevice->name(), kwinDevice->property("sysName").toString()),
     };
     if (kwinDevice->property("lmrTapButtonMap").value<bool>()) {
         device.libinputactionsDevice->properties().setLmrTapButtonMap(true);
@@ -233,7 +233,7 @@ void KWinInputBackend::kwinDeviceRemoved(const KWin::InputDevice *kwinDevice)
     }
 }
 
-libinputactions::InputDevice *KWinInputBackend::findInputActionsDevice(const KWin::InputDevice *kwinDevice)
+InputActions::InputDevice *KWinInputBackend::findInputActionsDevice(const KWin::InputDevice *kwinDevice)
 {
     for (auto &device : m_devices) {
         if (device.kwinDevice == kwinDevice) {
@@ -243,7 +243,7 @@ libinputactions::InputDevice *KWinInputBackend::findInputActionsDevice(const KWi
     return {};
 }
 
-libinputactions::InputDevice *KWinInputBackend::currentTouchpad()
+InputActions::InputDevice *KWinInputBackend::currentTouchpad()
 {
     for (const auto *device : KWin::input()->devices()) {
         if (device->isTouchpad()) {

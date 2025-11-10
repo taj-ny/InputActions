@@ -20,7 +20,7 @@
 
 #include <QThreadPool>
 
-namespace libinputactions
+namespace InputActions
 {
 
 class Action;

@@ -18,133 +18,75 @@
 
 #include "Config.h"
 #include "yaml.h"
-#include <QDir>
 #include <QFile>
 #include <QStandardPaths>
-#include <fcntl.h>
+#include <libinputactions/globals.h>
 #include <libinputactions/input/backends/LibevdevComplementaryInputBackend.h>
+#include <libinputactions/interfaces/ConfigProvider.h>
+#include <libinputactions/interfaces/InputEmitter.h>
 #include <libinputactions/interfaces/NotificationManager.h>
-#include <sys/inotify.h>
 
-namespace libinputactions
+namespace InputActions
 {
-
-static const QDir INPUTACTIONS_DIR = QStandardPaths::writableLocation(QStandardPaths::ConfigLocation) + "/inputactions";
 
 /**
  * Used to detect and prevent infinite compositor crash loops when loading the configuration.
  */
 const static QString CRASH_PREVENTION_FILE = QStandardPaths::writableLocation(QStandardPaths::TempLocation) + "/inputactions_init";
 
-Config::Config()
-{
-    if (!INPUTACTIONS_DIR.exists()) {
-        INPUTACTIONS_DIR.mkpath(".");
-    }
-
-    // pair<path, create>
-    std::vector<std::pair<QString, bool>> candidates;
-#ifdef DEBUG
-    candidates.emplace_back(INPUTACTIONS_DIR.path() + "/config-debug.yaml", false);
-#endif
-    candidates.emplace_back(INPUTACTIONS_DIR.path() + "/config.yaml", true);
-
-    for (const auto &candidate : candidates) {
-        const auto &path = candidate.first;
-        const auto &create = candidate.second;
-
-        if (QFile::exists(path)) {
-            m_path = path;
-            break;
-        } else if (create) {
-            QFile(path).open(QIODevice::WriteOnly);
-            m_path = path;
-            break;
-        }
-    }
-
-    m_inotifyFd = inotify_init();
-    if (m_inotifyFd == -1) {
-        qWarning(INPUTACTIONS, "Failed to initialize config watcher");
-        return;
-    }
-    fcntl(m_inotifyFd, F_SETFD, FD_CLOEXEC);
-    if (fcntl(m_inotifyFd, F_SETFL, fcntl(m_inotifyFd, F_GETFL, 0) | O_NONBLOCK) < 0) {
-        qWarning(INPUTACTIONS, "Failed to initialize config watcher (fcntl failed)");
-        return;
-    }
-    initWatchers();
-
-    connect(&m_readEventsTimer, &QTimer::timeout, this, &Config::readEvents);
-    m_readEventsTimer.setInterval(500);
-    m_readEventsTimer.start();
-}
-
-Config::~Config()
-{
-    if (m_inotifyFd != -1) {
-        close(m_inotifyFd);
-    }
-}
-
-std::optional<QString> Config::load(bool firstLoad)
+std::optional<QString> Config::load(const QString &config, bool preventCrashLoops)
 {
     std::optional<QString> error;
-    auto sendNotificationOnError = true;
 
-    if (!QFile::exists(CRASH_PREVENTION_FILE) || !firstLoad) {
-        QFile(CRASH_PREVENTION_FILE).open(QIODevice::WriteOnly);
+    if (!QFile::exists(CRASH_PREVENTION_FILE) || !preventCrashLoops) {
+        std::ignore = QFile(CRASH_PREVENTION_FILE).open(QIODevice::WriteOnly);
         try {
-            QFile configFile(m_path);
-            if (!configFile.open(QIODevice::ReadOnly)) {
-                throw std::runtime_error("Failed to open the configuration file");
-            }
-            const auto contents = QTextStream(&configFile).readAll();
-            if (contents == m_lastContents) {
-                // No change, don't spam the user
-                sendNotificationOnError = false;
-            }
-            m_lastContents = contents;
             qCDebug(INPUTACTIONS, "Reloading config");
 
-            const auto config = YAML::Load(contents.toStdString());
-            m_autoReload = config["autoreload"].as<bool>(true);
+            auto newConfig = std::make_shared<Config>();
+            const auto root = YAML::Load(config.toStdString());
+            newConfig->setAutoReload(root["autoreload"].as<bool>(true));
 
-            m_sendNotificationOnError = true;
-            if (const auto &notificationsNode = config["notifications"]) {
+            if (const auto &notificationsNode = root["notifications"]) {
                 if (const auto &configErrorNode = notificationsNode["config_error"]) {
-                    m_sendNotificationOnError = configErrorNode.as<bool>();
+                    newConfig->setSendNotificationOnError(configErrorNode.as<bool>());
                 }
             }
 
-            auto keyboardTriggerHandler = config["keyboard"].as<std::unique_ptr<KeyboardTriggerHandler>>(nullptr);
-            auto mouseTriggerHandler = config["mouse"].as<std::unique_ptr<MouseTriggerHandler>>(nullptr);
-            auto pointerTriggerHandler = config["pointer"].as<std::unique_ptr<PointerTriggerHandler>>(nullptr);
+            g_config = newConfig;
+
+            auto keyboardTriggerHandler = root["keyboard"].as<std::unique_ptr<KeyboardTriggerHandler>>(nullptr);
+            auto mouseTriggerHandler = root["mouse"].as<std::unique_ptr<MouseTriggerHandler>>(nullptr);
+            auto pointerTriggerHandler = root["pointer"].as<std::unique_ptr<PointerTriggerHandler>>(nullptr);
             std::function<std::unique_ptr<TouchpadTriggerHandler>(InputDevice * device)> touchpadTriggerHandlerFactory;
-            if (const auto &touchpadNode = config["touchpad"]) {
+            if (const auto &touchpadNode = root["touchpad"]) {
                 touchpadTriggerHandlerFactory = [touchpadNode](auto *device) {
                     return YAML::asTouchpadTriggerHandler(touchpadNode, device);
                 };
                 touchpadTriggerHandlerFactory(nullptr); // Make sure it doesn't throw
             }
 
-            auto deviceRules = config.as<std::vector<InputDeviceRule>>();
+            auto deviceRules = root.as<std::vector<InputDeviceRule>>();
 
             if (auto *libevdev = dynamic_cast<LibevdevComplementaryInputBackend *>(g_inputBackend.get())) {
-                if (const auto &pollingIntervalNode = config["__libevdev_polling_interval"]) {
+                if (const auto &pollingIntervalNode = root["__libevdev_polling_interval"]) {
                     libevdev->setPollingInterval(pollingIntervalNode.as<uint32_t>());
                 }
-                if (const auto &enabledNode = config["__libevdev_enabled"]) {
+                if (const auto &enabledNode = root["__libevdev_enabled"]) {
                     libevdev->setEnabled(enabledNode.as<bool>());
                 }
             }
 
             g_inputBackend->reset();
+            g_inputEmitter->reset(); // Okay because required keys are not cleared
+
             g_inputBackend->m_keyboardTriggerHandler = std::move(keyboardTriggerHandler);
             g_inputBackend->m_mouseTriggerHandler = std::move(mouseTriggerHandler);
             g_inputBackend->m_pointerTriggerHandler = std::move(pointerTriggerHandler);
             g_inputBackend->m_touchpadTriggerHandlerFactory = std::move(touchpadTriggerHandlerFactory);
             g_inputBackend->m_deviceRules = std::move(deviceRules);
+
+            g_inputEmitter->initialize();
             g_inputBackend->initialize();
         } catch (const std::exception &e) {
             error = QString("Failed to load configuration: %1").arg(QString::fromStdString(e.what()));
@@ -155,7 +97,7 @@ std::optional<QString> Config::load(bool firstLoad)
 
     if (error) {
         qCCritical(INPUTACTIONS).noquote() << error.value();
-        if (sendNotificationOnError && m_sendNotificationOnError) {
+        if (g_config->sendNotificationOnError()) {
             g_notificationManager->sendNotification("Failed to load configuration", error.value());
         }
     }
@@ -163,34 +105,9 @@ std::optional<QString> Config::load(bool firstLoad)
     return error;
 }
 
-void Config::initWatchers()
+std::optional<QString> Config::load(bool preventCrashLoops)
 {
-    m_inotifyWds.push_back(inotify_add_watch(m_inotifyFd, QFileInfo(m_path).dir().path().toStdString().c_str(), IN_CREATE | IN_MODIFY)); // watch dir
-    m_inotifyWds.push_back(inotify_add_watch(m_inotifyFd, m_path.toStdString().c_str(), IN_MODIFY | IN_DONT_FOLLOW)); // watch file
-    if (!QFile(m_path).symLinkTarget().isEmpty()) {
-        m_inotifyWds.push_back(inotify_add_watch(m_inotifyFd, m_path.toStdString().c_str(), IN_MODIFY)); // watch file that link points to
-    }
-}
-
-void Config::readEvents()
-{
-    auto first = true;
-    char buffer[512];
-    while (read(m_inotifyFd, &buffer, sizeof(buffer)) > 0) {
-        if (!first) {
-            continue;
-        }
-        first = false;
-
-        for (const auto &wd : m_inotifyWds) {
-            inotify_rm_watch(m_inotifyFd, wd);
-        }
-        initWatchers();
-
-        if (m_autoReload) {
-            load();
-        }
-    }
+    return load(g_configProvider->currentConfig(), preventCrashLoops);
 }
 
 }

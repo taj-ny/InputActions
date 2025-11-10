@@ -19,7 +19,7 @@
 #include "ActionExecutor.h"
 #include "Action.h"
 
-namespace libinputactions
+namespace InputActions
 {
 
 ActionExecutor::ActionExecutor()

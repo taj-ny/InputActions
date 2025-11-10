@@ -23,7 +23,7 @@
 #include <functional>
 #include <variant>
 
-namespace libinputactions
+namespace InputActions
 {
 
 template<typename T>

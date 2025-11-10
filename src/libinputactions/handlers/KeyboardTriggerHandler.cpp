@@ -20,7 +20,7 @@
 #include <libinputactions/input/Keyboard.h>
 #include <libinputactions/input/events.h>
 
-namespace libinputactions
+namespace InputActions
 {
 
 KeyboardTriggerHandler::KeyboardTriggerHandler()

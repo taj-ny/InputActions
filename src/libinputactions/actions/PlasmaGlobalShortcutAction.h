@@ -21,7 +21,7 @@
 #include "Action.h"
 #include <QString>
 
-namespace libinputactions
+namespace InputActions
 {
 
 class PlasmaGlobalShortcutAction : public Action

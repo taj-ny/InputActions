@@ -21,7 +21,7 @@
 #include <libinputactions/interfaces/NotificationManager.h>
 #include <libinputactions/variables/VariableManager.h>
 
-namespace libinputactions
+namespace InputActions
 {
 
 ConditionEvaluationArguments::ConditionEvaluationArguments()
@@ -44,7 +44,7 @@ bool Condition::evaluate(const ConditionEvaluationArguments &arguments)
         return evaluateImpl(arguments) == !m_negate;
     } catch (const std::exception &e) {
         qWarning(INPUTACTIONS).noquote() << "Failed to evaluate condition: " << e.what();
-        if (g_config && g_config->m_sendNotificationOnError && !m_exceptionNotificationShown) {
+        if (g_config->sendNotificationOnError() && !m_exceptionNotificationShown) {
             g_notificationManager->sendNotification("Failed to evaluate condition", e.what());
             m_exceptionNotificationShown = true;
         }

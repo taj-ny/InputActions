@@ -33,7 +33,7 @@
 #include <QCoreApplication>
 #include <chrono>
 
-using namespace libinputactions;
+using namespace InputActions;
 
 static const auto TICK_INTERVAL = std::chrono::milliseconds(static_cast<uint32_t>(1));
 
@@ -50,13 +50,6 @@ Plugin::Plugin(void *handle)
     g_sessionLock = std::make_shared<HyprlandSessionLock>();
     g_windowProvider = std::make_shared<HyprlandWindowProvider>();
 
-    // This should be moved to libinputactions eventually
-    g_variableManager->registerRemoteVariable<QString>("screen_name", [](auto &value) {
-        if (const auto monitor = g_pCompositor->getMonitorFromCursor()) {
-            value = QString::fromStdString(monitor->m_name);
-        }
-    });
-
     m_eventLoopTimer = makeShared<CEventLoopTimer>(
         TICK_INTERVAL,
         [this](SP<CEventLoopTimer> self, void *data) {
@@ -65,7 +58,22 @@ Plugin::Plugin(void *handle)
         this);
     g_pEventLoopManager->addTimer(m_eventLoopTimer);
 
+    setMissingImplementations();
+    initialize();
     g_config->load(true);
+}
+
+void Plugin::registerGlobalVariables(VariableManager *variableManager, std::shared_ptr<PointerPositionGetter> pointerPositionGetter,
+                                     std::shared_ptr<WindowProvider> windowProvider)
+{
+    InputActions::registerGlobalVariables(variableManager, pointerPositionGetter, windowProvider);
+
+    // This should be moved to libinputactions eventually
+    variableManager->registerRemoteVariable<QString>("screen_name", [](auto &value) {
+        if (const auto monitor = g_pCompositor->getMonitorFromCursor()) {
+            value = QString::fromStdString(monitor->m_name);
+        }
+    });
 }
 
 void Plugin::tick()

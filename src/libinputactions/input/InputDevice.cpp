@@ -19,7 +19,7 @@
 #include "InputDevice.h"
 #include <libinputactions/handlers/TouchpadTriggerHandler.h>
 
-namespace libinputactions
+namespace InputActions
 {
 
 InputDevice::InputDevice(InputDeviceType type, QString name, QString sysName)
@@ -78,6 +78,7 @@ void InputDeviceProperties::apply(const InputDeviceProperties &other)
         }
     };
 
+    apply(m_grab, other.m_grab);
     apply(m_ignore, other.m_ignore);
     apply(m_multiTouch, other.m_multiTouch);
     apply(m_size, other.m_size);
@@ -86,6 +87,16 @@ void InputDeviceProperties::apply(const InputDeviceProperties &other)
     apply(m_thumbPressure, other.m_thumbPressure);
     apply(m_palmPressure, other.m_palmPressure);
     apply(m_lmrTapButtonMap, other.m_lmrTapButtonMap);
+}
+
+bool InputDeviceProperties::grab() const
+{
+    return m_grab.value_or(false);
+}
+
+void InputDeviceProperties::setGrab(bool value)
+{
+    m_grab = value;
 }
 
 bool InputDeviceProperties::ignore() const

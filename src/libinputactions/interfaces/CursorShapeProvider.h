@@ -21,7 +21,7 @@
 #include <QString>
 #include <map>
 
-namespace libinputactions
+namespace InputActions
 {
 
 // https://wayland.app/protocols/cursor-shape-v1#wp_cursor_shape_device_v1:enum:shape
@@ -120,7 +120,7 @@ public:
     /**
      * @returns The current cursor shape, or std::nullopt if not available.
      */
-    virtual std::optional<CursorShape> cursorShape() { return {}; };
+    virtual std::optional<CursorShape> cursorShape() { return {}; }
 };
 
 inline std::shared_ptr<CursorShapeProvider> g_cursorShapeProvider;

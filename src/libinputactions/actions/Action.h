@@ -21,7 +21,7 @@
 #include <QString>
 #include <memory>
 
-namespace libinputactions
+namespace InputActions
 {
 
 class Condition;
@@ -77,8 +77,7 @@ public:
 
 protected:
     /**
-     * This method is not guaranteed to be called from the main thread. Implementations should use InputActions::runOnMainThread to schedule code to run on the
-     * main thread.
+     * This method is not guaranteed to be called from the main thread.
      */
     virtual void executeImpl() {};
 };

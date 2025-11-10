@@ -18,7 +18,7 @@
 
 #include "KeyboardShortcutTrigger.h"
 
-namespace libinputactions
+namespace InputActions
 {
 
 KeyboardShortcutTrigger::KeyboardShortcutTrigger(KeyboardShortcut shortcut)

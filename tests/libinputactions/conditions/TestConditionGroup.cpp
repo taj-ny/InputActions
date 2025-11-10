@@ -2,7 +2,7 @@
 #include "utils.h"
 #include <libinputactions/conditions/ConditionGroup.h>
 
-namespace libinputactions
+namespace InputActions
 {
 
 enum class ConditionEvaluationResult
@@ -75,5 +75,5 @@ void TestConditionGroup::evaluate()
 
 }
 
-QTEST_MAIN(libinputactions::TestConditionGroup)
+QTEST_MAIN(InputActions::TestConditionGroup)
 #include "TestConditionGroup.moc"

@@ -26,7 +26,7 @@
 #include "workspace.h"
 #include <libinputactions/input/backends/InputBackend.h>
 
-using namespace libinputactions;
+using namespace InputActions;
 
 std::optional<CursorShape> KWinPointer::cursorShape()
 {

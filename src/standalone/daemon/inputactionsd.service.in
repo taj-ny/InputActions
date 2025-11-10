@@ -1,0 +1,11 @@
+[Unit]
+Description=InputActions Daemon
+
+[Service]
+Type=simple
+ExecStart=@CMAKE_INSTALL_FULL_BINDIR@/inputactionsd
+Restart=on-failure
+RestartSec=5s
+
+[Install]
+WantedBy=multi-user.target

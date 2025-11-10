@@ -26,7 +26,7 @@
 
 Q_LOGGING_CATEGORY(INPUTACTIONS_HANDLER_MOUSE, "inputactions.handler.mouse", QtWarningMsg)
 
-namespace libinputactions
+namespace InputActions
 {
 
 MouseTriggerHandler::MouseTriggerHandler()
@@ -122,8 +122,8 @@ bool MouseTriggerHandler::pointerButton(const PointerButtonEvent &event)
         m_motionTimeoutTimer.stop();
         disconnect(&m_pressTimeoutTimer, nullptr, nullptr, nullptr);
         disconnect(&m_motionTimeoutTimer, nullptr, nullptr, nullptr);
-        connect(&m_pressTimeoutTimer, &QTimer::timeout, this, [this] {
-            const auto swipeTimeout = [this] {
+        connect(&m_pressTimeoutTimer, &QTimer::timeout, this, [this, sender = event.sender()] {
+            const auto swipeTimeout = [this, sender] {
                 if (m_hadTriggerSincePress) {
                     qCDebug(INPUTACTIONS_HANDLER_MOUSE, "Mouse gesture updated before motion timeout");
                     return;
@@ -133,7 +133,7 @@ bool MouseTriggerHandler::pointerButton(const PointerButtonEvent &event)
                 if (!activateTriggers(TriggerType::Press, *m_activationEvent).success) {
                     qCDebug(INPUTACTIONS_HANDLER_MOUSE, "No wheel or press mouse gestures");
                     if (m_unblockButtonsOnTimeout) {
-                        pressBlockedMouseButtons();
+                        pressBlockedMouseButtons(sender);
                     }
                 }
             };
@@ -176,8 +176,8 @@ bool MouseTriggerHandler::pointerButton(const PointerButtonEvent &event)
         const auto block = m_blockedMouseButtons.contains(nativeButton);
         if (m_blockedMouseButtons.removeAll(nativeButton) && !m_hadTriggerSincePress) {
             qCDebug(INPUTACTIONS_HANDLER_MOUSE).nospace() << "Mouse button pressed and released (button: " << nativeButton << ")";
-            g_inputEmitter->mouseButton(nativeButton, true);
-            g_inputEmitter->mouseButton(nativeButton, false);
+            g_inputEmitter->mouseButton(nativeButton, true, event.sender());
+            g_inputEmitter->mouseButton(nativeButton, false, event.sender());
         }
         if (m_blockedMouseButtons.empty()) {
             m_hadTriggerSincePress = false;
@@ -213,7 +213,7 @@ bool MouseTriggerHandler::pointerMotion(const MotionEvent &event)
         qCDebug(INPUTACTIONS_HANDLER_MOUSE, "Attempting to activate mouse motion gestures");
         if (!activateTriggers(TriggerType::StrokeSwipe).success) {
             qCDebug(INPUTACTIONS_HANDLER_MOUSE, "No motion gestures");
-            pressBlockedMouseButtons();
+            pressBlockedMouseButtons(event.sender());
         }
     }
 
@@ -222,7 +222,7 @@ bool MouseTriggerHandler::pointerMotion(const MotionEvent &event)
     if (hadActiveGestures && !hasActiveTriggers(TriggerType::StrokeSwipe)) {
         qCDebug(INPUTACTIONS_HANDLER_MOUSE, "Mouse motion gesture ended/cancelled during motion");
         // Swipe gesture cancelled due to wrong speed or direction
-        pressBlockedMouseButtons();
+        pressBlockedMouseButtons(event.sender());
     }
     const auto lockPointer = std::ranges::any_of(activeTriggers(TriggerType::StrokeSwipe), [](const auto *trigger) {
         return dynamic_cast<const MotionTrigger *>(trigger)->m_lockPointer;
@@ -259,10 +259,10 @@ bool MouseTriggerHandler::shouldBlockMouseButton(Qt::MouseButton button)
     return false;
 }
 
-void MouseTriggerHandler::pressBlockedMouseButtons()
+void MouseTriggerHandler::pressBlockedMouseButtons(const InputDevice *target)
 {
     for (const auto &button : m_blockedMouseButtons) {
-        g_inputEmitter->mouseButton(button, true);
+        g_inputEmitter->mouseButton(button, true, target);
         qCDebug(INPUTACTIONS_HANDLER_MOUSE).nospace() << "Mouse button unblocked (button: " << button << ")";
     }
     m_blockedMouseButtons.clear();

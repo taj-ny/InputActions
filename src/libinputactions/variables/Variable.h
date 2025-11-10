@@ -23,7 +23,7 @@
 #include <any>
 #include <typeindex>
 
-namespace libinputactions
+namespace InputActions
 {
 
 class Variable
@@ -35,11 +35,11 @@ public:
     /**
      * @return May be empty.
      */
-    virtual std::any get() const { return {}; };
+    virtual std::any get() const { return {}; }
     /**
      * @param value Must be the same as the variable's type or empty.
      */
-    virtual void set(std::any value) {};
+    virtual void set(std::any value) {}
 
     /**
      * @return Operations for this variable's type.

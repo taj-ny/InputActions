@@ -1,7 +1,7 @@
 # InputActions <a href="https://github.com/sponsors/taj-ny"><img src="https://img.shields.io/badge/Sponsor-gray?logo=githubsponsors"></a>
 InputActions is a tool that lets you bind simple and complex input actions (triggers) to system actions.
 
-Supported environments: Hyprland, Plasma 6 Wayland, [other environment will be supported soon](https://github.com/taj-ny/InputActions/pull/139)
+Supported environments: GNOME, Hyprland, Plasma 6, other Wayland compositors (availability of extra features depends on implemented protocols), X11 (base features only)
 
 [Getting started](https://wiki.inputactions.org/main/getting-started) | [Example triggers](https://wiki.inputactions.org/main/example-triggers)
 

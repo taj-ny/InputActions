@@ -22,7 +22,7 @@
 #include <memory>
 #include <vector>
 
-namespace libinputactions
+namespace InputActions
 {
 
 enum class ConditionGroupMode

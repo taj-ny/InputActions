@@ -22,7 +22,7 @@
 #include "input.h"
 #include <libinputactions/interfaces/InputEmitter.h>
 
-namespace libinputactions
+namespace InputActions
 {
 class InputBackend;
 }
@@ -43,18 +43,18 @@ public:
     bool isLidSwitch() const override;
 };
 
-class KWinInputEmitter : public libinputactions::InputEmitter
+class KWinInputEmitter : public InputActions::InputEmitter
 {
 public:
     KWinInputEmitter();
     ~KWinInputEmitter() override;
 
     void keyboardClearModifiers() override;
-    void keyboardKey(uint32_t key, bool state) override;
+    void keyboardKey(uint32_t key, bool state, const InputActions::InputDevice *target = nullptr) override;
     void keyboardText(const QString &text) override;
 
     void mouseAxis(const QPointF &delta) override;
-    void mouseButton(uint32_t button, bool state) override;
+    void mouseButton(uint32_t button, bool state, const InputActions::InputDevice *target = nullptr) override;
     void mouseMoveRelative(const QPointF &pos) override;
 
     void touchpadPinchBegin(uint8_t fingers) override;

@@ -18,7 +18,7 @@
 
 #include "MotionTrigger.h"
 
-namespace libinputactions
+namespace InputActions
 {
 
 MotionTrigger::MotionTrigger(TriggerType type)

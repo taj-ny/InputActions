@@ -22,7 +22,7 @@
 
 Q_LOGGING_CATEGORY(INPUTACTIONS_HANDLER_MULTITOUCH, "inputactions.handler.multitouch", QtWarningMsg)
 
-namespace libinputactions
+namespace InputActions
 {
 
 bool MultiTouchMotionTriggerHandler::touchChanged(const TouchChangedEvent &event)

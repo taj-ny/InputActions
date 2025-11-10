@@ -4,7 +4,7 @@
 #include <libinputactions/input/events.h>
 #include <libinputactions/triggers/HoverTrigger.h>
 
-namespace libinputactions
+namespace InputActions
 {
 
 void TestPointerTriggerHandler::init()
@@ -77,5 +77,5 @@ void TestPointerTriggerHandler::hover_conditionNoLongerSatisfiedNoMotionEvent_tr
 
 }
 
-QTEST_MAIN(libinputactions::TestPointerTriggerHandler)
+QTEST_MAIN(InputActions::TestPointerTriggerHandler)
 #include "TestPointerTriggerHandler.moc"

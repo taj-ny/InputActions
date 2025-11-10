@@ -23,7 +23,7 @@
 
 Q_LOGGING_CATEGORY(INPUTACTIONS_TRIGGER, "inputactions.trigger", QtWarningMsg)
 
-namespace libinputactions
+namespace InputActions
 {
 
 static const std::chrono::milliseconds TICK_INTERVAL{5L};

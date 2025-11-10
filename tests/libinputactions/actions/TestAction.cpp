@@ -2,7 +2,7 @@
 #include <libinputactions/actions/Action.h>
 #include <libinputactions/actions/ActionExecutor.h>
 
-namespace libinputactions
+namespace InputActions
 {
 
 void TestAction::init()
@@ -32,5 +32,5 @@ void TestAction::canExecute_withLimit()
 
 }
 
-QTEST_MAIN(libinputactions::TestAction)
+QTEST_MAIN(InputActions::TestAction)
 #include "TestAction.moc"

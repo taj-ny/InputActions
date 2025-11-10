@@ -20,6 +20,8 @@ set(libinputactions_SRCS
     libinputactions/conditions/CustomCondition.cpp
     libinputactions/conditions/LazyCondition.cpp
     libinputactions/conditions/VariableCondition.cpp
+    libinputactions/dbus/DBusInterfaceBase.cpp
+    libinputactions/dbus/IntegratedDBusInterface.cpp
     libinputactions/handlers/InputTriggerHandler.cpp
     libinputactions/handlers/KeyboardTriggerHandler.cpp
     libinputactions/handlers/MotionTriggerHandler.cpp
@@ -30,18 +32,21 @@ set(libinputactions_SRCS
     libinputactions/handlers/TriggerHandler.cpp
     libinputactions/input/backends/InputBackend.cpp
     libinputactions/input/backends/LibevdevComplementaryInputBackend.cpp
-    libinputactions/input/backends/LibinputCompositorInputBackend.cpp
+    libinputactions/input/backends/LibinputInputBackend.cpp
     libinputactions/input/InputDevice.cpp
     libinputactions/input/InputDeviceRule.cpp
     libinputactions/input/events.cpp
     libinputactions/input/InputEventHandler.cpp
     libinputactions/input/Keyboard.cpp
+    libinputactions/interfaces/implementations/FileConfigProvider.cpp
+    libinputactions/interfaces/ConfigProvider.cpp
     libinputactions/interfaces/CursorShapeProvider.h
-    libinputactions/interfaces/InputEmitter.h
+    libinputactions/interfaces/InputEmitter.cpp
     libinputactions/interfaces/NotificationManager.cpp
     libinputactions/interfaces/OnScreenMessageManager.h
     libinputactions/interfaces/PointerPositionGetter.h
     libinputactions/interfaces/PointerPositionSetter.h
+    libinputactions/interfaces/ProcessRunner.cpp
     libinputactions/interfaces/SessionLock.h
     libinputactions/interfaces/Window.h
     libinputactions/interfaces/WindowProvider.cpp
@@ -53,18 +58,26 @@ set(libinputactions_SRCS
     libinputactions/triggers/StrokeTrigger.cpp
     libinputactions/triggers/Trigger.cpp
     libinputactions/triggers/WheelTrigger.cpp
+    libinputactions/utils/ThreadUtils.cpp
+    libinputactions/utils/SessionUtils.cpp
     libinputactions/variables/LocalVariable.cpp
     libinputactions/variables/RemoteVariable.cpp
     libinputactions/variables/VariableManager.cpp
     libinputactions/variables/VariableOperations.cpp
     libinputactions/variables/Variable.cpp
     libinputactions/variables/VariableWrapper.h
-    libinputactions/DBusInterface.cpp
     libinputactions/globals.cpp
     libinputactions/InputActions.cpp
     libinputactions/Range.cpp
     libinputactions/Value.cpp
 )
+if (INPUTACTIONS_BUILD_IPC)
+    list(APPEND libinputactions_SRCS
+        libinputactions/ipc/JsonSerializer.cpp
+        libinputactions/ipc/messages.cpp
+        libinputactions/ipc/MessageHandler.cpp
+        libinputactions/ipc/MessageSocketConnection.cpp)
+endif()
 
 add_library(libinputactions STATIC ${libinputactions_SRCS})
 target_link_libraries(libinputactions PUBLIC
@@ -72,6 +85,11 @@ target_link_libraries(libinputactions PUBLIC
     Qt6::DBus
     ${LIBEVDEV_LIBRARIES}
 )
+if (INPUTACTIONS_BUILD_IPC)
+    target_link_libraries(libinputactions PUBLIC
+        Qt6::Network
+    )
+endif()
 target_compile_definitions(libinputactions PUBLIC TEST_VIRTUAL=$<IF:$<BOOL:${BUILD_TESTS}>,virtual,>)
 target_include_directories(libinputactions PRIVATE libinputactions libinputactions/. ${LIBEVDEV_INCLUDE_DIRS})
 set_target_properties(libinputactions PROPERTIES PREFIX "")
@@ -84,4 +102,7 @@ if (INPUTACTIONS_BUILD_HYPRLAND)
 endif()
 if (INPUTACTIONS_BUILD_KWIN)
     add_subdirectory(kwin)
+endif()
+if (INPUTACTIONS_BUILD_STANDALONE)
+    add_subdirectory(standalone)
 endif()

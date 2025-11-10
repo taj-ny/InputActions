@@ -21,7 +21,7 @@
 
 Q_LOGGING_CATEGORY(INPUTACTIONS_HANDLER_MOTION, "inputactions.handler.motion", QtWarningMsg)
 
-namespace libinputactions
+namespace InputActions
 {
 
 /**

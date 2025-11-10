@@ -22,7 +22,7 @@
 #include <any>
 #include <libinputactions/globals.h>
 
-namespace libinputactions
+namespace InputActions
 {
 
 class Variable;

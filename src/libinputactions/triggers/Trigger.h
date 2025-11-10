@@ -28,7 +28,7 @@
 
 Q_DECLARE_LOGGING_CATEGORY(INPUTACTIONS_TRIGGER)
 
-namespace libinputactions
+namespace InputActions
 {
 
 /**

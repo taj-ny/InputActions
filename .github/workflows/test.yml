@@ -28,7 +28,7 @@ jobs:
         run: cmake -B "${GITHUB_WORKSPACE}/build" -DBUILD_KWIN_EFFECT=OFF -DBUILD_TESTS=ON
 
       - name: Build
-        run: cmake --build "${GITHUB_WORKSPACE}/build" -j $(nproc)
+        run: cmake --build "${GITHUB_WORKSPACE}/build" -j$(nproc)
 
       - name: Run tests
         run: ctest --test-dir "${GITHUB_WORKSPACE}/build" --output-on-failure --verbose

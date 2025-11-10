@@ -18,7 +18,7 @@
 
 #include "WheelTrigger.h"
 
-namespace libinputactions
+namespace InputActions
 {
 
 WheelTrigger::WheelTrigger(TriggerDirection direction)

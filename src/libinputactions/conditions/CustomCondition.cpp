@@ -18,7 +18,7 @@
 
 #include "CustomCondition.h"
 
-namespace libinputactions
+namespace InputActions
 {
 
 CustomCondition::CustomCondition(std::function<bool(const ConditionEvaluationArguments &arguments)> function)

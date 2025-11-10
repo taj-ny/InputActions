@@ -20,11 +20,11 @@
 
 #include <libinputactions/interfaces/WindowProvider.h>
 
-class KWinWindowProvider : public libinputactions::WindowProvider
+class KWinWindowProvider : public InputActions::WindowProvider
 {
 public:
     KWinWindowProvider() = default;
 
-    std::unique_ptr<libinputactions::Window> activeWindow() override;
-    std::unique_ptr<libinputactions::Window> windowUnderPointer() override;
+    std::shared_ptr<InputActions::Window> activeWindow() override;
+    std::shared_ptr<InputActions::Window> windowUnderPointer() override;
 };

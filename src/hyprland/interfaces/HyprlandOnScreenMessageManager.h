@@ -20,7 +20,7 @@
 
 #include <libinputactions/interfaces/OnScreenMessageManager.h>
 
-class HyprlandOnScreenMessageManager : public libinputactions::OnScreenMessageManager
+class HyprlandOnScreenMessageManager : public InputActions::OnScreenMessageManager
 {
 public:
     void showMessage(const QString &message) override;

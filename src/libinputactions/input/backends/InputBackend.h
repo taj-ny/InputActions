@@ -20,10 +20,11 @@
 
 #include <QTimer>
 
-namespace libinputactions
+namespace InputActions
 {
 
 class InputDevice;
+class InputDeviceProperties;
 class InputDeviceRule;
 class InputEvent;
 class InputEventHandler;
@@ -75,6 +76,14 @@ public:
     void recordStroke(const std::function<void(const Stroke &stroke)> &callback);
 
     /**
+     * Evaluates device rules for the specified device and returns the properties without modifying the device's properties. Use this for devices that have not
+     * been added to the backend yet, otherwise use InputDevice::properties().
+     */
+    InputDeviceProperties deviceProperties(const InputDevice *device) const;
+
+    std::vector<InputDevice *> devices();
+
+    /**
      * Removes all event handlers, devices and custom properties. Backend must be initialized in order to be used again.
      * @see initialize
      */
@@ -114,6 +123,8 @@ protected:
     QTimer m_strokeRecordingTimeoutTimer;
 
 private:
+    void applyDeviceProperties(const InputDevice *device, InputDeviceProperties &properties) const;
+
     std::function<void(const Stroke &stroke)> m_strokeCallback;
 
     std::vector<InputEventHandler *> m_eventHandlerChain;

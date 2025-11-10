@@ -21,42 +21,49 @@
 #include <QThread>
 #include <libinputactions/interfaces/InputEmitter.h>
 #include <libinputactions/interfaces/PointerPositionSetter.h>
+#include <libinputactions/utils/ThreadUtils.h>
 
-namespace libinputactions
+namespace InputActions
 {
 
 InputAction::InputAction(std::vector<Item> sequence)
     : m_sequence(std::move(sequence))
 {
+    for (const auto &item : m_sequence) {
+        if (item.keyboardPress) {
+            g_inputEmitter->m_keyboardRequiredKeys.insert(item.keyboardPress);
+        }
+        if (item.keyboardRelease) {
+            g_inputEmitter->m_keyboardRequiredKeys.insert(item.keyboardRelease);
+        }
+    }
 }
 
 void InputAction::executeImpl()
 {
     for (const auto &item : m_sequence) {
         const auto keyboardText = item.keyboardText.get();
-        InputActions::runOnMainThread(
-            [this, item, keyboardText]() {
-                if (item.keyboardPress) {
-                    g_inputEmitter->keyboardKey(item.keyboardPress, true);
-                } else if (item.keyboardRelease) {
-                    g_inputEmitter->keyboardKey(item.keyboardRelease, false);
-                } else if (keyboardText) {
-                    g_inputEmitter->keyboardText(keyboardText.value());
-                } else if (item.mousePress) {
-                    g_inputEmitter->mouseButton(item.mousePress, true);
-                } else if (item.mouseRelease) {
-                    g_inputEmitter->mouseButton(item.mouseRelease, false);
-                } else if (!item.mouseAxis.isNull()) {
-                    g_inputEmitter->mouseAxis(item.mouseAxis);
-                } else if (!item.mouseMoveAbsolute.isNull()) {
-                    g_pointerPositionSetter->setGlobalPointerPosition(item.mouseMoveAbsolute);
-                } else if (!item.mouseMoveRelative.isNull()) {
-                    g_inputEmitter->mouseMoveRelative(item.mouseMoveRelative);
-                } else if (item.mouseMoveRelativeByDelta) {
-                    g_inputEmitter->mouseMoveRelative(m_deltaMultiplied);
-                }
-            },
-            false);
+        ThreadUtils::runOnThread(ThreadUtils::mainThread(), [this, item, keyboardText]() {
+            if (item.keyboardPress) {
+                g_inputEmitter->keyboardKey(item.keyboardPress, true);
+            } else if (item.keyboardRelease) {
+                g_inputEmitter->keyboardKey(item.keyboardRelease, false);
+            } else if (keyboardText) {
+                g_inputEmitter->keyboardText(keyboardText.value());
+            } else if (item.mousePress) {
+                g_inputEmitter->mouseButton(item.mousePress, true);
+            } else if (item.mouseRelease) {
+                g_inputEmitter->mouseButton(item.mouseRelease, false);
+            } else if (!item.mouseAxis.isNull()) {
+                g_inputEmitter->mouseAxis(item.mouseAxis);
+            } else if (!item.mouseMoveAbsolute.isNull()) {
+                g_pointerPositionSetter->setGlobalPointerPosition(item.mouseMoveAbsolute);
+            } else if (!item.mouseMoveRelative.isNull()) {
+                g_inputEmitter->mouseMoveRelative(item.mouseMoveRelative);
+            } else if (item.mouseMoveRelativeByDelta) {
+                g_inputEmitter->mouseMoveRelative(m_deltaMultiplied);
+            }
+        });
 
         if (m_delay.count()) {
             QThread::msleep(m_delay.count());

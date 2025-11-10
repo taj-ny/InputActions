@@ -18,7 +18,7 @@
 
 #include "InputBackend.h"
 #include <QObject>
-#include <libinputactions/conditions/Condition.h>
+#include <libinputactions/conditions/VariableCondition.h>
 #include <libinputactions/handlers/KeyboardTriggerHandler.h>
 #include <libinputactions/handlers/MotionTriggerHandler.h>
 #include <libinputactions/handlers/MouseTriggerHandler.h>
@@ -26,6 +26,7 @@
 #include <libinputactions/handlers/TouchpadTriggerHandler.h>
 #include <libinputactions/input/InputDeviceRule.h>
 #include <libinputactions/input/InputEventHandler.h>
+#include <libinputactions/input/Keyboard.h>
 #include <libinputactions/input/events.h>
 #include <libinputactions/interfaces/SessionLock.h>
 #include <libinputactions/triggers/StrokeTrigger.h>
@@ -33,7 +34,7 @@
 #include <libinputactions/variables/VariableManager.h>
 #include <ranges>
 
-namespace libinputactions
+namespace InputActions
 {
 
 InputBackend::InputBackend()
@@ -53,12 +54,54 @@ void InputBackend::setIgnoreEvents(bool value)
 
 void InputBackend::poll() {}
 
-void InputBackend::initialize() {}
+void InputBackend::initialize()
+{
+    InputDeviceRule ignoreOwnDevicesRule;
+    ignoreOwnDevicesRule.m_condition = std::make_shared<VariableCondition>("name",
+                                                                           std::vector<Value<std::any>>{Value(QStringLiteral("inputactions")),
+                                                                                                        Value(QStringLiteral("InputActions Virtual Keyboard")),
+                                                                                                        Value(QStringLiteral("InputActions Virtual Mouse"))},
+                                                                           ComparisonOperator::OneOf);
+    ignoreOwnDevicesRule.m_properties.setIgnore(true);
+    m_deviceRules.push_back(std::move(ignoreOwnDevicesRule));
+}
 
 void InputBackend::recordStroke(const std::function<void(const Stroke &stroke)> &callback)
 {
     m_isRecordingStroke = true;
     m_strokeCallback = callback;
+}
+
+InputDeviceProperties InputBackend::deviceProperties(const InputDevice *device) const
+{
+    InputDeviceProperties properties;
+    applyDeviceProperties(device, properties);
+    return properties;
+}
+
+std::vector<InputDevice *> InputBackend::devices()
+{
+    return m_devices;
+}
+
+void InputBackend::applyDeviceProperties(const InputDevice *device, InputDeviceProperties &properties) const
+{
+    for (const auto &rule : m_deviceRules | std::ranges::views::reverse) {
+        if (!rule.m_condition) {
+            properties.apply(rule.m_properties);
+            continue;
+        }
+
+        VariableManager manager;
+        manager.registerLocalVariable<QString>("name").set(device->name());
+        manager.registerLocalVariable<InputDeviceTypes>("types").set(device->type());
+
+        ConditionEvaluationArguments arguments;
+        arguments.variableManager = &manager;
+        if (rule.m_condition->satisfied(arguments)) {
+            properties.apply(rule.m_properties);
+        }
+    }
 }
 
 void InputBackend::reset()
@@ -74,22 +117,7 @@ void InputBackend::reset()
 void InputBackend::deviceAdded(InputDevice *device)
 {
     qCDebug(INPUTACTIONS).noquote().nospace() << "Device added (name: " << device->name() << ")";
-    for (const auto &rule : m_deviceRules | std::ranges::views::reverse) {
-        if (!rule.m_condition) {
-            device->properties().apply(rule.m_properties);
-            continue;
-        }
-
-        VariableManager manager;
-        manager.registerLocalVariable<QString>("name").set(device->name());
-        manager.registerLocalVariable<InputDeviceTypes>("types").set(device->type());
-
-        ConditionEvaluationArguments arguments;
-        arguments.variableManager = &manager;
-        if (rule.m_condition->satisfied(arguments)) {
-            device->properties().apply(rule.m_properties);
-        }
-    }
+    applyDeviceProperties(device, device->properties());
 
     if (device->type() == InputDeviceType::Touchpad && m_touchpadTriggerHandlerFactory) {
         device->m_touchpadTriggerHandler = m_touchpadTriggerHandlerFactory(device);
@@ -131,6 +159,17 @@ bool InputBackend::handleEvent(const InputEvent &event)
         return false;
     }
 
+    if (event.type() == InputEventType::KeyboardKey) {
+        const auto &keyboardEvent = static_cast<const KeyboardKeyEvent &>(event);
+        if (MODIFIERS.contains(keyboardEvent.nativeKey())) {
+            auto modifier = MODIFIERS.at(keyboardEvent.nativeKey());
+            if (keyboardEvent.state()) {
+                event.sender()->m_modifiers |= modifier;
+            } else {
+                event.sender()->m_modifiers &= ~modifier;
+            }
+        }
+    }
     if (event.sender()->type() != InputDeviceType::Keyboard) {
         g_variableManager->getVariable(BuiltinVariables::DeviceName)->set(event.sender()->name());
     }

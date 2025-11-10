@@ -19,8 +19,15 @@ set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Mouse and touchpad gestures for Hyprland,
 include(CPack)
 
 option(INPUTACTIONS_BUILD_HYPRLAND "Build the Hyprland plugin" OFF)
+option(INPUTACTIONS_BUILD_IPC "Build the IPC components of libinputactions" OFF)
 option(INPUTACTIONS_BUILD_KWIN "Build the KWin plugin" OFF)
+option(INPUTACTIONS_BUILD_STANDALONE "Build the standalone version" OFF)
+option(INPUTACTIONS_SYSTEMD "Enable systemd support" ON)
 option(BUILD_TESTS "Build tests" OFF)
+
+if (INPUTACTIONS_BUILD_STANDALONE)
+    set(INPUTACTIONS_BUILD_IPC ON)
+endif()
 
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Choose Release or Debug" FORCE)
@@ -41,7 +48,11 @@ find_package(Qt6 ${QT_MIN_VERSION} CONFIG REQUIRED COMPONENTS
     Core
     DBus
 )
-
+if (INPUTACTIONS_BUILD_IPC)
+    find_package(Qt6 ${QT_MIN_VERSION} CONFIG REQUIRED COMPONENTS
+        Network
+    )
+endif()
 
 add_compile_definitions(PROJECT_NAME="InputActions")
 add_compile_definitions(PROJECT_VERSION="${PROJECT_VERSION}")

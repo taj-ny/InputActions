@@ -19,7 +19,7 @@
 #include "SleepAction.h"
 #include <QThread>
 
-namespace libinputactions
+namespace InputActions
 {
 
 SleepAction::SleepAction(std::chrono::milliseconds time)

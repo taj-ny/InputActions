@@ -1,7 +1,7 @@
 #include "utils.h"
 #include <libinputactions/conditions/CustomCondition.cpp>
 
-namespace libinputactions
+namespace InputActions
 {
 
 std::shared_ptr<Condition> ERROR_CONDITION = std::make_shared<CustomCondition>([](const auto &arguments) -> bool {

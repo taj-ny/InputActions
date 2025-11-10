@@ -18,7 +18,7 @@
 
 #include "PointerTriggerHandler.h"
 
-namespace libinputactions
+namespace InputActions
 {
 
 bool PointerTriggerHandler::pointerMotion(const MotionEvent &event)
