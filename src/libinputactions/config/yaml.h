@@ -1437,6 +1437,9 @@ struct convert<InputDeviceProperties>
         if (const auto &ignoreNode = node["ignore"]) {
             value.setIgnore(ignoreNode.as<bool>());
         }
+        if (const auto &handleLibevdevEventsNode = node["handle_libevdev_events"]) {
+            value.setHandleLibevdevEvents(handleLibevdevEventsNode.as<bool>());
+        }
         if (const auto &buttonPad = node["buttonpad"]) {
             value.setButtonPad(buttonPad.as<bool>());
         }

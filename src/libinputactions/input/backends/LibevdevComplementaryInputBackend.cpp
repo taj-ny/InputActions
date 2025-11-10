@@ -104,7 +104,7 @@ void LibevdevComplementaryInputBackend::deviceAdded(InputDevice *device)
         InputBackend::deviceAdded(device);
     });
 
-    if (!m_enabled || device->type() != InputDeviceType::Touchpad) {
+    if (!m_enabled || device->type() != InputDeviceType::Touchpad || !deviceProperties(device).handleLibevdevEvents()) {
         return;
     }
 
