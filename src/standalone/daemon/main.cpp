@@ -61,7 +61,7 @@ int main()
         chmod(VAR_RUN_INPUTACTIONS_DIR.path().toStdString().c_str(), 0755);
     }
 
-    const auto fd = open(LOCK_FILE_PATH.toStdString().c_str(), O_RDWR | O_CREAT);
+    const auto fd = open(LOCK_FILE_PATH.toStdString().c_str(), O_RDWR | O_CREAT, 0600);
     if (flock(fd, LOCK_EX | LOCK_NB) < 0) {
         if (errno == EWOULDBLOCK) {
             qCritical() << "A daemon instance is already running.";
