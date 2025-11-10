@@ -66,6 +66,17 @@ TriggerManagementOperationResult TriggerHandler::activateTriggers(TriggerTypes t
     }
     m_timedTriggerUpdateTimer.start();
 
+    for (auto &trigger : m_triggers) {
+        if (!trigger->isResumeTimeoutTimerActive()) {
+            continue;
+        }
+
+        trigger->stopResumeTimeoutTimer();
+        if (!std::ranges::contains(m_activeTriggers, trigger.get())) {
+            trigger->cancel();
+        }
+    }
+
     qCDebug(INPUTACTIONS_HANDLER_TRIGGER).noquote().nospace() << "Triggers activated (count: " << m_activeTriggers.size() << ")";
     return result;
 }

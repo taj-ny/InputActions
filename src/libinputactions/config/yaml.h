@@ -930,6 +930,7 @@ struct convert<std::unique_ptr<Trigger>>
         loadMember(trigger->m_id, node["id"]);
         loadMember(trigger->m_mouseButtons, node["mouse_buttons"]);
         loadMember(trigger->m_mouseButtonsExactOrder, node["mouse_buttons_exact_order"]);
+        loadMember(trigger->m_resumeTimeout, node["resume_timeout"]);
         loadMember(trigger->m_setLastTrigger, node["set_last_trigger"]);
         loadMember(trigger->m_threshold, node["threshold"]);
         if (auto *motionTrigger = dynamic_cast<MotionTrigger *>(trigger.get())) {
