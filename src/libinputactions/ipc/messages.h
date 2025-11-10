@@ -31,11 +31,12 @@ class MessageSocketConnection;
 
 enum class MessageType : int
 {
+    HandshakeRequest,
+    HandshakeResponse,
+
     BeginSessionRequest,
     BeginSessionResponse,
     EnvironmentState,
-    HandshakeRequest,
-    HandshakeResponse,
     LoadConfigRequest,
     LoadConfigResponse,
     RecordStrokeRequest,

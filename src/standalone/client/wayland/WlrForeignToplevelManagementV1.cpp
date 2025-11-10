@@ -115,6 +115,10 @@ void WlrForeignToplevelManagementV1::handleClosed(void *data, zwlr_foreign_tople
 void WlrForeignToplevelManagementV1::handleDone(void *data, zwlr_foreign_toplevel_handle_v1 *handle)
 {
     auto *window = static_cast<WlrForeignToplevelManagementV1Window *>(data);
+    if (window != self->m_activeWindow) {
+        return;
+    }
+
     QJsonObject json;
     json["active_window_class"] = window->resourceClass;
     json["active_window_fullscreen"] = window->fullscreen;

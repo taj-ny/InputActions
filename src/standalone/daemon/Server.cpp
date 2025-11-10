@@ -38,9 +38,12 @@ void Server::start()
     m_server = new QLocalServer(this);
     connect(m_server, &QLocalServer::newConnection, this, &Server::onNewConnection);
 
-    m_server->listen(INPUTACTIONS_IPC_SOCKET_PATH);
+    if (!m_server->listen(INPUTACTIONS_IPC_SOCKET_PATH)) {
+        qCritical(INPUTACTIONS_IPC).noquote().nospace() << "Failed to start server: " << m_server->errorString();
+        QCoreApplication::exit(-1);
+    }
     if (chmod(INPUTACTIONS_IPC_SOCKET_PATH.toStdString().c_str(), 0666) != 0) {
-        qWarning(INPUTACTIONS_IPC) << "Failed to set socket permissions";
+        qWarning(INPUTACTIONS_IPC).noquote().nospace() << "Failed to set socket permissions: " << errno;
     }
 }
 

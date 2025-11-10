@@ -23,13 +23,19 @@
 #include "interfaces/IPCNotificationManager.h"
 #include "interfaces/IPCProcessRunner.h"
 #include <QCoreApplication>
+#include <QDir>
 #include <QThread>
 #include <csignal>
 #include <libinputactions/InputActions.h>
 #include <libinputactions/interfaces/ConfigProvider.h>
 #include <libinputactions/interfaces/NotificationManager.h>
+#include <sys/file.h>
+#include <sys/stat.h>
 
 using namespace InputActions;
+
+static const QDir VAR_RUN_INPUTACTIONS_DIR("/var/run/inputactions");
+static const QString LOCK_FILE_PATH = VAR_RUN_INPUTACTIONS_DIR.path() + "/lock";
 
 void handleSignal(int signal)
 {
@@ -40,10 +46,28 @@ void handleSignal(int signal)
 
 int main()
 {
+    if (geteuid()) {
+        qCritical() << "The daemon must be run as root.";
+        return -1;
+    }
+
     static int argc = 0;
     QCoreApplication app(argc, nullptr);
 
     std::signal(SIGINT, handleSignal);
+
+    if (!VAR_RUN_INPUTACTIONS_DIR.exists()) {
+        VAR_RUN_INPUTACTIONS_DIR.mkpath(".");
+        chmod(VAR_RUN_INPUTACTIONS_DIR.path().toStdString().c_str(), 0755);
+    }
+
+    const auto fd = open(LOCK_FILE_PATH.toStdString().c_str(), O_RDWR | O_CREAT);
+    if (flock(fd, LOCK_EX | LOCK_NB) < 0) {
+        if (errno == EWOULDBLOCK) {
+            qCritical() << "A daemon instance is already running.";
+            return -1;
+        }
+    }
 
     ::InputActions::InputActions inputActions;
     g_inputBackend = std::make_unique<StandaloneInputBackend>();

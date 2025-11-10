@@ -30,7 +30,7 @@ Q_DECLARE_LOGGING_CATEGORY(INPUTACTIONS_IPC)
 namespace InputActions
 {
 
-static const QString INPUTACTIONS_IPC_SOCKET_PATH = "/tmp/inputactionsd";
+static const QString INPUTACTIONS_IPC_SOCKET_PATH = "/var/run/inputactions/socket";
 
 class Message;
 
