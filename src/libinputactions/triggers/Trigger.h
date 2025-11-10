@@ -94,7 +94,7 @@ public:
      * Resets the trigger and notifies all actions that it has ended.
      * @internal
      */
-    void end();
+    void end(bool allowResuming = true);
 
     /**
      * Resets the trigger and notifies all actions that it has been cancelled.
@@ -116,6 +116,9 @@ public:
      * @internal
      */
     bool overridesOtherTriggersOnUpdate();
+
+    bool isResumeTimeoutTimerActive();
+    void stopResumeTimeoutTimer();
 
     /**
      * Must be satisfied in order for the trigger to be activated.
@@ -168,6 +171,12 @@ public:
      */
     bool m_mouseButtonsExactOrder{};
 
+    /**
+     * The amount of time after a trigger ends, during which the trigger can be performed again is if it never actually ended. Performing any action that does
+     * not activate this trigger causes it to be cancelled immediately.
+     */
+    std::chrono::milliseconds m_resumeTimeout{};
+
     const TriggerType &type() const;
 
 signals:
@@ -186,6 +195,7 @@ protected:
 
 private slots:
     void onTick();
+    void onResumeTimeoutTimerTimeout();
 
 private:
     void setLastTrigger();
@@ -198,6 +208,8 @@ private:
 
     bool m_withinThreshold = false;
     qreal m_absoluteAccumulatedDelta = 0;
+
+    QTimer m_resumeTimeoutTimer;
 
     friend class TestTrigger;
 };

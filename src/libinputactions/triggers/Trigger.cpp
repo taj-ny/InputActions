@@ -33,6 +33,10 @@ Trigger::Trigger(TriggerType type)
 {
     m_tickTimer.setTimerType(Qt::TimerType::PreciseTimer);
     connect(&m_tickTimer, &QTimer::timeout, this, &Trigger::onTick);
+
+    m_resumeTimeoutTimer.setTimerType(Qt::TimerType::PreciseTimer);
+    m_resumeTimeoutTimer.setSingleShot(true);
+    connect(&m_resumeTimeoutTimer, &QTimer::timeout, this, &Trigger::onResumeTimeoutTimerTimeout);
 }
 
 void Trigger::addAction(std::unique_ptr<TriggerAction> action)
@@ -104,10 +108,15 @@ bool Trigger::canEnd() const
     return m_withinThreshold && (!m_endCondition || m_endCondition->satisfied());
 }
 
-void Trigger::end()
+void Trigger::end(bool allowResuming)
 {
     if (!m_started) {
         reset();
+        return;
+    }
+
+    if (allowResuming && m_resumeTimeout.count()) {
+        m_resumeTimeoutTimer.start(m_resumeTimeout.count());
         return;
     }
 
@@ -156,6 +165,16 @@ bool Trigger::overridesOtherTriggersOnUpdate()
     });
 }
 
+bool Trigger::isResumeTimeoutTimerActive()
+{
+    return m_resumeTimeoutTimer.isActive();
+}
+
+void Trigger::stopResumeTimeoutTimer()
+{
+    m_resumeTimeoutTimer.stop();
+}
+
 void Trigger::actionAdded(TriggerAction *action)
 {
     if (dynamic_cast<const InputAction *>(action->action())) {
@@ -194,6 +213,15 @@ void Trigger::onTick()
 
     for (const auto &action : m_actions) {
         action->triggerTick(TICK_INTERVAL.count());
+    }
+}
+
+void Trigger::onResumeTimeoutTimerTimeout()
+{
+    if (canEnd()) {
+        end(false);
+    } else {
+        cancel();
     }
 }
 
