@@ -57,6 +57,15 @@ public:
      */
     void setIgnore(bool value);
 
+    /**
+     * @returns Whether to process libevdev events if available.
+     */
+    bool handleLibevdevEvents() const;
+    /**
+     * @see handleLibevdevEvents
+     */
+    void setHandleLibevdevEvents(bool value);
+
     bool multiTouch() const;
     /**
      * Only for testing.
@@ -104,6 +113,7 @@ public:
 private:
     std::optional<bool> m_grab;
     std::optional<bool> m_ignore;
+    std::optional<bool> m_handleLibevdevEvents;
 
     std::optional<bool> m_multiTouch;
     std::optional<QSizeF> m_size;

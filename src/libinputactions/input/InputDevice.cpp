@@ -80,6 +80,7 @@ void InputDeviceProperties::apply(const InputDeviceProperties &other)
 
     apply(m_grab, other.m_grab);
     apply(m_ignore, other.m_ignore);
+    apply(m_handleLibevdevEvents, other.m_handleLibevdevEvents);
     apply(m_multiTouch, other.m_multiTouch);
     apply(m_size, other.m_size);
     apply(m_buttonPad, other.m_buttonPad);
@@ -107,6 +108,16 @@ bool InputDeviceProperties::ignore() const
 void InputDeviceProperties::setIgnore(bool value)
 {
     m_ignore = value;
+}
+
+bool InputDeviceProperties::handleLibevdevEvents() const
+{
+    return m_handleLibevdevEvents.value_or(true);
+}
+
+void InputDeviceProperties::setHandleLibevdevEvents(bool value)
+{
+    m_handleLibevdevEvents = value;
 }
 
 bool InputDeviceProperties::multiTouch() const
