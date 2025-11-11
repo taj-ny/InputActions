@@ -75,7 +75,7 @@ private slots:
     void onSessionChangeDetectionTimerTick();
 
 private:
-    void activateSession(const Session &session);
+    void activateSession(const Session &session, bool loadConfig = true);
 
     DBusInterfaceBase m_dbusInterfaceBase;
 
