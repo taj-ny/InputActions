@@ -118,9 +118,6 @@ void SessionManager::beginSessionRequestMessage(const std::shared_ptr<const Begi
         session.m_ipcEnvironmentInterfaces = std::make_shared<IPCEnvironmentInterfaces>();
         session.m_variableManager = std::make_shared<VariableManager>();
         g_inputActions->registerGlobalVariables(session.m_variableManager.get(), session.m_ipcEnvironmentInterfaces, session.m_ipcEnvironmentInterfaces);
-        if (SessionUtils::currentTty() == message->tty()) {
-            activateSession(m_sessions[message->tty()]);
-        }
     }
     message->reply(response);
 
