@@ -26,7 +26,6 @@
 #include <libinputactions/handlers/TouchpadTriggerHandler.h>
 #include <libinputactions/input/InputDeviceRule.h>
 #include <libinputactions/input/InputEventHandler.h>
-#include <libinputactions/input/Keyboard.h>
 #include <libinputactions/input/events.h>
 #include <libinputactions/interfaces/SessionLock.h>
 #include <libinputactions/triggers/StrokeTrigger.h>
@@ -82,6 +81,15 @@ InputDeviceProperties InputBackend::deviceProperties(const InputDevice *device) 
 std::vector<InputDevice *> InputBackend::devices()
 {
     return m_devices;
+}
+
+Qt::KeyboardModifiers InputBackend::keyboardModifiers() const
+{
+    Qt::KeyboardModifiers modifiers;
+    for (const auto *device : m_devices) {
+        modifiers |= device->modifiers();
+    }
+    return modifiers;
 }
 
 void InputBackend::applyDeviceProperties(const InputDevice *device, InputDeviceProperties &properties) const
@@ -159,17 +167,6 @@ bool InputBackend::handleEvent(const InputEvent &event)
         return false;
     }
 
-    if (event.type() == InputEventType::KeyboardKey) {
-        const auto &keyboardEvent = static_cast<const KeyboardKeyEvent &>(event);
-        if (MODIFIERS.contains(keyboardEvent.nativeKey())) {
-            auto modifier = MODIFIERS.at(keyboardEvent.nativeKey());
-            if (keyboardEvent.state()) {
-                event.sender()->m_modifiers |= modifier;
-            } else {
-                event.sender()->m_modifiers &= ~modifier;
-            }
-        }
-    }
     if (event.sender()->type() != InputDeviceType::Keyboard) {
         g_variableManager->getVariable(BuiltinVariables::DeviceName)->set(event.sender()->name());
     }

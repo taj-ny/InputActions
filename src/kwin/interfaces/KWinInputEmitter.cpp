@@ -25,7 +25,7 @@
 #include <kwin/wayland/textinput_v3.h>
 #include <kwin/wayland_server.h>
 #include <kwin/workspace.h>
-#include <libinputactions/input/Keyboard.h>
+#include <libinputactions/input/InputDevice.h>
 #include <libinputactions/input/backends/InputBackend.h>
 #ifdef KWIN_6_5_OR_GREATER
 #include <kwin/input_event.h>
@@ -53,8 +53,8 @@ void KWinInputEmitter::keyboardClearModifiers()
         KWin::workspace()->disableGlobalShortcutsForClient(true);
     }
 
-    const auto modifiers = InputActions::g_keyboard->modifiers(); // This is not the real state, but it's fine in this case.
-    for (const auto &[key, modifier] : InputActions::MODIFIERS) {
+    const auto modifiers = InputActions::g_inputBackend->keyboardModifiers(); // This is not the real state, but it's fine in this case.
+    for (const auto &[key, modifier] : InputActions::KEYBOARD_MODIFIERS) {
         if (modifiers & modifier) {
             keyboardKey(key, false);
         }

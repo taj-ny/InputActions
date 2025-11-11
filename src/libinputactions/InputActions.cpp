@@ -1,7 +1,6 @@
 #include "InputActions.h"
 #include "actions/ActionExecutor.h"
 #include "config/Config.h"
-#include "input/Keyboard.h"
 #include "input/backends/InputBackend.h"
 #include "input/backends/LibevdevComplementaryInputBackend.h"
 #include "interfaces/ConfigProvider.h"
@@ -45,7 +44,6 @@ InputActions::~InputActions()
     g_config.reset();
     g_configProvider.reset();
     g_inputBackend.reset();
-    g_keyboard.reset();
     g_variableManager.reset();
 }
 
@@ -83,7 +81,6 @@ void InputActions::setMissingImplementations()
     setMissingImplementation(g_actionExecutor);
     setMissingImplementation(g_config);
     setMissingImplementation(g_inputBackend);
-    setMissingImplementation(g_keyboard);
     setMissingImplementation(g_variableManager);
 
     setMissingImplementation<ConfigProvider, FileConfigProvider>(g_configProvider);
@@ -110,7 +107,7 @@ void InputActions::registerGlobalVariables(VariableManager *variableManager, std
     }
     variableManager->registerLocalVariable(BuiltinVariables::Fingers);
     variableManager->registerRemoteVariable<Qt::KeyboardModifiers>(BuiltinVariables::KeyboardModifiers, [](auto &value) {
-        value = g_keyboard->modifiers();
+        value = g_inputBackend->keyboardModifiers();
     });
     variableManager->registerLocalVariable(BuiltinVariables::LastTriggerId);
     variableManager->registerLocalVariable(BuiltinVariables::LastTriggerTimestamp, true);

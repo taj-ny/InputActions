@@ -27,7 +27,6 @@
 #include <hyprland/src/plugins/PluginAPI.hpp>
 #undef HANDLE
 #include <libinputactions/input/InputDevice.h>
-#include <libinputactions/input/Keyboard.h>
 
 using namespace InputActions;
 
@@ -190,8 +189,11 @@ void HyprlandInputBackend::keyboardKey(SCallbackInfo &info, const std::any &data
     const auto keyboard = std::any_cast<SP<IKeyboard>>(map.at("keyboard"));
     const auto state = event.state == WL_KEYBOARD_KEY_STATE_PRESSED;
 
-    g_keyboard->updateModifiers(event.keycode, state);
-    info.cancelled = LibinputInputBackend::keyboardKey(findInputActionsDevice(keyboard.get()), event.keycode, state);
+    auto *device = findInputActionsDevice(keyboard.get());
+    if (device) {
+        device->updateModifiers(event.keycode, state);
+    }
+    info.cancelled = LibinputInputBackend::keyboardKey(device, event.keycode, state);
 }
 
 void HyprlandInputBackend::pointerAxis(SCallbackInfo &info, const std::any &data)

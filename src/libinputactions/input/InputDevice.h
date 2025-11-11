@@ -22,12 +22,24 @@
 #include <QRegularExpression>
 #include <QSizeF>
 #include <libinputactions/globals.h>
+#include <linux/input-event-codes.h>
 #include <optional>
 
 namespace InputActions
 {
 
 class TouchpadTriggerHandler;
+
+static const std::map<uint32_t, Qt::KeyboardModifier> KEYBOARD_MODIFIERS{
+    {KEY_LEFTALT, Qt::KeyboardModifier::AltModifier},
+    {KEY_LEFTCTRL, Qt::KeyboardModifier::ControlModifier},
+    {KEY_LEFTMETA, Qt::KeyboardModifier::MetaModifier},
+    {KEY_LEFTSHIFT, Qt::KeyboardModifier::ShiftModifier},
+    {KEY_RIGHTALT, Qt::KeyboardModifier::AltModifier},
+    {KEY_RIGHTCTRL, Qt::KeyboardModifier::ControlModifier},
+    {KEY_RIGHTMETA, Qt::KeyboardModifier::MetaModifier},
+    {KEY_RIGHTSHIFT, Qt::KeyboardModifier::ShiftModifier},
+};
 
 class InputDeviceProperties
 {
@@ -165,6 +177,12 @@ public:
     InputDevice(InputDeviceType type, QString name = {}, QString sysName = {});
     ~InputDevice();
 
+    const Qt::KeyboardModifiers &modifiers() const;
+    /**
+     * Non-modifier key events will be ignored.
+     */
+    void updateModifiers(uint32_t key, bool state);
+
     const InputDeviceType &type() const;
     const QString &name() const;
     const QString &sysName() const;
@@ -179,13 +197,13 @@ public:
 
     std::unique_ptr<TouchpadTriggerHandler> m_touchpadTriggerHandler;
 
-    Qt::KeyboardModifiers m_modifiers{};
-
 private:
     InputDeviceType m_type;
     QString m_name;
     QString m_sysName;
     InputDeviceProperties m_properties;
+
+    Qt::KeyboardModifiers m_modifiers{};
 };
 
 }

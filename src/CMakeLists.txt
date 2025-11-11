@@ -37,7 +37,6 @@ set(libinputactions_SRCS
     libinputactions/input/InputDeviceRule.cpp
     libinputactions/input/events.cpp
     libinputactions/input/InputEventHandler.cpp
-    libinputactions/input/Keyboard.cpp
     libinputactions/interfaces/implementations/FileConfigProvider.cpp
     libinputactions/interfaces/ConfigProvider.cpp
     libinputactions/interfaces/CursorShapeProvider.h

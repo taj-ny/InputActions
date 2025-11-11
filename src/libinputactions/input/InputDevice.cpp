@@ -31,6 +31,28 @@ InputDevice::InputDevice(InputDeviceType type, QString name, QString sysName)
 
 InputDevice::~InputDevice() = default;
 
+void InputDevice::updateModifiers(uint32_t key, bool state)
+{
+    Qt::KeyboardModifier modifier{};
+    if (KEYBOARD_MODIFIERS.contains(key)) {
+        modifier = KEYBOARD_MODIFIERS.at(key);
+    }
+    if (!modifier) {
+        return;
+    }
+
+    if (state) {
+        m_modifiers |= modifier;
+    } else {
+        m_modifiers &= ~modifier;
+    }
+}
+
+const Qt::KeyboardModifiers &InputDevice::modifiers() const
+{
+    return m_modifiers;
+}
+
 const InputDeviceType &InputDevice::type() const
 {
     return m_type;

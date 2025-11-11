@@ -18,9 +18,9 @@
 
 #pragma once
 
+#include <QSocketNotifier>
 #include <QTimer>
 #include <libinputactions/interfaces/ConfigProvider.h>
-#include <QSocketNotifier>
 
 namespace InputActions
 {

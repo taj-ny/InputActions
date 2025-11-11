@@ -19,7 +19,6 @@
 #include "EvdevInputEmitter.h"
 #include "input/StandaloneInputBackend.h"
 #include <fcntl.h>
-#include <libinputactions/input/Keyboard.h>
 #include <linux/uinput.h>
 
 using namespace InputActions;
@@ -76,16 +75,10 @@ void EvdevInputEmitter::keyboardClearModifiers()
             continue;
         }
 
-        for (const auto &[key, modifier] : MODIFIERS) {
-            if (device->m_modifiers & modifier) {
+        for (const auto &[key, modifier] : KEYBOARD_MODIFIERS) {
+            if (device->modifiers() & modifier) {
                 keyboardKey(key, false, device);
             }
-        }
-    }
-    const auto modifiers = g_keyboard->modifiers();
-    for (const auto &[key, modifier] : MODIFIERS) {
-        if (modifiers & modifier) {
-            keyboardKey(key, false);
         }
     }
 }
