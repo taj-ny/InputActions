@@ -154,7 +154,7 @@ bool StandaloneInputBackend::tryAddEvdevDevice(const QString &path)
         data->libinputDevice = {};
         data->libinput = libinput_path_create_context(&m_libinputBlockingInterface, nullptr);
 
-        auto virtualDeviceName = name.toStdString() + " (InputActions internal 1)";
+        auto virtualDeviceName = name.toStdString() + " (InputActions internal)";
         libevdev_set_name(data->libevdev, virtualDeviceName.c_str());
         libevdev_uinput_create_from_device(data->libevdev, LIBEVDEV_UINPUT_OPEN_MANAGED, &data->libinputEventInjectionDevice);
         fcntl(libevdev_uinput_get_fd(data->libinputEventInjectionDevice),
