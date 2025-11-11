@@ -18,7 +18,6 @@
 
 #include "KWinInputBackend.h"
 #include "input_event.h"
-#include <libinputactions/input/Keyboard.h>
 #include <libinputactions/input/events.h>
 #include <libinputactions/triggers/StrokeTrigger.h>
 
@@ -260,8 +259,12 @@ bool KWinInputBackend::isMouse(const KWin::InputDevice *device) const
 
 void KWinInputBackend::KeyboardModifierSpy::keyboardKey(KWin::KeyboardKeyEvent *event)
 {
-    if (dynamic_cast<KWinInputBackend *>(g_inputBackend.get())->m_ignoreEvents) {
+    auto *backend = dynamic_cast<KWinInputBackend *>(g_inputBackend.get());
+    if (backend->m_ignoreEvents) {
         return;
     }
-    g_keyboard->updateModifiers(event->nativeScanCode, event->state == KWin::KeyboardKeyState::Pressed);
+
+    if (auto *device = backend->findInputActionsDevice(event->device)) {
+        device->updateModifiers(event->nativeScanCode, event->state == KWin::KeyboardKeyState::Pressed);
+    }
 }

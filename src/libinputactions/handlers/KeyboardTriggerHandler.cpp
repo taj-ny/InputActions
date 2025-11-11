@@ -17,7 +17,7 @@
 */
 
 #include "KeyboardTriggerHandler.h"
-#include <libinputactions/input/Keyboard.h>
+#include <libinputactions/input/InputDevice.h>
 #include <libinputactions/input/events.h>
 
 namespace InputActions
@@ -32,13 +32,13 @@ bool KeyboardTriggerHandler::keyboardKey(const KeyboardKeyEvent &event)
 {
     InputTriggerHandler::keyboardKey(event);
 
-    const auto isModifier = MODIFIERS.contains(event.nativeKey());
+    const auto isModifier = KEYBOARD_MODIFIERS.contains(event.nativeKey());
     if (event.state()) {
         m_keys.insert(event.nativeKey());
         if (m_keys.size() == 1) {
             m_firstKey = event.nativeKey();
         }
-        if (!MODIFIERS.contains(m_firstKey)) {
+        if (!KEYBOARD_MODIFIERS.contains(m_firstKey)) {
             m_block = false;
             return false;
         }

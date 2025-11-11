@@ -40,7 +40,7 @@ class TouchpadTriggerHandler;
  * Primary backends are responsible for managing (adding and removing) devices. Complementary backends are only allowed to set properties when a device is
  * being added.
  *
- * On keyboard key events, the backend must call Keyboard::updateModifiers before InputBackend::handleEvent.
+ * On keyboard key events, the backend must call InputDevice::updateModifiers before InputBackend::handleEvent.
  *
  * Backends must ignore events when m_ignoreEvents is set to true.
  *
@@ -82,6 +82,13 @@ public:
     InputDeviceProperties deviceProperties(const InputDevice *device) const;
 
     std::vector<InputDevice *> devices();
+
+    /**
+     * @return Currently pressed keyboard modifiers, accumulated from all devices.
+     * @remark Key events that have been ignored by the input backend will not be used to update the modifier state. For example, clearing modifiers will not
+     * update the modifier state to none. This allows gestures with keyboard modifier conditions to be used again.
+     */
+    Qt::KeyboardModifiers keyboardModifiers() const;
 
     /**
      * Removes all event handlers, devices and custom properties. Backend must be initialized in order to be used again.

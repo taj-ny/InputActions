@@ -17,14 +17,14 @@
 */
 
 #include "InputEmitter.h"
-#include <libinputactions/input/Keyboard.h>
+#include <libinputactions/input/InputDevice.h>
 
 namespace InputActions
 {
 
 InputEmitter::InputEmitter()
 {
-    for (const auto &[key, _] : MODIFIERS) {
+    for (const auto &[key, _] : KEYBOARD_MODIFIERS) {
         m_keyboardRequiredKeys.insert(key);
     }
 }

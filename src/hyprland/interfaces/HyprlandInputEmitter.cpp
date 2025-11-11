@@ -24,9 +24,9 @@
 #include <hyprland/src/managers/input/InputManager.hpp>
 #include <hyprland/src/protocols/PointerGestures.hpp>
 #include <hyprland/src/protocols/core/Compositor.hpp>
-#include <libinputactions/input/Keyboard.h>
-#include <libinputactions/input/backends/InputBackend.h>
 #undef HANDLE
+#include <libinputactions/input/InputDevice.h>
+#include <libinputactions/input/backends/InputBackend.h>
 
 using namespace InputActions;
 
@@ -49,10 +49,10 @@ void HyprlandInputEmitter::keyboardClearModifiers()
 {
     g_inputBackend->setIgnoreEvents(true);
     m_modifiers = 0;
-    const auto modifiers = g_keyboard->modifiers();
+    const auto modifiers = g_inputBackend->keyboardModifiers();
     for (auto &keyboard : g_pInputManager->m_keyboards) {
         if (auto aqKeyboard = keyboard->aq()) {
-            for (const auto &[key, modifier] : InputActions::MODIFIERS) {
+            for (const auto &[key, modifier] : InputActions::KEYBOARD_MODIFIERS) {
                 if (modifiers & modifier) {
                     aqKeyboard->events.key.emit(Aquamarine::IKeyboard::SKeyEvent{
                         .key = key,

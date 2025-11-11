@@ -17,7 +17,7 @@
 */
 
 #include "MouseTriggerHandler.h"
-#include <libinputactions/input/Keyboard.h>
+#include <libinputactions/input/backends/InputBackend.h>
 #include <libinputactions/input/events.h>
 #include <libinputactions/interfaces/InputEmitter.h>
 #include <libinputactions/triggers/PressTrigger.h>
@@ -82,7 +82,7 @@ bool MouseTriggerHandler::pointerAxis(const MotionEvent &event)
             continuous = true;
         }
     }
-    if (!continuous || (m_buttons.empty() && !g_keyboard->modifiers())) {
+    if (!continuous || (m_buttons.empty() && !g_inputBackend->keyboardModifiers())) {
         qCDebug(INPUTACTIONS_HANDLER_MOUSE, "Wheel trigger will end immediately");
         endTriggers(TriggerType::Wheel);
     }

@@ -20,7 +20,6 @@
 #include <QDir>
 #include <QSocketNotifier>
 #include <fcntl.h>
-#include <libinputactions/input/Keyboard.h>
 #include <linux/uinput.h>
 #include <sys/inotify.h>
 
@@ -340,7 +339,7 @@ bool StandaloneInputBackend::handleEvent(InputDevice *sender, libinput_event *ev
             const auto key = libinput_event_keyboard_get_key(keyboardEvent);
             const auto state = libinput_event_keyboard_get_key_state(keyboardEvent) == LIBINPUT_KEY_STATE_PRESSED;
 
-            g_keyboard->updateModifiers(key, state);
+            sender->updateModifiers(key, state);
             return keyboardKey(sender,
                                libinput_event_keyboard_get_key(keyboardEvent),
                                libinput_event_keyboard_get_key_state(keyboardEvent) == LIBINPUT_KEY_STATE_PRESSED);
