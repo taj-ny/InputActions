@@ -118,6 +118,10 @@ void SessionManager::beginSessionRequestMessage(const std::shared_ptr<const Begi
         session.m_ipcEnvironmentInterfaces = std::make_shared<IPCEnvironmentInterfaces>();
         session.m_variableManager = std::make_shared<VariableManager>();
         g_inputActions->registerGlobalVariables(session.m_variableManager.get(), session.m_ipcEnvironmentInterfaces, session.m_ipcEnvironmentInterfaces);
+
+        if (SessionUtils::currentTty() == message->tty()) {
+            activateSession(session, false);
+        }
     }
     message->reply(response);
 
@@ -192,7 +196,7 @@ void SessionManager::variableListRequestMessage(const std::shared_ptr<const Vari
     }
 }
 
-void SessionManager::activateSession(const Session &session)
+void SessionManager::activateSession(const Session &session, bool loadConfig)
 {
     if (!session.m_client) {
         qCDebug(INPUTACTIONS) << "No client/config for current session, suspending";
@@ -200,7 +204,9 @@ void SessionManager::activateSession(const Session &session)
         return;
     }
 
-    g_config->load(session.m_config);
+    if (loadConfig) {
+        g_config->load(session.m_config);
+    }
     g_pointerPositionGetter = session.m_ipcEnvironmentInterfaces;
     g_variableManager = session.m_variableManager;
     g_windowProvider = session.m_ipcEnvironmentInterfaces;
