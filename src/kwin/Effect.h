@@ -19,14 +19,14 @@
 #pragma once
 
 #include "effect/effect.h"
-#include <libinputactions/InputActions.h>
+#include <libinputactions/InputActionsMain.h>
 
 namespace InputActions
 {
 
 class Effect
     : public KWin::Effect
-    , public InputActions
+    , public InputActionsMain
 {
 public:
     Effect();

@@ -28,13 +28,13 @@ class PointerPositionGetter;
 class VariableManager;
 class WindowProvider;
 
-class InputActions : public QObject
+class InputActionsMain : public QObject
 {
     Q_OBJECT
 
 public:
-    InputActions();
-    ~InputActions() override;
+    InputActionsMain();
+    ~InputActionsMain() override;
 
     void setMissingImplementations();
     void initialize();
@@ -82,6 +82,6 @@ private:
     IntegratedDBusInterface m_dbusInterface;
 };
 
-inline InputActions *g_inputActions;
+inline InputActionsMain *g_inputActions;
 
 }

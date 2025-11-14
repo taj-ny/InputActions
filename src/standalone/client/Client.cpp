@@ -19,7 +19,6 @@
 #include "Client.h"
 #include "ClientDBusInterface.h"
 #include <QCoreApplication>
-#include <libinputactions/InputActions.h>
 #include <libinputactions/globals.h>
 #include <libinputactions/ipc/MessageSocketConnection.h>
 #include <libinputactions/ipc/messages.h>

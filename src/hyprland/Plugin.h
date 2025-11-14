@@ -19,12 +19,12 @@
 #pragma once
 
 #include <hyprland/src/managers/eventLoop/EventLoopTimer.hpp>
-#include <libinputactions/InputActions.h>
+#include <libinputactions/InputActionsMain.h>
 
 namespace InputActions
 {
 
-class Plugin : public InputActions
+class Plugin : public InputActionsMain
 {
 public:
     Plugin(void *handle);

@@ -26,7 +26,7 @@
 #include <QDir>
 #include <QThread>
 #include <csignal>
-#include <libinputactions/InputActions.h>
+#include <libinputactions/InputActionsMain.h>
 #include <libinputactions/interfaces/ConfigProvider.h>
 #include <libinputactions/interfaces/NotificationManager.h>
 #include <sys/file.h>
@@ -69,7 +69,7 @@ int main()
         }
     }
 
-    ::InputActions::InputActions inputActions;
+    InputActionsMain inputActions;
     g_inputBackend = std::make_unique<StandaloneInputBackend>();
     g_inputEmitter = std::make_shared<EvdevInputEmitter>();
     g_notificationManager = std::make_shared<IPCNotificationManager>();

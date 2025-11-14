@@ -58,7 +58,7 @@ void Effect::reconfigure(ReconfigureFlags flags)
 void Effect::registerGlobalVariables(VariableManager *variableManager, std::shared_ptr<PointerPositionGetter> pointerPositionGetter,
                                      std::shared_ptr<WindowProvider> windowProvider)
 {
-    InputActions::registerGlobalVariables(variableManager);
+    InputActionsMain::registerGlobalVariables(variableManager);
 
     // Some of this should be moved to libinputactions eventually
     variableManager->registerRemoteVariable<bool>("plasma_overview_active", [](auto &value) {
