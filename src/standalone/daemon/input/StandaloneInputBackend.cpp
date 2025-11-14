@@ -139,7 +139,7 @@ bool StandaloneInputBackend::tryAddEvdevDevice(const QString &path)
         fcntl(fd, F_SETFD, FD_CLOEXEC);
         libevdev_new_from_fd(fd, &data->libevdev);
         if (!isDeviceNeutral(device.get(), data.get())) {
-            qWarning().noquote().nospace()
+            qWarning(INPUTACTIONS).noquote().nospace()
                 << QString("Failed to initialize device '%1': device is not in a neutral state and cannot be grabbed").arg(device->name());
             return false;
         }
@@ -155,7 +155,12 @@ bool StandaloneInputBackend::tryAddEvdevDevice(const QString &path)
 
         auto virtualDeviceName = name.toStdString() + " (InputActions internal)";
         libevdev_set_name(data->libevdev, virtualDeviceName.c_str());
-        libevdev_uinput_create_from_device(data->libevdev, LIBEVDEV_UINPUT_OPEN_MANAGED, &data->libinputEventInjectionDevice);
+        if (const auto error = libevdev_uinput_create_from_device(data->libevdev, LIBEVDEV_UINPUT_OPEN_MANAGED, &data->libinputEventInjectionDevice)) {
+            qWarning(INPUTACTIONS).noquote().nospace()
+                << QString("Failed to create virtual device '%1' (errno %2)").arg(QString::fromStdString(virtualDeviceName)).arg(QString::number(-error));
+            return false;
+        }
+
         fcntl(libevdev_uinput_get_fd(data->libinputEventInjectionDevice),
               F_SETFL,
               fcntl(libevdev_uinput_get_fd(data->libinputEventInjectionDevice), F_GETFL, 0) & ~O_NONBLOCK);
@@ -168,7 +173,12 @@ bool StandaloneInputBackend::tryAddEvdevDevice(const QString &path)
 
         virtualDeviceName = name.toStdString() + " (InputActions output)";
         libevdev_set_name(data->libevdev, virtualDeviceName.c_str());
-        libevdev_uinput_create_from_device(data->libevdev, LIBEVDEV_UINPUT_OPEN_MANAGED, &data->outputDevice);
+        if (const auto error = libevdev_uinput_create_from_device(data->libevdev, LIBEVDEV_UINPUT_OPEN_MANAGED, &data->outputDevice)) {
+            qWarning(INPUTACTIONS).noquote().nospace()
+                << QString("Failed to create virtual device '%1' (errno %2)").arg(QString::fromStdString(virtualDeviceName)).arg(QString::number(-error));
+            return false;
+        }
+
         data->outputDevicePath = libevdev_uinput_get_devnode(data->outputDevice);
 
         libevdev_set_name(data->libevdev, name.toStdString().c_str());
