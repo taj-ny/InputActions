@@ -18,6 +18,7 @@
 
 #include "WlrForeignToplevelManagementV1.h"
 #include "Client.h"
+#include <QJsonDocument>
 #include <QJsonObject>
 #include <libinputactions/ipc/MessageSocketConnection.h>
 #include <libinputactions/ipc/messages.h>

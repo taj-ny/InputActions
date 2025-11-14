@@ -18,6 +18,8 @@
 
 #include "JsonSerializer.h"
 #include "messages.h"
+#include <QJsonDocument>
+#include <QJsonObject>
 #include <QMetaProperty>
 
 namespace InputActions
