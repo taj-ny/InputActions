@@ -17,6 +17,7 @@
 */
 
 #include "ThreadUtils.h"
+#include <QAbstractEventDispatcher>
 #include <QCoreApplication>
 
 namespace InputActions
