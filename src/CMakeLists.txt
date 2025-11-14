@@ -37,11 +37,13 @@ set(libinputactions_SRCS
     libinputactions/input/InputDeviceRule.cpp
     libinputactions/input/events.cpp
     libinputactions/input/InputEventHandler.cpp
+    libinputactions/interfaces/implementations/DBusNotificationManager.cpp
     libinputactions/interfaces/implementations/FileConfigProvider.cpp
+    libinputactions/interfaces/implementations/ProcessRunnerImpl.cpp
     libinputactions/interfaces/ConfigProvider.cpp
     libinputactions/interfaces/CursorShapeProvider.h
     libinputactions/interfaces/InputEmitter.cpp
-    libinputactions/interfaces/NotificationManager.cpp
+    libinputactions/interfaces/NotificationManager.h
     libinputactions/interfaces/OnScreenMessageManager.h
     libinputactions/interfaces/PointerPositionGetter.h
     libinputactions/interfaces/PointerPositionSetter.h

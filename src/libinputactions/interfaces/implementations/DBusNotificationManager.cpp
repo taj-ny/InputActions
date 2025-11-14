@@ -16,14 +16,14 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include "NotificationManager.h"
+#include "DBusNotificationManager.h"
 #include <QDBusInterface>
 #include <QThreadPool>
 
 namespace InputActions
 {
 
-void NotificationManager::sendNotification(const QString &title, const QString &content)
+void DBusNotificationManager::sendNotification(const QString &title, const QString &content)
 {
     // Run in another thread because QDBusInterface's constructor can freeze the compositor if a notification is sent as soon as the plugin loads. Good enough
     // for now.

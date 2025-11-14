@@ -14,7 +14,9 @@
 #include "interfaces/SessionLock.h"
 #include "interfaces/Window.h"
 #include "interfaces/WindowProvider.h"
+#include "interfaces/implementations/DBusNotificationManager.h"
 #include "interfaces/implementations/FileConfigProvider.h"
+#include "interfaces/implementations/ProcessRunnerImpl.h"
 #include "variables/VariableManager.h"
 #include <QFile>
 #include <QStandardPaths>
@@ -68,13 +70,14 @@ void InputActionsMain::onConfigChanged(const QString &config)
 
 void InputActionsMain::setMissingImplementations()
 {
+    setMissingImplementation<ConfigProvider, FileConfigProvider>(g_configProvider);
     setMissingImplementation(g_cursorShapeProvider);
     setMissingImplementation(g_inputEmitter);
-    setMissingImplementation(g_notificationManager);
+    setMissingImplementation<NotificationManager, DBusNotificationManager>(g_notificationManager);
     setMissingImplementation(g_onScreenMessageManager);
     setMissingImplementation(g_pointerPositionGetter);
     setMissingImplementation(g_pointerPositionSetter);
-    setMissingImplementation(g_processRunner);
+    setMissingImplementation<ProcessRunner, ProcessRunnerImpl>(g_processRunner);
     setMissingImplementation(g_sessionLock);
     setMissingImplementation(g_windowProvider);
 
@@ -82,8 +85,6 @@ void InputActionsMain::setMissingImplementations()
     setMissingImplementation(g_config);
     setMissingImplementation(g_inputBackend);
     setMissingImplementation(g_variableManager);
-
-    setMissingImplementation<ConfigProvider, FileConfigProvider>(g_configProvider);
 }
 
 void InputActionsMain::registerGlobalVariables(VariableManager *variableManager, std::shared_ptr<PointerPositionGetter> pointerPositionGetter,

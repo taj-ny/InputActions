@@ -33,39 +33,4 @@ QString ProcessRunner::startProcessReadOutput(const QString &program, const QStr
     return startProcessReadOutput(program, arguments, g_variableManager->extraProcessEnvironment(arguments.join(" ")));
 }
 
-void ProcessRunner::startProcess(const QString &program, const QStringList &arguments, std::map<QString, QString> extraEnvironment, bool wait)
-{
-    auto *process = new QProcess;
-    connect(process, &QProcess::finished, this, [process]() {
-        process->deleteLater();
-    });
-    process->setProgram("/bin/sh");
-    process->setArguments(arguments);
-    setProcessEnvironment(*process, extraEnvironment);
-    process->start();
-    if (wait) {
-        process->waitForFinished();
-    }
-}
-
-QString ProcessRunner::startProcessReadOutput(const QString &program, const QStringList &arguments, std::map<QString, QString> extraEnvironment)
-{
-    QProcess process;
-    process.setProgram("/bin/sh");
-    process.setArguments(arguments);
-    setProcessEnvironment(process, extraEnvironment);
-    process.start();
-    process.waitForFinished();
-    return process.readAllStandardOutput();
-}
-
-void ProcessRunner::setProcessEnvironment(QProcess &process, std::map<QString, QString> environmentVariables)
-{
-    auto environment = QProcessEnvironment::systemEnvironment();
-    for (const auto &[key, value] : environmentVariables) {
-        environment.insert(key, value);
-    }
-    process.setProcessEnvironment(environment);
-}
-
 }

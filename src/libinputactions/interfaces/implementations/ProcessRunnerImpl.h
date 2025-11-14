@@ -18,20 +18,19 @@
 
 #pragma once
 
-#include <QString>
+#include <libinputactions/interfaces/ProcessRunner.h>
 
 namespace InputActions
 {
 
-class NotificationManager
+class ProcessRunnerImpl : public ProcessRunner
 {
 public:
-    NotificationManager() = default;
-    virtual ~NotificationManager() = default;
+    void startProcess(const QString &program, const QStringList &arguments, std::map<QString, QString> extraEnvironment, bool wait = false) override;
+    QString startProcessReadOutput(const QString &program, const QStringList &arguments, std::map<QString, QString> extraEnvironment) override;
 
-    virtual void sendNotification(const QString &title, const QString &content) {}
+private:
+    static void setProcessEnvironment(QProcess &process, std::map<QString, QString> environmentVariables);
 };
-
-inline std::shared_ptr<NotificationManager> g_notificationManager;
 
 }
