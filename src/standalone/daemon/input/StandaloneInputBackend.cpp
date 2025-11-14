@@ -390,17 +390,14 @@ bool StandaloneInputBackend::isDeviceNeutral(const InputDevice *device, const Ex
         case InputDeviceType::Keyboard:
         case InputDeviceType::Mouse:
             for (int code = 0; code < KEY_MAX; code++) {
-                if (libevdev_has_event_code(data->libevdev, EV_KEY, code)) {
-                    int value;
-                    libevdev_fetch_event_value(data->libevdev, EV_KEY, code, &value);
-                    if (value) {
-                        return false;
-                    }
+                if (libevdev_has_event_code(data->libevdev, EV_KEY, code) && libevdev_get_event_value(data->libevdev, EV_KEY, code)) {
+                    return false;
                 }
             }
             break;
+        case InputDeviceType::Touchpad:
+            return !libevdev_has_event_code(data->libevdev, EV_KEY, BTN_TOUCH) || !libevdev_get_event_value(data->libevdev, EV_KEY, BTN_TOUCH);
     }
-    // TODO: touchpad
     return true;
 }
 
@@ -411,12 +408,9 @@ void StandaloneInputBackend::resetDevice(const InputDevice *device, const ExtraD
         case InputDeviceType::Mouse: {
             bool syn{};
             for (int code = 0; code < KEY_MAX; code++) {
-                if (libevdev_has_event_code(data->libevdev, EV_KEY, code)) {
-                    int value;
-                    if (libevdev_fetch_event_value(data->libevdev, EV_KEY, code, &value) && value) {
-                        syn = true;
-                        libevdev_uinput_write_event(data->outputDevice, EV_KEY, code, 0);
-                    }
+                if (libevdev_has_event_code(data->libevdev, EV_KEY, code) && libevdev_get_event_value(data->libevdev, EV_KEY, code)) {
+                    syn = true;
+                    libevdev_uinput_write_event(data->outputDevice, EV_KEY, code, 0);
                 }
             }
 
