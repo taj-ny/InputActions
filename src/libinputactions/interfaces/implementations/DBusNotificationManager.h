@@ -18,20 +18,14 @@
 
 #pragma once
 
-#include <QString>
+#include <libinputactions/interfaces/NotificationManager.h>
 
 namespace InputActions
 {
 
-class NotificationManager
+class DBusNotificationManager : public NotificationManager
 {
 public:
-    NotificationManager() = default;
-    virtual ~NotificationManager() = default;
-
-    virtual void sendNotification(const QString &title, const QString &content) {}
+    void sendNotification(const QString &title, const QString &content) override;
 };
-
-inline std::shared_ptr<NotificationManager> g_notificationManager;
-
 }

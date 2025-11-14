@@ -18,8 +18,8 @@
 
 #pragma once
 
-#include <libinputactions/interfaces/NotificationManager.h>
-#include <libinputactions/interfaces/ProcessRunner.h>
+#include <libinputactions/interfaces/implementations/DBusNotificationManager.h>
+#include <libinputactions/interfaces/implementations/ProcessRunnerImpl.h>
 #include <libinputactions/ipc/MessageHandler.h>
 
 namespace InputActions
@@ -41,8 +41,8 @@ protected:
     void startProcessRequestMessage(const std::shared_ptr<const StartProcessRequestMessage> &message) override;
 
 private:
-    NotificationManager m_notificationManager;
-    ProcessRunner m_processRunner;
+    DBusNotificationManager m_notificationManager;
+    ProcessRunnerImpl m_processRunner;
 };
 
 }

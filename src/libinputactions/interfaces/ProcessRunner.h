@@ -35,11 +35,8 @@ public:
     void startProcess(const QString &program, const QStringList &arguments, bool wait = false);
     QString startProcessReadOutput(const QString &program, const QStringList &arguments);
 
-    virtual void startProcess(const QString &program, const QStringList &arguments, std::map<QString, QString> extraEnvironment, bool wait = false);
-    virtual QString startProcessReadOutput(const QString &program, const QStringList &arguments, std::map<QString, QString> extraEnvironment);
-
-private:
-    static void setProcessEnvironment(QProcess &process, std::map<QString, QString> environmentVariables);
+    virtual void startProcess(const QString &program, const QStringList &arguments, std::map<QString, QString> extraEnvironment, bool wait = false) {}
+    virtual QString startProcessReadOutput(const QString &program, const QStringList &arguments, std::map<QString, QString> extraEnvironment) { return {}; }
 };
 
 inline std::shared_ptr<ProcessRunner> g_processRunner;
