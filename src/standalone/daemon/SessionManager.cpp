@@ -19,7 +19,7 @@
 #include "SessionManager.h"
 #include "Server.h"
 #include "interfaces/IPCEnvironmentInterfaces.h"
-#include <libinputactions/InputActions.h>
+#include <libinputactions/InputActionsMain.h>
 #include <libinputactions/config/Config.h>
 #include <libinputactions/globals.h>
 #include <libinputactions/input/backends/InputBackend.h>

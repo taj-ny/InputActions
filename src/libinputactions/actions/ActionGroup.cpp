@@ -18,7 +18,7 @@
 
 #include "ActionGroup.h"
 #include "ActionExecutor.h"
-#include "InputActions.h"
+#include "InputActionsMain.h"
 #include <libinputactions/conditions/Condition.h>
 #include <libinputactions/utils/ThreadUtils.h>
 

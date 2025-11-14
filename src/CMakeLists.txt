@@ -66,7 +66,7 @@ set(libinputactions_SRCS
     libinputactions/variables/Variable.cpp
     libinputactions/variables/VariableWrapper.h
     libinputactions/globals.cpp
-    libinputactions/InputActions.cpp
+    libinputactions/InputActionsMain.cpp
     libinputactions/Range.cpp
     libinputactions/Value.cpp
 )

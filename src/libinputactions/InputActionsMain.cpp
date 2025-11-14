@@ -1,4 +1,4 @@
-#include "InputActions.h"
+#include "InputActionsMain.h"
 #include "actions/ActionExecutor.h"
 #include "config/Config.h"
 #include "input/backends/InputBackend.h"
@@ -22,12 +22,12 @@
 namespace InputActions
 {
 
-InputActions::InputActions()
+InputActionsMain::InputActionsMain()
 {
     g_inputActions = this;
 }
 
-InputActions::~InputActions()
+InputActionsMain::~InputActionsMain()
 {
     // Release as many resources as possible when the compositor plugin is disabled (KWin doesn't unload plugins from the address space)
     g_cursorShapeProvider.reset();
@@ -47,26 +47,26 @@ InputActions::~InputActions()
     g_variableManager.reset();
 }
 
-void InputActions::suspend()
+void InputActionsMain::suspend()
 {
     g_inputBackend->reset();
     g_inputEmitter->reset();
 }
 
-void InputActions::initialize()
+void InputActionsMain::initialize()
 {
-    connect(g_configProvider.get(), &ConfigProvider::configChanged, this, &InputActions::onConfigChanged);
+    connect(g_configProvider.get(), &ConfigProvider::configChanged, this, &InputActionsMain::onConfigChanged);
     registerGlobalVariables(g_variableManager.get());
 }
 
-void InputActions::onConfigChanged(const QString &config)
+void InputActionsMain::onConfigChanged(const QString &config)
 {
     if (g_config->autoReload()) {
         g_config->load(config);
     }
 }
 
-void InputActions::setMissingImplementations()
+void InputActionsMain::setMissingImplementations()
 {
     setMissingImplementation(g_cursorShapeProvider);
     setMissingImplementation(g_inputEmitter);
@@ -86,7 +86,7 @@ void InputActions::setMissingImplementations()
     setMissingImplementation<ConfigProvider, FileConfigProvider>(g_configProvider);
 }
 
-void InputActions::registerGlobalVariables(VariableManager *variableManager, std::shared_ptr<PointerPositionGetter> pointerPositionGetter,
+void InputActionsMain::registerGlobalVariables(VariableManager *variableManager, std::shared_ptr<PointerPositionGetter> pointerPositionGetter,
                                            std::shared_ptr<WindowProvider> windowProvider)
 {
     if (!pointerPositionGetter) {

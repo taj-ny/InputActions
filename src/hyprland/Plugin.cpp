@@ -66,7 +66,7 @@ Plugin::Plugin(void *handle)
 void Plugin::registerGlobalVariables(VariableManager *variableManager, std::shared_ptr<PointerPositionGetter> pointerPositionGetter,
                                      std::shared_ptr<WindowProvider> windowProvider)
 {
-    InputActions::registerGlobalVariables(variableManager, pointerPositionGetter, windowProvider);
+    InputActionsMain::registerGlobalVariables(variableManager, pointerPositionGetter, windowProvider);
 
     // This should be moved to libinputactions eventually
     variableManager->registerRemoteVariable<QString>("screen_name", [](auto &value) {

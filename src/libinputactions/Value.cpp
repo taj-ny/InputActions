@@ -17,7 +17,7 @@
 */
 
 #include "Value.h"
-#include "InputActions.h"
+#include "InputActionsMain.h"
 #include <QProcess>
 #include <libinputactions/globals.h>
 #include <libinputactions/interfaces/CursorShapeProvider.h>

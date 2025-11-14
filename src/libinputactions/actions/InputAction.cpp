@@ -17,7 +17,7 @@
 */
 
 #include "InputAction.h"
-#include "InputActions.h"
+#include "InputActionsMain.h"
 #include <QThread>
 #include <libinputactions/interfaces/InputEmitter.h>
 #include <libinputactions/interfaces/PointerPositionSetter.h>
