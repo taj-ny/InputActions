@@ -108,7 +108,7 @@ bool KWinInputBackend::swipeGestureUpdate(KWin::PointerSwipeGestureUpdateEvent *
 bool KWinInputBackend::swipeGestureUpdate(const QPointF &delta, std::chrono::microseconds time)
 {
 #endif
-    return touchpadSwipeUpdate(currentTouchpad(), delta);
+    return touchpadSwipeUpdate(currentTouchpad(), {delta});
 }
 
 #ifdef KWIN_6_5_OR_GREATER
@@ -189,7 +189,7 @@ bool KWinInputBackend::pointerButton(KWin::PointerButtonEvent *event)
 
 bool KWinInputBackend::pointerMotion(KWin::PointerMotionEvent *event)
 {
-    return LibinputInputBackend::pointerMotion(findInputActionsDevice(event->device), event->delta, event->deltaUnaccelerated);
+    return LibinputInputBackend::pointerMotion(findInputActionsDevice(event->device), {event->delta, event->deltaUnaccelerated});
 }
 
 bool KWinInputBackend::keyboardKey(KWin::KeyboardKeyEvent *event)

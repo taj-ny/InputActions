@@ -1,6 +1,7 @@
 #include "TestTriggerAction.h"
 #include <libinputactions/actions/Action.h>
 #include <libinputactions/actions/TriggerAction.h>
+#include <libinputactions/input/Delta.h>
 
 namespace InputActions
 {

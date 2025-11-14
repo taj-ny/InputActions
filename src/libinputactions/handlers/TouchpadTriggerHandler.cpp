@@ -51,13 +51,13 @@ bool TouchpadTriggerHandler::pointerAxis(const MotionEvent &event)
             activateTriggers(TriggerType::StrokeSwipe);
             [[fallthrough]];
         case State::Scrolling:
-            if (event.delta().isNull()) {
+            if (event.delta().unaccelerated().isNull()) {
                 endTriggers(TriggerType::StrokeSwipe);
                 setState(State::None);
                 return false; // Blocking a (0,0) event breaks kinetic scrolling
             }
 
-            return handleMotion(event.delta());
+            return handleMotion(event.sender(), event.delta());
         default:
             return false;
     }
@@ -115,7 +115,7 @@ bool TouchpadTriggerHandler::pointerMotion(const MotionEvent &event)
             setState(activateTriggers(TriggerType::StrokeSwipe).success ? State::MotionTrigger : State::MotionNoTrigger);
             [[fallthrough]];
         case State::MotionTrigger:
-            return handleMotion(event.delta());
+            return handleMotion(event.sender(), event.delta());
     }
     return false;
 }
@@ -182,7 +182,7 @@ bool TouchpadTriggerHandler::touchpadPinch(const TouchpadPinchEvent &event)
 
 bool TouchpadTriggerHandler::touchpadSwipe(const MotionEvent &event)
 {
-    return handleMotion(event.delta());
+    return handleMotion(event.sender(), event.delta());
 }
 
 void TouchpadTriggerHandler::setState(State state)

@@ -37,13 +37,13 @@ InputDevice *InputEvent::sender() const
     return m_sender;
 }
 
-MotionEvent::MotionEvent(InputDevice *sender, InputEventType type, const QPointF &delta)
+MotionEvent::MotionEvent(InputDevice *sender, InputEventType type, PointDelta delta)
     : InputEvent(type, sender)
-    , m_delta(delta)
+    , m_delta(std::move(delta))
 {
 }
 
-const QPointF &MotionEvent::delta() const
+const PointDelta &MotionEvent::delta() const
 {
     return m_delta;
 }

@@ -222,7 +222,7 @@ void HyprlandInputBackend::pointerMotion(SCallbackInfo &info, const std::any &da
     const auto pointerPosition = std::any_cast<const Vector2D>(data);
     const auto delta = pointerPosition - m_previousPointerPosition;
     m_previousPointerPosition = pointerPosition;
-    info.cancelled = LibinputInputBackend::pointerMotion(m_currentPointingDevice, QPointF(delta.x, delta.y));
+    info.cancelled = LibinputInputBackend::pointerMotion(m_currentPointingDevice, {{delta.x, delta.y}});
 }
 
 void HyprlandInputBackend::holdBeginHook(void *thisPtr, uint32_t timeMs, uint32_t fingers)
@@ -274,7 +274,7 @@ void HyprlandInputBackend::touchpadSwipeBegin(SCallbackInfo &info, const std::an
 void HyprlandInputBackend::touchpadSwipeUpdate(SCallbackInfo &info, const std::any &data)
 {
     const auto event = std::any_cast<IPointer::SSwipeUpdateEvent>(data);
-    info.cancelled = LibinputInputBackend::touchpadSwipeUpdate(m_currentTouchpad, QPointF(event.delta.x, event.delta.y));
+    info.cancelled = LibinputInputBackend::touchpadSwipeUpdate(m_currentTouchpad, {{event.delta.x, event.delta.y}});
 }
 
 void HyprlandInputBackend::touchpadSwipeEnd(SCallbackInfo &info, const std::any &data)

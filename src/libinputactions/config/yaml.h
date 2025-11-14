@@ -976,8 +976,11 @@ struct convert<std::unique_ptr<Trigger>>
         }
         trigger->m_activationCondition = conditionGroup;
 
+        const auto accelerated = node["accelerated"].as<bool>(false);
         for (const auto &actionNode : node["actions"]) {
-            trigger->addAction(actionNode.as<std::unique_ptr<TriggerAction>>());
+            auto action = actionNode.as<std::unique_ptr<TriggerAction>>();
+            action->m_accelerated = accelerated;
+            trigger->addAction(std::move(action));
         }
 
         return true;

@@ -31,6 +31,8 @@ namespace InputActions
 {
 
 class Action;
+class Delta;
+class PointDelta;
 
 /**
  * The point of the trigger's lifecycle at which the action should be executed.
@@ -110,7 +112,7 @@ public:
      * Called by the trigger.
      * @internal
      */
-    void triggerUpdated(qreal delta, const QPointF &deltaPointMultiplied);
+    void triggerUpdated(const Delta &delta, const PointDelta &deltaPointMultiplied);
     /**
      * Called by the trigger.
      * @internal
@@ -148,6 +150,10 @@ public:
      */
     ActionInterval m_interval;
     /**
+     * Use the accelerated delta for intervals, if available. This does not affect thresholds.
+     */
+    bool m_accelerated{};
+    /**
      * Sets how far the trigger needs to progress in order for the action to be executed. Thresholds are always
      * positive.
      * @remark Begin actions can't have thresholds. Set the threshold on the trigger instead.
@@ -155,7 +161,7 @@ public:
     std::optional<Range<qreal>> m_threshold;
 
 private:
-    void update(qreal delta);
+    void update(const Delta &delta);
 
     /**
      * Resets member variables that hold information about the performed input action.

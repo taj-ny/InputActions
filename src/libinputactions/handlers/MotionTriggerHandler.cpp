@@ -17,6 +17,8 @@
 */
 
 #include "MotionTriggerHandler.h"
+#include <libinputactions/input/Delta.h>
+#include <libinputactions/input/InputDevice.h>
 #include <libinputactions/triggers/StrokeTrigger.h>
 
 Q_LOGGING_CATEGORY(INPUTACTIONS_HANDLER_MOTION, "inputactions.handler.motion", QtWarningMsg)
@@ -57,22 +59,20 @@ void MotionTriggerHandler::setSpeedThreshold(TriggerType type, qreal threshold, 
     });
 }
 
-bool MotionTriggerHandler::handleMotion(const QPointF &delta)
+bool MotionTriggerHandler::handleMotion(const InputDevice *device, const PointDelta &delta)
 {
     if (!hasActiveTriggers(TriggerType::StrokeSwipe)) {
         return false;
     }
 
-    qCDebug(INPUTACTIONS_HANDLER_MOTION).nospace() << "Event (type: Motion, delta: " << delta << ")";
+    qCDebug(INPUTACTIONS_HANDLER_MOTION).nospace() << "Event (type: Motion, delta: " << delta.unaccelerated() << ")";
 
-    m_deltas.push_back(delta);
-    m_currentSwipeDelta += delta;
-    m_averageSwipeDelta = (m_deltas.size() * m_averageSwipeDelta + QPointF(std::abs(delta.x()), std::abs(delta.y()))) / (m_deltas.size() + 1);
+    m_deltas.push_back(delta.unaccelerated());
+    m_currentSwipeDelta += delta.unaccelerated();
+    m_averageSwipeDelta = (m_deltas.size() * m_averageSwipeDelta + QPointF(std::abs(delta.unaccelerated().x()), std::abs(delta.unaccelerated().y()))) / (m_deltas.size() + 1);
 
-    const auto deltaHypot = std::hypot(delta.x(), delta.y());
     TriggerSpeed speed{};
-    if (!determineSpeed(TriggerType::Swipe, deltaHypot, speed)) {
-        qCDebug(INPUTACTIONS_HANDLER_MOTION, "Event processed (type: Motion, status: DeterminingSpeed)");
+    if (!determineSpeed(TriggerType::Swipe, delta.unacceleratedHypot(), speed)) {
         return true;
     }
 
@@ -116,15 +116,15 @@ bool MotionTriggerHandler::handleMotion(const QPointF &delta)
                 Q_UNREACHABLE();
         }
 
-        swipeEvent.m_delta = m_currentSwipeAxis == Axis::Vertical ? delta.y() : delta.x();
+        swipeEvent.m_delta = m_currentSwipeAxis == Axis::Vertical ? Delta(delta.accelerated().y(), delta.unaccelerated().y()) : Delta(delta.accelerated().x(), delta.unaccelerated().x());
         swipeEvent.m_direction = static_cast<TriggerDirection>(direction);
-        swipeEvent.m_deltaMultiplied = delta * m_swipeDeltaMultiplier;
+        swipeEvent.m_deltaMultiplied = {delta.accelerated() * m_swipeDeltaMultiplier, delta.unaccelerated() * m_swipeDeltaMultiplier};
         swipeEvent.m_speed = speed;
         events[TriggerType::Swipe] = &swipeEvent;
     }
 
     if (hasActiveTriggers(TriggerType::Stroke)) {
-        strokeEvent.m_delta = deltaHypot;
+        strokeEvent.m_delta = device->type() == InputDeviceType::Mouse ? delta.acceleratedHypot() : delta.unacceleratedHypot(); // backwards compatibility
         strokeEvent.m_speed = speed;
         events[TriggerType::Stroke] = &strokeEvent;
     }
@@ -132,7 +132,7 @@ bool MotionTriggerHandler::handleMotion(const QPointF &delta)
     const auto result = updateTriggers(events);
     if (axisChanged && !result.success) {
         activateTriggers(TriggerType::Swipe);
-        return handleMotion(delta);
+        return handleMotion(device, delta);
     }
     return result.block;
 }

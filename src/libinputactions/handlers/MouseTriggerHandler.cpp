@@ -55,7 +55,7 @@ bool MouseTriggerHandler::keyboardKey(const KeyboardKeyEvent &event)
 
 bool MouseTriggerHandler::pointerAxis(const MotionEvent &event)
 {
-    const auto &delta = event.delta();
+    const auto &delta = event.delta().unaccelerated();
     qCDebug(INPUTACTIONS_HANDLER_MOUSE).nospace() << "Event (type: Wheel, delta: " << delta << ")";
 
     if (!hasActiveTriggers(TriggerType::Wheel) && !activateTriggers(TriggerType::Wheel).success) {
@@ -191,16 +191,16 @@ bool MouseTriggerHandler::pointerButton(const PointerButtonEvent &event)
 bool MouseTriggerHandler::pointerMotion(const MotionEvent &event)
 {
     const auto &delta = event.delta();
-    qCDebug(INPUTACTIONS_HANDLER_MOUSE).nospace() << "Event (type: PointerMotion, delta: " << delta << ")";
+    qCDebug(INPUTACTIONS_HANDLER_MOUSE).nospace() << "Event (type: PointerMotion, delta: " << delta.unaccelerated() << ")";
 
     if (m_pressTimeoutTimer.isActive()) {
         qCDebug(INPUTACTIONS_HANDLER_MOUSE, "Event processed (type: PointerMotion, status: PressingButtons)");
         return false;
     }
 
-    m_mouseMotionSinceButtonPress += std::hypot(delta.x(), delta.y());
+    m_mouseMotionSinceButtonPress += delta.unacceleratedHypot();
     if (m_mouseMotionSinceButtonPress < 5) {
-        qCDebug(INPUTACTIONS_HANDLER_MOUSE).nospace() << "Event processed (type: PointerMotion, status: InsufficientMotion, delta: " << delta << ")";
+        qCDebug(INPUTACTIONS_HANDLER_MOUSE).nospace() << "Event processed (type: PointerMotion, status: InsufficientMotion, delta: " << delta.unaccelerated() << ")";
         return false;
     }
 
@@ -218,7 +218,7 @@ bool MouseTriggerHandler::pointerMotion(const MotionEvent &event)
     }
 
     const auto hadActiveGestures = hasActiveTriggers(TriggerType::StrokeSwipe);
-    const auto block = handleMotion(delta);
+    const auto block = handleMotion(event.sender(), delta);
     if (hadActiveGestures && !hasActiveTriggers(TriggerType::StrokeSwipe)) {
         qCDebug(INPUTACTIONS_HANDLER_MOUSE, "Mouse motion gesture ended/cancelled during motion");
         // Swipe gesture cancelled due to wrong speed or direction

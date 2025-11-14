@@ -31,7 +31,7 @@ public:
     // Speed should be in a TriggerBeginEvent, but that's not a thing, and adding it would complicate everything.
     // Not worth it for a single property.
     TriggerSpeed m_speed = TriggerSpeed::Any;
-    QPointF m_deltaMultiplied{};
+    PointDelta m_deltaMultiplied{};
 };
 
 /**

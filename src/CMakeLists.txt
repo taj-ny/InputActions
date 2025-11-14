@@ -33,6 +33,7 @@ set(libinputactions_SRCS
     libinputactions/input/backends/InputBackend.cpp
     libinputactions/input/backends/LibevdevComplementaryInputBackend.cpp
     libinputactions/input/backends/LibinputInputBackend.cpp
+    libinputactions/input/Delta.cpp
     libinputactions/input/InputDevice.cpp
     libinputactions/input/InputDeviceRule.cpp
     libinputactions/input/events.cpp
