@@ -23,6 +23,7 @@
 #include <QTimer>
 #include <libinputactions/actions/TriggerAction.h>
 #include <libinputactions/conditions/Condition.h>
+#include <libinputactions/input/Delta.h>
 #include <libinputactions/globals.h>
 #include <set>
 
@@ -46,7 +47,7 @@ public:
     TriggerUpdateEvent() = default;
     virtual ~TriggerUpdateEvent() = default;
 
-    qreal m_delta{};
+    Delta m_delta;
 };
 
 /**

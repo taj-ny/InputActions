@@ -19,6 +19,7 @@
 #include "TriggerAction.h"
 #include "ActionExecutor.h"
 #include "InputAction.h"
+#include <libinputactions/input/Delta.h>
 
 Q_LOGGING_CATEGORY(INPUTACTIONS_ACTION, "inputactions.action", QtWarningMsg)
 
@@ -44,14 +45,14 @@ void TriggerAction::triggerStarted()
     }
 }
 
-void TriggerAction::triggerUpdated(qreal delta, const QPointF &deltaPointMultiplied)
+void TriggerAction::triggerUpdated(const Delta &delta, const PointDelta &deltaPointMultiplied)
 {
     if (m_on == On::Tick) {
         return;
     }
 
     if (auto *inputAction = dynamic_cast<InputAction *>(m_action.get())) {
-        inputAction->m_deltaMultiplied = deltaPointMultiplied;
+        inputAction->m_deltaMultiplied = m_accelerated ? deltaPointMultiplied.accelerated() : deltaPointMultiplied.unaccelerated();
     }
     update(delta);
 }
@@ -91,15 +92,15 @@ bool TriggerAction::canExecute() const
     return m_action->canExecute() && (!m_threshold || m_threshold->contains(m_absoluteAccumulatedDelta));
 }
 
-void TriggerAction::update(qreal delta)
+void TriggerAction::update(const Delta &delta)
 {
-    if (delta != 0 && std::signbit(m_accumulatedDelta) != std::signbit(delta)) {
+    if (delta.unaccelerated() != 0 && std::signbit(m_accumulatedDelta) != std::signbit(delta.unaccelerated())) {
         // Direction changed
-        m_accumulatedDelta = delta;
+        m_accumulatedDelta = m_accelerated ? delta.accelerated() : delta.unaccelerated();
         qCDebug(INPUTACTIONS_ACTION).noquote() << QString("Gesture direction changed (id: %1)").arg(m_action->m_id);
     } else {
-        m_accumulatedDelta += delta;
-        m_absoluteAccumulatedDelta += std::abs(delta);
+        m_accumulatedDelta += m_accelerated ? delta.accelerated() : delta.unaccelerated();
+        m_absoluteAccumulatedDelta += std::abs(delta.unaccelerated());
     }
     qCDebug(INPUTACTIONS_ACTION()).noquote()
         << QString("Action updated (id: %1, accumulatedDelta: %2)").arg(m_action->m_id, QString::number(m_accumulatedDelta));
@@ -109,7 +110,7 @@ void TriggerAction::update(qreal delta)
     }
     const auto interval = m_interval.value();
     if (interval == 0) {
-        if (m_interval.matches(delta)) {
+        if (m_interval.matches(delta.unaccelerated())) {
             tryExecute();
         }
         return;

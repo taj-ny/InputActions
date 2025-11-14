@@ -326,8 +326,9 @@ bool StandaloneInputBackend::handleEvent(InputDevice *sender, libinput_event *ev
                 case LIBINPUT_EVENT_GESTURE_SWIPE_BEGIN:
                     return touchpadSwipeBegin(sender, fingers);
                 case LIBINPUT_EVENT_GESTURE_SWIPE_UPDATE: {
-                    const QPointF delta(libinput_event_gesture_get_dx_unaccelerated(gestureEvent), libinput_event_gesture_get_dy_unaccelerated(gestureEvent));
-                    return touchpadSwipeUpdate(sender, delta);
+                    const QPointF acceleratedDelta(libinput_event_gesture_get_dx(gestureEvent), libinput_event_gesture_get_dy(gestureEvent));
+                    const QPointF unacceleratedDelta(libinput_event_gesture_get_dx_unaccelerated(gestureEvent), libinput_event_gesture_get_dy_unaccelerated(gestureEvent));
+                    return touchpadSwipeUpdate(sender, {acceleratedDelta, unacceleratedDelta});
                 }
                 case LIBINPUT_EVENT_GESTURE_SWIPE_END:
                     return touchpadSwipeEnd(sender, cancelled);
@@ -362,7 +363,9 @@ bool StandaloneInputBackend::handleEvent(InputDevice *sender, libinput_event *ev
                     return pointerButton(sender, scanCodeToMouseButton(button), button, state == LIBINPUT_BUTTON_STATE_PRESSED);
                 }
                 case LIBINPUT_EVENT_POINTER_MOTION:
-                    return pointerMotion(sender, {libinput_event_pointer_get_dx(pointerEvent), libinput_event_pointer_get_dy(pointerEvent)});
+                    const QPointF acceleratedDelta(libinput_event_pointer_get_dx(pointerEvent), libinput_event_pointer_get_dy(pointerEvent));
+                    const QPointF unacceleratedDelta(libinput_event_pointer_get_dx_unaccelerated(pointerEvent), libinput_event_pointer_get_dy_unaccelerated(pointerEvent));
+                    return pointerMotion(sender, {acceleratedDelta, unacceleratedDelta});
             }
     }
     return false;

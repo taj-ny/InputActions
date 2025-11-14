@@ -18,6 +18,7 @@
 
 #pragma once
 
+#include "Delta.h"
 #include "InputDevice.h"
 #include <QKeyCombination>
 #include <QPointF>
@@ -71,12 +72,12 @@ private:
 class MotionEvent : public InputEvent
 {
 public:
-    MotionEvent(InputDevice *sender, InputEventType type, const QPointF &delta);
+    MotionEvent(InputDevice *sender, InputEventType type, PointDelta delta);
 
-    const QPointF &delta() const;
+    const PointDelta &delta() const;
 
 private:
-    QPointF m_delta;
+    PointDelta m_delta;
 };
 
 class KeyboardKeyEvent : public InputEvent

@@ -26,6 +26,8 @@ Q_DECLARE_LOGGING_CATEGORY(INPUTACTIONS_HANDLER_MOTION)
 namespace InputActions
 {
 
+class PointDelta;
+
 enum class Axis
 {
     Horizontal,
@@ -67,7 +69,7 @@ protected:
      * Does nothing if there are no active pinch or rotate triggers.
      * @return Whether there are any active pinch or rotate triggers.
      */
-    bool handleMotion(const QPointF &delta);
+    bool handleMotion(const InputDevice *device, const PointDelta &delta);
 
     /**
      * If false is returned, speed is being determined and methods processing triggers must also return true

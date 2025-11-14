@@ -71,7 +71,8 @@ bool Trigger::endIfCannotUpdate() const
 
 void Trigger::update(const TriggerUpdateEvent &event)
 {
-    m_absoluteAccumulatedDelta += std::abs(event.m_delta);
+    const auto delta = event.m_delta.unaccelerated();
+    m_absoluteAccumulatedDelta += std::abs(delta);
     m_withinThreshold = !m_threshold || m_threshold->contains(m_absoluteAccumulatedDelta);
     if (!m_withinThreshold) {
         qCDebug(INPUTACTIONS_TRIGGER).noquote() << QString("Threshold not reached (id: %1, current: %2, min: %3, max: %4")
@@ -82,7 +83,7 @@ void Trigger::update(const TriggerUpdateEvent &event)
         return;
     }
 
-    qCDebug(INPUTACTIONS_TRIGGER).noquote() << QString("Trigger updated (id: %1, delta: %2)").arg(m_id, QString::number(event.m_delta));
+    qCDebug(INPUTACTIONS_TRIGGER).noquote() << QString("Trigger updated (id: %1, delta: %2)").arg(m_id, QString::number(delta));
 
     if (!m_started) {
         qCDebug(INPUTACTIONS_TRIGGER).noquote() << QString("Trigger started (id: %1)").arg(m_id);

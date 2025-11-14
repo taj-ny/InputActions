@@ -169,7 +169,7 @@ void TestTouchpadTriggerHandler::swipe1()
 
     addPoints(1);
     movePoints({0.05, 0});
-    QCOMPARE(m_handler->handleEvent(MotionEvent(m_touchpad.get(), InputEventType::PointerMotion, {10, 0})), true);
+    QCOMPARE(m_handler->handleEvent(MotionEvent(m_touchpad.get(), InputEventType::PointerMotion, {{10, 0}})), true);
     QCOMPARE(m_activatingTriggerSpy->count(), 1);
 
     removePoints();
@@ -189,10 +189,10 @@ void TestTouchpadTriggerHandler::swipe2()
     movePoints({0.05, 0});
     movePoints({0.05, 0});
     movePoints({0.05, 0});
-    QCOMPARE(m_handler->handleEvent(MotionEvent(m_touchpad.get(), InputEventType::PointerAxis, {10, 0})), true);
+    QCOMPARE(m_handler->handleEvent(MotionEvent(m_touchpad.get(), InputEventType::PointerAxis, {{10, 0}})), true);
     QCOMPARE(m_activatingTriggerSpy->count(), 1);
 
-    QCOMPARE(m_handler->handleEvent(MotionEvent(m_touchpad.get(), InputEventType::PointerAxis, {0, 0})), false);
+    QCOMPARE(m_handler->handleEvent(MotionEvent(m_touchpad.get(), InputEventType::PointerAxis, {{0, 0}})), false);
     QCOMPARE(m_endingTriggersSpy->count(), 1);
     QCOMPARE(m_endingTriggersSpy->at(0).at(0).value<TriggerTypes>(), TriggerType::StrokeSwipe);
 

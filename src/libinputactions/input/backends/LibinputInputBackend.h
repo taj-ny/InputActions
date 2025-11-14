@@ -19,6 +19,7 @@
 #pragma once
 
 #include <libinputactions/input/backends/LibevdevComplementaryInputBackend.h>
+#include <libinputactions/input/Delta.h>
 
 namespace InputActions
 {
@@ -54,7 +55,7 @@ protected:
      * @param sender The event will be ignored if nullptr.
      * @returns Whether to block the event.
      */
-    bool pointerMotion(InputDevice *sender, const QPointF &delta, QPointF deltaUnaccelerated = {});
+    bool pointerMotion(InputDevice *sender, const PointDelta &delta);
 
     /**
      * @param sender The event will be ignored if nullptr.
@@ -96,7 +97,7 @@ protected:
      * @param sender The event will be ignored if nullptr.
      * @returns Whether to block the event.
      */
-    bool touchpadSwipeUpdate(InputDevice *sender, const QPointF &delta);
+    bool touchpadSwipeUpdate(InputDevice *sender, const PointDelta &delta);
     /**
      * @param sender The event will be ignored if nullptr.
      * @returns Whether to block the event.

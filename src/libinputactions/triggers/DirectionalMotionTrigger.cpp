@@ -50,7 +50,7 @@ void DirectionalMotionTrigger::updateActions(const TriggerUpdateEvent &event)
     };
     auto delta = castedEvent.m_delta;
     if ((m_direction & (m_direction - 1)) == 0 && std::find(negativeDirections.begin(), negativeDirections.end(), m_direction) != negativeDirections.end()) {
-        delta *= -1;
+        delta = {delta.accelerated() * -1, delta.unaccelerated() * -1};
     }
 
     for (auto &action : actions()) {

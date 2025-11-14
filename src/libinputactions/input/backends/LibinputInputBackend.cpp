@@ -42,7 +42,7 @@ bool LibinputInputBackend::pointerAxis(InputDevice *sender, const QPointF &delta
     }
 
     if (sender->type() == InputDeviceType::Mouse) {
-        return handleEvent(MotionEvent(sender, InputEventType::PointerAxis, delta));
+        return handleEvent(MotionEvent(sender, InputEventType::PointerAxis, {delta}));
     }
 
     if (m_isRecordingStroke) {
@@ -57,7 +57,7 @@ bool LibinputInputBackend::pointerAxis(InputDevice *sender, const QPointF &delta
     if (delta.isNull() && sender->type() == InputDeviceType::Touchpad) {
         LibevdevComplementaryInputBackend::poll(); // Update clicked state, clicking cancels scrolling and generates a (0,0) event
     }
-    return handleEvent(MotionEvent(sender, InputEventType::PointerAxis, delta));
+    return handleEvent(MotionEvent(sender, InputEventType::PointerAxis, {delta}));
 }
 
 bool LibinputInputBackend::pointerButton(InputDevice *sender, Qt::MouseButton button, uint32_t nativeButton, bool state)
@@ -72,24 +72,19 @@ bool LibinputInputBackend::pointerButton(InputDevice *sender, Qt::MouseButton bu
     return handleEvent(PointerButtonEvent(sender, button, nativeButton, state));
 }
 
-bool LibinputInputBackend::pointerMotion(InputDevice *sender, const QPointF &delta, QPointF deltaUnaccelerated)
+bool LibinputInputBackend::pointerMotion(InputDevice *sender, const PointDelta &delta)
 {
     if (m_ignoreEvents || !sender) {
         return false;
     }
 
     if (m_isRecordingStroke) {
-        m_strokePoints.push_back(delta);
+        m_strokePoints.push_back(delta.accelerated()); // accelerated for backwards compatibility
         m_strokeRecordingTimeoutTimer.start(STROKE_RECORD_TIMEOUT);
         return false;
     }
 
-    if (deltaUnaccelerated.isNull()) {
-        deltaUnaccelerated = delta;
-    }
-
-    const auto isTouchpad = sender->type() == InputDeviceType::Touchpad;
-    auto block = handleEvent(MotionEvent(sender, InputEventType::PointerMotion, isTouchpad ? deltaUnaccelerated : delta));
+    auto block = handleEvent(MotionEvent(sender, InputEventType::PointerMotion, delta));
     if (block && m_previousPointerPosition) {
         g_pointerPositionSetter->setGlobalPointerPosition(m_previousPointerPosition.value());
     }
@@ -174,14 +169,14 @@ bool LibinputInputBackend::touchpadSwipeBegin(InputDevice *sender, uint8_t finge
     return m_block;
 }
 
-bool LibinputInputBackend::touchpadSwipeUpdate(InputDevice *sender, const QPointF &delta)
+bool LibinputInputBackend::touchpadSwipeUpdate(InputDevice *sender, const PointDelta &delta)
 {
     if (m_ignoreEvents || !sender) {
         return false;
     }
 
     if (m_isRecordingStroke) {
-        m_strokePoints.push_back(delta);
+        m_strokePoints.push_back(delta.unaccelerated());
         return true;
     }
 
