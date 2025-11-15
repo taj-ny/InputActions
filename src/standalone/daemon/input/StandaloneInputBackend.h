@@ -29,6 +29,12 @@
 namespace InputActions
 {
 
+struct LibinputEventsProcessingResult
+{
+    bool block{};
+    uint32_t eventCount{};
+};
+
 class StandaloneInputBackend
     : public QObject
     , public LibinputInputBackend
@@ -63,7 +69,7 @@ private:
     void evdevDeviceRemoved(const QString &path);
 
     bool handleEvent(InputDevice *sender, libinput_event *event);
-    bool handleLibinputEvents(InputDevice *device, libinput *libinput);
+    LibinputEventsProcessingResult handleLibinputEvents(InputDevice *device, libinput *libinput);
 
     /**
      * @return Whether the specified device is in a neutral state.
@@ -73,6 +79,10 @@ private:
      * Resets the output device of the specified grabbed device into a neutral state.
      */
     void resetDevice(const InputDevice *device, const ExtraDeviceData *data);
+    /**
+     * Copies the current state of the specified grabbed touchpad to its neutral output device.
+     */
+    void copyTouchpadState(const ExtraDeviceData *data) const;
 
     libinput_interface m_libinputBlockingInterface;
     libinput_interface m_libinputNonBlockingInterface;

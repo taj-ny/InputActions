@@ -57,9 +57,6 @@ public:
     void mouseButton(uint32_t button, bool state, const InputActions::InputDevice *target = nullptr) override;
     void mouseMoveRelative(const QPointF &pos) override;
 
-    void touchpadPinchBegin(uint8_t fingers) override;
-    void touchpadSwipeBegin(uint8_t fingers) override;
-
     InputDevice *device() const;
 
 private:
