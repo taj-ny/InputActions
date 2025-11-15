@@ -34,6 +34,8 @@
 namespace InputActions
 {
 
+static const QString ERROR_SESSION_INACTIVE = "This client's session is inactive";
+
 SessionManager::SessionManager(Server *server)
 {
     connect(server, &Server::messageReceived, this, [this](const auto &message) {
@@ -178,7 +180,14 @@ void SessionManager::loadConfigRequestMessage(const std::shared_ptr<const LoadCo
 
 void SessionManager::recordStrokeRequestMessage(const std::shared_ptr<const RecordStrokeRequestMessage> &message)
 {
-    if (sessionForClient(message->sender())) {
+    if (const auto *session = sessionForClient(message->sender())) {
+        if (&currentSession() != session) {
+            RecordStrokeResponseMessage response;
+            response.setError(ERROR_SESSION_INACTIVE);
+            message->reply(response);
+            return;
+        }
+
         g_inputBackend->recordStroke([this, message](const auto &stroke) {
             RecordStrokeResponseMessage response;
             response.setStroke(m_dbusInterfaceBase.strokeToBase64(stroke));
