@@ -81,6 +81,9 @@ public:
 
     bool keyboardKey(KWin::KeyboardKeyEvent *event) override;
 
+    void touchpadPinchBlockingStopped(uint32_t fingers) override;
+    void touchpadSwipeBlockingStopped(uint32_t fingers) override;
+
 private:
     void kwinDeviceAdded(KWin::InputDevice *kwinDevice);
     void kwinDeviceRemoved(const KWin::InputDevice *kwinDevice);
@@ -92,6 +95,7 @@ private:
 
     bool isMouse(const KWin::InputDevice *device) const;
 
+    KWin::InputRedirection *m_input;
     std::vector<KWinInputDevice> m_devices;
 
     class KeyboardModifierSpy : public KWin::InputEventSpy

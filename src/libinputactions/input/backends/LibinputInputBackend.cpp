@@ -17,7 +17,6 @@
 */
 
 #include "LibinputInputBackend.h"
-#include <libinputactions/interfaces/InputEmitter.h>
 #include <libinputactions/interfaces/PointerPositionGetter.h>
 #include <libinputactions/interfaces/PointerPositionSetter.h>
 
@@ -139,7 +138,7 @@ bool LibinputInputBackend::touchpadPinchUpdate(InputDevice *sender, qreal scale,
     const auto block = handleEvent(TouchpadPinchEvent(sender, scale, angleDelta));
     if (m_block && !block) {
         // Allow the compositor/client to handle the gesture
-        g_inputEmitter->touchpadPinchBegin(m_fingers);
+        touchpadPinchBlockingStopped(m_fingers);
     }
     m_block = block;
     return block;
@@ -183,7 +182,7 @@ bool LibinputInputBackend::touchpadSwipeUpdate(InputDevice *sender, const PointD
     const auto block = handleEvent(MotionEvent(sender, InputEventType::TouchpadSwipe, delta));
     if (m_block && !block) {
         // Allow the compositor/client to handle the gesture
-        g_inputEmitter->touchpadSwipeBegin(m_fingers);
+        touchpadSwipeBlockingStopped(m_fingers);
     }
     m_block = block;
     return block;

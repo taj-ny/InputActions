@@ -22,7 +22,6 @@
 #include <hyprland/src/managers/KeybindManager.hpp>
 #include <hyprland/src/managers/SeatManager.hpp>
 #include <hyprland/src/managers/input/InputManager.hpp>
-#include <hyprland/src/protocols/PointerGestures.hpp>
 #include <hyprland/src/protocols/core/Compositor.hpp>
 #undef HANDLE
 #include <libinputactions/input/InputDevice.h>
@@ -124,22 +123,6 @@ void HyprlandInputEmitter::mouseMoveRelative(const QPointF &pos)
         .delta = delta,
         .unaccel = delta,
         .device = m_pointer,
-    });
-    g_inputBackend->setIgnoreEvents(false);
-}
-
-void HyprlandInputEmitter::touchpadPinchBegin(uint8_t fingers)
-{
-    g_inputBackend->setIgnoreEvents(true);
-    PROTO::pointerGestures->pinchBegin(0, fingers);
-    g_inputBackend->setIgnoreEvents(false);
-}
-
-void HyprlandInputEmitter::touchpadSwipeBegin(uint8_t fingers)
-{
-    g_inputBackend->setIgnoreEvents(true);
-    g_pInputManager->onSwipeBegin(IPointer::SSwipeBeginEvent{
-        .fingers = fingers,
     });
     g_inputBackend->setIgnoreEvents(false);
 }

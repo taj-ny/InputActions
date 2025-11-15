@@ -106,6 +106,15 @@ protected:
 
     Qt::MouseButton scanCodeToMouseButton(uint32_t scanCode) const;
 
+    /**
+     * Called when a touchpad pinch update event was not blocked, but the previous one was.
+     */
+    virtual void touchpadPinchBlockingStopped(uint32_t fingers) {}
+    /**
+     * Called when a touchpad swipe update event was not blocked, but the previous one was.
+     */
+    virtual void touchpadSwipeBlockingStopped(uint32_t fingers) {}
+
 private:
     uint32_t m_fingers{};
     bool m_block{};

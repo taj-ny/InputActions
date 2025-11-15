@@ -25,6 +25,7 @@
 #include <hyprland/src/managers/SeatManager.hpp>
 #include <hyprland/src/managers/input/InputManager.hpp>
 #include <hyprland/src/plugins/PluginAPI.hpp>
+#include <hyprland/src/protocols/PointerGestures.hpp>
 #undef HANDLE
 #include <libinputactions/input/InputDevice.h>
 
@@ -89,6 +90,22 @@ void HyprlandInputBackend::reset()
     }
     m_devices.clear();
     LibinputInputBackend::reset();
+}
+
+void HyprlandInputBackend::touchpadPinchBlockingStopped(uint32_t fingers)
+{
+    m_ignoreEvents = true;
+    PROTO::pointerGestures->pinchBegin(0, fingers);
+    m_ignoreEvents = false;
+}
+
+void HyprlandInputBackend::touchpadSwipeBlockingStopped(uint32_t fingers)
+{
+    m_ignoreEvents = true;
+    g_pInputManager->onSwipeBegin(IPointer::SSwipeBeginEvent{
+        .fingers = fingers,
+    });
+    m_ignoreEvents = false;
 }
 
 void HyprlandInputBackend::checkDeviceChanges()

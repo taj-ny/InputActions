@@ -54,9 +54,6 @@ public:
     void mouseButton(uint32_t button, bool state, const InputActions::InputDevice *device = nullptr) override;
     void mouseMoveRelative(const QPointF &pos) override;
 
-    void touchpadPinchBegin(uint8_t fingers) override;
-    void touchpadSwipeBegin(uint8_t fingers) override;
-
 private:
     void onNewTextInputV3(const WP<CTextInputV3> &textInput);
 

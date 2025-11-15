@@ -56,9 +56,6 @@ public:
     virtual void mouseButton(uint32_t button, bool state, const InputDevice *target = nullptr) {}
     virtual void mouseMoveRelative(const QPointF &pos) {}
 
-    virtual void touchpadPinchBegin(uint8_t fingers) {}
-    virtual void touchpadSwipeBegin(uint8_t fingers) {}
-
     /**
      * The implementation may require that all keys that will be used must be registered before initialization. Modifier keys are added by default.
      */

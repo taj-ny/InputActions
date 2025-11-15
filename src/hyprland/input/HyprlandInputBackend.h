@@ -51,6 +51,10 @@ public:
     void initialize() override;
     void reset() override;
 
+protected:
+    void touchpadPinchBlockingStopped(uint32_t fingers) override;
+    void touchpadSwipeBlockingStopped(uint32_t fingers) override;
+
 private:
     void checkDeviceChanges();
     void deviceRemoved(const HyprlandInputDevice &device);

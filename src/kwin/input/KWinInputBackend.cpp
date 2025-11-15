@@ -18,6 +18,7 @@
 
 #include "KWinInputBackend.h"
 #include "input_event.h"
+#include "utils.h"
 #include <libinputactions/input/events.h>
 #include <libinputactions/triggers/StrokeTrigger.h>
 
@@ -25,13 +26,13 @@ using namespace InputActions;
 
 KWinInputBackend::KWinInputBackend()
     : InputEventFilter(KWin::InputFilterOrder::ScreenEdge)
+    , m_input(KWin::input())
 {
-    auto *input = KWin::input();
-    connect(input, &KWin::InputRedirection::deviceAdded, this, &KWinInputBackend::kwinDeviceAdded);
-    connect(input, &KWin::InputRedirection::deviceRemoved, this, &KWinInputBackend::kwinDeviceRemoved);
+    connect(m_input, &KWin::InputRedirection::deviceAdded, this, &KWinInputBackend::kwinDeviceAdded);
+    connect(m_input, &KWin::InputRedirection::deviceRemoved, this, &KWinInputBackend::kwinDeviceRemoved);
 
-    input->installInputEventFilter(this);
-    input->installInputEventSpy(&m_keyboardModifierSpy);
+    m_input->installInputEventFilter(this);
+    m_input->installInputEventSpy(&m_keyboardModifierSpy);
 }
 
 KWinInputBackend::~KWinInputBackend()
@@ -195,6 +196,50 @@ bool KWinInputBackend::pointerMotion(KWin::PointerMotionEvent *event)
 bool KWinInputBackend::keyboardKey(KWin::KeyboardKeyEvent *event)
 {
     return LibinputInputBackend::keyboardKey(findInputActionsDevice(event->device), event->nativeScanCode, event->state == KWin::KeyboardKeyState::Pressed);
+}
+
+void KWinInputBackend::touchpadPinchBlockingStopped(uint32_t fingers)
+{
+    m_ignoreEvents = true;
+    const auto time = timestamp();
+#ifdef KWIN_6_5_OR_GREATER
+    KWin::PointerPinchGestureBeginEvent event{
+        .fingerCount = static_cast<int>(fingers),
+        .time = time,
+    };
+    m_input->processSpies(&KWin::InputEventSpy::pinchGestureBegin, &event);
+    m_input->processFilters(&KWin::InputEventFilter::pinchGestureBegin, &event);
+#else
+    m_input->processSpies([&fingers, &time](auto &&spy) {
+        spy->pinchGestureBegin(fingers, time);
+    });
+    m_input->processFilters([&fingers, &time](auto &&filter) {
+        return filter->pinchGestureBegin(fingers, time);
+    });
+#endif
+    m_ignoreEvents = false;
+}
+
+void KWinInputBackend::touchpadSwipeBlockingStopped(uint32_t fingers)
+{
+    m_ignoreEvents = true;
+    const auto time = timestamp();
+#ifdef KWIN_6_5_OR_GREATER
+    KWin::PointerSwipeGestureBeginEvent event{
+        .fingerCount = static_cast<int>(fingers),
+        .time = time,
+    };
+    m_input->processSpies(&KWin::InputEventSpy::swipeGestureBegin, &event);
+    m_input->processFilters(&KWin::InputEventFilter::swipeGestureBegin, &event);
+#else
+    m_input->processSpies([&fingers, &time](auto &&spy) {
+        spy->swipeGestureBegin(fingers, time);
+    });
+    m_input->processFilters([&fingers, &time](auto &&filter) {
+        return filter->swipeGestureBegin(fingers, time);
+    });
+#endif
+    m_ignoreEvents = false;
 }
 
 void KWinInputBackend::kwinDeviceAdded(KWin::InputDevice *kwinDevice)

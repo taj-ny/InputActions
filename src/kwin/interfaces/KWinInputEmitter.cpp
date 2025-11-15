@@ -125,50 +125,6 @@ void KWinInputEmitter::mouseMoveRelative(const QPointF &pos)
     InputActions::g_inputBackend->setIgnoreEvents(false);
 }
 
-void KWinInputEmitter::touchpadPinchBegin(uint8_t fingers)
-{
-    InputActions::g_inputBackend->setIgnoreEvents(true);
-    const auto time = timestamp();
-#ifdef KWIN_6_5_OR_GREATER
-    KWin::PointerPinchGestureBeginEvent event{
-        .fingerCount = fingers,
-        .time = time,
-    };
-    m_input->processSpies(&KWin::InputEventSpy::pinchGestureBegin, &event);
-    m_input->processFilters(&KWin::InputEventFilter::pinchGestureBegin, &event);
-#else
-    m_input->processSpies([&fingers, &time](auto &&spy) {
-        spy->pinchGestureBegin(fingers, time);
-    });
-    m_input->processFilters([&fingers, &time](auto &&filter) {
-        return filter->pinchGestureBegin(fingers, time);
-    });
-#endif
-    InputActions::g_inputBackend->setIgnoreEvents(false);
-}
-
-void KWinInputEmitter::touchpadSwipeBegin(uint8_t fingers)
-{
-    InputActions::g_inputBackend->setIgnoreEvents(true);
-    const auto time = timestamp();
-#ifdef KWIN_6_5_OR_GREATER
-    KWin::PointerSwipeGestureBeginEvent event{
-        .fingerCount = fingers,
-        .time = time,
-    };
-    m_input->processSpies(&KWin::InputEventSpy::swipeGestureBegin, &event);
-    m_input->processFilters(&KWin::InputEventFilter::swipeGestureBegin, &event);
-#else
-    m_input->processSpies([&fingers, &time](auto &&spy) {
-        spy->swipeGestureBegin(fingers, time);
-    });
-    m_input->processFilters([&fingers, &time](auto &&filter) {
-        return filter->swipeGestureBegin(fingers, time);
-    });
-#endif
-    InputActions::g_inputBackend->setIgnoreEvents(false);
-}
-
 InputDevice *KWinInputEmitter::device() const
 {
     return m_device.get();
