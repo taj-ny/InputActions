@@ -34,9 +34,12 @@ enum class MessageType : int
     HandshakeRequest,
     HandshakeResponse,
 
+    GenericResponse,
+
     BeginSessionRequest,
     BeginSessionResponse,
     EnvironmentState,
+    InvokePlasmaGlobalShortcutRequest,
     LoadConfigRequest,
     LoadConfigResponse,
     RecordStrokeRequest,
@@ -101,7 +104,7 @@ class ResponseMessage : public Message
     Q_PROPERTY(QString error MEMBER m_error)
 
 public:
-    ResponseMessage(MessageType type)
+    ResponseMessage(MessageType type = MessageType::GenericResponse)
         : Message(type)
     {
     }
@@ -135,6 +138,7 @@ public:
     {
     }
 
+    void reply() const;
     void reply(ResponseMessage &message) const;
 
     const QString &requestId() const { return m_requestId; }
@@ -216,6 +220,29 @@ public:
 
 private:
     QString m_stateJson;
+};
+
+class InvokePlasmaGlobalShortcutRequestMessage : public RequestMessage
+{
+    Q_OBJECT
+    Q_PROPERTY(QString component MEMBER m_component)
+    Q_PROPERTY(QString shortcut MEMBER m_shortcut)
+
+public:
+    InvokePlasmaGlobalShortcutRequestMessage()
+        : RequestMessage(MessageType::InvokePlasmaGlobalShortcutRequest)
+    {
+    }
+
+    const QString &component() const { return m_component; }
+    void setComponent(const QString &value) { m_component = value; }
+
+    const QString &shortcut() const { return m_shortcut; }
+    void setShortcut(const QString &value) { m_shortcut = value; }
+
+private:
+    QString m_component;
+    QString m_shortcut;
 };
 
 class LoadConfigRequestMessage : public RequestMessage

@@ -21,6 +21,7 @@
 #include "input/StandaloneInputBackend.h"
 #include "interfaces/EvdevInputEmitter.h"
 #include "interfaces/IPCNotificationManager.h"
+#include "interfaces/IPCPlasmaGlobalShortcutInvoker.h"
 #include "interfaces/IPCProcessRunner.h"
 #include <QCoreApplication>
 #include <QDir>
@@ -73,6 +74,7 @@ int main()
     g_inputBackend = std::make_unique<StandaloneInputBackend>();
     g_inputEmitter = std::make_shared<EvdevInputEmitter>();
     g_notificationManager = std::make_shared<IPCNotificationManager>();
+    g_plasmaGlobalShortcutInvoker = std::make_shared<IPCPlasmaGlobalShortcutInvoker>();
     g_processRunner = std::make_shared<IPCProcessRunner>();
 
     auto *serverThread = new QThread;

@@ -19,6 +19,7 @@
 #pragma once
 
 #include <libinputactions/interfaces/implementations/DBusNotificationManager.h>
+#include <libinputactions/interfaces/implementations/DBusPlasmaGlobalShortcutInvoker.h>
 #include <libinputactions/interfaces/implementations/ProcessRunnerImpl.h>
 #include <libinputactions/ipc/MessageHandler.h>
 
@@ -37,11 +38,13 @@ public:
     ClientMessageHandler(Client *client);
 
 protected:
+    void invokePlasmaGlobalShortcutMessage(const std::shared_ptr<const InvokePlasmaGlobalShortcutRequestMessage> &message) override;
     void sendNotificationMessage(const std::shared_ptr<const SendNotificationMessage> &message) override;
     void startProcessRequestMessage(const std::shared_ptr<const StartProcessRequestMessage> &message) override;
 
 private:
     DBusNotificationManager m_notificationManager;
+    DBusPlasmaGlobalShortcutInvoker m_plasmaGlobalShortcutInvoker;
     ProcessRunnerImpl m_processRunner;
 };
 

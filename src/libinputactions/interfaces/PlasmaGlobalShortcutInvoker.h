@@ -1,6 +1,6 @@
 /*
     Input Actions - Input handler that executes user-defined actions
-    Copyright (C) 2024-2025 Marcin Woźniak
+    Copyright (C) 2025 Marcin Woźniak
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -16,21 +16,21 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include "PlasmaGlobalShortcutAction.h"
-#include <libinputactions/interfaces/PlasmaGlobalShortcutInvoker.h>
+#pragma once
+
+#include <QString>
 
 namespace InputActions
 {
 
-PlasmaGlobalShortcutAction::PlasmaGlobalShortcutAction(QString component, QString shortcut)
-    : m_component(std::move(component))
-    , m_shortcut(std::move(shortcut))
+class PlasmaGlobalShortcutInvoker
 {
-}
+public:
+    virtual ~PlasmaGlobalShortcutInvoker() = default;
 
-void PlasmaGlobalShortcutAction::executeImpl()
-{
-    g_plasmaGlobalShortcutInvoker->invoke(m_component, m_shortcut);
-}
+    virtual void invoke(const QString &component, const QString &shortcut) {}
+};
+
+inline std::shared_ptr<PlasmaGlobalShortcutInvoker> g_plasmaGlobalShortcutInvoker;
 
 }

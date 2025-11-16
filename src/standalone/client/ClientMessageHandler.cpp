@@ -30,6 +30,12 @@ ClientMessageHandler::ClientMessageHandler(Client *client)
     });
 }
 
+void ClientMessageHandler::invokePlasmaGlobalShortcutMessage(const std::shared_ptr<const InvokePlasmaGlobalShortcutRequestMessage> &message)
+{
+    m_plasmaGlobalShortcutInvoker.invoke(message->component(), message->shortcut());
+    message->reply();
+}
+
 void ClientMessageHandler::sendNotificationMessage(const std::shared_ptr<const SendNotificationMessage> &message)
 {
     m_notificationManager.sendNotification(message->title(), message->content());

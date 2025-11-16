@@ -34,6 +34,9 @@ void MessageHandler::handleMessage(std::shared_ptr<const Message> message)
         case MessageType::HandshakeRequest:
             handshakeRequestMessage(std::dynamic_pointer_cast<const HandshakeRequestMessage>(message));
             break;
+        case MessageType::InvokePlasmaGlobalShortcutRequest:
+            invokePlasmaGlobalShortcutMessage(std::dynamic_pointer_cast<const InvokePlasmaGlobalShortcutRequestMessage>(message));
+            break;
         case MessageType::LoadConfigRequest:
             loadConfigRequestMessage(std::dynamic_pointer_cast<const LoadConfigRequestMessage>(message));
             break;

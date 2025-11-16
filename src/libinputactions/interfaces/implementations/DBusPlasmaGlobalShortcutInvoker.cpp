@@ -1,6 +1,6 @@
 /*
     Input Actions - Input handler that executes user-defined actions
-    Copyright (C) 2024-2025 Marcin Woźniak
+    Copyright (C) 2025 Marcin Woźniak
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -16,21 +16,16 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include "PlasmaGlobalShortcutAction.h"
-#include <libinputactions/interfaces/PlasmaGlobalShortcutInvoker.h>
+#include "DBusPlasmaGlobalShortcutInvoker.h"
+#include <QDBusInterface>
 
 namespace InputActions
 {
 
-PlasmaGlobalShortcutAction::PlasmaGlobalShortcutAction(QString component, QString shortcut)
-    : m_component(std::move(component))
-    , m_shortcut(std::move(shortcut))
+void DBusPlasmaGlobalShortcutInvoker::invoke(const QString &component, const QString &shortcut)
 {
-}
-
-void PlasmaGlobalShortcutAction::executeImpl()
-{
-    g_plasmaGlobalShortcutInvoker->invoke(m_component, m_shortcut);
+    QDBusInterface interface("org.kde.kglobalaccel", "/component/" + component, "org.kde.kglobalaccel.Component");
+    interface.call("invokeShortcut", shortcut);
 }
 
 }

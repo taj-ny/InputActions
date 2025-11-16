@@ -16,21 +16,17 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include "PlasmaGlobalShortcutAction.h"
+#pragma once
+
 #include <libinputactions/interfaces/PlasmaGlobalShortcutInvoker.h>
 
 namespace InputActions
 {
 
-PlasmaGlobalShortcutAction::PlasmaGlobalShortcutAction(QString component, QString shortcut)
-    : m_component(std::move(component))
-    , m_shortcut(std::move(shortcut))
+class IPCPlasmaGlobalShortcutInvoker : public PlasmaGlobalShortcutInvoker
 {
-}
-
-void PlasmaGlobalShortcutAction::executeImpl()
-{
-    g_plasmaGlobalShortcutInvoker->invoke(m_component, m_shortcut);
-}
+public:
+    void invoke(const QString &component, const QString &shortcut) override;
+};
 
 }
