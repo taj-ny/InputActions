@@ -16,21 +16,20 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include "PlasmaGlobalShortcutAction.h"
-#include <libinputactions/interfaces/PlasmaGlobalShortcutInvoker.h>
+#include "IPCPlasmaGlobalShortcutInvoker.h"
+#include "SessionManager.h"
+#include <libinputactions/ipc/MessageSocketConnection.h>
+#include <libinputactions/ipc/messages.h>
 
 namespace InputActions
 {
 
-PlasmaGlobalShortcutAction::PlasmaGlobalShortcutAction(QString component, QString shortcut)
-    : m_component(std::move(component))
-    , m_shortcut(std::move(shortcut))
+void IPCPlasmaGlobalShortcutInvoker::invoke(const QString &component, const QString &shortcut)
 {
-}
-
-void PlasmaGlobalShortcutAction::executeImpl()
-{
-    g_plasmaGlobalShortcutInvoker->invoke(m_component, m_shortcut);
+    InvokePlasmaGlobalShortcutRequestMessage message;
+    message.setComponent(component);
+    message.setShortcut(shortcut);
+    g_sessionManager->currentSession().client()->sendMessageAndWaitForResponse<ResponseMessage>(message);
 }
 
 }

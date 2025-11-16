@@ -6,6 +6,7 @@ add_executable(inputactionsd
     interfaces/EvdevInputEmitter.cpp
     interfaces/IPCEnvironmentInterfaces.cpp
     interfaces/IPCNotificationManager.cpp
+    interfaces/IPCPlasmaGlobalShortcutInvoker.cpp
     interfaces/IPCProcessRunner.cpp
     main.cpp
     Server.cpp

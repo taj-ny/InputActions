@@ -15,6 +15,7 @@
 #include "interfaces/Window.h"
 #include "interfaces/WindowProvider.h"
 #include "interfaces/implementations/DBusNotificationManager.h"
+#include "interfaces/implementations/DBusPlasmaGlobalShortcutInvoker.h"
 #include "interfaces/implementations/FileConfigProvider.h"
 #include "interfaces/implementations/ProcessRunnerImpl.h"
 #include "variables/VariableManager.h"
@@ -77,6 +78,7 @@ void InputActionsMain::setMissingImplementations()
     setMissingImplementation(g_onScreenMessageManager);
     setMissingImplementation(g_pointerPositionGetter);
     setMissingImplementation(g_pointerPositionSetter);
+    setMissingImplementation<PlasmaGlobalShortcutInvoker, DBusPlasmaGlobalShortcutInvoker>(g_plasmaGlobalShortcutInvoker);
     setMissingImplementation<ProcessRunner, ProcessRunnerImpl>(g_processRunner);
     setMissingImplementation(g_sessionLock);
     setMissingImplementation(g_windowProvider);

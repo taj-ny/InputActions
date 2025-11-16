@@ -70,11 +70,17 @@ std::shared_ptr<Message> JsonSerializer::deserializeMessage(const QString &json)
         case MessageType::EnvironmentState:
             message = std::make_shared<EnvironmentStateMessage>();
             break;
+        case MessageType::GenericResponse:
+            message = std::make_shared<ResponseMessage>();
+            break;
         case MessageType::HandshakeRequest:
             message = std::make_shared<HandshakeRequestMessage>();
             break;
         case MessageType::HandshakeResponse:
             message = std::make_shared<HandshakeResponseMessage>();
+            break;
+        case MessageType::InvokePlasmaGlobalShortcutRequest:
+            message = std::make_shared<InvokePlasmaGlobalShortcutRequestMessage>();
             break;
         case MessageType::LoadConfigRequest:
             message = std::make_shared<LoadConfigRequestMessage>();

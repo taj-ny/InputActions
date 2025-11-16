@@ -22,6 +22,12 @@
 namespace InputActions
 {
 
+void RequestMessage::reply() const
+{
+    ResponseMessage message;
+    reply(message);
+}
+
 void RequestMessage::reply(ResponseMessage &message) const
 {
     message.setRequestId(m_requestId);

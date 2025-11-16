@@ -27,6 +27,7 @@ class Message;
 class BeginSessionRequestMessage;
 class EnvironmentStateMessage;
 class HandshakeRequestMessage;
+class InvokePlasmaGlobalShortcutRequestMessage;
 class LoadConfigRequestMessage;
 class RecordStrokeRequestMessage;
 class SendNotificationMessage;
@@ -45,6 +46,7 @@ protected:
     virtual void beginSessionRequestMessage(const std::shared_ptr<const BeginSessionRequestMessage> &message) {}
     virtual void environmentStateMessage(const std::shared_ptr<const EnvironmentStateMessage> &message) {}
     virtual void handshakeRequestMessage(const std::shared_ptr<const HandshakeRequestMessage> &message) {}
+    virtual void invokePlasmaGlobalShortcutMessage(const std::shared_ptr<const InvokePlasmaGlobalShortcutRequestMessage> &message) {}
     virtual void loadConfigRequestMessage(const std::shared_ptr<const LoadConfigRequestMessage> &message) {}
     virtual void recordStrokeRequestMessage(const std::shared_ptr<const RecordStrokeRequestMessage> &message) {}
     virtual void sendNotificationMessage(const std::shared_ptr<const SendNotificationMessage> &message) {}
