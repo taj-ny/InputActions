@@ -16,12 +16,13 @@
     packages = rec {
       default = pkgs.kdePackages.callPackage ./nix/package-kwin.nix { };
       inputactions = pkgs.kdePackages.callPackage ./nix/package.nix { };
+      inputactions-ctl = pkgs.kdePackages.callPackage ./nix/package-ctl.nix { };
       inputactions-kwin = default;
       inputactions-hyprland = pkgs.callPackage ./nix/package-hyprland.nix { };
     };
 
     devShells.default = pkgs.mkShell {
-      inputsFrom = [ packages.inputactions packages.inputactions-kwin packages.inputactions-hyprland ];
+      inputsFrom = [ packages.inputactions packages.inputactions-ctl packages.inputactions-kwin packages.inputactions-hyprland ];
       packages = [ pkgs.gtest ];
     };
   });

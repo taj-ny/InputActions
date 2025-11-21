@@ -13,6 +13,28 @@ on:
 permissions: {}
 
 jobs:
+  build_ctl:
+    name: Build (ctl)
+    runs-on: ubuntu-latest
+    container:
+      image: fedora:42 # zizmor: ignore[unpinned-images]
+      options: --user root
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          persist-credentials: false
+
+      - name: Install Dependencies
+        run: dnf -y install cmake extra-cmake-modules gcc-g++ qt6-qtbase-devel qt6-qtbase cli11-devel
+
+      - name: Configure CMake
+        run: cmake -B "${GITHUB_WORKSPACE}/build" -DINPUTACTIONS_BUILD_CTL=ON
+
+      - name: Build
+        run: cmake --build "${GITHUB_WORKSPACE}/build" -j$(nproc)
+
   build_kwin:
     name: Build (KWin)
     runs-on: ubuntu-latest

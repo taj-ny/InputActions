@@ -18,6 +18,7 @@ set(CPACK_PACKAGE_VERSION "${PROJECT_VERSION}")
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Mouse and touchpad gestures for Hyprland, Plasma 6 Wayland")
 include(CPack)
 
+option(INPUTACTIONS_BUILD_CTL "Build the control tool" OFF)
 option(INPUTACTIONS_BUILD_HYPRLAND "Build the Hyprland plugin" OFF)
 option(INPUTACTIONS_BUILD_IPC "Build the IPC components of libinputactions" OFF)
 option(INPUTACTIONS_BUILD_KWIN "Build the KWin plugin" OFF)

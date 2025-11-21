@@ -25,7 +25,7 @@ jobs:
           persist-credentials: false
 
       - name: Configure CMake
-        run: cmake -B "${GITHUB_WORKSPACE}/build" -DBUILD_KWIN_EFFECT=OFF -DBUILD_TESTS=ON
+        run: cmake -B "${GITHUB_WORKSPACE}/build" -DBUILD_TESTS=ON
 
       - name: Build
         run: cmake --build "${GITHUB_WORKSPACE}/build" -j$(nproc)
