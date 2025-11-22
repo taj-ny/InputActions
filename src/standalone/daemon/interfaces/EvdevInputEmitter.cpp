@@ -34,6 +34,8 @@ EvdevInputEmitter::EvdevInputEmitter()
     ioctl(m_pointerFd, UI_SET_EVBIT, EV_REL);
     ioctl(m_pointerFd, UI_SET_RELBIT, REL_X);
     ioctl(m_pointerFd, UI_SET_RELBIT, REL_Y);
+    ioctl(m_pointerFd, UI_SET_RELBIT, REL_WHEEL_HI_RES);
+    ioctl(m_pointerFd, UI_SET_RELBIT, REL_HWHEEL_HI_RES);
     uinput_setup setup = {};
     setup.id.bustype = BUS_USB;
     strcpy(setup.name, "InputActions Virtual Mouse");
@@ -94,6 +96,25 @@ void EvdevInputEmitter::keyboardKey(uint32_t key, bool state, const InputDevice 
     }
 }
 
+void EvdevInputEmitter::mouseAxis(const QPointF &delta)
+{
+    m_mouseAxisDelta += delta;
+    auto syn = false;
+    if (std::abs(m_mouseAxisDelta.x()) > 1) {
+        uinputEmit(m_pointerFd, EV_REL, REL_HWHEEL_HI_RES, static_cast<int32_t>(m_mouseAxisDelta.x()));
+        m_mouseAxisDelta.setX(std::fmod(m_mouseAxisDelta.x(), 1));
+        syn = true;
+    }
+    if (std::abs(m_mouseAxisDelta.y()) > 1) {
+        uinputEmit(m_pointerFd, EV_REL, REL_WHEEL_HI_RES, -static_cast<int32_t>(m_mouseAxisDelta.y()));
+        m_mouseAxisDelta.setY(std::fmod(m_mouseAxisDelta.y(), 1));
+        syn = true;
+    }
+    if (syn) {
+        uinputEmit(m_pointerFd, EV_SYN, SYN_REPORT);
+    }
+}
+
 void EvdevInputEmitter::mouseButton(uint32_t button, bool state, const InputDevice *target)
 {
     if (auto *libevdevTarget = dynamic_cast<StandaloneInputBackend *>(g_inputBackend.get())->outputDevice(target)) {
@@ -107,16 +128,16 @@ void EvdevInputEmitter::mouseButton(uint32_t button, bool state, const InputDevi
 
 void EvdevInputEmitter::mouseMoveRelative(const QPointF &pos)
 {
-    m_mouseDelta += pos;
+    m_mouseMotionDelta += pos;
     auto syn = false;
-    if (std::abs(m_mouseDelta.x()) > 1) {
-        uinputEmit(m_pointerFd, EV_REL, REL_X, static_cast<int32_t>(m_mouseDelta.x()));
-        m_mouseDelta.setX(std::fmod(m_mouseDelta.x(), 1));
+    if (std::abs(m_mouseMotionDelta.x()) > 1) {
+        uinputEmit(m_pointerFd, EV_REL, REL_X, static_cast<int32_t>(m_mouseMotionDelta.x()));
+        m_mouseMotionDelta.setX(std::fmod(m_mouseMotionDelta.x(), 1));
         syn = true;
     }
-    if (std::abs(m_mouseDelta.y()) > 1) {
-        uinputEmit(m_pointerFd, EV_REL, REL_Y, static_cast<int32_t>(m_mouseDelta.y()));
-        m_mouseDelta.setY(std::fmod(m_mouseDelta.y(), 1));
+    if (std::abs(m_mouseMotionDelta.y()) > 1) {
+        uinputEmit(m_pointerFd, EV_REL, REL_Y, static_cast<int32_t>(m_mouseMotionDelta.y()));
+        m_mouseMotionDelta.setY(std::fmod(m_mouseMotionDelta.y(), 1));
         syn = true;
     }
     if (syn) {

@@ -35,6 +35,7 @@ public:
     void keyboardClearModifiers() override;
     void keyboardKey(uint32_t key, bool state, const InputActions::InputDevice *target = nullptr) override;
 
+    void mouseAxis(const QPointF &delta) override;
     void mouseButton(uint32_t button, bool state, const InputActions::InputDevice *target = nullptr) override;
     void mouseMoveRelative(const QPointF &pos) override;
 
@@ -47,5 +48,7 @@ private:
 
     int m_keyboardFd = -1;
     int m_pointerFd = -1;
-    QPointF m_mouseDelta;
+
+    QPointF m_mouseAxisDelta;
+    QPointF m_mouseMotionDelta;
 };
