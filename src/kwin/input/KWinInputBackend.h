@@ -34,8 +34,7 @@ struct KWinInputDevice
  * next filter.
  */
 class KWinInputBackend
-    : public QObject
-    , public InputActions::LibinputInputBackend
+    : public InputActions::LibinputInputBackend
     , public KWin::InputEventFilter
 {
 public:

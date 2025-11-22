@@ -31,26 +31,29 @@ InputDevice::InputDevice(InputDeviceType type, QString name, QString sysName)
 
 InputDevice::~InputDevice() = default;
 
-void InputDevice::updateModifiers(uint32_t key, bool state)
+Qt::KeyboardModifiers InputDevice::modifiers() const
 {
-    Qt::KeyboardModifier modifier{};
-    if (KEYBOARD_MODIFIERS.contains(key)) {
-        modifier = KEYBOARD_MODIFIERS.at(key);
+    Qt::KeyboardModifiers modifiers;
+    for (const auto &[key, modifier] : KEYBOARD_MODIFIERS) {
+        if (m_keys.contains(key)) {
+            modifiers |= modifier;
+        }
     }
-    if (!modifier) {
-        return;
-    }
-
-    if (state) {
-        m_modifiers |= modifier;
-    } else {
-        m_modifiers &= ~modifier;
-    }
+    return modifiers;
 }
 
-const Qt::KeyboardModifiers &InputDevice::modifiers() const
+const std::unordered_set<uint32_t> &InputDevice::keys() const
 {
-    return m_modifiers;
+    return m_keys;
+}
+
+void InputDevice::setKeyState(uint32_t key, bool state)
+{
+    if (state) {
+        m_keys.insert(key);
+    } else {
+        m_keys.erase(key);
+    }
 }
 
 const InputDeviceType &InputDevice::type() const

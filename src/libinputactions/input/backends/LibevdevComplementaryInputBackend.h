@@ -32,7 +32,7 @@ namespace InputActions
  *
  * Emitted events: TouchpadClick, TouchpadSlot
  */
-class LibevdevComplementaryInputBackend : public virtual InputBackend
+class LibevdevComplementaryInputBackend : public InputBackend
 {
 public:
     LibevdevComplementaryInputBackend();

@@ -40,9 +40,7 @@ struct HyprlandInputDevice
 /**
  * Hold and pinch touchpad gestures require hooking, and therefore only work on x86_64.
  */
-class HyprlandInputBackend
-    : public QObject
-    , public InputActions::LibinputInputBackend
+class HyprlandInputBackend : public InputActions::LibinputInputBackend
 {
 public:
     HyprlandInputBackend(void *handle);

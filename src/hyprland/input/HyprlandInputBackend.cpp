@@ -208,7 +208,7 @@ void HyprlandInputBackend::keyboardKey(SCallbackInfo &info, const std::any &data
 
     auto *device = findInputActionsDevice(keyboard.get());
     if (device) {
-        device->updateModifiers(event.keycode, state);
+        device->setKeyState(event.keycode, state);
     }
     info.cancelled = LibinputInputBackend::keyboardKey(device, event.keycode, state);
 }

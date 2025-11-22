@@ -69,7 +69,8 @@ bool MotionTriggerHandler::handleMotion(const InputDevice *device, const PointDe
 
     m_deltas.push_back(delta.unaccelerated());
     m_currentSwipeDelta += delta.unaccelerated();
-    m_averageSwipeDelta = (m_deltas.size() * m_averageSwipeDelta + QPointF(std::abs(delta.unaccelerated().x()), std::abs(delta.unaccelerated().y()))) / (m_deltas.size() + 1);
+    m_averageSwipeDelta = (m_deltas.size() * m_averageSwipeDelta + QPointF(std::abs(delta.unaccelerated().x()), std::abs(delta.unaccelerated().y())))
+                        / (m_deltas.size() + 1);
 
     TriggerSpeed speed{};
     if (!determineSpeed(TriggerType::Swipe, delta.unacceleratedHypot(), speed)) {
@@ -116,7 +117,8 @@ bool MotionTriggerHandler::handleMotion(const InputDevice *device, const PointDe
                 Q_UNREACHABLE();
         }
 
-        swipeEvent.m_delta = m_currentSwipeAxis == Axis::Vertical ? Delta(delta.accelerated().y(), delta.unaccelerated().y()) : Delta(delta.accelerated().x(), delta.unaccelerated().x());
+        swipeEvent.m_delta = m_currentSwipeAxis == Axis::Vertical ? Delta(delta.accelerated().y(), delta.unaccelerated().y())
+                                                                  : Delta(delta.accelerated().x(), delta.unaccelerated().x());
         swipeEvent.m_direction = static_cast<TriggerDirection>(direction);
         swipeEvent.m_deltaMultiplied = {delta.accelerated() * m_swipeDeltaMultiplier, delta.unaccelerated() * m_swipeDeltaMultiplier};
         swipeEvent.m_speed = speed;

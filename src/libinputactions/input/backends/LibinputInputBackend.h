@@ -18,8 +18,8 @@
 
 #pragma once
 
-#include <libinputactions/input/backends/LibevdevComplementaryInputBackend.h>
 #include <libinputactions/input/Delta.h>
+#include <libinputactions/input/backends/LibevdevComplementaryInputBackend.h>
 
 namespace InputActions
 {
@@ -33,7 +33,7 @@ protected:
     LibinputInputBackend() = default;
 
     /**
-     * Keyboard::updateModifiers must be called prior to this method.
+     * InputDevice::setKeyState must be called prior to this method.
      * @param sender The event will be ignored if nullptr.
      * @returns Whether to block the event.
      */

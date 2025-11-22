@@ -18,6 +18,7 @@
 
 #include "InputBackend.h"
 #include <QObject>
+#include <libinputactions/InputActionsMain.h>
 #include <libinputactions/conditions/VariableCondition.h>
 #include <libinputactions/handlers/KeyboardTriggerHandler.h>
 #include <libinputactions/handlers/MotionTriggerHandler.h>
@@ -27,6 +28,7 @@
 #include <libinputactions/input/InputDeviceRule.h>
 #include <libinputactions/input/InputEventHandler.h>
 #include <libinputactions/input/events.h>
+#include <libinputactions/interfaces/NotificationManager.h>
 #include <libinputactions/interfaces/SessionLock.h>
 #include <libinputactions/triggers/StrokeTrigger.h>
 #include <libinputactions/variables/Variable.h>
@@ -36,12 +38,17 @@
 namespace InputActions
 {
 
+static const std::chrono::milliseconds EMERGENCY_COMBINATION_HOLD_DURATION{2000L};
+
 InputBackend::InputBackend()
 {
     m_strokeRecordingTimeoutTimer.setSingleShot(true);
-    QObject::connect(&m_strokeRecordingTimeoutTimer, &QTimer::timeout, [this] {
+    connect(&m_strokeRecordingTimeoutTimer, &QTimer::timeout, this, [this] {
         finishStrokeRecording();
     });
+
+    m_emergencyCombinationTimer.setSingleShot(true);
+    connect(&m_emergencyCombinationTimer, &QTimer::timeout, this, &InputBackend::onEmergencyCombinationTimerTimeout);
 }
 
 InputBackend::~InputBackend() = default;
@@ -163,7 +170,18 @@ void InputBackend::createEventHandlerChain()
 
 bool InputBackend::handleEvent(const InputEvent &event)
 {
-    if (!event.sender() || g_sessionLock->sessionLocked() || event.sender()->properties().ignore()) {
+    if (!event.sender() || event.sender()->properties().ignore()) {
+        return false;
+    }
+
+    if (event.type() == InputEventType::KeyboardKey && !m_emergencyCombination.empty()) {
+        m_emergencyCombinationTimer.stop();
+        if (event.sender()->keys() == m_emergencyCombination) {
+            m_emergencyCombinationTimer.start(EMERGENCY_COMBINATION_HOLD_DURATION);
+        }
+    }
+
+    if (g_sessionLock->sessionLocked()) {
         return false;
     }
 
@@ -184,6 +202,12 @@ void InputBackend::finishStrokeRecording()
     m_isRecordingStroke = false;
     m_strokeCallback(Stroke(m_strokePoints));
     m_strokePoints.clear();
+}
+
+void InputBackend::onEmergencyCombinationTimerTimeout()
+{
+    g_notificationManager->sendNotification("Emergency combination", "Emergency combination triggered, suspending may take up to a few seconds");
+    g_inputActions->suspend();
 }
 
 }

@@ -200,7 +200,8 @@ bool MouseTriggerHandler::pointerMotion(const MotionEvent &event)
 
     m_mouseMotionSinceButtonPress += delta.unacceleratedHypot();
     if (m_mouseMotionSinceButtonPress < 5) {
-        qCDebug(INPUTACTIONS_HANDLER_MOUSE).nospace() << "Event processed (type: PointerMotion, status: InsufficientMotion, delta: " << delta.unaccelerated() << ")";
+        qCDebug(INPUTACTIONS_HANDLER_MOUSE).nospace() << "Event processed (type: PointerMotion, status: InsufficientMotion, delta: " << delta.unaccelerated()
+                                                      << ")";
         return false;
     }
 
