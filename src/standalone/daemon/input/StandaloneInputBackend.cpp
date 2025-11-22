@@ -337,7 +337,8 @@ bool StandaloneInputBackend::handleEvent(InputDevice *sender, libinput_event *ev
                     return touchpadSwipeBegin(sender, fingers);
                 case LIBINPUT_EVENT_GESTURE_SWIPE_UPDATE: {
                     const QPointF acceleratedDelta(libinput_event_gesture_get_dx(gestureEvent), libinput_event_gesture_get_dy(gestureEvent));
-                    const QPointF unacceleratedDelta(libinput_event_gesture_get_dx_unaccelerated(gestureEvent), libinput_event_gesture_get_dy_unaccelerated(gestureEvent));
+                    const QPointF unacceleratedDelta(libinput_event_gesture_get_dx_unaccelerated(gestureEvent),
+                                                     libinput_event_gesture_get_dy_unaccelerated(gestureEvent));
                     return touchpadSwipeUpdate(sender, {acceleratedDelta, unacceleratedDelta});
                 }
                 case LIBINPUT_EVENT_GESTURE_SWIPE_END:
@@ -350,7 +351,7 @@ bool StandaloneInputBackend::handleEvent(InputDevice *sender, libinput_event *ev
             const auto key = libinput_event_keyboard_get_key(keyboardEvent);
             const auto state = libinput_event_keyboard_get_key_state(keyboardEvent) == LIBINPUT_KEY_STATE_PRESSED;
 
-            sender->updateModifiers(key, state);
+            sender->setKeyState(key, state);
             return keyboardKey(sender,
                                libinput_event_keyboard_get_key(keyboardEvent),
                                libinput_event_keyboard_get_key_state(keyboardEvent) == LIBINPUT_KEY_STATE_PRESSED);
@@ -374,7 +375,8 @@ bool StandaloneInputBackend::handleEvent(InputDevice *sender, libinput_event *ev
                 }
                 case LIBINPUT_EVENT_POINTER_MOTION:
                     const QPointF acceleratedDelta(libinput_event_pointer_get_dx(pointerEvent), libinput_event_pointer_get_dy(pointerEvent));
-                    const QPointF unacceleratedDelta(libinput_event_pointer_get_dx_unaccelerated(pointerEvent), libinput_event_pointer_get_dy_unaccelerated(pointerEvent));
+                    const QPointF unacceleratedDelta(libinput_event_pointer_get_dx_unaccelerated(pointerEvent),
+                                                     libinput_event_pointer_get_dy_unaccelerated(pointerEvent));
                     return pointerMotion(sender, {acceleratedDelta, unacceleratedDelta});
             }
     }

@@ -24,6 +24,7 @@
 #include <libinputactions/globals.h>
 #include <linux/input-event-codes.h>
 #include <optional>
+#include <unordered_set>
 
 namespace InputActions
 {
@@ -177,11 +178,16 @@ public:
     InputDevice(InputDeviceType type, QString name = {}, QString sysName = {});
     ~InputDevice();
 
-    const Qt::KeyboardModifiers &modifiers() const;
     /**
-     * Non-modifier key events will be ignored.
+     * Current keyboard modifiers, derived from pressed keyboard keys.
      */
-    void updateModifiers(uint32_t key, bool state);
+    Qt::KeyboardModifiers modifiers() const;
+
+    /**
+     * Currently pressed keyboard keys.
+     */
+    const std::unordered_set<uint32_t> &keys() const;
+    void setKeyState(uint32_t key, bool state);
 
     const InputDeviceType &type() const;
     const QString &name() const;
@@ -203,7 +209,7 @@ private:
     QString m_sysName;
     InputDeviceProperties m_properties;
 
-    Qt::KeyboardModifiers m_modifiers{};
+    std::unordered_set<uint32_t> m_keys;
 };
 
 }

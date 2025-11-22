@@ -35,9 +35,7 @@ struct LibinputEventsProcessingResult
     uint32_t eventCount{};
 };
 
-class StandaloneInputBackend
-    : public QObject
-    , public LibinputInputBackend
+class StandaloneInputBackend : public LibinputInputBackend
 {
     Q_OBJECT
 

@@ -23,8 +23,8 @@
 #include <QTimer>
 #include <libinputactions/actions/TriggerAction.h>
 #include <libinputactions/conditions/Condition.h>
-#include <libinputactions/input/Delta.h>
 #include <libinputactions/globals.h>
+#include <libinputactions/input/Delta.h>
 #include <set>
 
 Q_DECLARE_LOGGING_CATEGORY(INPUTACTIONS_TRIGGER)

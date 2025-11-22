@@ -19,6 +19,8 @@
 #pragma once
 
 #include <QTimer>
+#include <linux/input-event-codes.h>
+#include <unordered_set>
 
 namespace InputActions
 {
@@ -40,7 +42,7 @@ class TouchpadTriggerHandler;
  * Primary backends are responsible for managing (adding and removing) devices. Complementary backends are only allowed to set properties when a device is
  * being added.
  *
- * On keyboard key events, the backend must call InputDevice::updateModifiers before InputBackend::handleEvent.
+ * On keyboard key events, the backend must call InputDevice::setKeyState before InputBackend::handleEvent.
  *
  * Backends must ignore events when m_ignoreEvents is set to true.
  *
@@ -48,8 +50,10 @@ class TouchpadTriggerHandler;
  * @see reset
  * @see initialize
  */
-class InputBackend
+class InputBackend : public QObject
 {
+    Q_OBJECT
+
 public:
     InputBackend();
     virtual ~InputBackend();
@@ -107,6 +111,11 @@ public:
 
     std::function<std::unique_ptr<TouchpadTriggerHandler>(InputDevice *device)> m_touchpadTriggerHandlerFactory;
 
+    /**
+     * A combination of keyboard keys, that when held for a specific amount of time, will cause InputActions to enter a suspended state.
+     */
+    std::unordered_set<uint32_t> m_emergencyCombination = {KEY_BACKSPACE, KEY_SPACE, KEY_ENTER};
+
 protected:
     /**
      * Backends should add device properties in this method.
@@ -129,14 +138,17 @@ protected:
     std::vector<QPointF> m_strokePoints;
     QTimer m_strokeRecordingTimeoutTimer;
 
+private slots:
+    void onEmergencyCombinationTimerTimeout();
+
 private:
     void applyDeviceProperties(const InputDevice *device, InputDeviceProperties &properties) const;
 
-    std::function<void(const Stroke &stroke)> m_strokeCallback;
-
     std::vector<InputEventHandler *> m_eventHandlerChain;
-
     std::vector<InputDevice *> m_devices;
+
+    std::function<void(const Stroke &stroke)> m_strokeCallback;
+    QTimer m_emergencyCombinationTimer;
 };
 
 inline std::unique_ptr<InputBackend> g_inputBackend;

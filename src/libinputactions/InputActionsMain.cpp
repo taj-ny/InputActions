@@ -90,7 +90,7 @@ void InputActionsMain::setMissingImplementations()
 }
 
 void InputActionsMain::registerGlobalVariables(VariableManager *variableManager, std::shared_ptr<PointerPositionGetter> pointerPositionGetter,
-                                           std::shared_ptr<WindowProvider> windowProvider)
+                                               std::shared_ptr<WindowProvider> windowProvider)
 {
     if (!pointerPositionGetter) {
         pointerPositionGetter = g_pointerPositionGetter;

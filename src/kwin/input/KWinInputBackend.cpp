@@ -310,6 +310,6 @@ void KWinInputBackend::KeyboardModifierSpy::keyboardKey(KWin::KeyboardKeyEvent *
     }
 
     if (auto *device = backend->findInputActionsDevice(event->device)) {
-        device->updateModifiers(event->nativeScanCode, event->state == KWin::KeyboardKeyState::Pressed);
+        device->setKeyState(event->nativeScanCode, event->state == KWin::KeyboardKeyState::Pressed);
     }
 }
