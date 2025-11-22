@@ -49,4 +49,16 @@ void ActionExecutor::execute(const std::shared_ptr<Action> &action, ActionThread
     }
 }
 
+void ActionExecutor::clearQueue()
+{
+    m_ownActionThreadPool.clear();
+    m_sharedActionThreadPool.clear();
+}
+
+void ActionExecutor::waitForDone()
+{
+    m_ownActionThreadPool.waitForDone();
+    m_sharedActionThreadPool.waitForDone();
+}
+
 }
