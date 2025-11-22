@@ -20,6 +20,7 @@
 #include "Server.h"
 #include "interfaces/IPCEnvironmentInterfaces.h"
 #include <libinputactions/InputActionsMain.h>
+#include <libinputactions/actions/ActionExecutor.h>
 #include <libinputactions/config/Config.h>
 #include <libinputactions/globals.h>
 #include <libinputactions/input/backends/InputBackend.h>
@@ -207,15 +208,19 @@ void SessionManager::variableListRequestMessage(const std::shared_ptr<const Vari
 
 void SessionManager::activateSession(const Session &session, bool loadConfig)
 {
+    g_inputActions->suspend();
+    g_actionExecutor->clearQueue();
+    g_actionExecutor->waitForDone();
+
     if (!session.m_client) {
         qCDebug(INPUTACTIONS) << "No client/config for current session, suspending";
-        g_inputActions->suspend();
         return;
     }
 
-    if (loadConfig) {
-        g_config->load(session.m_config);
+    if (loadConfig && g_config->load(session.m_config)) {
+        g_config->load(QString(""));
     }
+
     g_pointerPositionGetter = session.m_ipcEnvironmentInterfaces;
     g_variableManager = session.m_variableManager;
     g_windowProvider = session.m_ipcEnvironmentInterfaces;
@@ -226,8 +231,8 @@ void SessionManager::onSessionChangeDetectionTimerTick()
     const auto tty = SessionUtils::currentTty();
     if (m_currentTty != tty) {
         qCDebug(INPUTACTIONS).noquote().nospace() << "TTY changed to " << tty;
-        m_currentTty = tty;
         activateSession(m_sessions[tty]);
+        m_currentTty = tty;
     }
 }
 

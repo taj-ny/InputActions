@@ -53,6 +53,15 @@ public:
      */
     void execute(const std::shared_ptr<Action> &action, ActionThread thread = ActionThread::Auto);
 
+    /**
+     * Clears the action queue.
+     */
+    void clearQueue();
+    /**
+     * Waits for all actions to finish execution.
+     */
+    void waitForDone();
+
 private:
     /**
      * Consists of one thread, shared across all actions.
