@@ -19,15 +19,18 @@
 #include <CLI/CLI.hpp>
 #include <QDBusInterface>
 
-void printResponse(const QDBusMessage &message)
+void printResponse(QDBusPendingCall call)
 {
-    if (message.type() == QDBusMessage::MessageType::ErrorMessage) {
-        std::cerr << message.errorMessage().toStdString() << '\n';
+    call.waitForFinished();
+    const auto reply = call.reply();
+
+    if (reply.type() == QDBusMessage::MessageType::ErrorMessage) {
+        std::cerr << reply.errorMessage().toStdString() << '\n';
         return;
     }
 
-    if (message.arguments().size() > 0) {
-        std::cout << message.arguments().at(0).toString().toStdString() << '\n';
+    if (reply.arguments().size() > 0) {
+        std::cout << reply.arguments().at(0).toString().toStdString() << '\n';
     }
 }
 
@@ -48,12 +51,12 @@ int main(int argc, char **argv)
     auto *config = app.add_subcommand("config", "Manage config")->require_subcommand();
     config->add_subcommand("reload", "Reload config")->callback([&dbusInterface]() {
         ensureInterfaceIsValid(dbusInterface);
-        printResponse(dbusInterface.call("reloadConfig"));
+        printResponse(dbusInterface.asyncCall("reloadConfig"));
     });
 
     app.add_subcommand("record-stroke", "Record a stroke using a mouse or touchpad")->callback([&dbusInterface]() {
         ensureInterfaceIsValid(dbusInterface);
-        printResponse(dbusInterface.call("recordStroke"));
+        printResponse(dbusInterface.asyncCall("recordStroke"));
     });
 
     auto *variables = app.add_subcommand("variables", "Manage variables")->require_subcommand();
@@ -63,7 +66,7 @@ int main(int argc, char **argv)
     variablesList->add_option("-f,--filter", variablesListFilter, "Only show variables that match the specified regular expression")->default_str("");
     variablesList->callback([&dbusInterface, &variablesListFilter]() {
         ensureInterfaceIsValid(dbusInterface);
-        printResponse(dbusInterface.call("variables", QString::fromStdString(variablesListFilter)));
+        printResponse(dbusInterface.asyncCall("variables", QString::fromStdString(variablesListFilter)));
     });
 
     CLI11_PARSE(app, argc, argv);
