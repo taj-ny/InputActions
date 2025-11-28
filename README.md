@@ -3,7 +3,7 @@ InputActions is a tool that lets you bind simple and complex input actions (trig
 
 Supported environments: GNOME, Hyprland, Plasma 6, other Wayland compositors (availability of extra features depends on implemented protocols), X11 (base features only)
 
-[Getting started](https://wiki.inputactions.org/main/getting-started) | [Example triggers](https://wiki.inputactions.org/main/example-triggers) | [Wiki repository](https://github.com/InputActions/wiki)
+[Installation & getting started](https://wiki.inputactions.org/main/getting-started) | [Example triggers](https://wiki.inputactions.org/main/example-triggers) | [Wiki repository](https://github.com/InputActions/wiki)
 
 # Features
 - Keyboard triggers: shortcut
