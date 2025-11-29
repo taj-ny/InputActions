@@ -39,10 +39,11 @@ public:
 
 private slots:
     void onReadyRead();
+    void onRetryTimerTimeout();
 
 private:
     void initWatchers();
-    void tryReadConfig();
+    void tryReadConfig(bool retryIfEmpty = false);
 
     /**
      * @return Path to the configuration file.
@@ -54,6 +55,7 @@ private:
     int m_inotifyFd;
     std::vector<int> m_inotifyWds;
     std::unique_ptr<QSocketNotifier> m_inotifyNotifier;
+    QTimer m_retryTimer;
 };
 
 }
