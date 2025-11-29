@@ -28,10 +28,14 @@ namespace InputActions
 {
 
 static const QDir INPUTACTIONS_DIR = QStandardPaths::writableLocation(QStandardPaths::ConfigLocation) + "/inputactions";
+static const std::chrono::milliseconds CONFIG_LOAD_RETRY_DELAY{500L};
 
 FileConfigProvider::FileConfigProvider()
     : m_path(ensureConfigPath())
 {
+    connect(&m_retryTimer, &QTimer::timeout, this, &FileConfigProvider::onRetryTimerTimeout);
+    m_retryTimer.setSingleShot(true);
+
     m_inotifyFd = inotify_init();
     if (m_inotifyFd == -1) {
         qWarning(INPUTACTIONS, "Failed to initialize config watcher");
@@ -86,11 +90,16 @@ void FileConfigProvider::onReadyRead()
             inotify_rm_watch(m_inotifyFd, wd);
         }
         initWatchers();
-        tryReadConfig();
+        tryReadConfig(true);
     }
 }
 
-void FileConfigProvider::tryReadConfig()
+void FileConfigProvider::onRetryTimerTimeout()
+{
+    tryReadConfig();
+}
+
+void FileConfigProvider::tryReadConfig(bool retryIfEmpty)
 {
     QFile configFile(m_path);
     if (!configFile.open(QIODevice::ReadOnly)) {
@@ -98,6 +107,12 @@ void FileConfigProvider::tryReadConfig()
     }
 
     const auto config = QTextStream(&configFile).readAll();
+    if (config.isEmpty() && retryIfEmpty) {
+        m_retryTimer.start(CONFIG_LOAD_RETRY_DELAY);
+        return;
+    }
+    m_retryTimer.stop();
+
     if (config != currentConfig()) {
         setConfig(config);
     }
