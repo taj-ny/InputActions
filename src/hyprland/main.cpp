@@ -16,8 +16,7 @@ APICALL EXPORT std::string PLUGIN_API_VERSION()
 
 APICALL EXPORT PLUGIN_DESCRIPTION_INFO PLUGIN_INIT(void *handle)
 {
-    const std::string hash = __hyprland_api_get_hash();
-    if (hash != GIT_COMMIT_HASH) {
+    if (strcmp(__hyprland_api_get_hash(), __hyprland_api_get_client_hash()) != 0) {
         HyprlandAPI::addNotification(handle, "[" PROJECT_NAME "] Mismatched headers! Can't proceed.", CHyprColor{1.0, 0.2, 0.2, 1.0}, 5000);
         throw std::runtime_error("[" PROJECT_NAME "] Version mismatch");
     }
