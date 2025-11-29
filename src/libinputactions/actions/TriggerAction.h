@@ -131,9 +131,10 @@ public:
 
     /**
      * Executes the action if it can be executed.
+     * @param executions Must be 1 if the action is not mergeable.
      * @see canExecute
      */
-    void tryExecute();
+    void tryExecute(uint32_t executions = 1);
     /**
      * @return Whether the condition and threshold are satisfied.
      */

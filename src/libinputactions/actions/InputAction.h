@@ -50,6 +50,7 @@ public:
     InputAction(std::vector<Item> sequence);
 
     bool async() const override;
+    bool mergeable() const override;
 
     /**
      * Delay between each item in the sequence.
@@ -62,7 +63,7 @@ public:
     QPointF m_deltaMultiplied;
 
 protected:
-    void executeImpl() override;
+    void executeImpl(uint32_t executions) override;
 
 private:
     std::vector<Item> m_sequence;

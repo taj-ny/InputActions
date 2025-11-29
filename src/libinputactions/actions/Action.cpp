@@ -36,13 +36,21 @@ void Action::aboutToExecute()
     m_executions++;
 }
 
-void Action::execute()
+void Action::execute(uint32_t executions)
 {
+    Q_ASSERT(executions != 0);
+    Q_ASSERT(executions == 1 || mergeable());
+
     qCDebug(INPUTACTIONS) << QString("Executing action \"%1\"").arg(m_id);
-    executeImpl();
+    executeImpl(executions);
 }
 
 bool Action::async() const
+{
+    return false;
+}
+
+bool Action::mergeable() const
 {
     return false;
 }

@@ -32,7 +32,7 @@ bool CommandAction::async() const
     return m_wait || m_command.expensive();
 }
 
-void CommandAction::executeImpl()
+void CommandAction::executeImpl(uint32_t executions)
 {
     const auto command = m_command.get().value_or("");
     if (command.isEmpty()) {

@@ -27,13 +27,13 @@ ActionExecutor::ActionExecutor()
     m_sharedActionThreadPool.setMaxThreadCount(1);
 }
 
-void ActionExecutor::execute(const std::shared_ptr<Action> &action, ActionThread thread)
+void ActionExecutor::execute(const std::shared_ptr<Action> &action, ActionExecutionArguments &&arguments)
 {
-    const auto execute = [action = action]() { // copy action in case config gets reloaded while actions are scheduled
-        action->execute();
+    const auto execute = [action = action, executions = arguments.executions]() { // copy action in case config gets reloaded while actions are scheduled
+        action->execute(executions);
     };
     action->aboutToExecute();
-    switch (thread) {
+    switch (arguments.thread) {
         case ActionThread::Auto:
             if (action->async() || m_sharedActionThreadPool.activeThreadCount()) {
                 m_sharedActionThreadPool.start(execute);

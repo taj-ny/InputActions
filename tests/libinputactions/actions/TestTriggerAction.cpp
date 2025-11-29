@@ -1,5 +1,6 @@
 #include "TestTriggerAction.h"
 #include <libinputactions/actions/Action.h>
+#include <libinputactions/actions/CustomAction.h>
 #include <libinputactions/actions/TriggerAction.h>
 #include <libinputactions/input/Delta.h>
 
@@ -42,6 +43,23 @@ void TestTriggerAction::triggerUpdated_intervals()
     }
 
     QCOMPARE(action->action()->m_executions, executions);
+}
+
+void TestTriggerAction::triggerUpdated_mergeable()
+{
+    uint32_t actualExecutions{};
+    auto action = std::make_unique<TriggerAction>(std::make_shared<CustomAction>([&actualExecutions](auto executions) {
+        actualExecutions = executions;
+    }, false, true));
+
+    ActionInterval interval{};
+    interval.setValue(1);
+    action->m_on = On::Update;
+    action->m_interval = interval;
+
+    action->triggerUpdated(10, {});
+
+    QCOMPARE(actualExecutions, 10);
 }
 
 }

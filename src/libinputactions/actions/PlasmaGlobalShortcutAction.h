@@ -30,7 +30,7 @@ public:
     PlasmaGlobalShortcutAction(QString component, QString shortcut);
 
 protected:
-    void executeImpl() override;
+    void executeImpl(uint32_t executions) override;
 
 private:
     QString m_component;

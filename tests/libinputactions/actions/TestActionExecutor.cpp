@@ -12,7 +12,7 @@ void TestActionExecutor::init()
 
 void TestActionExecutor::execute_syncAction_executedOnMainThread()
 {
-    m_executor->execute(std::make_shared<CustomAction>([]() {
+    m_executor->execute(std::make_shared<CustomAction>([](auto) {
         QVERIFY(isMainThread());
     }));
 }
@@ -20,7 +20,7 @@ void TestActionExecutor::execute_syncAction_executedOnMainThread()
 void TestActionExecutor::execute_asyncAction_executedOnActionThread()
 {
     m_executor->execute(std::make_shared<CustomAction>(
-        []() {
+        [](auto) {
             QVERIFY(!isMainThread());
         },
         true));
@@ -30,7 +30,7 @@ void TestActionExecutor::execute_asyncAction_executedOnActionThread()
 void TestActionExecutor::execute_syncActionWhileActionThreadIsBusy_executedOnActionThread()
 {
     m_executor->execute(std::make_shared<SleepAction>(std::chrono::milliseconds(100U)));
-    m_executor->execute(std::make_shared<CustomAction>([]() {
+    m_executor->execute(std::make_shared<CustomAction>([](auto) {
         QVERIFY(!isMainThread());
     }));
     QTest::qWait(500);
@@ -39,25 +39,25 @@ void TestActionExecutor::execute_syncActionWhileActionThreadIsBusy_executedOnAct
 void TestActionExecutor::execute_syncAndAsyncActions_orderPreserved()
 {
     std::vector<uint8_t> results;
-    m_executor->execute(std::make_shared<CustomAction>([&results]() {
+    m_executor->execute(std::make_shared<CustomAction>([&results](auto) {
         results.push_back(1);
     }));
     m_executor->execute(std::make_shared<CustomAction>(
-        [&results]() {
+        [&results](auto) {
             QTest::qWait(20);
             results.push_back(2);
         },
         true));
-    m_executor->execute(std::make_shared<CustomAction>([&results]() {
+    m_executor->execute(std::make_shared<CustomAction>([&results](auto) {
         results.push_back(3);
     }));
     m_executor->execute(std::make_shared<CustomAction>(
-        [&results]() {
+        [&results](auto) {
             QTest::qWait(10);
             results.push_back(4);
         },
         true));
-    m_executor->execute(std::make_shared<CustomAction>([&results]() {
+    m_executor->execute(std::make_shared<CustomAction>([&results](auto) {
         results.push_back(5);
     }));
     QTest::qWait(50);
