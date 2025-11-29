@@ -31,7 +31,7 @@ ActionGroup::ActionGroup(std::vector<std::shared_ptr<Action>> actions, Execution
 {
 }
 
-void ActionGroup::executeImpl()
+void ActionGroup::executeImpl(uint32_t executions)
 {
     // TODO Each action with a condition introduces latency
     const auto evaluateCondition = [](const auto &action) {
@@ -55,13 +55,17 @@ void ActionGroup::executeImpl()
                 if (!evaluateCondition(action)) {
                     continue;
                 }
-                g_actionExecutor->execute(action, ActionThread::Current);
+                g_actionExecutor->execute(action, {
+                    .thread = ActionThread::Current,
+                });
             }
             break;
         case ExecutionMode::First:
             for (const auto &action : m_actions) {
                 if (evaluateCondition(action)) {
-                    g_actionExecutor->execute(action, ActionThread::Current);
+                    g_actionExecutor->execute(action, {
+                        .thread = ActionThread::Current,
+                    });
                     break;
                 }
             }

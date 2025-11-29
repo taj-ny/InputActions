@@ -47,7 +47,7 @@ public:
     bool async() const override;
 
 protected:
-    void executeImpl() override;
+    void executeImpl(uint32_t executions) override;
 
 private:
     std::vector<std::shared_ptr<Action>> m_actions;

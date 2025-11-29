@@ -45,7 +45,7 @@ public:
     bool m_wait{};
 
 protected:
-    void executeImpl() override;
+    void executeImpl(uint32_t executions) override;
 
 private:
     Value<QString> m_command;

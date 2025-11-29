@@ -39,11 +39,11 @@ InputAction::InputAction(std::vector<Item> sequence)
     }
 }
 
-void InputAction::executeImpl()
+void InputAction::executeImpl(uint32_t executions)
 {
     for (const auto &item : m_sequence) {
         const auto keyboardText = item.keyboardText.get();
-        ThreadUtils::runOnThread(ThreadUtils::mainThread(), [this, item, keyboardText]() {
+        ThreadUtils::runOnThread(ThreadUtils::mainThread(), [this, executions, item, keyboardText]() {
             if (item.keyboardPress) {
                 g_inputEmitter->keyboardKey(item.keyboardPress, true);
             } else if (item.keyboardRelease) {
@@ -55,7 +55,7 @@ void InputAction::executeImpl()
             } else if (item.mouseRelease) {
                 g_inputEmitter->mouseButton(item.mouseRelease, false);
             } else if (!item.mouseAxis.isNull()) {
-                g_inputEmitter->mouseAxis(item.mouseAxis);
+                g_inputEmitter->mouseAxis(item.mouseAxis * executions);
             } else if (!item.mouseMoveAbsolute.isNull()) {
                 g_pointerPositionSetter->setGlobalPointerPosition(item.mouseMoveAbsolute);
             } else if (!item.mouseMoveRelative.isNull()) {
@@ -75,6 +75,13 @@ bool InputAction::async() const
 {
     return m_delay.count() || std::ranges::any_of(m_sequence, [](const auto &item) {
                return item.keyboardText.expensive();
+           });
+}
+
+bool InputAction::mergeable() const
+{
+    return !m_delay.count() && std::ranges::all_of(m_sequence, [](const auto &item) {
+               return !item.mouseAxis.isNull();
            });
 }
 

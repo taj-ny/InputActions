@@ -47,12 +47,16 @@ public:
      * @see executeImpl
      * @internal
      */
-    void execute();
+    void execute(uint32_t executions);
     /**
      * Whether the action should be executed asynchronously. A value of false does not guarantee that the action will be executed synchronously.
      * @see ActionExecutor::execute
      */
     virtual bool async() const;
+    /**
+     * Whether multiple executions of this action can be merged together.
+     */
+    virtual bool mergeable() const;
 
     void reset();
 
@@ -78,8 +82,9 @@ public:
 protected:
     /**
      * This method is not guaranteed to be called from the main thread.
+     * @param executions If the action is mergeable, this is set to the intended execution count, otherwise 1. Must not be 0.
      */
-    virtual void executeImpl() {};
+    virtual void executeImpl(uint32_t executions) {}
 };
 
 }

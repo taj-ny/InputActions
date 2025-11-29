@@ -12,6 +12,8 @@ class TestTriggerAction : public Test
 private slots:
     void triggerUpdated_intervals_data();
     void triggerUpdated_intervals();
+
+    void triggerUpdated_mergeable();
 };
 
 }

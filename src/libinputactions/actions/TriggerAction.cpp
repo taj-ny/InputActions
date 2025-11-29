@@ -80,10 +80,12 @@ void TriggerAction::triggerCancelled()
     reset();
 }
 
-void TriggerAction::tryExecute()
+void TriggerAction::tryExecute(uint32_t executions)
 {
     if (canExecute()) {
-        g_actionExecutor->execute(m_action);
+        g_actionExecutor->execute(m_action, {
+            .executions = executions,
+        });
     }
 }
 
@@ -116,14 +118,24 @@ void TriggerAction::update(const Delta &delta)
         return;
     }
 
+    uint32_t times{};
     // Keep executing action until accumulated delta no longer exceeds the interval
     while (m_interval.matches(m_accumulatedDelta) && std::abs(m_accumulatedDelta / interval) >= 1) {
-        tryExecute();
+        if (m_action->mergeable()) {
+            times++;
+        } else {
+            tryExecute();
+        }
+
         if (std::signbit(m_accumulatedDelta) != std::signbit(interval)) {
             m_accumulatedDelta += interval;
         } else {
             m_accumulatedDelta -= interval;
         }
+    }
+
+    if (times) {
+        tryExecute(times);
     }
 }
 

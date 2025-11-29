@@ -42,6 +42,18 @@ enum class ActionThread
     Own,
 };
 
+struct ActionExecutionArguments
+{
+    /**
+     * Must be 1 if the action is not mergeable.
+     */
+    uint32_t executions = 1;
+    /**
+     * Which thread to execute the action on.
+     */
+    ActionThread thread = ActionThread::Auto;
+};
+
 class ActionExecutor
 {
 public:
@@ -49,9 +61,8 @@ public:
 
     /**
      * Executes an action without checking its condition.
-     * @param thread Which thread to execute the action on.
      */
-    void execute(const std::shared_ptr<Action> &action, ActionThread thread = ActionThread::Auto);
+    void execute(const std::shared_ptr<Action> &action, ActionExecutionArguments &&arguments = {});
 
     /**
      * Clears the action queue.
