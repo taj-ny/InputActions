@@ -141,7 +141,7 @@ QString FileConfigProvider::ensureConfigPath()
             finalPath = path;
             break;
         } else if (create) {
-            QFile(path).open(QIODevice::WriteOnly);
+            std::ignore = QFile(path).open(QIODevice::WriteOnly);
             finalPath = path;
             break;
         }
