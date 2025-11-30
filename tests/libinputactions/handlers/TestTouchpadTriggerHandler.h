@@ -1,6 +1,6 @@
 #include "Test.h"
+#include "mocks/MockTouchpadTriggerHandler.h"
 #include <QSignalSpy>
-#include <libinputactions/handlers/TouchpadTriggerHandler.h>
 
 namespace InputActions
 {
@@ -38,13 +38,22 @@ private slots:
     void tap_fingerCount_data();
     void tap_fingerCount();
 
+    void pointerAxis_oneAxisPerEvent_firstEventPassedThrough();
+    void pointerAxis_oneAxisPerEvent_eventsBlocked();
+    void pointerAxis_oneAxisPerEvent_eventsNotBlocked();
+    void pointerAxis_oneAxisPerEvent_eventBlockingStops();
+    void pointerAxis_oneAxisPerEvent_differentAxisEventsMerged();
+    void pointerAxis_oneAxisPerEvent_sameAxisEventsNotMerged();
+
+    void pointerAxis_notOneAxisPerEvent_notMerged();
+
 private:
     TouchPoint &addPoint(const QPointF &position = {0.5, 0.5});
     void addPoints(uint8_t count, const QPointF &position = {0.5, 0.5});
     void movePoints(const QPointF &delta);
     void removePoints(int16_t count = -1);
 
-    std::unique_ptr<TouchpadTriggerHandler> m_handler;
+    std::unique_ptr<MockTouchpadTriggerHandler> m_handler;
     std::unique_ptr<QSignalSpy> m_activatingTriggerSpy;
     std::unique_ptr<QSignalSpy> m_activatingTriggersSpy;
     std::unique_ptr<QSignalSpy> m_cancellingTriggersSpy;

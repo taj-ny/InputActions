@@ -222,7 +222,7 @@ void HyprlandInputBackend::pointerAxis(SCallbackInfo &info, const std::any &data
     if (event.relativeDirection == WL_POINTER_AXIS_RELATIVE_DIRECTION_INVERTED) {
         delta *= -1;
     }
-    info.cancelled = LibinputInputBackend::pointerAxis(m_currentPointingDevice, delta);
+    info.cancelled = LibinputInputBackend::pointerAxis(m_currentPointingDevice, delta, true);
 }
 
 void HyprlandInputBackend::pointerButton(SCallbackInfo &info, const std::any &data)

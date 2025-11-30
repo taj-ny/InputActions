@@ -48,9 +48,12 @@ void TestTriggerAction::triggerUpdated_intervals()
 void TestTriggerAction::triggerUpdated_mergeable()
 {
     uint32_t actualExecutions{};
-    auto action = std::make_unique<TriggerAction>(std::make_shared<CustomAction>([&actualExecutions](auto executions) {
-        actualExecutions = executions;
-    }, false, true));
+    auto action = std::make_unique<TriggerAction>(std::make_shared<CustomAction>(
+        [&actualExecutions](auto executions) {
+            actualExecutions = executions;
+        },
+        false,
+        true));
 
     ActionInterval interval{};
     interval.setValue(1);

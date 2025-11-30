@@ -68,6 +68,10 @@ private:
     QTimer m_clickTimeoutTimer;
     QTimer m_libinputTapTimeoutTimer;
 
+    bool m_previousPointerAxisEventBlocked{};
+    PointDelta m_pointerAxisDelta;
+
+    friend class MockTouchpadTriggerHandler;
     friend class TestTouchpadTriggerHandler;
 };
 

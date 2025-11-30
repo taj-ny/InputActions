@@ -81,8 +81,8 @@ bool InputAction::async() const
 bool InputAction::mergeable() const
 {
     return !m_delay.count() && std::ranges::all_of(m_sequence, [](const auto &item) {
-               return !item.mouseAxis.isNull();
-           });
+        return !item.mouseAxis.isNull();
+    });
 }
 
 }

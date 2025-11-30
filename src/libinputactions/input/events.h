@@ -72,12 +72,14 @@ private:
 class MotionEvent : public InputEvent
 {
 public:
-    MotionEvent(InputDevice *sender, InputEventType type, PointDelta delta);
+    MotionEvent(InputDevice *sender, InputEventType type, PointDelta delta, bool oneAxisPerEvent = false);
 
     const PointDelta &delta() const;
+    bool oneAxisPerEvent() const;
 
 private:
     PointDelta m_delta;
+    bool m_oneAxisPerEvent;
 };
 
 class KeyboardKeyEvent : public InputEvent
