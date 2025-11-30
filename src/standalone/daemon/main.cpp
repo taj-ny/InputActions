@@ -57,6 +57,13 @@ int main()
 
     std::signal(SIGINT, handleSignal);
 
+    const int minPriority = sched_get_priority_min(SCHED_RR);
+    sched_param sp;
+    sp.sched_priority = minPriority;
+    if (pthread_setschedparam(pthread_self(), SCHED_RR | SCHED_RESET_ON_FORK, &sp) != 0) {
+        qWarning(INPUTACTIONS, "Failed to gain real time thread priority: %s", strerror(errno));
+    }
+
     if (!VAR_RUN_INPUTACTIONS_DIR.exists()) {
         VAR_RUN_INPUTACTIONS_DIR.mkpath(".");
         chmod(VAR_RUN_INPUTACTIONS_DIR.path().toStdString().c_str(), 0755);
