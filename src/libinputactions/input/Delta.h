@@ -41,6 +41,8 @@ public:
     const T &accelerated() const { return m_accelerated; }
     const T &unaccelerated() const { return m_unaccelerated; };
 
+    bool operator==(const DeltaBase &other) const { return m_accelerated == other.m_accelerated && m_unaccelerated == other.m_unaccelerated; }
+
 private:
     T m_accelerated;
     T m_unaccelerated;
@@ -59,6 +61,8 @@ public:
 
     qreal acceleratedHypot() const;
     qreal unacceleratedHypot() const;
+
+    PointDelta operator+(const PointDelta &other) const;
 };
 
 }

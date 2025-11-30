@@ -55,17 +55,19 @@ void ActionGroup::executeImpl(uint32_t executions)
                 if (!evaluateCondition(action)) {
                     continue;
                 }
-                g_actionExecutor->execute(action, {
-                    .thread = ActionThread::Current,
-                });
+                g_actionExecutor->execute(action,
+                                          {
+                                              .thread = ActionThread::Current,
+                                          });
             }
             break;
         case ExecutionMode::First:
             for (const auto &action : m_actions) {
                 if (evaluateCondition(action)) {
-                    g_actionExecutor->execute(action, {
-                        .thread = ActionThread::Current,
-                    });
+                    g_actionExecutor->execute(action,
+                                              {
+                                                  .thread = ActionThread::Current,
+                                              });
                     break;
                 }
             }

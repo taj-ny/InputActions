@@ -8,6 +8,8 @@
 #include <linux/input-event-codes.h>
 #include <ranges>
 
+using namespace ::testing;
+
 namespace InputActions
 {
 
@@ -15,7 +17,7 @@ void TestTouchpadTriggerHandler::init()
 {
     m_touchpad = std::make_unique<InputDevice>(InputDeviceType::Touchpad);
     m_touchpad->m_touchPoints = std::vector<TouchPoint>(5);
-    m_handler = std::make_unique<TouchpadTriggerHandler>(m_touchpad.get());
+    m_handler = std::make_unique<MockTouchpadTriggerHandler>(m_touchpad.get());
     m_activatingTriggerSpy = std::make_unique<QSignalSpy>(m_handler.get(), &TriggerHandler::activatingTrigger);
     m_activatingTriggersSpy = std::make_unique<QSignalSpy>(m_handler.get(), &TriggerHandler::activatingTriggers);
     m_cancellingTriggersSpy = std::make_unique<QSignalSpy>(m_handler.get(), &TriggerHandler::cancellingTriggers);
@@ -399,6 +401,94 @@ void TestTouchpadTriggerHandler::tap_fingerCount()
     QCOMPARE(m_activatingTriggerSpy->count(), activated);
 
     QCOMPARE(m_handler->m_state, MultiTouchMotionTriggerHandler::State::None);
+}
+
+void TestTouchpadTriggerHandler::pointerAxis_oneAxisPerEvent_firstEventPassedThrough()
+{
+    EXPECT_CALL(*m_handler, handleMotion(m_touchpad.get(), PointDelta({1, 1}))).Times(1);
+
+    m_handler->pointerAxis(MotionEvent(m_touchpad.get(), InputEventType::PointerAxis, {{1, 1}}, true));
+
+    QVERIFY(Mock::VerifyAndClearExpectations(m_handler.get()));
+}
+
+void TestTouchpadTriggerHandler::pointerAxis_oneAxisPerEvent_eventsBlocked()
+{
+    EXPECT_CALL(*m_handler, handleMotion(m_touchpad.get(), _)).WillRepeatedly(Return(true));
+
+    // First is passed through
+    QVERIFY(m_handler->pointerAxis(MotionEvent(m_touchpad.get(), InputEventType::PointerAxis, {{1, 1}}, true)));
+
+    QVERIFY(m_handler->pointerAxis(MotionEvent(m_touchpad.get(), InputEventType::PointerAxis, {{1, 0}}, true)));
+    QVERIFY(m_handler->pointerAxis(MotionEvent(m_touchpad.get(), InputEventType::PointerAxis, {{0, 1}}, true)));
+}
+
+void TestTouchpadTriggerHandler::pointerAxis_oneAxisPerEvent_eventsNotBlocked()
+{
+    EXPECT_CALL(*m_handler, handleMotion(m_touchpad.get(), _)).WillRepeatedly(Return(false));
+
+    // First is passed through
+    QVERIFY(!m_handler->pointerAxis(MotionEvent(m_touchpad.get(), InputEventType::PointerAxis, {{1, 1}}, true)));
+
+    QVERIFY(!m_handler->pointerAxis(MotionEvent(m_touchpad.get(), InputEventType::PointerAxis, {{1, 0}}, true)));
+    QVERIFY(!m_handler->pointerAxis(MotionEvent(m_touchpad.get(), InputEventType::PointerAxis, {{0, 1}}, true)));
+}
+
+void TestTouchpadTriggerHandler::pointerAxis_oneAxisPerEvent_eventBlockingStops()
+{
+    auto block = true;
+    EXPECT_CALL(*m_handler, handleMotion(m_touchpad.get(), _)).WillRepeatedly([&block]() {
+        return block;
+    });
+
+    // First is passed through
+    QVERIFY(m_handler->pointerAxis(MotionEvent(m_touchpad.get(), InputEventType::PointerAxis, {{1, 1}}, true)));
+
+    QVERIFY(m_handler->pointerAxis(MotionEvent(m_touchpad.get(), InputEventType::PointerAxis, {{1, 0}}, true)));
+    block = false;
+    QVERIFY(!m_handler->pointerAxis(MotionEvent(m_touchpad.get(), InputEventType::PointerAxis, {{0, 1}}, true)));
+
+    QVERIFY(!m_handler->pointerAxis(MotionEvent(m_touchpad.get(), InputEventType::PointerAxis, {{1, 0}}, true)));
+    QVERIFY(!m_handler->pointerAxis(MotionEvent(m_touchpad.get(), InputEventType::PointerAxis, {{0, 1}}, true)));
+}
+
+void TestTouchpadTriggerHandler::pointerAxis_oneAxisPerEvent_differentAxisEventsMerged()
+{
+    // First is passed through
+    m_handler->pointerAxis(MotionEvent(m_touchpad.get(), InputEventType::PointerAxis, {{1, 1}}, true));
+
+    EXPECT_CALL(*m_handler, handleMotion(m_touchpad.get(), PointDelta({1, 1}))).Times(1);
+
+    m_handler->pointerAxis(MotionEvent(m_touchpad.get(), InputEventType::PointerAxis, {{1, 0}}, true));
+    m_handler->pointerAxis(MotionEvent(m_touchpad.get(), InputEventType::PointerAxis, {{0, 1}}, true));
+
+    QVERIFY(Mock::VerifyAndClearExpectations(m_handler.get()));
+}
+
+void TestTouchpadTriggerHandler::pointerAxis_oneAxisPerEvent_sameAxisEventsNotMerged()
+{
+    // First is passed through
+    m_handler->pointerAxis(MotionEvent(m_touchpad.get(), InputEventType::PointerAxis, {{1, 1}}, true));
+
+    EXPECT_CALL(*m_handler, handleMotion(m_touchpad.get(), PointDelta({1, 0}))).Times(2);
+    m_handler->pointerAxis(MotionEvent(m_touchpad.get(), InputEventType::PointerAxis, {{1, 0}}, true));
+    m_handler->pointerAxis(MotionEvent(m_touchpad.get(), InputEventType::PointerAxis, {{1, 0}}, true));
+    QVERIFY(Mock::VerifyAndClearExpectations(m_handler.get()));
+
+    EXPECT_CALL(*m_handler, handleMotion(m_touchpad.get(), PointDelta({0, 1}))).Times(2);
+    m_handler->pointerAxis(MotionEvent(m_touchpad.get(), InputEventType::PointerAxis, {{0, 1}}, true));
+    m_handler->pointerAxis(MotionEvent(m_touchpad.get(), InputEventType::PointerAxis, {{0, 1}}, true));
+    QVERIFY(Mock::VerifyAndClearExpectations(m_handler.get()));
+}
+
+void TestTouchpadTriggerHandler::pointerAxis_notOneAxisPerEvent_notMerged()
+{
+    // First would be passed through
+    m_handler->pointerAxis(MotionEvent(m_touchpad.get(), InputEventType::PointerAxis, {{1, 1}}, false));
+
+    EXPECT_CALL(*m_handler, handleMotion(m_touchpad.get(), PointDelta({1, 0}))).Times(1);
+    m_handler->pointerAxis(MotionEvent(m_touchpad.get(), InputEventType::PointerAxis, {{1, 0}}, false));
+    QVERIFY(Mock::VerifyAndClearExpectations(m_handler.get()));
 }
 
 TouchPoint &TestTouchpadTriggerHandler::addPoint(const QPointF &position)

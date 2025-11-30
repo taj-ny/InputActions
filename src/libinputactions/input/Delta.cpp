@@ -33,4 +33,9 @@ qreal PointDelta::unacceleratedHypot() const
     return std::hypot(delta.x(), delta.y());
 }
 
+PointDelta PointDelta::operator+(const PointDelta &other) const
+{
+    return {accelerated() + other.accelerated(), unaccelerated() + other.unaccelerated()};
+}
+
 }

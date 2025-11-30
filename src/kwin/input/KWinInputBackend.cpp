@@ -177,7 +177,7 @@ bool KWinInputBackend::pointerAxis(KWin::PointerAxisEvent *event)
     if (event->inverted) {
         delta *= -1;
     }
-    return LibinputInputBackend::pointerAxis(findInputActionsDevice(event->device), delta);
+    return LibinputInputBackend::pointerAxis(findInputActionsDevice(event->device), delta, true);
 }
 
 bool KWinInputBackend::pointerButton(KWin::PointerButtonEvent *event)

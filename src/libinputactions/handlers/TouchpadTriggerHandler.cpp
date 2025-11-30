@@ -40,24 +40,55 @@ TouchpadTriggerHandler::TouchpadTriggerHandler(InputDevice *device)
 
 bool TouchpadTriggerHandler::pointerAxis(const MotionEvent &event)
 {
+    bool isFirstEvent{};
     switch (m_state) {
         case State::Motion:
         case State::MotionNoTrigger:
         case State::None:
         case State::Touch:
         case State::TouchIdle:
+            isFirstEvent = true;
             g_variableManager->getVariable(BuiltinVariables::Fingers)->set(2);
             setState(State::Scrolling);
             activateTriggers(TriggerType::StrokeSwipe);
             [[fallthrough]];
-        case State::Scrolling:
+        case State::Scrolling: {
             if (event.delta().unaccelerated().isNull()) {
                 endTriggers(TriggerType::StrokeSwipe);
                 setState(State::None);
+
+                m_previousPointerAxisEventBlocked = false;
+                m_pointerAxisDelta = {};
+
                 return false; // Blocking a (0,0) event breaks kinetic scrolling
             }
 
-            return handleMotion(event.sender(), event.delta());
+            std::vector<PointDelta> deltas;
+            if (isFirstEvent || !event.oneAxisPerEvent()) {
+                // First event must always be passed through for blocking
+                deltas.push_back(event.delta());
+            } else if (m_pointerAxisDelta.unaccelerated().isNull()) {
+                m_pointerAxisDelta = event.delta();
+                return m_previousPointerAxisEventBlocked;
+            } else {
+                const auto sum = m_pointerAxisDelta + event.delta();
+                if (sum.unaccelerated().x() && sum.unaccelerated().y()) {
+                    deltas.push_back(sum);
+                } else {
+                    // Don't merge if both events have the same one axis
+                    deltas.push_back(m_pointerAxisDelta);
+                    deltas.push_back(event.delta());
+                }
+            }
+            m_pointerAxisDelta = {};
+
+            bool block{};
+            for (const auto &delta : deltas) {
+                block = handleMotion(event.sender(), delta) || block;
+            }
+            m_previousPointerAxisEventBlocked = block;
+            return block;
+        }
         default:
             return false;
     }

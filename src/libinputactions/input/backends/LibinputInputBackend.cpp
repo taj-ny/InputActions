@@ -34,7 +34,7 @@ bool LibinputInputBackend::keyboardKey(InputDevice *sender, uint32_t key, bool s
     return handleEvent(KeyboardKeyEvent(sender, key, state));
 }
 
-bool LibinputInputBackend::pointerAxis(InputDevice *sender, const QPointF &delta)
+bool LibinputInputBackend::pointerAxis(InputDevice *sender, const QPointF &delta, bool oneAxisPerEvent)
 {
     if (m_ignoreEvents || !sender) {
         return false;
@@ -56,7 +56,7 @@ bool LibinputInputBackend::pointerAxis(InputDevice *sender, const QPointF &delta
     if (delta.isNull() && sender->type() == InputDeviceType::Touchpad) {
         LibevdevComplementaryInputBackend::poll(); // Update clicked state, clicking cancels scrolling and generates a (0,0) event
     }
-    return handleEvent(MotionEvent(sender, InputEventType::PointerAxis, {delta}));
+    return handleEvent(MotionEvent(sender, InputEventType::PointerAxis, {delta}, oneAxisPerEvent));
 }
 
 bool LibinputInputBackend::pointerButton(InputDevice *sender, Qt::MouseButton button, uint32_t nativeButton, bool state)

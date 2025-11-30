@@ -44,7 +44,7 @@ protected:
      * @param sender The event will be ignored if nullptr.
      * @returns Whether to block the event.
      */
-    bool pointerAxis(InputDevice *sender, const QPointF &delta);
+    bool pointerAxis(InputDevice *sender, const QPointF &delta, bool oneAxisPerEvent = false);
     /**
      * Handles mouse and touchpad buttons.
      * @param sender The event will be ignored if nullptr.
