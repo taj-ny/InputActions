@@ -13,6 +13,7 @@ Supported environments: GNOME, Hyprland, Plasma 6, other Wayland compositors (av
     delay
   - Keyboard modifiers can be specified instead of or along with mouse buttons
   - Triggers:
+    - Circle: continuous circular motion
     - Press: can be either instant or delayed
     - Stroke: draw a shape
     - Swipe: move left, right, up or down
@@ -20,6 +21,7 @@ Supported environments: GNOME, Hyprland, Plasma 6, other Wayland compositors (av
 - Touchpad:
   - Absolute initial and current positions of all fingers are available as variables and can be used in conditions, making position-dependent triggers possible
   - Triggers:
+    - Circle: 1-4 fingers, can be used for circular scrolling
     - Click: 1-5 fingers, available on devices with one integrated button
     - Pinch: 2-4 fingers
     - Press (hold): 1-4 fingers
@@ -115,5 +117,6 @@ Supported environments: GNOME, Hyprland, Plasma 6, other Wayland compositors (av
   ```
 
 # Credits
-- [Strokognition](https://invent.kde.org/jpetso/strokognition), [wstroke](https://github.com/dkondor/wstroke), [easystroke](https://github.com/thjaeger/easystroke) - Stroke gestures
+- [Strokognition](https://invent.kde.org/jpetso/strokognition), [wstroke](https://github.com/dkondor/wstroke), [easystroke](https://github.com/thjaeger/easystroke) - Stroke triggers
+- [circular-scrolling-improved](https://github.com/galundin/circular-scrolling-improved) - Circle triggers
 - [KWin](https://invent.kde.org/plasma/kwin) - Gesture handling code (heavily extended and modified)

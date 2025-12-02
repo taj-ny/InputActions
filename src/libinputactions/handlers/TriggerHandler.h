@@ -103,6 +103,10 @@ protected:
      * @return Whether there are any triggers of the specified types.
      */
     bool hasActiveTriggers(TriggerTypes types = TriggerType::All);
+    /**
+     * @return Whether there are any blocking triggers of the specified types.
+     */
+    bool hasActiveBlockingTriggers(TriggerTypes types = TriggerType::All);
 
     /**
      * Creates a trigger activation event with information that can be provided by the input device(s).

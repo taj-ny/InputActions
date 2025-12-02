@@ -923,7 +923,9 @@ struct convert<std::unique_ptr<Trigger>>
     static bool decode(const Node &node, std::unique_ptr<Trigger> &trigger)
     {
         const auto type = node["type"].as<QString>();
-        if (type == "click") {
+        if (type == "circle") {
+            trigger = std::make_unique<DirectionalMotionTrigger>(TriggerType::Circle, static_cast<TriggerDirection>(node["direction"].as<RotateDirection>()));
+        } else if (type == "click") {
             trigger = std::make_unique<Trigger>(TriggerType::Click);
         } else if (type == "hold" || type == "press") {
             auto pressTrigger = new PressTrigger;

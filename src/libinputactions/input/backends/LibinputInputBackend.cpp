@@ -164,7 +164,7 @@ bool LibinputInputBackend::touchpadSwipeBegin(InputDevice *sender, uint8_t finge
     }
 
     m_fingers = fingers;
-    m_block = handleEvent(TouchpadGestureLifecyclePhaseEvent(sender, TouchpadGestureLifecyclePhase::Begin, TriggerType::StrokeSwipe, fingers));
+    m_block = handleEvent(TouchpadGestureLifecyclePhaseEvent(sender, TouchpadGestureLifecyclePhase::Begin, TriggerType::SinglePointMotion, fingers));
     return m_block;
 }
 
@@ -201,7 +201,7 @@ bool LibinputInputBackend::touchpadSwipeEnd(InputDevice *sender, bool cancelled)
 
     return handleEvent(TouchpadGestureLifecyclePhaseEvent(sender,
                                                           cancelled ? TouchpadGestureLifecyclePhase::Cancel : TouchpadGestureLifecyclePhase::End,
-                                                          TriggerType::StrokeSwipe));
+                                                          TriggerType::SinglePointMotion));
 }
 
 Qt::MouseButton LibinputInputBackend::scanCodeToMouseButton(uint32_t scanCode) const

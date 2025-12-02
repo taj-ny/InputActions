@@ -14,6 +14,13 @@
 
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+
+    Code for circle triggers was taken from https://github.com/galundin/circular-scrolling-improved
+
+    Copyright 2013 Andrew Lundin
+    MIT License
+    http://opensource.org/licenses/MIT
 */
 
 #include "MotionTriggerHandler.h"
@@ -31,6 +38,10 @@ namespace InputActions
  */
 static const size_t AXIS_CHANGE_MIN_DELTA_COUNT = 10;
 
+static const qreal CIRCLE_COASTING_FRICTION = 0.02;
+static const std::chrono::milliseconds CIRCLE_COASTING_TIMER_INTERVAL{30L};
+static const qreal PI_2 = M_PI * 2;
+
 MotionTriggerHandler::MotionTriggerHandler()
 {
     connect(this, &TriggerHandler::activatingTrigger, this, &MotionTriggerHandler::onActivatingTrigger);
@@ -40,6 +51,8 @@ MotionTriggerHandler::MotionTriggerHandler()
     setSpeedThreshold(TriggerType::Pinch, 0.08, static_cast<TriggerDirection>(PinchDirection::Out));
     setSpeedThreshold(TriggerType::Rotate, 5);
     setSpeedThreshold(TriggerType::Swipe, 20);
+
+    connect(&m_circleCoastingTimer, &QTimer::timeout, this, &MotionTriggerHandler::onCircleCoastingTimerTick);
 }
 
 void MotionTriggerHandler::setSpeedThreshold(TriggerType type, qreal threshold, TriggerDirection directions)
@@ -61,16 +74,14 @@ void MotionTriggerHandler::setSpeedThreshold(TriggerType type, qreal threshold, 
 
 bool MotionTriggerHandler::handleMotion(const InputDevice *device, const PointDelta &delta)
 {
-    if (!hasActiveTriggers(TriggerType::StrokeSwipe)) {
+    if (!hasActiveTriggers(TriggerType::SinglePointMotion)) {
         return false;
     }
 
     qCDebug(INPUTACTIONS_HANDLER_MOTION).nospace() << "Event (type: Motion, delta: " << delta.unaccelerated() << ")";
 
     m_deltas.push_back(delta.unaccelerated());
-    m_currentSwipeDelta += delta.unaccelerated();
-    m_averageSwipeDelta = (m_deltas.size() * m_averageSwipeDelta + QPointF(std::abs(delta.unaccelerated().x()), std::abs(delta.unaccelerated().y())))
-                        / (m_deltas.size() + 1);
+    m_totalSwipeDelta += delta.unaccelerated();
 
     TriggerSpeed speed{};
     if (!determineSpeed(TriggerType::Swipe, delta.unacceleratedHypot(), speed)) {
@@ -78,9 +89,76 @@ bool MotionTriggerHandler::handleMotion(const InputDevice *device, const PointDe
     }
 
     std::map<TriggerType, const TriggerUpdateEvent *> events;
+    DirectionalMotionTriggerUpdateEvent circleEvent;
     DirectionalMotionTriggerUpdateEvent swipeEvent;
     MotionTriggerUpdateEvent strokeEvent;
     bool axisChanged{};
+
+    // Block the event even if the result says not to do so.
+    bool block{};
+
+    if (hasActiveTriggers(TriggerType::Circle)) {
+        m_circleCoastingTimer.start(CIRCLE_COASTING_TIMER_INTERVAL);
+
+        const auto d = delta.unaccelerated();
+        const auto angle = std::atan2(d.y(), d.x());
+
+        auto angleDelta = angle - m_circlePreviousAngle;
+        angleDelta = angleDelta - static_cast<int>(angleDelta / PI_2) * PI_2;
+        if (angleDelta < 0) {
+            angleDelta += PI_2;
+        }
+        if (angleDelta > M_PI) {
+            angleDelta -= PI_2;
+        }
+
+        const auto absAngleDelta = std::abs(angleDelta);
+        const auto distance = std::hypot(d.x(), d.y());
+
+        // Clamp spikes
+        if (absAngleDelta > 0.5) {
+            angleDelta = 0.5 * angleDelta / absAngleDelta;
+        }
+
+        // Error estimation
+        const auto angleDeltaError = std::pow(angleDelta - m_circleFilterDelta, 2);
+
+        // Naive filter for error estimation on next event
+        m_circleFilterDelta = (angleDelta + m_circleFilterDelta) / 2;
+
+        // Reduce weight for small movements
+        const auto minDistance = std::min(distance, m_circlePreviousDistance);
+        const auto distanceFactor = std::log(1 + minDistance / 10);
+
+        // Adaptive filter
+        const auto weight = std::min(absAngleDelta * distanceFactor / (1 + angleDeltaError * 100), static_cast<qreal>(1));
+        m_circleAdaptiveDelta = angleDelta * weight + m_circleAdaptiveDelta * (1 - weight);
+
+        m_circlePreviousAngle = angle;
+        m_circlePreviousDistance = distance;
+
+        if (m_circleIsFirstEvent) {
+            // First event will have a delta of 0, ignore
+            m_circleIsFirstEvent = false;
+            return hasActiveBlockingTriggers(TriggerType::Circle);
+        }
+
+        const auto cubedAngleDelta = std::pow(m_circleAdaptiveDelta, 3) * 10000; // Multiply by an arbitrary number to prevent decimal places in update
+        // action intervals. The delta is not the actual angle anyway so it doesn't matter.
+        m_circleTotalDelta += cubedAngleDelta;
+
+        if (m_circleTotalDelta == 0) {
+            // Cannot determine direction
+            block = hasActiveBlockingTriggers(TriggerType::Circle);
+        } else {
+            circleEvent.setDelta(cubedAngleDelta);
+            circleEvent.setDirection(static_cast<TriggerDirection>(m_circleTotalDelta > 0 ? RotateDirection::Clockwise : RotateDirection::Counterclockwise));
+            circleEvent.setSpeed(speed);
+            events[TriggerType::Circle] = &circleEvent;
+        }
+
+        // TODO: Cancel if motion is a straight line
+    }
 
     if (hasActiveTriggers(TriggerType::Swipe)) {
         if (m_deltas.size() < 2) {
@@ -89,7 +167,7 @@ bool MotionTriggerHandler::handleMotion(const InputDevice *device, const PointDe
         }
 
         if (m_currentSwipeAxis == Axis::None) {
-            m_currentSwipeAxis = std::abs(m_currentSwipeDelta.x()) >= std::abs(m_currentSwipeDelta.y()) ? Axis::Horizontal : Axis::Vertical;
+            m_currentSwipeAxis = std::abs(m_totalSwipeDelta.x()) >= std::abs(m_totalSwipeDelta.y()) ? Axis::Horizontal : Axis::Vertical;
         } else if (m_deltas.size() >= AXIS_CHANGE_MIN_DELTA_COUNT) { // Make sure we have enough data to detect axis change
             const std::vector<QPointF> lastDeltas(m_deltas.end() - AXIS_CHANGE_MIN_DELTA_COUNT, m_deltas.end());
             QPointF sum;
@@ -108,10 +186,10 @@ bool MotionTriggerHandler::handleMotion(const InputDevice *device, const PointDe
         SwipeDirection direction{};
         switch (m_currentSwipeAxis) {
             case Axis::Vertical:
-                direction = m_currentSwipeDelta.y() < 0 ? SwipeDirection::Up : SwipeDirection::Down;
+                direction = m_totalSwipeDelta.y() < 0 ? SwipeDirection::Up : SwipeDirection::Down;
                 break;
             case Axis::Horizontal:
-                direction = m_currentSwipeDelta.x() < 0 ? SwipeDirection::Left : SwipeDirection::Right;
+                direction = m_totalSwipeDelta.x() < 0 ? SwipeDirection::Left : SwipeDirection::Right;
                 break;
             default:
                 Q_UNREACHABLE();
@@ -136,7 +214,7 @@ bool MotionTriggerHandler::handleMotion(const InputDevice *device, const PointDe
         activateTriggers(TriggerType::Swipe);
         return handleMotion(device, delta);
     }
-    return result.block;
+    return result.block || block;
 }
 
 bool MotionTriggerHandler::determineSpeed(TriggerType type, qreal delta, TriggerSpeed &speed, TriggerDirection direction)
@@ -181,13 +259,31 @@ void MotionTriggerHandler::reset()
 {
     TriggerHandler::reset();
     m_currentSwipeAxis = Axis::None;
-    m_currentSwipeDelta = {};
-    m_averageSwipeDelta = {};
+    m_totalSwipeDelta = {};
     m_speed = {};
     m_isDeterminingSpeed = false;
-    m_sampledInputEvents = 0;
-    m_accumulatedAbsoluteSampledDelta = 0;
+    m_circleIsFirstEvent = true;
     m_deltas.clear();
+    m_sampledInputEvents = m_accumulatedAbsoluteSampledDelta = m_circlePreviousAngle = m_circlePreviousDistance = m_circleFilterDelta = m_circleAdaptiveDelta
+        = m_circleTotalDelta = 0;
+    m_circleCoastingTimer.stop();
+}
+
+void MotionTriggerHandler::onCircleCoastingTimerTick()
+{
+    if (!hasActiveTriggers(TriggerType::Circle)) {
+        m_circleCoastingTimer.stop();
+    }
+
+    if (m_circleAdaptiveDelta > CIRCLE_COASTING_FRICTION) {
+        m_circleAdaptiveDelta -= CIRCLE_COASTING_FRICTION;
+    } else if (m_circleAdaptiveDelta < -CIRCLE_COASTING_FRICTION) {
+        m_circleAdaptiveDelta += CIRCLE_COASTING_FRICTION;
+    } else {
+        m_circleAdaptiveDelta = 0;
+        m_circleCoastingTimer.stop();
+    }
+    m_circleFilterDelta = 0;
 }
 
 void MotionTriggerHandler::onActivatingTrigger(const Trigger *trigger)
