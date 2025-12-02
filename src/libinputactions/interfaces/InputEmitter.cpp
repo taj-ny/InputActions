@@ -25,8 +25,13 @@ namespace InputActions
 InputEmitter::InputEmitter()
 {
     for (const auto &[key, _] : KEYBOARD_MODIFIERS) {
-        m_keyboardRequiredKeys.insert(key);
+        keyboardAddRequiredKey(key);
     }
+}
+
+void InputEmitter::keyboardAddRequiredKey(uint32_t key)
+{
+    m_keyboardRequiredKeys.insert(key);
 }
 
 }

@@ -37,6 +37,11 @@ public:
     virtual void initialize() {}
     virtual void reset() {}
 
+    /**
+     * The implementation may require that all keys that will be used must be registered before initialization. Modifier keys are added by default.
+     */
+    void keyboardAddRequiredKey(uint32_t key);
+
     virtual void keyboardClearModifiers() {}
     /**
      * @param key See <linux/input-event-codes.h>. If the key is not in m_keyboardRequiredKeys, the call may fail.
@@ -56,9 +61,7 @@ public:
     virtual void mouseButton(uint32_t button, bool state, const InputDevice *target = nullptr) {}
     virtual void mouseMoveRelative(const QPointF &pos) {}
 
-    /**
-     * The implementation may require that all keys that will be used must be registered before initialization. Modifier keys are added by default.
-     */
+protected:
     std::set<uint32_t> m_keyboardRequiredKeys;
 };
 

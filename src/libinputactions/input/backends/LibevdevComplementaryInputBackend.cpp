@@ -86,7 +86,7 @@ void LibevdevComplementaryInputBackend::addDevice(InputDevice *device, libevdev 
         multiTouch = true;
         slotCount = libevdev_get_abs_maximum(libevdev, ABS_MT_SLOT) + 1;
     }
-    device->m_touchPoints = std::vector<TouchPoint>(slotCount);
+    device->setTouchPoints(std::vector<TouchPoint>(slotCount));
     qCDebug(INPUTACTIONS_BACKEND_LIBEVDEV).noquote().nospace()
         << "Found valid touchpad (size: " << size << ", multiTouch: " << multiTouch << ", slots: " << slotCount << ")";
 
@@ -157,7 +157,7 @@ void LibevdevComplementaryInputBackend::handleEvdevEvent(InputDevice *sender, co
             if (code == SYN_REPORT) {
                 for (size_t i = 0; i < data->previousTouchPoints.size(); i++) {
                     const auto &previous = data->previousTouchPoints[i];
-                    auto &slot = sender->m_touchPoints[i];
+                    auto &slot = sender->touchPoints()[i];
 
                     if (slot.pressure >= properties.palmPressure()) {
                         slot.type = TouchPointType::Palm;
@@ -181,7 +181,7 @@ void LibevdevComplementaryInputBackend::handleEvdevEvent(InputDevice *sender, co
                         handleEvent(TouchChangedEvent(sender, slot, slot.position - previous.position));
                     }
                 }
-                data->previousTouchPoints = sender->m_touchPoints;
+                data->previousTouchPoints = sender->touchPoints();
             }
             break;
         case EV_KEY:
@@ -196,7 +196,7 @@ void LibevdevComplementaryInputBackend::handleEvdevEvent(InputDevice *sender, co
             }
             break;
         case EV_ABS:
-            auto &currentTouchPoint = sender->m_touchPoints[data->currentSlot];
+            auto &currentTouchPoint = sender->touchPoints()[data->currentSlot];
             if (properties.multiTouch()) {
                 switch (code) {
                     case ABS_MT_SLOT:

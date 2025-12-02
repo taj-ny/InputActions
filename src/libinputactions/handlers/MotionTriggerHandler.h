@@ -56,11 +56,12 @@ public:
     /**
      * Used for the move_by_delta mouse input action. Temporary workaround.
      */
-    qreal m_swipeDeltaMultiplier = 1.0;
+    void setSwipeDeltaMultiplier(qreal value) { m_swipeDeltaMultiplier = value; }
+
     /**
      * How many input events to sample in order to determine the speed.
      */
-    uint8_t m_inputEventsToSample = 3;
+    void setInputEventsToSample(uint8_t value) { m_inputEventsToSample = value; }
 
 protected:
     MotionTriggerHandler();
@@ -99,6 +100,9 @@ private:
     std::vector<TriggerSpeedThreshold> m_speedThresholds;
 
     std::vector<QPointF> m_deltas;
+
+    qreal m_swipeDeltaMultiplier = 1.0;
+    uint8_t m_inputEventsToSample = 3;
 
     friend class MockTouchpadTriggerHandler;
 };

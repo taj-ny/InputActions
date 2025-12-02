@@ -34,6 +34,17 @@ public:
     InputDeviceRule();
     ~InputDeviceRule();
 
+    /**
+     * May be nullptr.
+     */
+    const std::shared_ptr<Condition> &condition() const { return m_condition; }
+    void setCondition(std::shared_ptr<Condition> value) { m_condition = std::move(value); }
+
+    InputDeviceProperties &properties() { return m_properties; }
+    const InputDeviceProperties &properties() const { return m_properties; }
+    void setProperties(InputDeviceProperties value) { m_properties = std::move(value); }
+
+private:
     std::shared_ptr<Condition> m_condition;
     InputDeviceProperties m_properties;
 };

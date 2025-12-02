@@ -48,7 +48,7 @@ public:
      */
     bool evaluate(const ConditionEvaluationArguments &arguments = {});
 
-    bool m_negate{};
+    void setNegate(bool value) { m_negate = value; }
 
 protected:
     Condition() = default;
@@ -60,6 +60,7 @@ protected:
 
 private:
     bool m_exceptionNotificationShown{};
+    bool m_negate{};
 };
 
 }

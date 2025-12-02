@@ -55,7 +55,7 @@ bool KeyboardTriggerHandler::keyboardKey(const KeyboardKeyEvent &event)
 std::unique_ptr<TriggerActivationEvent> KeyboardTriggerHandler::createActivationEvent() const
 {
     auto event = TriggerHandler::createActivationEvent();
-    event->keyboardKeys = {m_keys.begin(), m_keys.end()};
+    event->setKeyboardKeys({m_keys.begin(), m_keys.end()});
     return event;
 }
 

@@ -100,13 +100,13 @@ void TriggerAction::update(const Delta &delta)
     if (delta.unaccelerated() != 0 && std::signbit(m_accumulatedDelta) != std::signbit(delta.unaccelerated())) {
         // Direction changed
         m_accumulatedDelta = m_accelerated ? delta.accelerated() : delta.unaccelerated();
-        qCDebug(INPUTACTIONS_ACTION).noquote() << QString("Gesture direction changed (id: %1)").arg(m_action->m_id);
+        qCDebug(INPUTACTIONS_ACTION).noquote() << QString("Gesture direction changed (id: %1)").arg(m_action->id());
     } else {
         m_accumulatedDelta += m_accelerated ? delta.accelerated() : delta.unaccelerated();
         m_absoluteAccumulatedDelta += std::abs(delta.unaccelerated());
     }
     qCDebug(INPUTACTIONS_ACTION()).noquote()
-        << QString("Action updated (id: %1, accumulatedDelta: %2)").arg(m_action->m_id, QString::number(m_accumulatedDelta));
+        << QString("Action updated (id: %1, accumulatedDelta: %2)").arg(m_action->id(), QString::number(m_accumulatedDelta));
 
     if (m_on != On::Update && m_on != On::Tick) {
         return;
@@ -147,11 +147,6 @@ void TriggerAction::reset()
     m_absoluteAccumulatedDelta = 0;
 }
 
-const Action *TriggerAction::action() const
-{
-    return m_action.get();
-}
-
 bool ActionInterval::matches(qreal value) const
 {
     if (m_direction == IntervalDirection::Any) {
@@ -159,21 +154,6 @@ bool ActionInterval::matches(qreal value) const
     } else {
         return (value < 0 && m_direction == IntervalDirection::Negative) || (value > 0 && m_direction == IntervalDirection::Positive);
     }
-}
-
-const qreal &ActionInterval::value() const
-{
-    return m_value;
-}
-
-void ActionInterval::setValue(qreal value)
-{
-    m_value = value;
-}
-
-void ActionInterval::setDirection(const IntervalDirection &direction)
-{
-    m_direction = direction;
 }
 
 }

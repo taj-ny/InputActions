@@ -434,7 +434,7 @@ void StandaloneInputBackend::resetDevice(const InputDevice *device, const ExtraD
         }
         case InputDeviceType::Touchpad:
             // Reverse order so that ABS_MT_SLOT is equal to 0 after
-            for (int i = device->m_touchPoints.size() - 1; i >= 0; i--) {
+            for (int i = device->touchPoints().size() - 1; i >= 0; i--) {
                 libevdev_uinput_write_event(data->outputDevice, EV_ABS, ABS_MT_SLOT, i);
                 libevdev_uinput_write_event(data->outputDevice, EV_ABS, ABS_MT_TRACKING_ID, -1);
             }

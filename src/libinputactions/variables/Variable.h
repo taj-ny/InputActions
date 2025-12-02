@@ -51,12 +51,14 @@ public:
     /**
      * Whether the value should not be shown in the DBus interface.
      */
-    bool m_hidden{};
+    bool hidden() const { return m_hidden; }
+    void setHidden(bool value) { m_hidden = value; }
 
 private:
     std::type_index m_type;
     std::variant<bool, QString> m_value;
     std::unique_ptr<VariableOperationsBase> m_operations;
+    bool m_hidden{};
 };
 
 }

@@ -28,7 +28,7 @@ HoverTrigger::HoverTrigger()
 
 bool HoverTrigger::canUpdate(const TriggerUpdateEvent &event) const
 {
-    return Trigger::canUpdate(event) && (!m_activationCondition || m_activationCondition->satisfied());
+    return Trigger::canUpdate(event) && (!activationCondition() || activationCondition()->satisfied());
 }
 
 bool HoverTrigger::endIfCannotUpdate() const

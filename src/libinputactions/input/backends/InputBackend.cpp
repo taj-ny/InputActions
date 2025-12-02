@@ -63,12 +63,12 @@ void InputBackend::poll() {}
 void InputBackend::initialize()
 {
     InputDeviceRule ignoreOwnDevicesRule;
-    ignoreOwnDevicesRule.m_condition = std::make_shared<VariableCondition>("name",
-                                                                           std::vector<Value<std::any>>{Value(QStringLiteral("inputactions")),
-                                                                                                        Value(QStringLiteral("InputActions Virtual Keyboard")),
-                                                                                                        Value(QStringLiteral("InputActions Virtual Mouse"))},
-                                                                           ComparisonOperator::OneOf);
-    ignoreOwnDevicesRule.m_properties.setIgnore(true);
+    ignoreOwnDevicesRule.setCondition(std::make_shared<VariableCondition>("name",
+                                                                          std::vector<Value<std::any>>{Value(QStringLiteral("inputactions")),
+                                                                                                       Value(QStringLiteral("InputActions Virtual Keyboard")),
+                                                                                                       Value(QStringLiteral("InputActions Virtual Mouse"))},
+                                                                          ComparisonOperator::OneOf));
+    ignoreOwnDevicesRule.properties().setIgnore(true);
     m_deviceRules.push_back(std::move(ignoreOwnDevicesRule));
 }
 
@@ -102,8 +102,8 @@ Qt::KeyboardModifiers InputBackend::keyboardModifiers() const
 void InputBackend::applyDeviceProperties(const InputDevice *device, InputDeviceProperties &properties) const
 {
     for (const auto &rule : m_deviceRules | std::ranges::views::reverse) {
-        if (!rule.m_condition) {
-            properties.apply(rule.m_properties);
+        if (!rule.condition()) {
+            properties.apply(rule.properties());
             continue;
         }
 
@@ -113,8 +113,8 @@ void InputBackend::applyDeviceProperties(const InputDevice *device, InputDeviceP
 
         ConditionEvaluationArguments arguments;
         arguments.variableManager = &manager;
-        if (rule.m_condition->satisfied(arguments)) {
-            properties.apply(rule.m_properties);
+        if (rule.condition()->satisfied(arguments)) {
+            properties.apply(rule.properties());
         }
     }
 }
@@ -135,7 +135,7 @@ void InputBackend::deviceAdded(InputDevice *device)
     applyDeviceProperties(device, device->properties());
 
     if (device->type() == InputDeviceType::Touchpad && m_touchpadTriggerHandlerFactory) {
-        device->m_touchpadTriggerHandler = m_touchpadTriggerHandlerFactory(device);
+        device->setTouchpadTriggerHandler(m_touchpadTriggerHandlerFactory(device));
     }
 
     m_devices.push_back(device);
@@ -161,8 +161,8 @@ void InputBackend::createEventHandlerChain()
     pushToChain(m_keyboardTriggerHandler);
     pushToChain(m_mouseTriggerHandler);
     for (const auto &device : m_devices) {
-        if (const auto &touchpadTriggerHandler = device->m_touchpadTriggerHandler) {
-            m_eventHandlerChain.push_back(touchpadTriggerHandler.get());
+        if (const auto &touchpadTriggerHandler = device->touchpadTriggerHandler()) {
+            m_eventHandlerChain.push_back(touchpadTriggerHandler);
         }
     }
     pushToChain(m_pointerTriggerHandler);
@@ -208,6 +208,31 @@ void InputBackend::onEmergencyCombinationTimerTimeout()
 {
     g_notificationManager->sendNotification("Emergency combination", "Emergency combination triggered, suspending may take up to a few seconds");
     g_inputActions->suspend();
+}
+
+void InputBackend::setDeviceRules(std::vector<InputDeviceRule> rules)
+{
+    m_deviceRules = std::move(rules);
+}
+
+void InputBackend::setKeyboardTriggerHandler(std::unique_ptr<KeyboardTriggerHandler> value)
+{
+    m_keyboardTriggerHandler = std::move(value);
+}
+
+void InputBackend::setMouseTriggerHandler(std::unique_ptr<MouseTriggerHandler> value)
+{
+    m_mouseTriggerHandler = std::move(value);
+}
+
+void InputBackend::setPointerTriggerHandler(std::unique_ptr<PointerTriggerHandler> value)
+{
+    m_pointerTriggerHandler = std::move(value);
+}
+
+void InputBackend::setTouchpadTriggerHandlerFactory(std::function<std::unique_ptr<TouchpadTriggerHandler>(InputDevice *device)> value)
+{
+    m_touchpadTriggerHandlerFactory = std::move(value);
 }
 
 }

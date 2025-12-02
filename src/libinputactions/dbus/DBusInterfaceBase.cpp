@@ -44,7 +44,7 @@ QString DBusInterfaceBase::variableList(const VariableManager *variableManager, 
     QStringList result;
     const QRegularExpression filterRegex(filter);
     for (const auto &[name, variable] : variableManager->variables()) {
-        if (variable->m_hidden || !filterRegex.match(name).hasMatch()) {
+        if (variable->hidden() || !filterRegex.match(name).hasMatch()) {
             continue;
         }
         result.push_back(QString("%1: %2").arg(name, variable->operations()->toString()));

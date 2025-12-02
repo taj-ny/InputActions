@@ -31,10 +31,10 @@ InputAction::InputAction(std::vector<Item> sequence)
 {
     for (const auto &item : m_sequence) {
         if (item.keyboardPress) {
-            g_inputEmitter->m_keyboardRequiredKeys.insert(item.keyboardPress);
+            g_inputEmitter->keyboardAddRequiredKey(item.keyboardPress);
         }
         if (item.keyboardRelease) {
-            g_inputEmitter->m_keyboardRequiredKeys.insert(item.keyboardRelease);
+            g_inputEmitter->keyboardAddRequiredKey(item.keyboardRelease);
         }
     }
 }

@@ -59,10 +59,10 @@ TriggerManagementOperationResult TriggerHandler::activateTriggers(TriggerTypes t
         Q_EMIT activatingTrigger(trigger);
         Q_EMIT trigger->activated();
         m_activeTriggers.push_back(trigger);
-        qCDebug(INPUTACTIONS_HANDLER_TRIGGER).noquote() << QString("Trigger activated (id: %1)").arg(trigger->m_id);
+        qCDebug(INPUTACTIONS_HANDLER_TRIGGER).noquote() << QString("Trigger activated (id: %1)").arg(trigger->id());
 
         result.success = true;
-        result.block = result.block || trigger->m_blockEvents;
+        result.block = result.block || trigger->blockEvents();
     }
     m_timedTriggerUpdateTimer.start();
 
@@ -117,7 +117,7 @@ TriggerManagementOperationResult TriggerHandler::updateTriggers(const std::map<T
         }
 
         result.success = true;
-        result.block = result.block || trigger->m_blockEvents;
+        result.block = result.block || trigger->blockEvents();
         trigger->update(*event);
 
         if (m_activeTriggers.size() > 1) {
@@ -160,7 +160,7 @@ TriggerManagementOperationResult TriggerHandler::endTriggers(TriggerTypes types)
         }
 
         result.success = true;
-        result.block = result.block || trigger->m_blockEvents;
+        result.block = result.block || trigger->blockEvents();
 
         it = m_activeTriggers.erase(it);
         if (!trigger->canEnd()) {
@@ -198,7 +198,7 @@ TriggerManagementOperationResult TriggerHandler::cancelTriggers(TriggerTypes typ
         }
 
         result.success = true;
-        result.block = result.block || trigger->m_blockEvents;
+        result.block = result.block || trigger->blockEvents();
 
         trigger->cancel();
         it = m_activeTriggers.erase(it);
@@ -208,7 +208,7 @@ TriggerManagementOperationResult TriggerHandler::cancelTriggers(TriggerTypes typ
 
 void TriggerHandler::cancelTriggers(Trigger *except)
 {
-    qCDebug(INPUTACTIONS_HANDLER_TRIGGER).noquote().nospace() << "Cancelling triggers (except: " << except->m_id << ")";
+    qCDebug(INPUTACTIONS_HANDLER_TRIGGER).noquote().nospace() << "Cancelling triggers (except: " << except->id() << ")";
     for (auto it = m_activeTriggers.begin(); it != m_activeTriggers.end();) {
         auto gesture = *it;
         if (gesture != except) {
@@ -264,7 +264,7 @@ void TriggerHandler::updateTimedTriggers()
     std::map<TriggerType, const TriggerUpdateEvent *> events;
     for (const auto &type : TIMED_TRIGGERS) {
         auto *event = new TriggerUpdateEvent;
-        event->m_delta = m_timedTriggerUpdateDelta;
+        event->setDelta(m_timedTriggerUpdateDelta);
         events[type] = event;
     }
 

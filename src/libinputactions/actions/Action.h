@@ -61,23 +61,27 @@ public:
     void reset();
 
     /**
-     * Must be satisfied in order for the action to be executed.
+     * Must be satisfied in order for the action to be executed. May be nullptr.
      */
-    std::shared_ptr<Condition> m_condition;
+    const std::shared_ptr<Condition> &condition() const { return m_condition; }
+    void setCondition(std::shared_ptr<Condition> value) { m_condition = std::move(value); }
+
     /**
      * Must be unique.
      */
-    QString m_id;
+    const QString &id() const { return m_id; }
+    void setId(QString value) { m_id = std::move(value); }
+
+    /**
+     * The maximum amount of times the action can execute during the gesture. 0 = no limit
+     */
+    void setExecutionLimit(uint32_t value) { m_executionLimit = value; }
+
     /**
      * Executions since last reset.
+     * @internal
      */
-    uint32_t m_executions{};
-    /**
-     * The maximum amount of times the action can execute during the gesture.
-     *
-     * 0 = no limit
-     */
-    uint32_t m_executionLimit{};
+    uint32_t executions() const { return m_executions; }
 
 protected:
     /**
@@ -85,6 +89,12 @@ protected:
      * @param executions If the action is mergeable, this is set to the intended execution count, otherwise 1. Must not be 0.
      */
     virtual void executeImpl(uint32_t executions) {}
+
+private:
+    std::shared_ptr<Condition> m_condition;
+    QString m_id;
+    uint32_t m_executions{};
+    uint32_t m_executionLimit{};
 };
 
 }

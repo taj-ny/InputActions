@@ -52,6 +52,10 @@ class DirectionalMotionTriggerUpdateEvent : public MotionTriggerUpdateEvent
 public:
     DirectionalMotionTriggerUpdateEvent() = default;
 
+    TriggerDirection direction() const { return m_direction; }
+    void setDirection(TriggerDirection value) { m_direction = value; }
+
+private:
     TriggerDirection m_direction = UINT32_MAX;
 };
 

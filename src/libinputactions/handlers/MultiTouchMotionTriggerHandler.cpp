@@ -156,9 +156,9 @@ bool MultiTouchMotionTriggerHandler::handlePinch(qreal scale, qreal angleDelta)
     }
 
     DirectionalMotionTriggerUpdateEvent event;
-    event.m_delta = delta;
-    event.m_direction = direction;
-    event.m_speed = speed;
+    event.setDelta(delta);
+    event.setDirection(direction);
+    event.setSpeed(speed);
     const auto result = updateTriggers(type, event);
 
     qCDebug(INPUTACTIONS_HANDLER_MULTITOUCH).nospace() << "Event processed (type: Pinch, hasGestures: " << result.success << ")";

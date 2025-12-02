@@ -103,18 +103,17 @@ public:
     /**
      * Rules are evaluated in reverse order when a device is added.
      */
-    std::vector<InputDeviceRule> m_deviceRules;
+    void setDeviceRules(std::vector<InputDeviceRule> rules);
 
-    std::unique_ptr<KeyboardTriggerHandler> m_keyboardTriggerHandler;
-    std::unique_ptr<MouseTriggerHandler> m_mouseTriggerHandler;
-    std::unique_ptr<PointerTriggerHandler> m_pointerTriggerHandler;
-
-    std::function<std::unique_ptr<TouchpadTriggerHandler>(InputDevice *device)> m_touchpadTriggerHandlerFactory;
+    void setKeyboardTriggerHandler(std::unique_ptr<KeyboardTriggerHandler> value);
+    void setMouseTriggerHandler(std::unique_ptr<MouseTriggerHandler> value);
+    void setPointerTriggerHandler(std::unique_ptr<PointerTriggerHandler> value);
+    void setTouchpadTriggerHandlerFactory(std::function<std::unique_ptr<TouchpadTriggerHandler>(InputDevice *device)> value);
 
     /**
      * A combination of keyboard keys, that when held for a specific amount of time, will cause InputActions to enter a suspended state.
      */
-    std::unordered_set<uint32_t> m_emergencyCombination = {KEY_BACKSPACE, KEY_SPACE, KEY_ENTER};
+    void setEmergencyCombination(std::unordered_set<uint32_t> value) { m_emergencyCombination = value; }
 
 protected:
     /**
@@ -149,6 +148,14 @@ private:
 
     std::function<void(const Stroke &stroke)> m_strokeCallback;
     QTimer m_emergencyCombinationTimer;
+
+    std::vector<InputDeviceRule> m_deviceRules;
+    std::unique_ptr<KeyboardTriggerHandler> m_keyboardTriggerHandler;
+    std::unique_ptr<MouseTriggerHandler> m_mouseTriggerHandler;
+    std::unique_ptr<PointerTriggerHandler> m_pointerTriggerHandler;
+    std::function<std::unique_ptr<TouchpadTriggerHandler>(InputDevice *device)> m_touchpadTriggerHandlerFactory;
+
+    std::unordered_set<uint32_t> m_emergencyCombination = {KEY_BACKSPACE, KEY_SPACE, KEY_ENTER};
 };
 
 inline std::unique_ptr<InputBackend> g_inputBackend;

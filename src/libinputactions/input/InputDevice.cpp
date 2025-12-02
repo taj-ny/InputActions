@@ -42,11 +42,6 @@ Qt::KeyboardModifiers InputDevice::modifiers() const
     return modifiers;
 }
 
-const std::unordered_set<uint32_t> &InputDevice::keys() const
-{
-    return m_keys;
-}
-
 void InputDevice::setKeyState(uint32_t key, bool state)
 {
     if (state) {
@@ -54,31 +49,6 @@ void InputDevice::setKeyState(uint32_t key, bool state)
     } else {
         m_keys.erase(key);
     }
-}
-
-const InputDeviceType &InputDevice::type() const
-{
-    return m_type;
-}
-
-const QString &InputDevice::name() const
-{
-    return m_name;
-}
-
-const QString &InputDevice::sysName() const
-{
-    return m_sysName;
-}
-
-InputDeviceProperties &InputDevice::properties()
-{
-    return m_properties;
-}
-
-const InputDeviceProperties &InputDevice::properties() const
-{
-    return m_properties;
 }
 
 std::vector<const TouchPoint *> InputDevice::validTouchPoints() const
@@ -93,6 +63,11 @@ std::vector<const TouchPoint *> InputDevice::validTouchPoints() const
         return a->downTimestamp < b->downTimestamp;
     });
     return result;
+}
+
+void InputDevice::setTouchpadTriggerHandler(std::unique_ptr<TouchpadTriggerHandler> value)
+{
+    m_touchpadTriggerHandler = std::move(value);
 }
 
 void InputDeviceProperties::apply(const InputDeviceProperties &other)
@@ -120,19 +95,9 @@ bool InputDeviceProperties::grab() const
     return m_grab.value_or(false);
 }
 
-void InputDeviceProperties::setGrab(bool value)
-{
-    m_grab = value;
-}
-
 bool InputDeviceProperties::ignore() const
 {
     return m_ignore.value_or(false);
-}
-
-void InputDeviceProperties::setIgnore(bool value)
-{
-    m_ignore = value;
 }
 
 bool InputDeviceProperties::handleLibevdevEvents() const
@@ -140,19 +105,9 @@ bool InputDeviceProperties::handleLibevdevEvents() const
     return m_handleLibevdevEvents.value_or(true);
 }
 
-void InputDeviceProperties::setHandleLibevdevEvents(bool value)
-{
-    m_handleLibevdevEvents = value;
-}
-
 bool InputDeviceProperties::multiTouch() const
 {
     return m_multiTouch.value_or(false);
-}
-
-void InputDeviceProperties::setMultiTouch(bool value)
-{
-    m_multiTouch = value;
 }
 
 QSizeF InputDeviceProperties::size() const
@@ -160,19 +115,9 @@ QSizeF InputDeviceProperties::size() const
     return m_size.value_or(QSizeF());
 }
 
-void InputDeviceProperties::setSize(const QSizeF &value)
-{
-    m_size = value;
-}
-
 bool InputDeviceProperties::buttonPad() const
 {
     return m_buttonPad.value_or(false);
-}
-
-void InputDeviceProperties::setButtonPad(bool value)
-{
-    m_buttonPad = value;
 }
 
 uint32_t InputDeviceProperties::fingerPressure() const
@@ -180,19 +125,9 @@ uint32_t InputDeviceProperties::fingerPressure() const
     return m_fingerPressure.value_or(0);
 }
 
-void InputDeviceProperties::setFingerPressure(uint32_t value)
-{
-    m_fingerPressure = value;
-}
-
 uint32_t InputDeviceProperties::thumbPressure() const
 {
     return m_thumbPressure.value_or(UINT32_MAX);
-}
-
-void InputDeviceProperties::setThumbPressure(uint32_t value)
-{
-    m_thumbPressure = value;
 }
 
 uint32_t InputDeviceProperties::palmPressure() const
@@ -200,19 +135,9 @@ uint32_t InputDeviceProperties::palmPressure() const
     return m_palmPressure.value_or(UINT32_MAX);
 }
 
-void InputDeviceProperties::setPalmPressure(uint32_t value)
-{
-    m_palmPressure = value;
-}
-
 bool InputDeviceProperties::lmrTapButtonMap() const
 {
     return m_lmrTapButtonMap.value_or(false);
-}
-
-void InputDeviceProperties::setLmrTapButtonMap(bool value)
-{
-    m_lmrTapButtonMap = value;
 }
 
 }

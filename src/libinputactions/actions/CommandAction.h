@@ -42,13 +42,15 @@ public:
     /**
      * Whether to wait for the shell process to exit.
      */
-    bool m_wait{};
+    bool wait() const { return m_wait; }
+    void setWait(bool value) { m_wait = value; }
 
 protected:
     void executeImpl(uint32_t executions) override;
 
 private:
     Value<QString> m_command;
+    bool m_wait{};
 };
 
 }

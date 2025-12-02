@@ -15,7 +15,7 @@ void TestPointerTriggerHandler::init()
 void TestPointerTriggerHandler::hover_conditionNotSatisfied_triggerNotActivated()
 {
     auto trigger = std::make_unique<HoverTrigger>();
-    trigger->m_activationCondition = FALSE_CONDITION;
+    trigger->setActivationCondition(FALSE_CONDITION);
     QSignalSpy activatedSpy(trigger.get(), &Trigger::activated);
 
     PointerTriggerHandler handler;
@@ -41,7 +41,7 @@ void TestPointerTriggerHandler::hover_conditionNoLongerSatisfied_triggerEnded()
 {
     auto trigger = std::make_unique<HoverTrigger>();
     auto satisfied = true;
-    trigger->m_activationCondition = referenceCondition(satisfied);
+    trigger->setActivationCondition(referenceCondition(satisfied));
     QSignalSpy endedSpy(trigger.get(), &Trigger::ended);
 
     PointerTriggerHandler handler;
@@ -60,7 +60,7 @@ void TestPointerTriggerHandler::hover_conditionNoLongerSatisfiedNoMotionEvent_tr
 {
     auto trigger = std::make_unique<HoverTrigger>();
     auto satisfied = true;
-    trigger->m_activationCondition = referenceCondition(satisfied);
+    trigger->setActivationCondition(referenceCondition(satisfied));
     QSignalSpy endedSpy(trigger.get(), &Trigger::ended);
 
     PointerTriggerHandler handler;
