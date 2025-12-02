@@ -45,7 +45,7 @@ Variable *VariableManager::getVariable(const QString &name) const
 
 Variable *VariableManager::registerVariable(const QString &name, std::unique_ptr<Variable> variable, bool hidden)
 {
-    variable->m_hidden = hidden;
+    variable->setHidden(hidden);
     m_variables[name] = std::move(variable);
 
     if (m_variables[name]->type() == typeid(QPointF)) {

@@ -29,7 +29,7 @@ WheelTrigger::WheelTrigger(TriggerDirection direction)
 void WheelTrigger::actionAdded(TriggerAction *action)
 {
     DirectionalMotionTrigger::actionAdded(action);
-    if (action->m_on == On::Update) {
+    if (action->on() == On::Update) {
         m_continuous = true;
     }
 }

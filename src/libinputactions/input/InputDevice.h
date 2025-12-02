@@ -53,75 +53,66 @@ public:
     void apply(const InputDeviceProperties &other);
 
     /**
-     * @returns Whether the device should be grabbed (standalone only).
+     * Whether the device should be grabbed (standalone only).
      */
     bool grab() const;
-    /**
-     * @see grab
-     */
-    void setGrab(bool value);
+    void setGrab(bool value) { m_grab = value; }
 
     /**
-     * @returns Whether the device should be ignored completely.
+     * Whether the device should be ignored completely.
      */
     bool ignore() const;
-    /**
-     * @see ignore
-     */
-    void setIgnore(bool value);
+    void setIgnore(bool value) { m_ignore = value; }
 
     /**
-     * @returns Whether to process libevdev events if available.
+     * Whether to process libevdev events if available.
      */
     bool handleLibevdevEvents() const;
-    /**
-     * @see handleLibevdevEvents
-     */
-    void setHandleLibevdevEvents(bool value);
+    void setHandleLibevdevEvents(bool value) { m_handleLibevdevEvents = value; }
 
     bool multiTouch() const;
     /**
      * Only for testing.
      * @internal
      */
-    void setMultiTouch(bool value);
+    void setMultiTouch(bool value) { m_multiTouch = value; }
 
     QSizeF size() const;
     /**
      * Only for testing.
      * @internal
      */
-    void setSize(const QSizeF &value);
+    void setSize(const QSizeF &value) { m_size = value; }
 
+    /**
+     * Whether INPUT_PROP_BUTTONPAD is present.
+     */
     bool buttonPad() const;
-    /**
-     * @param value Overrides whether INPUT_PROP_BUTTONPAD is present.
-     */
-    void setButtonPad(bool value);
+    void setButtonPad(bool value) { m_buttonPad = value; }
 
+    /**
+     * Minimum pressure for a touch point to be considered a finger.
+     */
     uint32_t fingerPressure() const;
-    /**
-     * @param value Minimum pressure for a touch point to be considered a finger.
-     */
-    void setFingerPressure(uint32_t value);
+    void setFingerPressure(uint32_t value) { m_fingerPressure = value; }
 
+    /**
+     * Minimum pressure for a touch point to be considered a thumb.
+     */
     uint32_t thumbPressure() const;
-    /**
-     * @param value Minimum pressure for a touch point to be considered a thumb.
-     */
-    void setThumbPressure(uint32_t value);
+    void setThumbPressure(uint32_t value) { m_thumbPressure = value; }
 
+    /**
+     * Minimum pressure for a touch point to be considered a palm.
+     */
     uint32_t palmPressure() const;
-    /**
-     * @param value Minimum pressure for a touch point to be considered a palm.
-     */
-    void setPalmPressure(uint32_t value);
+    void setPalmPressure(uint32_t value) { m_palmPressure = value; }
 
-    bool lmrTapButtonMap() const;
     /**
-     * @param value Whether tapping is mapped to left (1 finger), middle (2) and right (3) buttons.
+     * Whether tapping is mapped to left (1 finger), middle (2) and right (3) buttons.
      */
-    void setLmrTapButtonMap(bool value);
+    bool lmrTapButtonMap() const;
+    void setLmrTapButtonMap(bool value) { m_lmrTapButtonMap = value; }
 
 private:
     std::optional<bool> m_grab;
@@ -186,30 +177,35 @@ public:
     /**
      * Currently pressed keyboard keys.
      */
-    const std::unordered_set<uint32_t> &keys() const;
+    const std::unordered_set<uint32_t> &keys() const { return m_keys; }
     void setKeyState(uint32_t key, bool state);
 
-    const InputDeviceType &type() const;
-    const QString &name() const;
-    const QString &sysName() const;
-    InputDeviceProperties &properties();
-    const InputDeviceProperties &properties() const;
+    const InputDeviceType &type() const { return m_type; }
+    const QString &name() const { return m_name; }
+    const QString &sysName() const { return m_sysName; }
+    InputDeviceProperties &properties() { return m_properties; }
+    const InputDeviceProperties &properties() const { return m_properties; }
 
     /**
      * The size of the vector is equal to the slot count.
      */
-    std::vector<TouchPoint> m_touchPoints;
-    std::vector<const TouchPoint *> validTouchPoints() const;
+    const std::vector<TouchPoint> &touchPoints() const { return m_touchPoints; }
+    std::vector<TouchPoint> &touchPoints() { return m_touchPoints; }
 
-    std::unique_ptr<TouchpadTriggerHandler> m_touchpadTriggerHandler;
+    std::vector<const TouchPoint *> validTouchPoints() const;
+    void setTouchPoints(std::vector<TouchPoint> value) { m_touchPoints = std::move(value); }
+
+    TouchpadTriggerHandler *touchpadTriggerHandler() const { return m_touchpadTriggerHandler.get(); }
+    void setTouchpadTriggerHandler(std::unique_ptr<TouchpadTriggerHandler> value);
 
 private:
     InputDeviceType m_type;
     QString m_name;
     QString m_sysName;
     InputDeviceProperties m_properties;
-
     std::unordered_set<uint32_t> m_keys;
+    std::vector<TouchPoint> m_touchPoints;
+    std::unique_ptr<TouchpadTriggerHandler> m_touchpadTriggerHandler;
 };
 
 }

@@ -16,7 +16,7 @@ namespace InputActions
 void TestTouchpadTriggerHandler::init()
 {
     m_touchpad = std::make_unique<InputDevice>(InputDeviceType::Touchpad);
-    m_touchpad->m_touchPoints = std::vector<TouchPoint>(5);
+    m_touchpad->setTouchPoints(std::vector<TouchPoint>(5));
     m_handler = std::make_unique<MockTouchpadTriggerHandler>(m_touchpad.get());
     m_activatingTriggerSpy = std::make_unique<QSignalSpy>(m_handler.get(), &TriggerHandler::activatingTrigger);
     m_activatingTriggersSpy = std::make_unique<QSignalSpy>(m_handler.get(), &TriggerHandler::activatingTriggers);
@@ -166,7 +166,7 @@ void TestTouchpadTriggerHandler::press3_blocked()
 void TestTouchpadTriggerHandler::swipe1()
 {
     auto trigger = std::make_unique<Trigger>(TriggerType::Swipe);
-    trigger->m_activationCondition = std::make_shared<VariableCondition>("fingers", InputActions::Value<qreal>(1), ComparisonOperator::EqualTo);
+    trigger->setActivationCondition(std::make_shared<VariableCondition>("fingers", InputActions::Value<qreal>(1), ComparisonOperator::EqualTo));
     m_handler->addTrigger(std::move(trigger));
 
     addPoints(1);
@@ -184,7 +184,7 @@ void TestTouchpadTriggerHandler::swipe1()
 void TestTouchpadTriggerHandler::swipe2()
 {
     auto trigger = std::make_unique<Trigger>(TriggerType::Swipe);
-    trigger->m_activationCondition = std::make_shared<VariableCondition>("fingers", InputActions::Value<qreal>(2), ComparisonOperator::EqualTo);
+    trigger->setActivationCondition(std::make_shared<VariableCondition>("fingers", InputActions::Value<qreal>(2), ComparisonOperator::EqualTo));
     m_handler->addTrigger(std::move(trigger));
 
     addPoints(2);
@@ -280,12 +280,12 @@ void TestTouchpadTriggerHandler::tap2_variablesSetDuringActivation()
     QCOMPARE(finger1Position->get(), first);
     QCOMPARE(finger2Position->get(), second);
 
-    m_handler->handleEvent(TouchChangedEvent(m_touchpad.get(), m_touchpad->m_touchPoints[0], {}));
+    m_handler->handleEvent(TouchChangedEvent(m_touchpad.get(), m_touchpad->touchPoints()[0], {}));
     removePoints(1);
     QCOMPARE(finger1Position->get(), first);
     QCOMPARE(finger2Position->get(), second);
 
-    m_handler->handleEvent(TouchChangedEvent(m_touchpad.get(), m_touchpad->m_touchPoints[0], {}));
+    m_handler->handleEvent(TouchChangedEvent(m_touchpad.get(), m_touchpad->touchPoints()[0], {}));
     removePoints(1);
     QCOMPARE(finger1Position->get(), first);
     QCOMPARE(finger2Position->get(), second);
@@ -387,7 +387,7 @@ void TestTouchpadTriggerHandler::tap_fingerCount()
     QFETCH(bool, activated);
 
     auto trigger = std::make_unique<Trigger>(TriggerType::Tap);
-    trigger->m_activationCondition = std::make_shared<VariableCondition>("fingers", InputActions::Value<qreal>(triggerFingers), ComparisonOperator::EqualTo);
+    trigger->setActivationCondition(std::make_shared<VariableCondition>("fingers", InputActions::Value<qreal>(triggerFingers), ComparisonOperator::EqualTo));
     m_handler->addTrigger(std::move(trigger));
     m_touchpad->properties().setLmrTapButtonMap(lmrTapButtonMap);
 
@@ -493,7 +493,7 @@ void TestTouchpadTriggerHandler::pointerAxis_notOneAxisPerEvent_notMerged()
 
 TouchPoint &TestTouchpadTriggerHandler::addPoint(const QPointF &position)
 {
-    auto &point = m_touchpad->m_touchPoints[m_touchpad->validTouchPoints().size()];
+    auto &point = m_touchpad->touchPoints()[m_touchpad->validTouchPoints().size()];
     point.valid = true;
     point.initialPosition = point.position = position;
     point.downTimestamp = std::chrono::steady_clock::now();
@@ -510,7 +510,7 @@ void TestTouchpadTriggerHandler::addPoints(uint8_t count, const QPointF &positio
 
 void TestTouchpadTriggerHandler::movePoints(const QPointF &delta)
 {
-    for (auto &point : m_touchpad->m_touchPoints) {
+    for (auto &point : m_touchpad->touchPoints()) {
         if (!point.valid) {
             continue;
         }
@@ -523,7 +523,7 @@ void TestTouchpadTriggerHandler::movePoints(const QPointF &delta)
 void TestTouchpadTriggerHandler::removePoints(int16_t count)
 {
     uint8_t removed{};
-    for (auto &point : std::ranges::reverse_view(m_touchpad->m_touchPoints)) {
+    for (auto &point : std::ranges::reverse_view(m_touchpad->touchPoints())) {
         if (!point.valid) {
             continue;
         }

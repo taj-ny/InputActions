@@ -36,13 +36,13 @@ void TestTriggerAction::triggerUpdated_intervals()
     QFETCH(int, executions);
 
     auto action = std::make_unique<TriggerAction>();
-    action->m_on = On::Update;
-    action->m_interval = interval;
+    action->setOn(On::Update);
+    action->setInterval(interval);
     for (const auto &delta : deltas) {
         action->triggerUpdated(delta, {});
     }
 
-    QCOMPARE(action->action()->m_executions, executions);
+    QCOMPARE(action->action()->executions(), executions);
 }
 
 void TestTriggerAction::triggerUpdated_mergeable()
@@ -57,8 +57,8 @@ void TestTriggerAction::triggerUpdated_mergeable()
 
     ActionInterval interval{};
     interval.setValue(1);
-    action->m_on = On::Update;
-    action->m_interval = interval;
+    action->setOn(On::Update);
+    action->setInterval(interval);
 
     action->triggerUpdated(10, {});
 

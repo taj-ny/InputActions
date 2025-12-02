@@ -731,7 +731,7 @@ static std::shared_ptr<Condition> asVariableCondition(const Node &node, std::opt
     }
 
     auto condition = std::make_shared<VariableCondition>(variableName, right, comparisonOperator);
-    condition->m_negate = negate;
+    condition->setNegate(negate);
     return condition;
 }
 
@@ -772,7 +772,7 @@ struct convert<std::shared_ptr<Condition>>
                     auto classGroup = std::make_shared<ConditionGroup>(ConditionGroupMode::Any);
                     classGroup->add(std::make_shared<VariableCondition>("window_class", value, ComparisonOperator::Regex));
                     classGroup->add(std::make_shared<VariableCondition>("window_name", value, ComparisonOperator::Regex));
-                    classGroup->m_negate = negate.contains("window_class");
+                    classGroup->setNegate(negate.contains("window_class"));
                     group->add(classGroup);
                 }
                 if (const auto &windowStateNode = node["window_state"]) {
@@ -785,7 +785,7 @@ struct convert<std::shared_ptr<Condition>>
                     if (value.contains("maximized")) {
                         classGroup->add(std::make_shared<VariableCondition>("window_maximized", trueValue, ComparisonOperator::EqualTo));
                     }
-                    classGroup->m_negate = negate.contains("window_state");
+                    classGroup->setNegate(negate.contains("window_state"));
                     group->add(classGroup);
                 }
                 condition = group;
@@ -891,6 +891,32 @@ void loadMember(std::optional<T> &member, const Node &node)
     }
 }
 
+template<typename T, typename TObject>
+void loadSetter(TObject *object, void (TObject::*setter)(T), const Node &node)
+{
+    if (node) {
+        (object->*setter)(node.as<T>());
+    }
+}
+
+template<typename T, typename TObject>
+void loadSetter(const std::unique_ptr<TObject> &object, void (TObject::*setter)(T), const Node &node)
+{
+    loadSetter(object.get(), setter, node);
+}
+
+template<typename T, typename TObject>
+void loadSetter(const std::shared_ptr<TObject> &object, void (TObject::*setter)(T), const Node &node)
+{
+    loadSetter(object.get(), setter, node);
+}
+
+template<typename T, typename TObject>
+void loadSetter(TObject &object, void (TObject::*setter)(T), const Node &node)
+{
+    loadSetter(&object, setter, node);
+}
+
 template<>
 struct convert<std::unique_ptr<Trigger>>
 {
@@ -901,7 +927,7 @@ struct convert<std::unique_ptr<Trigger>>
             trigger = std::make_unique<Trigger>(TriggerType::Click);
         } else if (type == "hold" || type == "press") {
             auto pressTrigger = new PressTrigger;
-            loadMember(pressTrigger->m_instant, node["instant"]);
+            loadSetter(pressTrigger, &PressTrigger::setInstant, node["instant"]);
             trigger.reset(pressTrigger);
         } else if (type == "hover") {
             trigger = std::make_unique<HoverTrigger>();
@@ -923,18 +949,18 @@ struct convert<std::unique_ptr<Trigger>>
             throw Exception(node.Mark(), "Invalid trigger type");
         }
 
-        loadMember(trigger->m_blockEvents, node["block_events"]);
-        loadMember(trigger->m_clearModifiers, node["clear_modifiers"]);
-        loadMember(trigger->m_endCondition, node["end_conditions"]);
-        loadMember(trigger->m_id, node["id"]);
-        loadMember(trigger->m_mouseButtons, node["mouse_buttons"]);
-        loadMember(trigger->m_mouseButtonsExactOrder, node["mouse_buttons_exact_order"]);
-        loadMember(trigger->m_resumeTimeout, node["resume_timeout"]);
-        loadMember(trigger->m_setLastTrigger, node["set_last_trigger"]);
-        loadMember(trigger->m_threshold, node["threshold"]);
+        loadSetter(trigger, &Trigger::setBlockEvents, node["block_events"]);
+        loadSetter(trigger, &Trigger::setClearModifiers, node["clear_modifiers"]);
+        loadSetter(trigger, &Trigger::setEndCondition, node["end_conditions"]);
+        loadSetter(trigger, &Trigger::setId, node["id"]);
+        loadSetter(trigger, &Trigger::setMouseButtons, node["mouse_buttons"]);
+        loadSetter(trigger, &Trigger::setMouseButtonsExactOrder, node["mouse_buttons_exact_order"]);
+        loadSetter(trigger, &Trigger::setResumeTimeout, node["resume_timeout"]);
+        loadSetter(trigger, &Trigger::setSetLastTrigger, node["set_last_trigger"]);
+        loadSetter(trigger, &Trigger::setThreshold, node["threshold"]);
         if (auto *motionTrigger = dynamic_cast<MotionTrigger *>(trigger.get())) {
-            loadMember(motionTrigger->m_lockPointer, node["lock_pointer"]);
-            loadMember(motionTrigger->m_speed, node["speed"]);
+            loadSetter(motionTrigger, &MotionTrigger::setLockPointer, node["lock_pointer"]);
+            loadSetter(motionTrigger, &MotionTrigger::setSpeed, node["speed"]);
         }
 
         auto conditionGroup = std::make_shared<ConditionGroup>();
@@ -974,12 +1000,12 @@ struct convert<std::unique_ptr<Trigger>>
         if (const auto &conditionsNode = node["conditions"]) {
             conditionGroup->add(conditionsNode.as<std::shared_ptr<Condition>>());
         }
-        trigger->m_activationCondition = conditionGroup;
+        trigger->setActivationCondition(conditionGroup);
 
         const auto accelerated = node["accelerated"].as<bool>(false);
         for (const auto &actionNode : node["actions"]) {
             auto action = actionNode.as<std::unique_ptr<TriggerAction>>();
-            action->m_accelerated = accelerated;
+            action->setAccelerated(accelerated);
             trigger->addAction(std::move(action));
         }
 
@@ -994,11 +1020,11 @@ struct convert<std::unique_ptr<TriggerAction>>
     {
         value = std::make_unique<TriggerAction>(node.as<std::shared_ptr<Action>>());
 
-        loadMember(value->m_interval, node["interval"]);
-        loadMember(value->m_threshold, node["threshold"]);
-        loadMember(value->m_on, node["on"]);
+        loadSetter(value, &TriggerAction::setInterval, node["interval"]);
+        loadSetter(value, &TriggerAction::setOn, node["on"]);
+        loadSetter(value, &TriggerAction::setThreshold, node["threshold"]);
 
-        if (value->m_on == On::Begin && value->m_threshold && (value->m_threshold->min() || value->m_threshold->max())) {
+        if (value->on() == On::Begin && value->threshold() && (value->threshold()->min() || value->threshold()->max())) {
             throw Exception(node.Mark(), "Begin actions can't have thresholds");
         }
 
@@ -1013,11 +1039,11 @@ struct convert<std::shared_ptr<Action>>
     {
         if (const auto &commandNode = node["command"]) {
             auto action = std::make_shared<CommandAction>(commandNode.as<InputActions::Value<QString>>());
-            loadMember(action->m_wait, node["wait"]);
+            loadSetter(action, &CommandAction::setWait, node["wait"]);
             value = action;
         } else if (const auto &inputNode = node["input"]) {
             auto action = std::make_shared<InputAction>(inputNode.as<std::vector<InputAction::Item>>());
-            loadMember(action->m_delay, node["delay"]);
+            loadSetter(action, &InputAction::setDelay, node["delay"]);
             value = action;
         } else if (const auto &plasmaShortcutNode = node["plasma_shortcut"]) {
             const auto split = plasmaShortcutNode.as<QString>().split(",");
@@ -1033,9 +1059,9 @@ struct convert<std::shared_ptr<Action>>
             throw Exception(node.Mark(), "Action has no valid action property");
         }
 
-        loadMember(value->m_condition, node["conditions"]);
-        loadMember(value->m_executionLimit, node["limit"]);
-        loadMember(value->m_id, node["id"]);
+        loadSetter(value, &Action::setCondition, node["conditions"]);
+        loadSetter(value, &Action::setExecutionLimit, node["limit"]);
+        loadSetter(value, &Action::setId, node["id"]);
 
         return true;
     }
@@ -1084,7 +1110,7 @@ static void decodeMotionTriggerHandler(const Node &node, TriggerHandler *handler
 
     auto *motionHandler = dynamic_cast<MotionTriggerHandler *>(handler);
     if (const auto &speedNode = node["speed"]) {
-        loadMember(motionHandler->m_inputEventsToSample, speedNode["events"]);
+        loadSetter(motionHandler, &MotionTriggerHandler::setInputEventsToSample, speedNode["events"]);
         if (const auto &thresholdNode = speedNode["swipe_threshold"]) {
             motionHandler->setSpeedThreshold(TriggerType::Swipe, thresholdNode.as<qreal>());
         }
@@ -1129,9 +1155,9 @@ struct convert<std::unique_ptr<MouseTriggerHandler>>
         handler.reset(mouseTriggerHandler);
         decodeMotionTriggerHandler(node, handler.get());
 
-        loadMember(mouseTriggerHandler->m_motionTimeout, node["motion_timeout"]);
-        loadMember(mouseTriggerHandler->m_pressTimeout, node["press_timeout"]);
-        loadMember(mouseTriggerHandler->m_unblockButtonsOnTimeout, node["unblock_buttons_on_timeout"]);
+        loadSetter(mouseTriggerHandler, &MouseTriggerHandler::setMotionTimeout, node["motion_timeout"]);
+        loadSetter(mouseTriggerHandler, &MouseTriggerHandler::setPressTimeout, node["press_timeout"]);
+        loadSetter(mouseTriggerHandler, &MouseTriggerHandler::setUnblockButtonsOnTimeout, node["unblock_buttons_on_timeout"]);
 
         return true;
     }
@@ -1152,8 +1178,8 @@ std::unique_ptr<TouchpadTriggerHandler> asTouchpadTriggerHandler(const Node &nod
 {
     auto handler = std::make_unique<TouchpadTriggerHandler>(device);
     decodeMultiTouchMotionTriggerHandler(node, handler.get());
-    loadMember(handler->m_clickTimeout, node["click_timeout"]);
-    loadMember(handler->m_swipeDeltaMultiplier, node["delta_multiplier"]);
+    loadSetter(handler, &TouchpadTriggerHandler::setClickTimeout, node["click_timeout"]);
+    loadSetter(static_cast<MotionTriggerHandler *>(handler.get()), &MotionTriggerHandler::setSwipeDeltaMultiplier, node["delta_multiplier"]);
     return handler;
 }
 
@@ -1404,8 +1430,8 @@ struct convert<std::vector<InputDeviceRule>>
     {
         for (const auto &ruleNode : node["device_rules"]) {
             InputDeviceRule rule;
-            loadMember(rule.m_condition, ruleNode["conditions"]);
-            loadMember(rule.m_properties, ruleNode);
+            loadSetter(rule, &InputDeviceRule::setCondition, ruleNode["conditions"]);
+            loadSetter(rule, &InputDeviceRule::setProperties, ruleNode);
             value.push_back(std::move(rule));
         }
 
@@ -1414,8 +1440,8 @@ struct convert<std::vector<InputDeviceRule>>
             if (const auto &devicesNode = touchpadNode["devices"]) {
                 for (auto it = devicesNode.begin(); it != devicesNode.end(); ++it) {
                     InputDeviceRule rule;
-                    rule.m_condition = std::make_shared<VariableCondition>("name", InputActions::Value(it->first.as<QString>()), ComparisonOperator::EqualTo);
-                    loadMember(rule.m_properties, it->second);
+                    rule.setCondition(std::make_shared<VariableCondition>("name", InputActions::Value(it->first.as<QString>()), ComparisonOperator::EqualTo));
+                    loadSetter(rule, &InputDeviceRule::setProperties, it->second);
                     value.push_back(std::move(rule));
                 }
             }
@@ -1430,31 +1456,16 @@ struct convert<InputDeviceProperties>
 {
     static bool decode(const Node &node, InputDeviceProperties &value)
     {
-        if (const auto &multiTouchNode = node["__multiTouch"]) {
-            value.setMultiTouch(multiTouchNode.as<bool>());
-        }
-        if (const auto &grabNode = node["grab"]) {
-            value.setGrab(grabNode.as<bool>());
-        }
-        if (const auto &ignoreNode = node["ignore"]) {
-            value.setIgnore(ignoreNode.as<bool>());
-        }
-        if (const auto &handleLibevdevEventsNode = node["handle_libevdev_events"]) {
-            value.setHandleLibevdevEvents(handleLibevdevEventsNode.as<bool>());
-        }
-        if (const auto &buttonPad = node["buttonpad"]) {
-            value.setButtonPad(buttonPad.as<bool>());
-        }
+        loadSetter(value, &InputDeviceProperties::setMultiTouch, node["__multiTouch"]);
+        loadSetter(value, &InputDeviceProperties::setButtonPad, node["buttonpad"]);
+        loadSetter(value, &InputDeviceProperties::setGrab, node["grab"]);
+        loadSetter(value, &InputDeviceProperties::setHandleLibevdevEvents, node["handle_libevdev_events"]);
+        loadSetter(value, &InputDeviceProperties::setIgnore, node["ignore"]);
+
         if (const auto &pressureRangesNode = node["pressure_ranges"]) {
-            if (const auto &fingerNode = pressureRangesNode["finger"]) {
-                value.setFingerPressure(fingerNode.as<uint32_t>());
-            }
-            if (const auto &thumbNode = pressureRangesNode["thumb"]) {
-                value.setThumbPressure(thumbNode.as<uint32_t>());
-            }
-            if (const auto &palmNode = pressureRangesNode["palm"]) {
-                value.setPalmPressure(palmNode.as<uint32_t>());
-            }
+            loadSetter(value, &InputDeviceProperties::setFingerPressure, pressureRangesNode["finger"]);
+            loadSetter(value, &InputDeviceProperties::setThumbPressure, pressureRangesNode["thumb"]);
+            loadSetter(value, &InputDeviceProperties::setPalmPressure, pressureRangesNode["palm"]);
         }
         return true;
     }

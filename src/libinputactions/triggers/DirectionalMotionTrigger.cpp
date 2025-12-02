@@ -34,7 +34,7 @@ bool DirectionalMotionTrigger::canUpdate(const TriggerUpdateEvent &event) const
     }
 
     const auto &castedEvent = dynamic_cast<const DirectionalMotionTriggerUpdateEvent &>(event);
-    return m_direction & castedEvent.m_direction;
+    return m_direction & castedEvent.direction();
 }
 
 void DirectionalMotionTrigger::updateActions(const TriggerUpdateEvent &event)
@@ -48,13 +48,13 @@ void DirectionalMotionTrigger::updateActions(const TriggerUpdateEvent &event)
         static_cast<TriggerDirection>(SwipeDirection::Left),
         static_cast<TriggerDirection>(SwipeDirection::Up),
     };
-    auto delta = castedEvent.m_delta;
+    auto delta = castedEvent.delta();
     if ((m_direction & (m_direction - 1)) == 0 && std::find(negativeDirections.begin(), negativeDirections.end(), m_direction) != negativeDirections.end()) {
         delta = {delta.accelerated() * -1, delta.unaccelerated() * -1};
     }
 
     for (auto &action : actions()) {
-        action->triggerUpdated(delta, castedEvent.m_deltaMultiplied);
+        action->triggerUpdated(delta, castedEvent.deltaMultiplied());
     }
 }
 

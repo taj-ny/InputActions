@@ -31,7 +31,11 @@ public:
     /**
      * Whether the trigger should be activated immediately, preventing normal clicks from being performed. Currently only applies to mouse gestures.
      */
-    bool m_instant = false;
+    bool instant() const { return m_instant; }
+    void setInstant(bool value) { m_instant = value; }
+
+private:
+    bool m_instant{};
 };
 
 }

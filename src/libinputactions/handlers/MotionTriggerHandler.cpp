@@ -117,17 +117,17 @@ bool MotionTriggerHandler::handleMotion(const InputDevice *device, const PointDe
                 Q_UNREACHABLE();
         }
 
-        swipeEvent.m_delta = m_currentSwipeAxis == Axis::Vertical ? Delta(delta.accelerated().y(), delta.unaccelerated().y())
-                                                                  : Delta(delta.accelerated().x(), delta.unaccelerated().x());
-        swipeEvent.m_direction = static_cast<TriggerDirection>(direction);
-        swipeEvent.m_deltaMultiplied = {delta.accelerated() * m_swipeDeltaMultiplier, delta.unaccelerated() * m_swipeDeltaMultiplier};
-        swipeEvent.m_speed = speed;
+        swipeEvent.setDelta(m_currentSwipeAxis == Axis::Vertical ? Delta(delta.accelerated().y(), delta.unaccelerated().y())
+                                                                 : Delta(delta.accelerated().x(), delta.unaccelerated().x()));
+        swipeEvent.setDirection(static_cast<TriggerDirection>(direction));
+        swipeEvent.setDeltaMultiplied({delta.accelerated() * m_swipeDeltaMultiplier, delta.unaccelerated() * m_swipeDeltaMultiplier});
+        swipeEvent.setSpeed(speed);
         events[TriggerType::Swipe] = &swipeEvent;
     }
 
     if (hasActiveTriggers(TriggerType::Stroke)) {
-        strokeEvent.m_delta = device->type() == InputDeviceType::Mouse ? delta.acceleratedHypot() : delta.unacceleratedHypot(); // backwards compatibility
-        strokeEvent.m_speed = speed;
+        strokeEvent.setDelta(device->type() == InputDeviceType::Mouse ? delta.acceleratedHypot() : delta.unacceleratedHypot()); // backwards compatibility
+        strokeEvent.setSpeed(speed);
         events[TriggerType::Stroke] = &strokeEvent;
     }
 
@@ -194,7 +194,7 @@ void MotionTriggerHandler::onActivatingTrigger(const Trigger *trigger)
 {
     if (const auto motionTrigger = dynamic_cast<const MotionTrigger *>(trigger)) {
         if (!m_isDeterminingSpeed && motionTrigger->hasSpeed()) {
-            qCDebug(INPUTACTIONS_HANDLER_MOTION).noquote() << QString("Trigger has speed (id: %1)").arg(trigger->m_id);
+            qCDebug(INPUTACTIONS_HANDLER_MOTION).noquote() << QString("Trigger has speed (id: %1)").arg(trigger->id());
             m_isDeterminingSpeed = true;
         }
     }

@@ -38,7 +38,7 @@ public:
      * The time for the user to perform a click once a press gesture had been detected by libinput. If the click is not performed, the press trigger is
      * activated.
      */
-    std::chrono::milliseconds m_clickTimeout{200};
+    void setClickTimeout(std::chrono::milliseconds value) { m_clickTimeout = value; }
 
 protected:
     /**
@@ -70,6 +70,8 @@ private:
 
     bool m_previousPointerAxisEventBlocked{};
     PointDelta m_pointerAxisDelta;
+
+    std::chrono::milliseconds m_clickTimeout{200L};
 
     friend class MockTouchpadTriggerHandler;
     friend class TestTouchpadTriggerHandler;

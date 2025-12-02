@@ -29,7 +29,7 @@ KeyboardShortcutTrigger::KeyboardShortcutTrigger(KeyboardShortcut shortcut)
 
 bool KeyboardShortcutTrigger::canActivate(const TriggerActivationEvent &event) const
 {
-    return Trigger::canActivate(event) && (m_shortcut.keys == event.keyboardKeys);
+    return Trigger::canActivate(event) && (m_shortcut.keys == event.keyboardKeys());
 }
 
 }

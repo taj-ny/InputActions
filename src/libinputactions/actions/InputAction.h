@@ -55,7 +55,8 @@ public:
     /**
      * Delay between each item in the sequence.
      */
-    std::chrono::milliseconds m_delay{};
+    const std::chrono::milliseconds &delay() const { return m_delay; }
+    void setDelay(std::chrono::milliseconds value) { m_delay = std::move(value); }
 
     /**
      * Temporary hack, do not set outside of TriggerAction.
@@ -67,6 +68,7 @@ protected:
 
 private:
     std::vector<Item> m_sequence;
+    std::chrono::milliseconds m_delay{};
 };
 
 }

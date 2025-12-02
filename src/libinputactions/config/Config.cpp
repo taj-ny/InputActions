@@ -45,12 +45,10 @@ std::optional<QString> Config::load(const QString &config, bool preventCrashLoop
 
             auto newConfig = std::make_shared<Config>();
             const auto root = YAML::Load(config.toStdString());
-            newConfig->setAutoReload(root["autoreload"].as<bool>(true));
+            YAML::loadSetter(newConfig, &Config::setAutoReload, root["autoreload"]);
 
             if (const auto &notificationsNode = root["notifications"]) {
-                if (const auto &configErrorNode = notificationsNode["config_error"]) {
-                    newConfig->setSendNotificationOnError(configErrorNode.as<bool>());
-                }
+                YAML::loadSetter(newConfig, &Config::setSendNotificationOnError, notificationsNode["config_error"]);
             }
 
             g_config = newConfig;
@@ -69,22 +67,18 @@ std::optional<QString> Config::load(const QString &config, bool preventCrashLoop
             auto deviceRules = root.as<std::vector<InputDeviceRule>>();
 
             if (auto *libevdev = dynamic_cast<LibevdevComplementaryInputBackend *>(g_inputBackend.get())) {
-                if (const auto &pollingIntervalNode = root["__libevdev_polling_interval"]) {
-                    libevdev->setPollingInterval(pollingIntervalNode.as<uint32_t>());
-                }
-                if (const auto &enabledNode = root["__libevdev_enabled"]) {
-                    libevdev->setEnabled(enabledNode.as<bool>());
-                }
+                YAML::loadSetter(libevdev, &LibevdevComplementaryInputBackend::setPollingInterval, root["__libevdev_polling_interval"]);
+                YAML::loadSetter(libevdev, &LibevdevComplementaryInputBackend::setEnabled, root["__libevdev_enabled"]);
             }
 
             g_inputBackend->reset();
             g_inputEmitter->reset(); // Okay because required keys are not cleared
 
-            g_inputBackend->m_keyboardTriggerHandler = std::move(keyboardTriggerHandler);
-            g_inputBackend->m_mouseTriggerHandler = std::move(mouseTriggerHandler);
-            g_inputBackend->m_pointerTriggerHandler = std::move(pointerTriggerHandler);
-            g_inputBackend->m_touchpadTriggerHandlerFactory = std::move(touchpadTriggerHandlerFactory);
-            g_inputBackend->m_deviceRules = std::move(deviceRules);
+            g_inputBackend->setKeyboardTriggerHandler(std::move(keyboardTriggerHandler));
+            g_inputBackend->setMouseTriggerHandler(std::move(mouseTriggerHandler));
+            g_inputBackend->setPointerTriggerHandler(std::move(pointerTriggerHandler));
+            g_inputBackend->setTouchpadTriggerHandlerFactory(touchpadTriggerHandlerFactory);
+            g_inputBackend->setDeviceRules(deviceRules);
 
             g_inputEmitter->initialize();
             g_inputBackend->initialize();

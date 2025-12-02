@@ -59,9 +59,9 @@ void TestTrigger::canActivate_mouseButtons()
     QFETCH(bool, result);
 
     TriggerActivationEvent event;
-    m_trigger->m_mouseButtons = triggerButtons.value();
-    m_trigger->m_mouseButtonsExactOrder = orderMatters;
-    event.mouseButtons = eventButtons;
+    m_trigger->setMouseButtons(triggerButtons.value());
+    m_trigger->setMouseButtonsExactOrder(orderMatters);
+    event.setMouseButtons(eventButtons);
     QCOMPARE(m_trigger->canActivate(event), result);
 }
 
@@ -86,19 +86,19 @@ void TestTrigger::update_threshold()
     QFETCH(bool, actionExecuted);
 
     auto action = std::make_unique<TriggerAction>();
-    auto &executions = action->action()->m_executions;
-    action->m_on = On::Begin;
+    const auto *actionRaw = action.get();
+    action->setOn(On::Begin);
     m_trigger->addAction(std::move(action));
     if (threshold) {
-        m_trigger->m_threshold = threshold.value();
+        m_trigger->setThreshold(threshold.value());
     }
 
     TriggerUpdateEvent event;
     for (const auto &delta : deltas) {
-        event.m_delta = delta;
+        event.setDelta(delta);
         m_trigger->update(event);
     }
-    QCOMPARE(executions, actionExecuted);
+    QCOMPARE(actionRaw->action()->executions(), actionExecuted);
 }
 
 }

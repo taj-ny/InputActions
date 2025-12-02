@@ -19,7 +19,7 @@ void TestAction::canExecute_noLimit()
 
 void TestAction::canExecute_withLimit()
 {
-    m_action->m_executionLimit = 1;
+    m_action->setExecutionLimit(1);
     QVERIFY(m_action->canExecute());
     g_actionExecutor->execute(m_action);
     QVERIFY(!m_action->canExecute());

@@ -72,8 +72,8 @@ bool MouseTriggerHandler::pointerAxis(const MotionEvent &event)
         direction = SwipeDirection::Up;
     }
     DirectionalMotionTriggerUpdateEvent updateEvent;
-    updateEvent.m_delta = delta.x() != 0 ? delta.x() : delta.y();
-    updateEvent.m_direction = static_cast<TriggerDirection>(direction);
+    updateEvent.setDelta(delta.x() != 0 ? delta.x() : delta.y());
+    updateEvent.setDirection(static_cast<TriggerDirection>(direction));
 
     const auto result = updateTriggers(TriggerType::Wheel, updateEvent);
     bool continuous = false;
@@ -112,7 +112,7 @@ bool MouseTriggerHandler::pointerButton(const PointerButtonEvent &event)
         // This should be per-gesture instead of global, but it's good enough
         m_instantPress = false;
         for (const auto &trigger : triggers(TriggerType::Press, *m_activationEvent)) {
-            if (dynamic_cast<PressTrigger *>(trigger)->m_instant) {
+            if (dynamic_cast<PressTrigger *>(trigger)->instant()) {
                 qCDebug(INPUTACTIONS_HANDLER_MOUSE, "Press gesture is instant");
                 m_instantPress = true;
                 break;
@@ -226,7 +226,7 @@ bool MouseTriggerHandler::pointerMotion(const MotionEvent &event)
         pressBlockedMouseButtons(event.sender());
     }
     const auto lockPointer = std::ranges::any_of(activeTriggers(TriggerType::StrokeSwipe), [](const auto *trigger) {
-        return dynamic_cast<const MotionTrigger *>(trigger)->m_lockPointer;
+        return dynamic_cast<const MotionTrigger *>(trigger)->lockPointer();
     });
     return block && lockPointer;
 }
@@ -239,7 +239,7 @@ void MouseTriggerHandler::onActivatingTrigger(const Trigger *trigger)
 std::unique_ptr<TriggerActivationEvent> MouseTriggerHandler::createActivationEvent() const
 {
     auto event = TriggerHandler::createActivationEvent();
-    event->mouseButtons = m_buttons;
+    event->setMouseButtons(m_buttons);
     return event;
 }
 
@@ -247,13 +247,13 @@ bool MouseTriggerHandler::shouldBlockMouseButton(Qt::MouseButton button)
 {
     const auto event = createActivationEvent();
     // A partial match is required, not an exact one
-    event->mouseButtons = {};
+    event->setMouseButtons({});
     for (const auto &trigger : triggers(TriggerType::All, *event.get())) {
-        const auto buttons = trigger->m_mouseButtons;
-        if (trigger->m_blockEvents
-            && ((trigger->m_mouseButtonsExactOrder && std::ranges::equal(m_buttons, buttons | std::views::take(m_buttons.size())))
-                || (!trigger->m_mouseButtonsExactOrder && std::ranges::contains(buttons, button)))) {
-            qCDebug(INPUTACTIONS_HANDLER_MOUSE).noquote().nospace() << "Mouse button blocked (button: " << button << ", trigger: " << trigger->m_id << ")";
+        const auto buttons = trigger->mouseButtons();
+        if (trigger->blockEvents()
+            && ((trigger->mouseButtonsExactOrder() && std::ranges::equal(m_buttons, buttons | std::views::take(m_buttons.size())))
+                || (!trigger->mouseButtonsExactOrder() && std::ranges::contains(buttons, button)))) {
+            qCDebug(INPUTACTIONS_HANDLER_MOUSE).noquote().nospace() << "Mouse button blocked (button: " << button << ", trigger: " << trigger->id() << ")";
             return true;
         }
     }

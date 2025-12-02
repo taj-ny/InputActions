@@ -47,10 +47,11 @@ void Trigger::addAction(std::unique_ptr<TriggerAction> action)
 
 bool Trigger::canActivate(const TriggerActivationEvent &event) const
 {
-    if (!m_mouseButtons.empty() && event.mouseButtons.has_value()) {
-        if (m_mouseButtons.size() != event.mouseButtons->size() || (m_mouseButtonsExactOrder && !std::ranges::equal(m_mouseButtons, event.mouseButtons.value()))
+    if (!m_mouseButtons.empty() && event.mouseButtons().has_value()) {
+        if (m_mouseButtons.size() != event.mouseButtons()->size()
+            || (m_mouseButtonsExactOrder && !std::ranges::equal(m_mouseButtons, event.mouseButtons().value()))
             || (!m_mouseButtonsExactOrder && !std::ranges::all_of(m_mouseButtons, [event](auto &button) {
-                   return std::ranges::contains(event.mouseButtons.value(), button);
+                   return std::ranges::contains(event.mouseButtons().value(), button);
                }))) {
             return false;
         }
@@ -71,7 +72,7 @@ bool Trigger::endIfCannotUpdate() const
 
 void Trigger::update(const TriggerUpdateEvent &event)
 {
-    const auto delta = event.m_delta.unaccelerated();
+    const auto delta = event.delta().unaccelerated();
     m_absoluteAccumulatedDelta += std::abs(delta);
     m_withinThreshold = !m_threshold || m_threshold->contains(m_absoluteAccumulatedDelta);
     if (!m_withinThreshold) {
@@ -151,7 +152,7 @@ bool Trigger::overridesOtherTriggersOnEnd()
     }
 
     return std::ranges::any_of(m_actions, [](const auto &action) {
-        return (action->m_on == On::End || action->m_on == On::EndCancel) && action->canExecute();
+        return (action->on() == On::End || action->on() == On::EndCancel) && action->canExecute();
     });
 }
 
@@ -162,7 +163,7 @@ bool Trigger::overridesOtherTriggersOnUpdate()
     }
 
     return std::ranges::any_of(m_actions, [](const auto &action) {
-        return action->action()->m_executions || (action->m_on == On::Update && action->canExecute());
+        return action->action()->executions() || (action->on() == On::Update && action->canExecute());
     });
 }
 
@@ -197,7 +198,7 @@ const std::vector<TriggerAction *> Trigger::actions()
 void Trigger::updateActions(const TriggerUpdateEvent &event)
 {
     for (const auto &action : m_actions) {
-        action->triggerUpdated(event.m_delta, {});
+        action->triggerUpdated(event.delta(), {});
     }
 }
 

@@ -63,12 +63,12 @@ void TestDirectionalMotionTrigger::canUpdate()
     auto trigger = std::make_unique<DirectionalMotionTrigger>(TriggerType::None, direction);
     for (const auto &validDirection : valid) {
         DirectionalMotionTriggerUpdateEvent event;
-        event.m_direction = validDirection;
+        event.setDirection(validDirection);
         QVERIFY(trigger->canUpdate(event));
     }
     for (const auto &invalidDirection : invalid) {
         DirectionalMotionTriggerUpdateEvent event;
-        event.m_direction = invalidDirection;
+        event.setDirection(invalidDirection);
         QVERIFY(!trigger->canUpdate(event));
     }
 }

@@ -36,7 +36,7 @@ void ActionGroup::executeImpl(uint32_t executions)
     // TODO Each action with a condition introduces latency
     const auto evaluateCondition = [](const auto &action) {
         auto satisfied = true;
-        if (const auto &condition = action->m_condition) {
+        if (const auto &condition = action->condition()) {
             ThreadUtils::runOnThread(
                 ThreadUtils::mainThread(),
                 [&condition, &satisfied]() {

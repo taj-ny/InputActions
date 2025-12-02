@@ -74,17 +74,16 @@ public:
      */
     bool matches(qreal delta) const;
 
-    const qreal &value() const;
+    qreal value() const { return m_value; }
     /**
-     * @param value Will be converted to an absolute value. 0 means execute exactly once per input event, direction
-     * still applies. Default is 0.
+     * @param value Will be converted to an absolute value. 0 means execute exactly once per input event, direction still applies. Default is 0.
      */
-    void setValue(qreal value);
+    void setValue(qreal value) { m_value = value; }
 
     /**
-     * @param direction Default is Any.
+     * Default is Any.
      */
-    void setDirection(const IntervalDirection &direction);
+    void setDirection(IntervalDirection value) { m_direction = value; }
 
 private:
     qreal m_value{};
@@ -140,26 +139,32 @@ public:
      */
     bool canExecute() const;
 
-    const Action *action() const;
+    const Action *action() const { return m_action.get(); }
 
     /**
      * The point of the trigger's lifecycle at which the action should be executed.
      */
-    On m_on = On::End;
+    On on() const { return m_on; }
+    void setOn(On value) { m_on = value; }
+
     /**
      * How often and when an update action should repeat.
      */
-    ActionInterval m_interval;
+    const ActionInterval &interval() const { return m_interval; }
+    void setInterval(ActionInterval value) { m_interval = std::move(value); }
+
     /**
      * Use the accelerated delta for intervals, if available. This does not affect thresholds.
      */
-    bool m_accelerated{};
+    bool accelerated() const { return m_accelerated; }
+    void setAccelerated(bool value) { m_accelerated = value; }
+
     /**
-     * Sets how far the trigger needs to progress in order for the action to be executed. Thresholds are always
-     * positive.
+     * How far the trigger needs to progress in order for the action to be executed. Thresholds are always positive.
      * @remark Begin actions can't have thresholds. Set the threshold on the trigger instead.
      */
-    std::optional<Range<qreal>> m_threshold;
+    const std::optional<Range<qreal>> &threshold() const { return m_threshold; }
+    void setThreshold(Range<qreal> value) { m_threshold = std::move(value); }
 
 private:
     void update(const Delta &delta);
@@ -169,7 +174,11 @@ private:
      */
     void reset();
 
+    bool m_accelerated{};
     std::shared_ptr<Action> m_action;
+    ActionInterval m_interval;
+    On m_on = On::End;
+    std::optional<Range<qreal>> m_threshold;
 
     /**
      * The sum of deltas from update events. Reset when the direction changes.

@@ -58,8 +58,8 @@ class InputEvent
 public:
     virtual ~InputEvent() = default;
 
-    const InputEventType &type() const;
-    InputDevice *sender() const;
+    const InputEventType &type() const { return m_type; }
+    InputDevice *sender() const { return m_sender; }
 
 protected:
     InputEvent(InputEventType type, InputDevice *sender);
@@ -74,8 +74,8 @@ class MotionEvent : public InputEvent
 public:
     MotionEvent(InputDevice *sender, InputEventType type, PointDelta delta, bool oneAxisPerEvent = false);
 
-    const PointDelta &delta() const;
-    bool oneAxisPerEvent() const;
+    const PointDelta &delta() const { return m_delta; }
+    bool oneAxisPerEvent() const { return m_oneAxisPerEvent; }
 
 private:
     PointDelta m_delta;
@@ -87,8 +87,8 @@ class KeyboardKeyEvent : public InputEvent
 public:
     KeyboardKeyEvent(InputDevice *sender, uint32_t nativeKey, bool state);
 
-    const uint32_t &nativeKey() const;
-    const bool &state() const;
+    uint32_t nativeKey() const { return m_nativeKey; }
+    bool state() const { return m_state; }
 
 private:
     uint32_t m_nativeKey;
@@ -100,9 +100,9 @@ class PointerButtonEvent : public InputEvent
 public:
     PointerButtonEvent(InputDevice *sender, Qt::MouseButton button, uint32_t nativeButton, bool state);
 
-    const Qt::MouseButton &button() const;
-    const uint32_t &nativeButton() const;
-    const bool &state() const;
+    const Qt::MouseButton &button() const { return m_button; }
+    uint32_t nativeButton() const { return m_nativeButton; }
+    bool state() const { return m_state; }
 
 private:
     Qt::MouseButton m_button;
@@ -115,7 +115,7 @@ class TouchpadClickEvent : public InputEvent
 public:
     TouchpadClickEvent(InputDevice *sender, bool state);
 
-    const bool &state() const;
+    bool state() const { return m_state; }
 
 private:
     bool m_state;
@@ -126,8 +126,8 @@ class TouchpadPinchEvent : public InputEvent
 public:
     TouchpadPinchEvent(InputDevice *sender, qreal scale, qreal angleDelta);
 
-    const qreal &scale() const;
-    const qreal &angleDelta() const;
+    qreal scale() const { return m_scale; }
+    qreal angleDelta() const { return m_angleDelta; }
 
 private:
     qreal m_scale;
@@ -139,9 +139,9 @@ class TouchpadGestureLifecyclePhaseEvent : public InputEvent
 public:
     TouchpadGestureLifecyclePhaseEvent(InputDevice *sender, TouchpadGestureLifecyclePhase phase, TriggerTypes triggers, uint8_t fingers = 0);
 
-    const TouchpadGestureLifecyclePhase &phase() const;
-    const TriggerTypes &triggers() const;
-    const uint8_t &fingers() const;
+    TouchpadGestureLifecyclePhase phase() const { return m_phase; }
+    const TriggerTypes &triggers() const { return m_triggers; }
+    uint8_t fingers() const { return m_fingers; }
 
 private:
     TouchpadGestureLifecyclePhase m_phase;
@@ -154,7 +154,7 @@ class TouchEvent : public InputEvent
 public:
     TouchEvent(InputDevice *sender, InputEventType type, TouchPoint point);
 
-    const TouchPoint &point() const;
+    const TouchPoint &point() const { return m_point; }
 
 private:
     TouchPoint m_point;
@@ -165,7 +165,7 @@ class TouchChangedEvent : public TouchEvent
 public:
     TouchChangedEvent(InputDevice *sender, TouchPoint point, QPointF positionDelta);
 
-    const QPointF &positionDelta() const;
+    const QPointF &positionDelta() const { return m_positionDelta; }
 
 private:
     QPointF m_positionDelta;

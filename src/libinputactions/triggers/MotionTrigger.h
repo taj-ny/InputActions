@@ -28,6 +28,13 @@ class MotionTriggerUpdateEvent : public TriggerUpdateEvent
 public:
     MotionTriggerUpdateEvent() = default;
 
+    TriggerSpeed speed() const { return m_speed; }
+    void setSpeed(TriggerSpeed value) { m_speed = value; }
+
+    PointDelta deltaMultiplied() const { return m_deltaMultiplied; }
+    void setDeltaMultiplied(PointDelta value) { m_deltaMultiplied = std::move(value); }
+
+private:
     // Speed should be in a TriggerBeginEvent, but that's not a thing, and adding it would complicate everything.
     // Not worth it for a single property.
     TriggerSpeed m_speed = TriggerSpeed::Any;
@@ -50,15 +57,21 @@ public:
     bool canUpdate(const TriggerUpdateEvent &event) const override;
 
     bool hasSpeed() const;
+    TriggerSpeed speed() const { return m_speed; }
+    void setSpeed(TriggerSpeed value) { m_speed = value; }
 
     /**
      * Lock the pointer while this trigger is active. Only applies to mouse triggers.
      */
-    bool m_lockPointer{};
-    TriggerSpeed m_speed = TriggerSpeed::Any;
+    bool lockPointer() const { return m_lockPointer; }
+    void setLockPointer(bool value) { m_lockPointer = value; }
 
 protected:
     void updateActions(const TriggerUpdateEvent &event) override;
+
+private:
+    bool m_lockPointer{};
+    TriggerSpeed m_speed = TriggerSpeed::Any;
 };
 
 }
