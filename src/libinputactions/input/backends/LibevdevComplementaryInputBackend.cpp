@@ -104,7 +104,7 @@ void LibevdevComplementaryInputBackend::deviceAdded(InputDevice *device)
         InputBackend::deviceAdded(device);
     });
 
-    if (!m_enabled || device->type() != InputDeviceType::Touchpad || !deviceProperties(device).handleLibevdevEvents()) {
+    if (!m_enabled || device->type() != InputDeviceType::Touchpad) {
         return;
     }
 
@@ -176,8 +176,10 @@ void LibevdevComplementaryInputBackend::handleEvdevEvent(InputDevice *sender, co
                             slot.initialPosition = slot.position;
                         }
 
-                        handleEvent(TouchEvent(sender, slot.valid ? InputEventType::TouchDown : InputEventType::TouchUp, slot));
-                    } else if (previous.position != slot.position || previous.pressure != slot.pressure) {
+                        if (properties.handleLibevdevEvents()) {
+                            handleEvent(TouchEvent(sender, slot.valid ? InputEventType::TouchDown : InputEventType::TouchUp, slot));
+                        }
+                    } else if (properties.handleLibevdevEvents() && (previous.position != slot.position || previous.pressure != slot.pressure)) {
                         handleEvent(TouchChangedEvent(sender, slot, slot.position - previous.position));
                     }
                 }
@@ -189,7 +191,7 @@ void LibevdevComplementaryInputBackend::handleEvdevEvent(InputDevice *sender, co
                 case BTN_LEFT:
                 case BTN_MIDDLE:
                 case BTN_RIGHT:
-                    if (properties.buttonPad()) {
+                    if (properties.handleLibevdevEvents() && properties.buttonPad()) {
                         handleEvent(TouchpadClickEvent(sender, value));
                     }
                     break;

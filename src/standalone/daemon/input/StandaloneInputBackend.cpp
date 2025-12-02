@@ -184,18 +184,14 @@ bool StandaloneInputBackend::tryAddEvdevDevice(const QString &path)
         libevdev_set_name(data->libevdev, name.toStdString().c_str());
 
         if (deviceType == InputDeviceType::Touchpad) {
-            if (properties.handleLibevdevEvents()) {
-                LibevdevComplementaryInputBackend::addDevice(device.get(), data->libevdev, false);
-            }
+            LibevdevComplementaryInputBackend::addDevice(device.get(), data->libevdev, false);
 
             connect(&data->touchpadStateResetTimer, &QTimer::timeout, this, [this, device = device.get(), data = data.get()]() {
                 resetDevice(device, data);
             });
         }
     } else {
-        if (properties.handleLibevdevEvents()) {
-            LibevdevComplementaryInputBackend::deviceAdded(device.get());
-        }
+        LibevdevComplementaryInputBackend::deviceAdded(device.get());
     }
 
     if (data->libinputDevice) {
@@ -509,9 +505,7 @@ void StandaloneInputBackend::poll()
             }
 
             frame.push_back(evdevEvent);
-            if (device->properties().handleLibevdevEvents()) {
-                LibevdevComplementaryInputBackend::handleEvdevEvent(device.get(), evdevEvent);
-            }
+            LibevdevComplementaryInputBackend::handleEvdevEvent(device.get(), evdevEvent);
 
             if (evdevEvent.type != EV_SYN) {
                 continue;
