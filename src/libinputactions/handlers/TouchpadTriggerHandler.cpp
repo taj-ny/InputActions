@@ -50,11 +50,11 @@ bool TouchpadTriggerHandler::pointerAxis(const MotionEvent &event)
             isFirstEvent = true;
             g_variableManager->getVariable(BuiltinVariables::Fingers)->set(2);
             setState(State::Scrolling);
-            activateTriggers(TriggerType::StrokeSwipe);
+            activateTriggers(TriggerType::SinglePointMotion);
             [[fallthrough]];
         case State::Scrolling: {
             if (event.delta().unaccelerated().isNull()) {
-                endTriggers(TriggerType::StrokeSwipe);
+                endTriggers(TriggerType::SinglePointMotion);
                 setState(State::None);
 
                 m_previousPointerAxisEventBlocked = false;
@@ -143,7 +143,7 @@ bool TouchpadTriggerHandler::pointerMotion(const MotionEvent &event)
         case State::Touch:
         case State::TouchIdle:
             g_variableManager->getVariable(BuiltinVariables::Fingers)->set(1);
-            setState(activateTriggers(TriggerType::StrokeSwipe).success ? State::MotionTrigger : State::MotionNoTrigger);
+            setState(activateTriggers(TriggerType::SinglePointMotion).success ? State::MotionTrigger : State::MotionNoTrigger);
             [[fallthrough]];
         case State::MotionTrigger:
             return handleMotion(event.sender(), event.delta());

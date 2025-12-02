@@ -60,9 +60,13 @@ enum class TriggerType : uint32_t
     KeyboardShortcut = 1u << 7,
     Tap = 1u << 8,
     Hover = 1u << 9,
+    Circle = 1u << 10,
 
     PinchRotate = Pinch | Rotate,
-    StrokeSwipe = Stroke | Swipe,
+    /**
+     * Any trigger that relies on the motion of a single point. This also includes touch device triggers where all fingers are moving in the same direction.
+     */
+    SinglePointMotion = Circle | Stroke | Swipe,
 
     All = UINT32_MAX
 };

@@ -212,20 +212,20 @@ bool MouseTriggerHandler::pointerMotion(const MotionEvent &event)
         m_motionTimeoutTimer.stop();
 
         qCDebug(INPUTACTIONS_HANDLER_MOUSE, "Attempting to activate mouse motion gestures");
-        if (!activateTriggers(TriggerType::StrokeSwipe).success) {
+        if (!activateTriggers(TriggerType::SinglePointMotion).success) {
             qCDebug(INPUTACTIONS_HANDLER_MOUSE, "No motion gestures");
             pressBlockedMouseButtons(event.sender());
         }
     }
 
-    const auto hadActiveGestures = hasActiveTriggers(TriggerType::StrokeSwipe);
+    const auto hadActiveGestures = hasActiveTriggers(TriggerType::SinglePointMotion);
     const auto block = handleMotion(event.sender(), delta);
-    if (hadActiveGestures && !hasActiveTriggers(TriggerType::StrokeSwipe)) {
+    if (hadActiveGestures && !hasActiveTriggers(TriggerType::SinglePointMotion)) {
         qCDebug(INPUTACTIONS_HANDLER_MOUSE, "Mouse motion gesture ended/cancelled during motion");
         // Swipe gesture cancelled due to wrong speed or direction
         pressBlockedMouseButtons(event.sender());
     }
-    const auto lockPointer = std::ranges::any_of(activeTriggers(TriggerType::StrokeSwipe), [](const auto *trigger) {
+    const auto lockPointer = std::ranges::any_of(activeTriggers(TriggerType::SinglePointMotion), [](const auto *trigger) {
         return dynamic_cast<const MotionTrigger *>(trigger)->lockPointer();
     });
     return block && lockPointer;

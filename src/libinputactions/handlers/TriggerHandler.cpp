@@ -254,6 +254,13 @@ bool TriggerHandler::hasActiveTriggers(TriggerTypes types)
     });
 }
 
+bool TriggerHandler::hasActiveBlockingTriggers(TriggerTypes types)
+{
+    return std::ranges::any_of(m_activeTriggers, [&types](const auto *trigger) {
+        return types & trigger->type() && trigger->blockEvents();
+    });
+}
+
 void TriggerHandler::updateTimedTriggers()
 {
     if (!hasActiveTriggers()) {

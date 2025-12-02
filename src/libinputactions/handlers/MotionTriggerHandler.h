@@ -85,19 +85,28 @@ protected:
     void reset() override;
 
 private slots:
+    void onCircleCoastingTimerTick();
+
     void onActivatingTrigger(const Trigger *trigger);
     void onEndingTriggers(TriggerTypes types);
 
 private:
     Axis m_currentSwipeAxis = Axis::None;
-    QPointF m_currentSwipeDelta;
-    QPointF m_averageSwipeDelta;
+    QPointF m_totalSwipeDelta;
 
     bool m_isDeterminingSpeed = false;
     uint8_t m_sampledInputEvents = 0;
     qreal m_accumulatedAbsoluteSampledDelta = 0;
     std::optional<TriggerSpeed> m_speed;
     std::vector<TriggerSpeedThreshold> m_speedThresholds;
+
+    qreal m_circleTotalDelta{};
+    qreal m_circlePreviousAngle{};
+    qreal m_circlePreviousDistance{};
+    qreal m_circleFilterDelta{};
+    qreal m_circleAdaptiveDelta{};
+    bool m_circleIsFirstEvent = true;
+    QTimer m_circleCoastingTimer;
 
     std::vector<QPointF> m_deltas;
 
