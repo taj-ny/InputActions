@@ -29,15 +29,6 @@ namespace InputActions
 
 Q_LOGGING_CATEGORY(INPUTACTIONS_BACKEND_LIBEVDEV, "inputactions.input.backend.libevdev", QtWarningMsg)
 
-LibevdevComplementaryInputBackend::LibevdevComplementaryInputBackend()
-{
-    m_inputTimer.setTimerType(Qt::TimerType::PreciseTimer);
-    m_inputTimer.setInterval(10);
-    QObject::connect(&m_inputTimer, &QTimer::timeout, [this] {
-        poll();
-    });
-}
-
 libevdev *LibevdevComplementaryInputBackend::openDevice(const QString &sysName)
 {
     const auto path = QString("/dev/input/%1").arg(sysName).toStdString();
@@ -95,6 +86,13 @@ void LibevdevComplementaryInputBackend::addDevice(InputDevice *device, libevdev 
     properties.setMultiTouch(multiTouch);
     properties.setButtonPad(buttonPad);
 
+    if (owner) {
+        data->notifier = std::make_unique<QSocketNotifier>(libevdev_get_fd(libevdev), QSocketNotifier::Read);
+        connect(data->notifier.get(), &QSocketNotifier::activated, this, [this, device] {
+            poll(device);
+        });
+    }
+
     m_devices[device] = std::move(data);
 }
 
@@ -129,16 +127,12 @@ void LibevdevComplementaryInputBackend::deviceAdded(InputDevice *device)
     }
 
     addDevice(device, libevdev, true);
-    m_inputTimer.start();
 }
 
 void LibevdevComplementaryInputBackend::deviceRemoved(const InputDevice *device)
 {
     InputBackend::deviceRemoved(device);
     m_devices.erase(const_cast<InputDevice *>(device));
-    if (m_devices.empty()) {
-        m_inputTimer.stop();
-    }
 }
 
 void LibevdevComplementaryInputBackend::handleEvdevEvent(InputDevice *sender, const input_event &event)
@@ -234,34 +228,28 @@ void LibevdevComplementaryInputBackend::handleEvdevEvent(InputDevice *sender, co
     }
 }
 
-void LibevdevComplementaryInputBackend::poll()
+void LibevdevComplementaryInputBackend::poll(InputDevice *device)
 {
     if (m_ignoreEvents) {
         return;
     }
 
-    input_event event;
-    for (auto &[device, data] : m_devices) {
-        if (!data->owner || !data->libevdev) {
-            continue;
-        }
-
-        int status{};
-        while (true) {
-            auto flags = status == LIBEVDEV_READ_STATUS_SYNC ? LIBEVDEV_READ_FLAG_SYNC : LIBEVDEV_READ_FLAG_NORMAL;
-            status = libevdev_next_event(data->libevdev, flags, &event);
-            if (status != LIBEVDEV_READ_STATUS_SUCCESS && status != LIBEVDEV_READ_STATUS_SYNC) {
-                break;
-            }
-
-            handleEvdevEvent(device, event);
-        }
+    const auto &data = m_devices[device];
+    if (!data->owner || !data->libevdev) {
+        return;
     }
-}
 
-void LibevdevComplementaryInputBackend::setPollingInterval(uint32_t value)
-{
-    m_inputTimer.setInterval(value);
+    input_event event;
+    int status{};
+    while (true) {
+        auto flags = status == LIBEVDEV_READ_STATUS_SYNC ? LIBEVDEV_READ_FLAG_SYNC : LIBEVDEV_READ_FLAG_NORMAL;
+        status = libevdev_next_event(data->libevdev, flags, &event);
+        if (status != LIBEVDEV_READ_STATUS_SUCCESS && status != LIBEVDEV_READ_STATUS_SYNC) {
+            break;
+        }
+
+        handleEvdevEvent(device, event);
+    }
 }
 
 void LibevdevComplementaryInputBackend::setEnabled(bool value)
