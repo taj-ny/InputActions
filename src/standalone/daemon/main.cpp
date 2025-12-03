@@ -36,7 +36,12 @@
 using namespace InputActions;
 
 static const QDir VAR_RUN_INPUTACTIONS_DIR("/var/run/inputactions");
-static const QString LOCK_FILE_PATH = VAR_RUN_INPUTACTIONS_DIR.path() + "/lock";
+static const QString LOCK_FILE_PATH = VAR_RUN_INPUTACTIONS_DIR.path() +
+#ifdef DEBUG
+    "/lock-debug";
+#else
+    "/lock";
+#endif
 
 void handleSignal(int signal)
 {
