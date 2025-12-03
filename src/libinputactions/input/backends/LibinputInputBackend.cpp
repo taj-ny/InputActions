@@ -54,7 +54,7 @@ bool LibinputInputBackend::pointerAxis(InputDevice *sender, const QPointF &delta
     }
 
     if (delta.isNull() && sender->type() == InputDeviceType::Touchpad) {
-        LibevdevComplementaryInputBackend::poll(); // Update clicked state, clicking cancels scrolling and generates a (0,0) event
+        poll(sender); // Update clicked state, clicking cancels scrolling and generates a (0,0) event
     }
     return handleEvent(MotionEvent(sender, InputEventType::PointerAxis, {delta}, oneAxisPerEvent));
 }
@@ -66,7 +66,7 @@ bool LibinputInputBackend::pointerButton(InputDevice *sender, Qt::MouseButton bu
     }
 
     if (sender->type() == InputDeviceType::Touchpad) {
-        LibevdevComplementaryInputBackend::poll(); // Update clicked state
+        poll(sender); // Update clicked state
     }
     return handleEvent(PointerButtonEvent(sender, button, nativeButton, state));
 }
@@ -100,7 +100,7 @@ bool LibinputInputBackend::touchpadHoldBegin(InputDevice *sender, uint8_t finger
     }
 
     m_fingers = fingers;
-    LibevdevComplementaryInputBackend::poll(); // Update clicked state
+    poll(sender); // Update clicked state
     m_block = handleEvent(TouchpadGestureLifecyclePhaseEvent(sender, TouchpadGestureLifecyclePhase::Begin, TriggerType::Press, fingers));
     return m_block;
 }
@@ -111,7 +111,7 @@ bool LibinputInputBackend::touchpadHoldEnd(InputDevice *sender, bool cancelled)
         return false;
     }
 
-    LibevdevComplementaryInputBackend::poll(); // Update clicked state
+    poll(sender); // Update clicked state
     handleEvent(TouchpadGestureLifecyclePhaseEvent(sender,
                                                    cancelled ? TouchpadGestureLifecyclePhase::Cancel : TouchpadGestureLifecyclePhase::End,
                                                    TriggerType::Press));

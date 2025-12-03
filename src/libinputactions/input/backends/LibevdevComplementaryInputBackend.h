@@ -18,11 +18,12 @@
 
 #pragma once
 
-#include <QTimer>
+#include <QSocketNotifier>
 #include <libevdev-1.0/libevdev/libevdev.h>
 #include <libinputactions/input/backends/InputBackend.h>
 #include <libinputactions/input/events.h>
 #include <map>
+#include <memory>
 
 namespace InputActions
 {
@@ -35,14 +36,9 @@ namespace InputActions
 class LibevdevComplementaryInputBackend : public InputBackend
 {
 public:
-    LibevdevComplementaryInputBackend();
+    LibevdevComplementaryInputBackend() = default;
 
-    void poll() override;
-
-    /**
-     * @param value How often to poll input events.
-     */
-    void setPollingInterval(uint32_t value);
+    void poll(InputDevice *device);
 
     /**
      * Will take effect only if set before initialization.
@@ -61,7 +57,6 @@ private:
     libevdev *openDevice(const QString &sysName);
 
     bool m_enabled = true;
-    QTimer m_inputTimer;
 
     struct ExtraDeviceData
     {
@@ -72,6 +67,7 @@ private:
          * Whether libevdev is owned by this input backend.
          */
         bool owner{};
+        std::unique_ptr<QSocketNotifier> notifier;
 
         uint8_t currentSlot{};
         /**

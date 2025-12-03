@@ -58,8 +58,6 @@ void InputBackend::setIgnoreEvents(bool value)
     m_ignoreEvents = value;
 }
 
-void InputBackend::poll() {}
-
 void InputBackend::initialize()
 {
     InputDeviceRule ignoreOwnDevicesRule;

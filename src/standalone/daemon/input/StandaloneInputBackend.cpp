@@ -484,8 +484,6 @@ void StandaloneInputBackend::copyTouchpadState(const ExtraDeviceData *data) cons
 
 void StandaloneInputBackend::poll()
 {
-    LibevdevComplementaryInputBackend::poll();
-
     std::vector<input_event> frame;
     for (auto &[device, data] : m_devices) {
         if (!device->properties().grab()) {

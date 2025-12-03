@@ -63,10 +63,6 @@ public:
      * @param value Whether to ignore all input events.
      */
     void setIgnoreEvents(bool value);
-    /**
-     * Polls and handles events from all devices until there are no events left in the queue.
-     */
-    virtual void poll();
 
     /**
      * Detects and adds devices.

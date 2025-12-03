@@ -67,7 +67,6 @@ std::optional<QString> Config::load(const QString &config, bool preventCrashLoop
             auto deviceRules = root.as<std::vector<InputDeviceRule>>();
 
             if (auto *libevdev = dynamic_cast<LibevdevComplementaryInputBackend *>(g_inputBackend.get())) {
-                YAML::loadSetter(libevdev, &LibevdevComplementaryInputBackend::setPollingInterval, root["__libevdev_polling_interval"]);
                 YAML::loadSetter(libevdev, &LibevdevComplementaryInputBackend::setEnabled, root["__libevdev_enabled"]);
             }
 

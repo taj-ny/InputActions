@@ -46,8 +46,6 @@ public:
     void initialize() override;
     void reset() final;
 
-    void poll() override;
-
     libevdev_uinput *outputDevice(const InputDevice *device) const;
 
 private slots:
@@ -56,6 +54,8 @@ private slots:
 
 private:
     struct ExtraDeviceData;
+
+    void poll();
 
     void evdevDeviceAdded(const QString &path);
     /**
