@@ -51,6 +51,7 @@ public slots:
 
     QString recordStroke();
     QString reloadConfig();
+    QString suspend();
     QString variables(QString filter = "");
 
 private slots:

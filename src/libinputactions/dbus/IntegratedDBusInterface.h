@@ -48,6 +48,7 @@ public:
 public slots:
     Q_NOREPLY void recordStroke(const QDBusMessage &message);
     QString reloadConfig();
+    QString suspend();
     QString variables(QString filter = "");
 
 private:

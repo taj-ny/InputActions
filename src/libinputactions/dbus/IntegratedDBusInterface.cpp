@@ -23,6 +23,7 @@
 #include <libinputactions/interfaces/OnScreenMessageManager.h>
 #include <libinputactions/triggers/StrokeTrigger.h>
 #include <libinputactions/variables/VariableManager.h>
+#include <libinputactions/InputActionsMain.h>
 
 namespace InputActions
 {
@@ -61,6 +62,12 @@ QString IntegratedDBusInterface::reloadConfig()
     if (error) {
         return error.value();
     }
+    return "success";
+}
+
+QString IntegratedDBusInterface::suspend()
+{
+    g_inputActions->suspend();
     return "success";
 }
 

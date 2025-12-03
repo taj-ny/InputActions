@@ -68,6 +68,15 @@ QString ClientDBusInterface::reloadConfig()
     return ERROR_NO_REPLY;
 }
 
+QString ClientDBusInterface::suspend()
+{
+    SuspendRequestMessage request;
+    if (const auto response = m_client->socketConnection()->sendMessageAndWaitForResponse<ResponseMessage>(request)) {
+        return response->success() ? "success" : response->error();
+    }
+    return ERROR_NO_REPLY;
+}
+
 QString ClientDBusInterface::variables(QString filter)
 {
     VariableListRequestMessage request;
