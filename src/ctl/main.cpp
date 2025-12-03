@@ -58,6 +58,14 @@ int main(int argc, char **argv)
         ensureInterfaceIsValid(dbusInterface);
         printResponse(dbusInterface.asyncCall("recordStroke"));
     });
+    app.add_subcommand("resume", "Resume InputActions")->callback([&dbusInterface]() {
+        ensureInterfaceIsValid(dbusInterface);
+        printResponse(dbusInterface.asyncCall("reloadConfig"));
+    });
+    app.add_subcommand("suspend", "Suspend InputActions")->callback([&dbusInterface]() {
+        ensureInterfaceIsValid(dbusInterface);
+        printResponse(dbusInterface.asyncCall("suspend"));
+    });
 
     auto *variables = app.add_subcommand("variables", "Manage variables")->require_subcommand();
 

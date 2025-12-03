@@ -32,6 +32,7 @@ class LoadConfigRequestMessage;
 class RecordStrokeRequestMessage;
 class SendNotificationMessage;
 class StartProcessRequestMessage;
+class SuspendRequestMessage;
 class VariableListRequestMessage;
 
 class MessageHandler
@@ -51,6 +52,7 @@ protected:
     virtual void recordStrokeRequestMessage(const std::shared_ptr<const RecordStrokeRequestMessage> &message) {}
     virtual void sendNotificationMessage(const std::shared_ptr<const SendNotificationMessage> &message) {}
     virtual void startProcessRequestMessage(const std::shared_ptr<const StartProcessRequestMessage> &message) {}
+    virtual void suspendRequestMessage(const std::shared_ptr<const SuspendRequestMessage> &message) {}
     virtual void variableListRequestMessage(const std::shared_ptr<const VariableListRequestMessage> &message) {}
 };
 

@@ -162,6 +162,7 @@ void SessionManager::loadConfigRequestMessage(const std::shared_ptr<const LoadCo
 {
     LoadConfigResponseMessage response;
     if (auto *session = sessionForClient(message->sender())) {
+        session->m_suspended = false;
         auto config = message->config();
         if (m_etcConfigProvider) {
             config = m_etcConfigProvider->currentConfig();
@@ -197,6 +198,19 @@ void SessionManager::recordStrokeRequestMessage(const std::shared_ptr<const Reco
     }
 }
 
+void SessionManager::suspendRequestMessage(const std::shared_ptr<const SuspendRequestMessage> &message)
+{
+    if (auto *session = sessionForClient(message->sender())) {
+        session->m_suspended = true;
+
+        if (&currentSession() == session) {
+            activateSession(*session, false);
+        }
+
+        message->reply();
+    }
+}
+
 void SessionManager::variableListRequestMessage(const std::shared_ptr<const VariableListRequestMessage> &message)
 {
     if (auto *session = sessionForClient(message->sender())) {
@@ -212,6 +226,10 @@ void SessionManager::activateSession(const Session &session, bool loadConfig)
     g_actionExecutor->clearQueue();
     g_actionExecutor->waitForDone();
 
+    if (session.m_suspended) {
+        qCDebug(INPUTACTIONS) << "Session is suspended";
+        return;
+    }
     if (!session.m_client) {
         qCDebug(INPUTACTIONS) << "No client/config for current session, suspending";
         return;

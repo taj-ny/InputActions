@@ -47,6 +47,7 @@ enum class MessageType : int
     SendNotification,
     StartProcessRequestMessage,
     StartProcessResponseMessage,
+    SuspendRequest,
     VariableListRequest,
     VariableListResponse,
 };
@@ -368,6 +369,17 @@ private:
     QVariantMap m_environment;
     bool m_wait{};
     bool m_output{};
+};
+
+class SuspendRequestMessage : public RequestMessage
+{
+    Q_OBJECT
+
+public:
+    SuspendRequestMessage()
+        : RequestMessage(MessageType::SuspendRequest)
+    {
+    }
 };
 
 class StartProcessResponseMessage : public ResponseMessage

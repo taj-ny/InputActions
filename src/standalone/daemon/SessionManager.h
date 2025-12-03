@@ -43,6 +43,7 @@ private:
     bool m_hasClient{};
     QString m_config;
     MessageSocketConnection *m_client{};
+    bool m_suspended{};
 
     std::shared_ptr<IPCEnvironmentInterfaces> m_ipcEnvironmentInterfaces;
     std::shared_ptr<VariableManager> m_variableManager;
@@ -69,6 +70,7 @@ protected:
     void handshakeRequestMessage(const std::shared_ptr<const HandshakeRequestMessage> &message) override;
     void loadConfigRequestMessage(const std::shared_ptr<const LoadConfigRequestMessage> &message) override;
     void recordStrokeRequestMessage(const std::shared_ptr<const RecordStrokeRequestMessage> &message) override;
+    void suspendRequestMessage(const std::shared_ptr<const SuspendRequestMessage> &message) override;
     void variableListRequestMessage(const std::shared_ptr<const VariableListRequestMessage> &message) override;
 
 private slots:
