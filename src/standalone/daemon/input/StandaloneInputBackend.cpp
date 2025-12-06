@@ -466,7 +466,7 @@ void StandaloneInputBackend::copyTouchpadState(const ExtraDeviceData *data) cons
         libevdev_uinput_write_event(data->outputDevice, EV_ABS, code, info->value);
     }
 
-    for (int slot = 0; slot <= libevdev_get_num_slots(data->libevdev); slot++) {
+    for (int slot = 0; slot < libevdev_get_num_slots(data->libevdev); slot++) {
         libevdev_uinput_write_event(data->outputDevice, EV_ABS, ABS_MT_SLOT, slot);
 
         for (int code = ABS_MT_SLOT; code <= ABS_MT_TOOL_Y; code++) {
