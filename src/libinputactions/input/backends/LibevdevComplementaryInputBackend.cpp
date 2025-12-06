@@ -230,7 +230,7 @@ void LibevdevComplementaryInputBackend::handleEvdevEvent(InputDevice *sender, co
 
 void LibevdevComplementaryInputBackend::poll(InputDevice *device)
 {
-    if (m_ignoreEvents) {
+    if (m_ignoreEvents || !m_devices.contains(device)) {
         return;
     }
 
