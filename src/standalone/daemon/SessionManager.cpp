@@ -87,7 +87,7 @@ void SessionManager::beginSessionRequestMessage(const std::shared_ptr<const Begi
     setutent();
     utmp *entry;
     while ((entry = getutent()) != nullptr) {
-        if (entry->ut_type == USER_PROCESS && message->tty() == entry->ut_line) {
+        if ((entry->ut_type == USER_PROCESS || entry->ut_type == LOGIN_PROCESS) && message->tty() == entry->ut_line) {
             ttyUser = QString::fromLatin1(entry->ut_user, sizeof(entry->ut_user));
             break;
         }
