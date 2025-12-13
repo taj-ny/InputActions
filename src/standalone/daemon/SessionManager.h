@@ -18,6 +18,7 @@
 
 #pragma once
 
+#include <QDBusInterface>
 #include <QTimer>
 #include <libinputactions/dbus/DBusInterfaceBase.h>
 #include <libinputactions/ipc/MessageHandler.h>
@@ -80,6 +81,7 @@ private:
     void activateSession(const Session &session, bool loadConfig = true);
 
     DBusInterfaceBase m_dbusInterfaceBase;
+    QDBusInterface m_freedesktopLoginDbusInterface;
 
     std::unique_ptr<FileConfigProvider> m_etcConfigProvider;
 
