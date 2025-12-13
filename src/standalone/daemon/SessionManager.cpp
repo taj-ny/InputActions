@@ -19,6 +19,7 @@
 #include "SessionManager.h"
 #include "Server.h"
 #include "interfaces/IPCEnvironmentInterfaces.h"
+#include <QDBusArgument>
 #include <libinputactions/InputActionsMain.h>
 #include <libinputactions/actions/ActionExecutor.h>
 #include <libinputactions/config/Config.h>
@@ -38,6 +39,7 @@ namespace InputActions
 static const QString ERROR_SESSION_INACTIVE = "This client's session is inactive";
 
 SessionManager::SessionManager(Server *server)
+    : m_freedesktopLoginDbusInterface("org.freedesktop.login1", "/org/freedesktop/login1", "org.freedesktop.login1.Manager", QDBusConnection::systemBus())
 {
     connect(server, &Server::messageReceived, this, [this](const auto &message) {
         handleMessage(message);
@@ -83,34 +85,79 @@ void SessionManager::beginSessionRequestMessage(const std::shared_ptr<const Begi
         return;
     }
 
-    QString ttyUser;
-    setutent();
-    utmp *entry;
-    while ((entry = getutent()) != nullptr) {
-        if (entry->ut_type == USER_PROCESS && message->tty() == entry->ut_line) {
-            ttyUser = QString::fromLatin1(entry->ut_user, sizeof(entry->ut_user));
-            break;
+    if (m_freedesktopLoginDbusInterface.isValid()) {
+        const auto reply = m_freedesktopLoginDbusInterface.call("ListSessionsEx");
+        if (reply.type() == QDBusMessage::MessageType::ErrorMessage) {
+            response.setError(QString("Authentication failed: ListSessionsEx call failed: %1").arg(reply.errorMessage()));
+            message->reply(response);
+            return;
         }
-    }
-    endutent();
 
-    if (ttyUser.isEmpty()) {
-        response.setError("Authentication failed: could not get username of tty owner");
-        message->reply(response);
-        return;
-    }
+        if (reply.arguments().count() == 0) {
+            response.setError("Authentication failed: ListSessionEx returned no sessions");
+            message->reply(response);
+            return;
+        }
 
-    passwd *pwd = getpwnam(ttyUser.toStdString().c_str());
-    if (!pwd) {
-        response.setError("Authentication failed: could not get pid from username");
-        message->reply(response);
-        return;
-    }
+        bool success{};
+        const auto sessionData = reply.arguments().at(0).value<QDBusArgument>();
+        sessionData.beginArray();
+        while (!sessionData.atEnd()) {
+            bool b;
+            QDBusObjectPath o;
+            QString s;
+            quint64 t;
+            uint32_t u;
 
-    if (cred.uid != pwd->pw_uid) {
-        response.setError("Permission denied: cannot begin session for another user");
-        message->reply(response);
-        return;
+            uint32_t uid;
+            QString tty;
+
+            sessionData.beginStructure();
+            sessionData >> s >> uid >> s >> s >> u >> s >> tty >> b >> t >> o;
+            sessionData.endStructure();
+
+            if (cred.uid == uid && message->tty() == tty) {
+                success = true;
+                break;
+            }
+        }
+        sessionData.endArray();
+
+        if (!success) {
+            response.setError("Permission denied: cannot begin session for another user");
+            message->reply(response);
+            return;
+        }
+    } else {
+        QString ttyUser;
+        setutent();
+        utmp *entry;
+        while ((entry = getutent()) != nullptr) {
+            if (entry->ut_type == USER_PROCESS && message->tty() == entry->ut_line) {
+                ttyUser = QString::fromLatin1(entry->ut_user, sizeof(entry->ut_user));
+                break;
+            }
+        }
+        endutent();
+
+        if (ttyUser.isEmpty()) {
+            response.setError("Authentication failed: could not get username of tty owner");
+            message->reply(response);
+            return;
+        }
+
+        passwd *pwd = getpwnam(ttyUser.toStdString().c_str());
+        if (!pwd) {
+            response.setError("Authentication failed: could not get pid from username");
+            message->reply(response);
+            return;
+        }
+
+        if (cred.uid != pwd->pw_uid) {
+            response.setError("Permission denied: cannot begin session for another user");
+            message->reply(response);
+            return;
+        }
     }
 
     auto &session = m_sessions[message->tty()];
