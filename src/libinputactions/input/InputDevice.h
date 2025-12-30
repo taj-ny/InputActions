@@ -30,6 +30,7 @@ namespace InputActions
 {
 
 class TouchpadTriggerHandler;
+class TouchscreenTriggerHandler;
 
 static const std::map<uint32_t, Qt::KeyboardModifier> KEYBOARD_MODIFIERS{
     {KEY_LEFTALT, Qt::KeyboardModifier::AltModifier},
@@ -145,6 +146,10 @@ struct TouchPoint
      */
     bool valid{};
     TouchPointType type = TouchPointType::None;
+    /**
+     * May be unused.
+     */
+    int32_t id{};
 
     /**
      * Whether this touch point is active.
@@ -153,8 +158,17 @@ struct TouchPoint
     bool active{};
 
     // These members must not be reset if the point becomes invalid or inactive.
-    QPointF initialPosition;
+    /**
+     * Unaltered current position, as provided by the compositor/evdev. Only used for touchscreens.
+     */
+    QPointF unalteredPosition;
+    /**
+     * Unaltered current position, as provided by the compositor/evdev. Only used for touchscreens.
+     */
+    QPointF unalteredInitialPosition;
+
     QPointF position;
+    QPointF initialPosition;
     uint32_t pressure{};
     std::chrono::steady_clock::time_point downTimestamp;
 };
@@ -168,6 +182,20 @@ public:
      */
     InputDevice(InputDeviceType type, QString name = {}, QString sysName = {});
     ~InputDevice();
+
+    /**
+     * Resets the output device seen by the compositor/libinput into a neutral state.
+     */
+    TEST_VIRTUAL void resetOutputDeviceState();
+    /**
+     * Clones the device's state as seen by InputActions into the output device seen by the compositor/libinput.
+     */
+    TEST_VIRTUAL void restoreOutputDeviceState();
+
+    /**
+     * @param points Must be unaltered points from events provided by the backend.
+     */
+    TEST_VIRTUAL void simulateTouchscreenTap(const std::vector<QPointF> &points);
 
     /**
      * Current keyboard modifiers, derived from pressed keyboard keys.
@@ -198,6 +226,9 @@ public:
     TouchpadTriggerHandler *touchpadTriggerHandler() const { return m_touchpadTriggerHandler.get(); }
     void setTouchpadTriggerHandler(std::unique_ptr<TouchpadTriggerHandler> value);
 
+    TouchscreenTriggerHandler *touchscreenTriggerHandler() const { return m_touchscreenTriggerHandler.get(); }
+    void setTouchscreenTriggerHandler(std::unique_ptr<TouchscreenTriggerHandler> value);
+
 private:
     InputDeviceType m_type;
     QString m_name;
@@ -206,6 +237,7 @@ private:
     std::unordered_set<uint32_t> m_keys;
     std::vector<TouchPoint> m_touchPoints;
     std::unique_ptr<TouchpadTriggerHandler> m_touchpadTriggerHandler;
+    std::unique_ptr<TouchscreenTriggerHandler> m_touchscreenTriggerHandler;
 };
 
 }

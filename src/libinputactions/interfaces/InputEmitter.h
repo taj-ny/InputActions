@@ -18,7 +18,6 @@
 
 #pragma once
 
-#include <QPointF>
 #include <libinputactions/globals.h>
 #include <memory>
 #include <set>
@@ -28,11 +27,12 @@ namespace InputActions
 
 class InputDevice;
 
-class InputEmitter
+class InputEmitter : public QObject
 {
+    Q_OBJECT
+
 public:
     InputEmitter();
-    virtual ~InputEmitter() = default;
 
     virtual void initialize() {}
     virtual void reset() {}

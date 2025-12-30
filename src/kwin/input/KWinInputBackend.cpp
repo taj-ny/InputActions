@@ -17,9 +17,13 @@
 */
 
 #include "KWinInputBackend.h"
+#include "interfaces/KWinInputEmitter.h"
 #include "input_event.h"
 #include "utils.h"
+#include "workspace.h"
+#include "core/output.h"
 #include <libinputactions/input/events.h>
+#include <libinputactions/interfaces/InputEmitter.h>
 #include <libinputactions/triggers/StrokeTrigger.h>
 
 using namespace InputActions;
@@ -198,6 +202,39 @@ bool KWinInputBackend::keyboardKey(KWin::KeyboardKeyEvent *event)
     return LibinputInputBackend::keyboardKey(findInputActionsDevice(event->device), event->nativeScanCode, event->state == KWin::KeyboardKeyState::Pressed);
 }
 
+bool KWinInputBackend::touchDown(KWin::TouchDownEvent *event)
+{
+    auto *sender = currentTouchscreen();
+    auto *output = KWin::workspace()->outputAt(event->pos);
+    const QPointF position((event->pos.x() - output->geometry().x()) / output->geometry().width() * sender->properties().size().width(),
+                      (event->pos.y() - output->geometry().y()) / output->geometry().height() * sender->properties().size().height());
+    return touchscreenTouchDown(currentTouchscreen(), event->id, position, event->pos);
+}
+
+bool KWinInputBackend::touchMotion(KWin::TouchMotionEvent *event)
+{
+    auto *sender = currentTouchscreen();
+    auto *output = KWin::workspace()->outputAt(event->pos);
+    const QPointF position((event->pos.x() - output->geometry().x()) / output->geometry().width() * sender->properties().size().width(),
+                      (event->pos.y() - output->geometry().y()) / output->geometry().height() * sender->properties().size().height());
+    return touchscreenTouchMotion(currentTouchscreen(), event->id, position, event->pos);
+}
+
+bool KWinInputBackend::touchUp(KWin::TouchUpEvent *event)
+{
+    return touchscreenTouchUp(currentTouchscreen(), event->id);
+}
+
+bool KWinInputBackend::touchCancel()
+{
+    return touchscreenTouchCancel(currentTouchscreen());
+}
+
+bool KWinInputBackend::touchFrame()
+{
+    return touchscreenTouchFrame(currentTouchscreen());
+}
+
 void KWinInputBackend::touchpadPinchBlockingStopped(uint32_t fingers)
 {
     m_ignoreEvents = true;
@@ -242,6 +279,79 @@ void KWinInputBackend::touchpadSwipeBlockingStopped(uint32_t fingers)
     m_ignoreEvents = false;
 }
 
+// Events generated during resetting and restoring must not go through TouchInputRedirection, as it already contains the actual device state.
+void KWinInputBackend::resetOutputDeviceState(InputActions::InputDevice *device)
+{
+    if (device->type() != InputDeviceType::Touchscreen) {
+        return;
+    }
+
+    m_ignoreEvents = true;
+    for (const auto &point : device->validTouchPoints()) {
+        KWin::TouchUpEvent event{
+            .id = point->id,
+            .time = timestamp(),
+        };
+        m_input->processSpies(&KWin::InputEventSpy::touchUp, &event);
+        m_input->processFilters(&KWin::InputEventFilter::touchUp, &event);
+    }
+
+    m_input->processFilters(&KWin::InputEventFilter::touchFrame);
+    m_ignoreEvents = false;
+}
+
+void KWinInputBackend::restoreOutputDeviceState(InputActions::InputDevice *device)
+{
+    if (device->type() != InputDeviceType::Touchscreen) {
+        return;
+    }
+
+    m_ignoreEvents = true;
+    for (const auto &point : device->validTouchPoints()) {
+        KWin::TouchDownEvent event{
+            .id = point->id,
+            .pos = point->unalteredInitialPosition,
+            .time = timestamp(),
+        };
+        m_input->processSpies(&KWin::InputEventSpy::touchDown, &event);
+        m_input->processFilters(&KWin::InputEventFilter::touchDown, &event);
+    }
+    m_input->processFilters(&KWin::InputEventFilter::touchFrame);
+    for (const auto &point : device->validTouchPoints()) {
+        KWin::TouchMotionEvent event{
+            .id = point->id,
+            .pos = point->unalteredPosition,
+            .time = timestamp(),
+        };
+        m_input->processSpies(&KWin::InputEventSpy::touchMotion, &event);
+        m_input->processFilters(&KWin::InputEventFilter::touchMotion, &event);
+    }
+    m_input->processFilters(&KWin::InputEventFilter::touchFrame);
+    m_ignoreEvents = false;
+}
+
+void KWinInputBackend::simulateTouchscreenTapDown(const InputActions::InputDevice *device, const std::vector<QPointF> &points)
+{
+    auto *kwinDevice = findKwinDevice(device);
+    m_ignoreEvents = true;
+    for (size_t i = 0; i < points.size(); ++i) {
+        Q_EMIT kwinDevice->touchDown(i + 100, points[i], timestamp(), kwinDevice);
+    }
+    Q_EMIT kwinDevice->touchFrame(kwinDevice);
+    m_ignoreEvents = false;
+}
+
+void KWinInputBackend::simulateTouchscreenTapUp(const InputActions::InputDevice *device, const std::vector<QPointF> &points)
+{
+    auto *kwinDevice = findKwinDevice(device);
+    m_ignoreEvents = true;
+    for (size_t i = 0; i < points.size(); ++i) {
+        Q_EMIT kwinDevice->touchUp(i + 100, timestamp(), kwinDevice);
+    }
+    Q_EMIT kwinDevice->touchFrame(kwinDevice);
+    m_ignoreEvents = false;
+}
+
 void KWinInputBackend::kwinDeviceAdded(KWin::InputDevice *kwinDevice)
 {
     InputDeviceType type;
@@ -251,6 +361,8 @@ void KWinInputBackend::kwinDeviceAdded(KWin::InputDevice *kwinDevice)
         type = InputDeviceType::Keyboard;
     } else if (kwinDevice->isTouchpad()) {
         type = InputDeviceType::Touchpad;
+    } else if (kwinDevice->isTouch()) {
+        type = InputDeviceType::Touchscreen;
     } else {
         return;
     }
@@ -262,6 +374,11 @@ void KWinInputBackend::kwinDeviceAdded(KWin::InputDevice *kwinDevice)
     if (kwinDevice->property("lmrTapButtonMap").value<bool>()) {
         device.libinputactionsDevice->properties().setLmrTapButtonMap(true);
     }
+
+    if (type == InputDeviceType::Touchscreen) {
+        device.libinputactionsDevice->properties().setSize(kwinDevice->property("size").value<QSizeF>());
+    }
+
     deviceAdded(device.libinputactionsDevice.get());
     m_devices.push_back(std::move(device));
 }
@@ -287,10 +404,31 @@ InputActions::InputDevice *KWinInputBackend::findInputActionsDevice(const KWin::
     return {};
 }
 
+KWin::InputDevice *KWinInputBackend::findKwinDevice(const InputActions::InputDevice *inputactionsDevice)
+{
+    for (auto &device : m_devices) {
+        if (device.libinputactionsDevice.get() == inputactionsDevice) {
+            return device.kwinDevice;
+        }
+    }
+    return {};
+}
+
+
 InputActions::InputDevice *KWinInputBackend::currentTouchpad()
 {
     for (const auto *device : KWin::input()->devices()) {
         if (device->isTouchpad()) {
+            return findInputActionsDevice(device);
+        }
+    }
+    return nullptr;
+}
+
+InputActions::InputDevice *KWinInputBackend::currentTouchscreen()
+{
+    for (const auto *device : KWin::input()->devices()) {
+        if (device->isTouch() && !device->isTouchpad()) {
             return findInputActionsDevice(device);
         }
     }

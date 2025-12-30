@@ -35,6 +35,7 @@
 #include <libinputactions/handlers/MouseTriggerHandler.h>
 #include <libinputactions/handlers/PointerTriggerHandler.h>
 #include <libinputactions/handlers/TouchpadTriggerHandler.h>
+#include <libinputactions/handlers/TouchscreenTriggerHandler.h>
 #include <libinputactions/input/InputDeviceRule.h>
 #include <libinputactions/interfaces/CursorShapeProvider.h>
 #include <libinputactions/triggers/HoverTrigger.h>
@@ -1182,6 +1183,13 @@ std::unique_ptr<TouchpadTriggerHandler> asTouchpadTriggerHandler(const Node &nod
     decodeMultiTouchMotionTriggerHandler(node, handler.get());
     loadSetter(handler, &TouchpadTriggerHandler::setClickTimeout, node["click_timeout"]);
     loadSetter(static_cast<MotionTriggerHandler *>(handler.get()), &MotionTriggerHandler::setSwipeDeltaMultiplier, node["delta_multiplier"]);
+    return handler;
+}
+
+std::unique_ptr<TouchscreenTriggerHandler> asTouchscreenTriggerHandler(const Node &node, InputDevice *device)
+{
+    auto handler = std::make_unique<TouchscreenTriggerHandler>(device);
+    decodeMultiTouchMotionTriggerHandler(node, handler.get());
     return handler;
 }
 

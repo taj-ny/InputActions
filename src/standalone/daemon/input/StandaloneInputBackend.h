@@ -46,7 +46,14 @@ public:
     void initialize() override;
     void reset() final;
 
+    void resetOutputDeviceState(InputDevice *device) override;
+    void restoreOutputDeviceState(InputDevice *device) override;
+
     libevdev_uinput *outputDevice(const InputDevice *device) const;
+
+protected:
+    void simulateTouchscreenTapDown(const InputDevice *device, const std::vector<QPointF> &points) override;
+    void simulateTouchscreenTapUp(const InputDevice *device, const std::vector<QPointF> &points) override;
 
 private slots:
     void inotifyTimerTick();
@@ -66,8 +73,8 @@ private:
     void finishLibinputDeviceInitialization(InputDevice *device, ExtraDeviceData *data);
     void evdevDeviceRemoved(const QString &path);
 
-    bool handleEvent(InputDevice *sender, libinput_event *event);
-    LibinputEventsProcessingResult handleLibinputEvents(InputDevice *device, libinput *libinput);
+    bool handleEvent(InputDevice *sender, ExtraDeviceData *data, libinput_event *event);
+    LibinputEventsProcessingResult handleLibinputEvents(InputDevice *device, ExtraDeviceData *data, libinput *libinput);
 
     /**
      * @return Whether the specified device is in a neutral state.

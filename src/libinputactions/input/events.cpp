@@ -83,4 +83,14 @@ TouchChangedEvent::TouchChangedEvent(InputDevice *sender, TouchPoint point, QPoi
 {
 }
 
+TouchCancelEvent::TouchCancelEvent(InputDevice *sender)
+    : InputEvent(InputEventType::TouchCancel, sender)
+{
+}
+
+TouchFrameEvent::TouchFrameEvent(InputDevice *sender)
+    : InputEvent(InputEventType::TouchFrame, sender)
+{
+}
+
 }

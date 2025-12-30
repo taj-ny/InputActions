@@ -25,6 +25,7 @@
 #include <libinputactions/handlers/MouseTriggerHandler.h>
 #include <libinputactions/handlers/PointerTriggerHandler.h>
 #include <libinputactions/handlers/TouchpadTriggerHandler.h>
+#include <libinputactions/handlers/TouchscreenTriggerHandler.h>
 #include <libinputactions/input/InputDeviceRule.h>
 #include <libinputactions/input/InputEventHandler.h>
 #include <libinputactions/input/StrokeRecorder.h>
@@ -44,6 +45,10 @@ InputBackend::InputBackend()
 {
     m_emergencyCombinationTimer.setSingleShot(true);
     connect(&m_emergencyCombinationTimer, &QTimer::timeout, this, &InputBackend::onEmergencyCombinationTimerTimeout);
+
+    m_touchscreenTapTimer.setSingleShot(true);
+    m_touchscreenTapTimer.setTimerType(Qt::PreciseTimer);
+    connect(&m_touchscreenTapTimer, &QTimer::timeout, this, &InputBackend::onTouchscreenTapTimerTimeout);
 }
 
 InputBackend::~InputBackend() = default;
@@ -63,6 +68,19 @@ void InputBackend::initialize()
                                                                           ComparisonOperator::OneOf));
     ignoreOwnDevicesRule.properties().setIgnore(true);
     m_deviceRules.push_back(std::move(ignoreOwnDevicesRule));
+}
+
+void InputBackend::simulateTouchscreenTap(const InputDevice *device, const std::vector<QPointF> &points)
+{
+    if (m_touchscreenTapTimer.isActive()) {
+        return;
+    }
+
+    simulateTouchscreenTapDown(device, points);
+
+    m_currentTouchscreenTapPoints = points;
+    m_currentTouchscreenTapTarget = device;
+    m_touchscreenTapTimer.start(100);
 }
 
 InputDeviceProperties InputBackend::deviceProperties(const InputDevice *device) const
@@ -114,6 +132,7 @@ void InputBackend::reset()
     m_pointerTriggerHandler = {};
     m_touchpadTriggerHandlerFactory = {};
     m_eventHandlerChain.clear();
+    m_currentTouchscreen = {};
 }
 
 void InputBackend::deviceAdded(InputDevice *device)
@@ -123,6 +142,8 @@ void InputBackend::deviceAdded(InputDevice *device)
 
     if (device->type() == InputDeviceType::Touchpad && m_touchpadTriggerHandlerFactory) {
         device->setTouchpadTriggerHandler(m_touchpadTriggerHandlerFactory(device));
+    } else if (device->type() == InputDeviceType::Touchscreen && m_touchscreenTriggerHandlerFactory) {
+        device->setTouchscreenTriggerHandler(m_touchscreenTriggerHandlerFactory(device));
     }
 
     m_devices.push_back(device);
@@ -134,6 +155,9 @@ void InputBackend::deviceRemoved(const InputDevice *device)
     qCDebug(INPUTACTIONS).noquote().nospace() << "Device removed (name: " << device->name() << ")";
     std::erase(m_devices, device);
     createEventHandlerChain();
+    if (m_currentTouchscreen == device) {
+        m_currentTouchscreen = {};
+    }
 }
 
 void InputBackend::createEventHandlerChain()
@@ -151,6 +175,8 @@ void InputBackend::createEventHandlerChain()
     for (const auto &device : m_devices) {
         if (const auto &touchpadTriggerHandler = device->touchpadTriggerHandler()) {
             m_eventHandlerChain.push_back(touchpadTriggerHandler);
+        } else if (const auto &touchscreenTriggerHandler = device->touchscreenTriggerHandler()) {
+            m_eventHandlerChain.push_back(touchscreenTriggerHandler);
         }
     }
     pushToChain(m_pointerTriggerHandler);
@@ -167,6 +193,10 @@ bool InputBackend::handleEvent(const InputEvent &event)
         if (event.sender()->keys() == m_emergencyCombination) {
             m_emergencyCombinationTimer.start(EMERGENCY_COMBINATION_HOLD_DURATION);
         }
+    }
+
+    if (event.sender()->type() == InputDeviceType::Touchscreen) {
+        m_currentTouchscreen = event.sender();
     }
 
     if (g_sessionLock->sessionLocked()) {
@@ -189,6 +219,11 @@ void InputBackend::onEmergencyCombinationTimerTimeout()
 {
     g_notificationManager->sendNotification("Emergency combination", "Emergency combination triggered, suspending may take up to a few seconds");
     g_inputActions->suspend();
+}
+
+void InputBackend::onTouchscreenTapTimerTimeout()
+{
+    simulateTouchscreenTapUp(m_currentTouchscreenTapTarget, m_currentTouchscreenTapPoints);
 }
 
 void InputBackend::setDeviceRules(std::vector<InputDeviceRule> rules)
@@ -214,6 +249,11 @@ void InputBackend::setPointerTriggerHandler(std::unique_ptr<PointerTriggerHandle
 void InputBackend::setTouchpadTriggerHandlerFactory(std::function<std::unique_ptr<TouchpadTriggerHandler>(InputDevice *device)> value)
 {
     m_touchpadTriggerHandlerFactory = std::move(value);
+}
+
+void InputBackend::setTouchscreenTriggerHandlerFactory(std::function<std::unique_ptr<TouchscreenTriggerHandler>(InputDevice *device)> value)
+{
+    m_touchscreenTriggerHandlerFactory = std::move(value);
 }
 
 }

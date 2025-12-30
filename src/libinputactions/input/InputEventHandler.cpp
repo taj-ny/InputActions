@@ -39,8 +39,12 @@ bool InputEventHandler::handleEvent(const InputEvent &event)
             return pointerMotion(dynamic_cast<const MotionEvent &>(event));
         case InputEventType::TouchChanged:
             return touchChanged(dynamic_cast<const TouchChangedEvent &>(event));
+        case InputEventType::TouchCancel:
+            return touchCancel(dynamic_cast<const TouchCancelEvent &>(event));
         case InputEventType::TouchDown:
             return touchDown(dynamic_cast<const TouchEvent &>(event));
+        case InputEventType::TouchFrame:
+            return touchFrame(dynamic_cast<const TouchFrameEvent &>(event));
         case InputEventType::TouchUp:
             return touchUp(dynamic_cast<const TouchEvent &>(event));
         case InputEventType::TouchpadClick:

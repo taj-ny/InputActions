@@ -107,13 +107,13 @@ public:
      * Resets the trigger and notifies all actions that it has ended.
      * @internal
      */
-    void end(bool allowResuming = true);
+    TEST_VIRTUAL void end(bool allowResuming = true);
 
     /**
      * Resets the trigger and notifies all actions that it has been cancelled.
      * @internal
      */
-    void cancel();
+    TEST_VIRTUAL void cancel();
 
     /**
      * The trigger handler calls this method before ending a trigger. If true is returned, that trigger is ended and

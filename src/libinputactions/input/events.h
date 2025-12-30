@@ -35,8 +35,10 @@ enum class InputEventType
     PointerButton,
     PointerMotion,
 
-    TouchDown,
+    TouchCancel,
     TouchChanged,
+    TouchDown,
+    TouchFrame,
     TouchUp,
 
     TouchpadClick,
@@ -169,6 +171,18 @@ public:
 
 private:
     QPointF m_positionDelta;
+};
+
+class TouchCancelEvent : public InputEvent
+{
+public:
+    TouchCancelEvent(InputDevice *sender);
+};
+
+class TouchFrameEvent : public InputEvent
+{
+public:
+    TouchFrameEvent(InputDevice *sender);
 };
 
 }

@@ -36,6 +36,10 @@ public:
      */
     virtual std::shared_ptr<Window> activeWindow();
     /**
+     * @return The window under the center of valid touch points of the current touchscreen, or nullptr if not available.
+     */
+    virtual std::shared_ptr<Window> windowUnderFingers();
+    /**
      * @return The window under the pointer, or nullptr if not available.
      */
     virtual std::shared_ptr<Window> windowUnderPointer();

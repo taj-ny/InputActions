@@ -124,6 +124,8 @@ bool StandaloneInputBackend::tryAddEvdevDevice(const QString &path)
         deviceType = InputDeviceType::Keyboard;
     } else if (udev_device_get_property_value(udevDevice, "ID_INPUT_TOUCHPAD")) {
         deviceType = InputDeviceType::Touchpad;
+    } else if (udev_device_get_property_value(udevDevice, "ID_INPUT_TOUCHSCREEN")) {
+        deviceType = InputDeviceType::Touchscreen;
     } else {
         return true;
     }
@@ -287,7 +289,7 @@ void StandaloneInputBackend::deviceInitializationRetryTimerTick()
     }
 }
 
-bool StandaloneInputBackend::handleEvent(InputDevice *sender, libinput_event *event)
+bool StandaloneInputBackend::handleEvent(InputDevice *sender, ExtraDeviceData *data, libinput_event *event)
 {
     const auto type = libinput_event_get_type(event);
     switch (type) {
@@ -354,7 +356,7 @@ bool StandaloneInputBackend::handleEvent(InputDevice *sender, libinput_event *ev
         }
         case LIBINPUT_EVENT_POINTER_AXIS:
         case LIBINPUT_EVENT_POINTER_BUTTON:
-        case LIBINPUT_EVENT_POINTER_MOTION:
+        case LIBINPUT_EVENT_POINTER_MOTION: {
             auto *pointerEvent = libinput_event_get_pointer_event(event);
             switch (type) {
                 case LIBINPUT_EVENT_POINTER_AXIS: {
@@ -375,18 +377,48 @@ bool StandaloneInputBackend::handleEvent(InputDevice *sender, libinput_event *ev
                                                      libinput_event_pointer_get_dy_unaccelerated(pointerEvent));
                     return pointerMotion(sender, {acceleratedDelta, unacceleratedDelta});
             }
+            break;
+        }
+        case LIBINPUT_EVENT_TOUCH_CANCEL:
+        case LIBINPUT_EVENT_TOUCH_DOWN:
+        case LIBINPUT_EVENT_TOUCH_FRAME:
+        case LIBINPUT_EVENT_TOUCH_MOTION:
+        case LIBINPUT_EVENT_TOUCH_UP: {
+            auto *touchEvent = libinput_event_get_touch_event(event);
+            switch (type) {
+                case LIBINPUT_EVENT_TOUCH_CANCEL:
+                    return touchscreenTouchCancel(sender);
+                case LIBINPUT_EVENT_TOUCH_DOWN: {
+                    const auto slot = libinput_event_touch_get_slot(touchEvent);
+                    const QPointF position(libinput_event_touch_get_x(touchEvent), libinput_event_touch_get_y(touchEvent));
+                    const QPointF unalteredPosition(libevdev_get_slot_value(data->libevdev, slot, ABS_X), libevdev_get_slot_value(data->libevdev, slot, ABS_Y));
+                    return touchscreenTouchDown(sender, slot, position, unalteredPosition);
+                }
+                case LIBINPUT_EVENT_TOUCH_FRAME:
+                    return touchscreenTouchFrame(sender);
+                case LIBINPUT_EVENT_TOUCH_MOTION: {
+                    const auto slot = libinput_event_touch_get_slot(touchEvent);
+                    const QPointF position(libinput_event_touch_get_x(touchEvent), libinput_event_touch_get_y(touchEvent));
+                    const QPointF unalteredPosition(libevdev_get_slot_value(data->libevdev, slot, ABS_X), libevdev_get_slot_value(data->libevdev, slot, ABS_Y));
+                    return touchscreenTouchMotion(sender, slot, position, unalteredPosition);
+                }
+                case LIBINPUT_EVENT_TOUCH_UP:
+                    return touchscreenTouchUp(sender, libinput_event_touch_get_slot(touchEvent));
+            }
+            break;
+        }
     }
     return false;
 }
 
-LibinputEventsProcessingResult StandaloneInputBackend::handleLibinputEvents(InputDevice *device, libinput *libinput)
+LibinputEventsProcessingResult StandaloneInputBackend::handleLibinputEvents(InputDevice *device, ExtraDeviceData *data, libinput *libinput)
 {
     libinput_dispatch(libinput);
 
     // FIXME: One evdev frame can result in multiple libinput events, but one blocked libinput event will block the entire evdev frame.
     LibinputEventsProcessingResult result;
     while (auto *libinputEvent = libinput_get_event(libinput)) {
-        result.block = handleEvent(device, libinputEvent) || result.block;
+        result.block = handleEvent(device, data, libinputEvent) || result.block;
         libinput_event_destroy(libinputEvent);
         result.eventCount++;
     }
@@ -405,6 +437,7 @@ bool StandaloneInputBackend::isDeviceNeutral(const InputDevice *device, const Ex
             }
             break;
         case InputDeviceType::Touchpad:
+        case InputDeviceType::Touchscreen:
             return !libevdev_has_event_code(data->libevdev, EV_KEY, BTN_TOUCH) || !libevdev_get_event_value(data->libevdev, EV_KEY, BTN_TOUCH);
     }
     return true;
@@ -429,6 +462,7 @@ void StandaloneInputBackend::resetDevice(const InputDevice *device, const ExtraD
             break;
         }
         case InputDeviceType::Touchpad:
+        case InputDeviceType::Touchscreen:
             // Reverse order so that ABS_MT_SLOT is equal to 0 after
             for (int i = device->touchPoints().size() - 1; i >= 0; i--) {
                 libevdev_uinput_write_event(data->outputDevice, EV_ABS, ABS_MT_SLOT, i);
@@ -487,7 +521,7 @@ void StandaloneInputBackend::poll()
     std::vector<input_event> frame;
     for (auto &[device, data] : m_devices) {
         if (!device->properties().grab()) {
-            handleLibinputEvents(device.get(), data->libinput);
+            handleLibinputEvents(device.get(), data.get(), data->libinput);
             continue;
         }
 
@@ -498,7 +532,7 @@ void StandaloneInputBackend::poll()
             status = libevdev_next_event(data->libevdev, flags, &evdevEvent);
             if (status != LIBEVDEV_READ_STATUS_SUCCESS && status != LIBEVDEV_READ_STATUS_SYNC) {
                 // Handle events generated after a delay, e.g. pointer button after tapping
-                handleLibinputEvents(device.get(), data->libinput);
+                handleLibinputEvents(device.get(), data.get(), data->libinput);
                 break;
             }
 
@@ -512,23 +546,25 @@ void StandaloneInputBackend::poll()
             for (const auto &event : frame) {
                 libevdev_uinput_write_event(data->libinputEventInjectionDevice, event.type, event.code, event.value);
             }
-            const auto result = handleLibinputEvents(device.get(), data->libinput);
+            const auto result = handleLibinputEvents(device.get(), data.get(), data->libinput);
 
-            // Copy state of the real device to the output device if events suddenly stop being blocked while the device is not in a neutral state
-            if (data->touchpadBlocked && !result.block && result.eventCount) {
-                data->touchpadStateResetTimer.stop();
-                data->touchpadBlocked = false;
-                copyTouchpadState(data.get());
-            }
+            if (device->type() == InputDeviceType::Touchpad) {
+                // Copy state of the real device to the output device if events suddenly stop being blocked while the device is not in a neutral state
+                if (data->touchpadBlocked && !result.block && result.eventCount) {
+                    data->touchpadStateResetTimer.stop();
+                    data->touchpadBlocked = false;
+                    copyTouchpadState(data.get());
+                }
 
-            // Touchpad gestures are blocked by blocking the current and all next frames until all fingers are lifted, and changing the state of the output
-            // device to neutral after 200ms. The delay is required to block tap gestures, but doesn't affect motion gesture blocking negatively.
-            if (result.block && device->type() == InputDeviceType::Touchpad && !data->touchpadBlocked) {
-                data->touchpadBlocked = true;
-                data->touchpadStateResetTimer.start(200);
-            } else if (data->touchpadNeutral && data->touchpadStateResetTimer.isActive()) {
-                data->touchpadStateResetTimer.stop();
-                resetDevice(device.get(), data.get());
+                // Touchpad gestures are blocked by blocking the current and all next frames until all fingers are lifted, and changing the state of the output
+                // device to neutral after 200ms. The delay is required to block tap gestures, but doesn't affect motion gesture blocking negatively.
+                if (result.block && !data->touchpadBlocked) {
+                    data->touchpadBlocked = true;
+                    data->touchpadStateResetTimer.start(200);
+                } else if (data->touchpadNeutral && data->touchpadStateResetTimer.isActive()) {
+                    data->touchpadStateResetTimer.stop();
+                    resetDevice(device.get(), data.get());
+                }
             }
 
             if (!result.block && !data->touchpadBlocked) {
@@ -541,7 +577,7 @@ void StandaloneInputBackend::poll()
             data->touchpadNeutral = false;
         }
 
-        if (device->validTouchPoints().empty()) {
+        if (device->type() == InputDeviceType::Touchpad && device->validTouchPoints().empty()) {
             data->touchpadNeutral = true;
             data->touchpadBlocked = false;
         }
@@ -556,6 +592,44 @@ libevdev_uinput *StandaloneInputBackend::outputDevice(const InputActions::InputD
         }
     }
     return nullptr;
+}
+
+void StandaloneInputBackend::resetOutputDeviceState(InputDevice *device)
+{
+    if (device->type() != InputDeviceType::Touchscreen) {
+        return;
+    }
+
+    for (auto &[devicePtr, data] : m_devices) {
+        if (devicePtr.get() == device) {
+            resetDevice(device, data.get());
+            break;
+        }
+    }
+}
+
+void StandaloneInputBackend::restoreOutputDeviceState(InputDevice *device)
+{
+    if (device->type() != InputDeviceType::Touchscreen) {
+        return;
+    }
+
+    for (auto &[devicePtr, data] : m_devices) {
+        if (devicePtr.get() == device) {
+            copyTouchpadState(data.get());
+            break;
+        }
+    }
+}
+
+void StandaloneInputBackend::simulateTouchscreenTapDown(const InputDevice *device, const std::vector<QPointF> &points)
+{
+
+}
+
+void StandaloneInputBackend::simulateTouchscreenTapUp(const InputDevice *device, const std::vector<QPointF> &points)
+{
+
 }
 
 int StandaloneInputBackend::openRestricted(const char *path, int flags, void *data)

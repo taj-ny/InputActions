@@ -175,6 +175,107 @@ bool LibinputInputBackend::touchpadSwipeEnd(InputDevice *sender, bool cancelled)
                                                           TriggerType::SinglePointMotion));
 }
 
+bool LibinputInputBackend::touchscreenTouchCancel(InputDevice *sender)
+{
+    if (m_ignoreEvents || !sender) {
+        return false;
+    }
+
+    for (auto &point : sender->touchPoints()) {
+        point.active = false;
+        point.valid = false;
+    }
+
+    return handleEvent(TouchCancelEvent(sender));
+}
+
+bool LibinputInputBackend::touchscreenTouchDown(InputDevice *sender, int32_t id, const QPointF &position, const QPointF &unalteredPosition)
+{
+    if (m_ignoreEvents || !sender) {
+        return false;
+    }
+
+    TouchPoint *freePoint{};
+    for (auto &point : sender->touchPoints()) {
+        if (!point.active) {
+            freePoint = &point;
+            break;
+        }
+    }
+    if (!freePoint) {
+        sender->touchPoints().push_back({});
+        freePoint = &sender->touchPoints()[sender->touchPoints().size() - 1];
+    }
+
+    freePoint->active = true;
+    freePoint->valid = true;
+    freePoint->type = TouchPointType::Finger;
+    freePoint->initialPosition = position;
+    freePoint->position = position;
+    freePoint->id = id;
+    freePoint->downTimestamp = std::chrono::steady_clock::now();
+    freePoint->unalteredPosition = unalteredPosition;
+    freePoint->unalteredInitialPosition = unalteredPosition;
+
+    return handleEvent(TouchEvent(sender, InputEventType::TouchDown, *freePoint));
+}
+
+bool LibinputInputBackend::touchscreenTouchFrame(InputDevice *sender)
+{
+    if (m_ignoreEvents || !sender) {
+        return false;
+    }
+
+    return handleEvent(TouchFrameEvent(sender));
+}
+
+bool LibinputInputBackend::touchscreenTouchMotion(InputDevice *sender, int32_t id, const QPointF &position, const QPointF &unalteredPosition)
+{
+    if (m_ignoreEvents || !sender) {
+        return false;
+    }
+
+    TouchPoint *point{};
+    for (auto &touchPoint : sender->touchPoints()) {
+        if (touchPoint.id == id) {
+            point = &touchPoint;
+            break;
+        }
+    }
+    if (!point) {
+        return false;
+    }
+
+    const auto delta = position - point->position;
+    point->position = position;
+    point->unalteredPosition = unalteredPosition;
+
+    return handleEvent(TouchChangedEvent(sender, *point, delta));
+}
+
+bool LibinputInputBackend::touchscreenTouchUp(InputDevice *sender, int32_t id)
+{
+    if (m_ignoreEvents || !sender) {
+        return false;
+    }
+
+    TouchPoint *point{};
+    for (auto &touchPoint : sender->touchPoints()) {
+        if (touchPoint.id == id) {
+            point = &touchPoint;
+            break;
+        }
+    }
+    if (!point) {
+        return false;
+    }
+
+    point->active = false;
+    point->valid = false;
+
+    return handleEvent(TouchEvent(sender, InputEventType::TouchUp, *point));
+}
+
 Qt::MouseButton LibinputInputBackend::scanCodeToMouseButton(uint32_t scanCode) const
 {
     static const std::map<uint32_t, Qt::MouseButton> buttons = {
