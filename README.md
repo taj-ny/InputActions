@@ -23,8 +23,8 @@ Supported environments: GNOME, Hyprland, Plasma 6, other Wayland compositors (av
   - Triggers:
     - Circle: 1-4 fingers, can be used for circular scrolling
     - Click: 1-5 fingers, available on devices with one integrated button
+    - Hold: 1-4 fingers
     - Pinch: 2-4 fingers
-    - Press (hold): 1-4 fingers
     - Rotate: 2-4 fingers
     - Stroke: 1-4 fingers
     - Swipe: 1-4 fingers
