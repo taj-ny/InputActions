@@ -94,88 +94,7 @@ bool TouchscreenTriggerHandler::touchCancel(const TouchCancelEvent &event)
 
 bool TouchscreenTriggerHandler::touchChanged(const TouchChangedEvent &event)
 {
-    const auto &points = event.sender()->validTouchPoints();
-
-    if (m_state != State::WaitingForTouchUps) {
-        updateVariables(m_device);
-    }
-
-    switch (m_state) {
-        case State::Pinch: {
-            if (points.size() < 2) {
-                break;
-            }
-
-            const auto info = pinchInfo();
-            const auto scale = info.distance / m_initialDistance;
-
-            auto angleDelta = info.angle - m_previousAngle;
-            if (angleDelta > 180.0) {
-                angleDelta -= 360.0;
-            } else if (angleDelta < -180.0) {
-                angleDelta += 360.0;
-            }
-            setBlockAndUpdateOutputDeviceState(handlePinch(scale, angleDelta));
-
-            m_previousAngle = info.angle;
-
-            break;
-        }
-        case State::Swipe:
-            setBlockAndUpdateOutputDeviceState(handleMotion(m_device, event.positionDelta() / points.size()));
-            break;
-        case State::WaitingForTouchDowns:
-        case State::Hold:
-        case State::Touch: {
-            const auto fingerPassedThreshold = [this](const auto *point) {
-                return hypot(point->position - m_pointInitialPositions[point]) >= MOTION_THRESHOLD_MM;
-            };
-            if (std::ranges::any_of(points, fingerPassedThreshold)) {
-                setState(State::MotionOnePointReachedThreshold);
-            } else {
-                break;
-            }
-            [[fallthrough]];
-        }
-        case State::MotionOnePointReachedThreshold: {
-            const auto fingerPassedThreshold = [this](const auto *point) {
-                return hypot(point->position - m_pointInitialPositions[point]) >= MOTION_THRESHOLD_MM;
-            };
-            if (std::ranges::all_of(points, fingerPassedThreshold)) {
-                setState(State::MotionAllPointsReachedThreshold);
-            } else {
-                break;
-            }
-            [[fallthrough]];
-        }
-        case State::MotionAllPointsReachedThreshold:
-            bool sameDirection = true;
-            uint32_t firstDirection{};
-            QPointF totalDelta;
-            for (size_t i = 0; i < points.size(); i++) {
-                totalDelta += m_pointInitialPositions[points[i]] - points[i]->position;
-                const auto direction = directionFromPoint(m_pointInitialPositions[points[i]] - points[i]->position);
-                if (i == 0) {
-                    firstDirection = direction;
-                    continue;
-                }
-
-                if (!sameDirections(firstDirection, direction)) {
-                    sameDirection = false;
-                    break;
-                }
-            }
-            if (sameDirection) {
-                setState(State::Swipe);
-
-                handleMotion(m_device, totalDelta / points.size());
-                break;
-            }
-
-            setState(State::Pinch);
-            break;
-    }
-
+    m_touchModifiedInCurrentFrame = true;
     return m_block;
 }
 
@@ -203,6 +122,102 @@ bool TouchscreenTriggerHandler::touchDown(const TouchEvent &event)
 
 bool TouchscreenTriggerHandler::touchFrame(const TouchFrameEvent &event)
 {
+    if (!m_touchModifiedInCurrentFrame) {
+        const auto block = m_block || m_blockNextFrame;
+        m_blockNextFrame = false;
+        return block;
+    }
+    m_touchModifiedInCurrentFrame = false;
+
+    const auto &points = event.sender()->validTouchPoints();
+    for (const auto *point : points) {
+        for (auto &preTouchUpPoint : m_preTouchUpPoints) {
+            if (point->id == preTouchUpPoint.id) {
+                preTouchUpPoint.position = point->position;
+                preTouchUpPoint.unalteredPosition = point->unalteredPosition;
+            }
+        }
+    }
+
+    if (m_state != State::WaitingForTouchUps) {
+        updateVariables(m_device);
+    }
+
+    switch (m_state) {
+        case State::Pinch: {
+            const auto info = pinchInfo();
+            const auto scale = info.distance / m_initialDistance;
+
+            auto angleDelta = info.angle - m_previousAngle;
+            if (angleDelta > 180.0) {
+                angleDelta -= 360.0;
+            } else if (angleDelta < -180.0) {
+                angleDelta += 360.0;
+            }
+            m_previousAngle = info.angle;
+
+            setBlockAndUpdateOutputDeviceState(handlePinch(scale, angleDelta));
+
+            break;
+        }
+        case State::Swipe: {
+            const auto center = touchCenter();
+            setBlockAndUpdateOutputDeviceState(handleMotion(m_device, center - m_previousCenter));
+            m_previousCenter = center;
+            break;
+        }
+        case State::WaitingForTouchDowns:
+        case State::Hold:
+        case State::Touch: {
+            const auto fingerPassedThreshold = [this](const auto *point) {
+                return hypot(point->position - m_pointInitialPositions[point]) >= MOTION_THRESHOLD_MM;
+            };
+            if (std::ranges::any_of(points, fingerPassedThreshold)) {
+                setState(State::MotionOnePointReachedThreshold);
+            } else {
+                break;
+            }
+            [[fallthrough]];
+        }
+        case State::MotionOnePointReachedThreshold: {
+            const auto fingerPassedThreshold = [this](const auto *point) {
+                return hypot(point->position - m_pointInitialPositions[point]) >= MOTION_THRESHOLD_MM;
+            };
+            if (std::ranges::all_of(points, fingerPassedThreshold)) {
+                setState(State::Motion);
+            } else {
+                break;
+            }
+            [[fallthrough]];
+        }
+        case State::Motion:
+            bool sameDirection = true;
+            uint32_t firstDirection{};
+            QPointF totalDelta;
+            for (size_t i = 0; i < points.size(); i++) {
+                totalDelta += m_pointInitialPositions[points[i]] - points[i]->position;
+                const auto direction = directionFromPoint(m_pointInitialPositions[points[i]] - points[i]->position);
+                if (i == 0) {
+                    firstDirection = direction;
+                    continue;
+                }
+
+                if (!sameDirections(firstDirection, direction)) {
+                    sameDirection = false;
+                    break;
+                }
+            }
+            if (sameDirection) {
+                setState(State::Swipe);
+
+                handleMotion(m_device, totalDelta / points.size());
+                break;
+            }
+
+            setState(State::Pinch);
+            break;
+    }
+
     const auto block = m_block || m_blockNextFrame;
     m_blockNextFrame = false;
     return block;
@@ -266,25 +281,30 @@ void TouchscreenTriggerHandler::handleTouchUp()
                 return std::chrono::duration_cast<std::chrono::milliseconds>(now - point.downTimestamp) <= TAP_TIMEOUT
                     && hypot(point.position - point.initialPosition) < MOTION_THRESHOLD_MM;
             })) {
-                const auto result = activateTriggers(TriggerType::Tap);
-                if (result.success) {
-                    updateTriggers(TriggerType::Tap);
-                    endTriggers(TriggerType::Tap);
-                }
-
-                if (!result.block && m_block) {
-                    std::vector<QPointF> points;
-                    for (const auto &point : m_preTouchUpPoints) {
-                        points.push_back(point.unalteredPosition);
-                    }
-                    m_device->simulateTouchscreenTap(points);
-                }
+                handleTap();
             }
             break;
         }
     }
     setState(State::None);
     updateVariables();
+}
+
+void TouchscreenTriggerHandler::handleTap()
+{
+    const auto result = activateTriggers(TriggerType::Tap);
+    if (result.success) {
+        updateTriggers(TriggerType::Tap);
+        endTriggers(TriggerType::Tap);
+    }
+
+    if (!result.block && m_block) {
+        std::vector<QPointF> points;
+        for (const auto &point : m_preTouchUpPoints) {
+            points.push_back(point.unalteredPosition);
+        }
+        m_device->simulateTouchscreenTap(points);
+    }
 }
 
 void TouchscreenTriggerHandler::setState(State state)
@@ -337,6 +357,7 @@ void TouchscreenTriggerHandler::setState(State state)
             break;
         }
         case State::Swipe:
+            m_previousCenter = touchCenter();
             setBlockAndUpdateOutputDeviceState(activateTriggers(TriggerType::SinglePointMotion).block);
             break;
         case State::Touch:
@@ -390,6 +411,17 @@ PinchInfo TouchscreenTriggerHandler::pinchInfo()
         .angle = radiansToDegrees(atan2(delta)),
         .distance = hypot(delta),
     };
+}
+
+QPointF TouchscreenTriggerHandler::touchCenter() const
+{
+    QPointF center;
+    const auto points = m_device->validTouchPoints();
+    for (const auto *point : m_device->validTouchPoints()) {
+        center += point->position;
+    }
+    center /= points.size();
+    return center;
 }
 
 uint32_t TouchscreenTriggerHandler::directionFromPoint(const QPointF &point)

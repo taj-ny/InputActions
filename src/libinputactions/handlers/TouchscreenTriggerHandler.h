@@ -54,6 +54,7 @@ private slots:
 
 private:
     TEST_VIRTUAL void handleTouchUp();
+    TEST_VIRTUAL void handleTap();
 
     TEST_VIRTUAL void beginGestureRecognition();
     void setBlockAndUpdateOutputDeviceState(bool value);
@@ -70,6 +71,9 @@ private:
 
     qreal m_initialDistance;
     qreal m_previousAngle;
+    QPointF m_previousCenter;
+
+    bool m_touchModifiedInCurrentFrame{};
 
     bool m_block{};
     bool m_blockNextFrame{};
@@ -84,16 +88,18 @@ private:
         Touch,
 
         MotionOnePointReachedThreshold,
-        MotionAllPointsReachedThreshold,
+        Motion,
 
         Hold,
         Pinch,
         Swipe,
     } m_state
         = State::None;
-    void setState(State state);
+    TEST_VIRTUAL void setState(State state);
 
-    PinchInfo pinchInfo();
+    PinchInfo pinchInfo() const;
+    QPointF touchCenter() const;
+
     static uint32_t directionFromPoint(const QPointF &point);
     static bool sameDirections(uint32_t a, uint32_t b);
     static double hypot(const QPointF &point);
