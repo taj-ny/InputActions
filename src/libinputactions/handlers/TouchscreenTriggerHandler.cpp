@@ -399,7 +399,7 @@ void TouchscreenTriggerHandler::setBlockAndUpdateOutputDeviceState(bool value)
     m_block = value;
 }
 
-PinchInfo TouchscreenTriggerHandler::pinchInfo()
+PinchInfo TouchscreenTriggerHandler::pinchInfo() const
 {
     const auto points = m_device->validTouchPoints();
 
