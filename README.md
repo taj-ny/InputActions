@@ -113,7 +113,7 @@ Supported environments: GNOME, Hyprland, Plasma 6, other Wayland compositors (av
   # minimize window under pointer (Plasma)
   actions:
     - on: end
-      command: kdotool windowminimize $window_under_id
+      command: kdotool windowminimize $window_under_pointer_id
   ```
 
 # Credits
