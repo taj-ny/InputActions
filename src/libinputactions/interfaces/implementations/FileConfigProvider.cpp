@@ -126,7 +126,7 @@ QString FileConfigProvider::ensureConfigPath()
 
     // pair<path, create>
     std::vector<std::pair<QString, bool>> candidates;
-#ifdef DEBUG
+#ifndef NDEBUG
     candidates.emplace_back(INPUTACTIONS_DIR.path() + "/config-debug.yaml", false);
 #endif
     candidates.emplace_back(INPUTACTIONS_ETC_CONFIG_PATH, false);

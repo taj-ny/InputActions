@@ -20,12 +20,15 @@
 
 #include <libinputactions/interfaces/Window.h>
 
+namespace Desktop::View
+{
 class CWindow;
+}
 
 class HyprlandWindow : public InputActions::Window
 {
 public:
-    HyprlandWindow(CWindow *window);
+    HyprlandWindow(Desktop::View::CWindow *window);
 
     std::optional<QString> id() override;
     std::optional<QRectF> geometry() override;
@@ -34,5 +37,5 @@ public:
     std::optional<bool> fullscreen() override;
 
 private:
-    CWindow *m_window;
+    Desktop::View::CWindow *m_window;
 };

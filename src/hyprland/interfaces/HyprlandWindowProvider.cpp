@@ -19,13 +19,14 @@
 #include "HyprlandWindowProvider.h"
 #include "HyprlandWindow.h"
 #include <hyprland/src/Compositor.hpp>
+#include <hyprland/src/desktop/state/FocusState.hpp>
 #include <hyprland/src/managers/PointerManager.hpp>
 
 using namespace InputActions;
 
 std::shared_ptr<Window> HyprlandWindowProvider::activeWindow()
 {
-    if (auto *window = g_pCompositor->m_lastWindow.lock().get()) {
+    if (auto *window = Desktop::focusState()->window().get()) {
         return std::make_shared<HyprlandWindow>(window);
     }
     return {};
