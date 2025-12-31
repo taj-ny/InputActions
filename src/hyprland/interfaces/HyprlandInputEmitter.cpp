@@ -18,6 +18,7 @@
 
 #include "HyprlandInputEmitter.h"
 #include <hyprland/src/Compositor.hpp>
+#include <hyprland/src/desktop/state/FocusState.hpp>
 #include <hyprland/src/helpers/WLClasses.hpp>
 #include <hyprland/src/managers/KeybindManager.hpp>
 #include <hyprland/src/managers/SeatManager.hpp>
@@ -90,11 +91,11 @@ void HyprlandInputEmitter::keyboardKey(uint32_t key, bool state, const InputDevi
 
 void HyprlandInputEmitter::keyboardText(const QString &text)
 {
-    if (!g_pCompositor->m_lastFocus) {
+    if (!Desktop::focusState()->window()) {
         return;
     }
 
-    const auto *client = g_pCompositor->m_lastFocus->client();
+    const auto *client = Desktop::focusState()->surface()->client();
     for (const auto &[v3, _] : m_v3TextInputs) {
         if (v3->client() == client && v3->good()) {
             v3->preeditString({}, 0, 0);

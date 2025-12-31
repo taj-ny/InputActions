@@ -17,9 +17,9 @@
 */
 
 #include "HyprlandWindow.h"
-#include <hyprland/src/desktop/Window.hpp>
+#include <hyprland/src/desktop/view/Window.hpp>
 
-HyprlandWindow::HyprlandWindow(CWindow *window)
+HyprlandWindow::HyprlandWindow(Desktop::View::CWindow *window)
     : m_window(window)
 {
 }
