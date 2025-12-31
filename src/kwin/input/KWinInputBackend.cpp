@@ -335,7 +335,7 @@ void KWinInputBackend::simulateTouchscreenTapDown(const InputActions::InputDevic
     auto *kwinDevice = findKwinDevice(device);
     m_ignoreEvents = true;
     for (size_t i = 0; i < points.size(); ++i) {
-        Q_EMIT kwinDevice->touchDown(i + 100, points[i], timestamp(), kwinDevice);
+        Q_EMIT kwinDevice->touchDown(i, points[i], timestamp(), kwinDevice);
     }
     Q_EMIT kwinDevice->touchFrame(kwinDevice);
     m_ignoreEvents = false;
@@ -346,7 +346,7 @@ void KWinInputBackend::simulateTouchscreenTapUp(const InputActions::InputDevice 
     auto *kwinDevice = findKwinDevice(device);
     m_ignoreEvents = true;
     for (size_t i = 0; i < points.size(); ++i) {
-        Q_EMIT kwinDevice->touchUp(i + 100, timestamp(), kwinDevice);
+        Q_EMIT kwinDevice->touchUp(i, timestamp(), kwinDevice);
     }
     Q_EMIT kwinDevice->touchFrame(kwinDevice);
     m_ignoreEvents = false;

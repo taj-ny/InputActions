@@ -269,6 +269,7 @@ void TouchscreenTriggerHandler::handleTouchUp()
         cancelTriggers(TriggerType::All);
         beginGestureRecognition();
         updateVariables(m_device);
+        setState(State::Touch);
         return;
     }
 

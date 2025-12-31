@@ -89,6 +89,8 @@ private:
      */
     void copyTouchpadState(const ExtraDeviceData *data) const;
 
+    ExtraDeviceData *findData(const InputDevice *device);
+
     libinput_interface m_libinputBlockingInterface;
     libinput_interface m_libinputNonBlockingInterface;
 

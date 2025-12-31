@@ -124,7 +124,7 @@ bool StandaloneInputBackend::tryAddEvdevDevice(const QString &path)
         deviceType = InputDeviceType::Keyboard;
     } else if (udev_device_get_property_value(udevDevice, "ID_INPUT_TOUCHPAD")) {
         deviceType = InputDeviceType::Touchpad;
-    } else if (udev_device_get_property_value(udevDevice, "ID_INPUT_TOUCHSCREEN")) {
+    } else if (libinput_device_has_capability(data->libinputDevice, LIBINPUT_DEVICE_CAP_TOUCH)) {
         deviceType = InputDeviceType::Touchscreen;
     } else {
         return true;
@@ -134,6 +134,14 @@ bool StandaloneInputBackend::tryAddEvdevDevice(const QString &path)
 
     if (properties.ignore()) {
         return true;
+    }
+
+    if (deviceType == InputDeviceType::Touchscreen) {
+        double width{};
+        double height{};
+        if (libinput_device_get_size(data->libinputDevice, &width, &height) == 0) {
+            device->properties().setSize({width, height});
+        }
     }
 
     if (properties.grab()) {
@@ -380,26 +388,24 @@ bool StandaloneInputBackend::handleEvent(InputDevice *sender, ExtraDeviceData *d
             break;
         }
         case LIBINPUT_EVENT_TOUCH_CANCEL:
-        case LIBINPUT_EVENT_TOUCH_DOWN:
+            return touchscreenTouchCancel(sender);
         case LIBINPUT_EVENT_TOUCH_FRAME:
+            return touchscreenTouchFrame(sender);
+        case LIBINPUT_EVENT_TOUCH_DOWN:
         case LIBINPUT_EVENT_TOUCH_MOTION:
         case LIBINPUT_EVENT_TOUCH_UP: {
             auto *touchEvent = libinput_event_get_touch_event(event);
             switch (type) {
-                case LIBINPUT_EVENT_TOUCH_CANCEL:
-                    return touchscreenTouchCancel(sender);
                 case LIBINPUT_EVENT_TOUCH_DOWN: {
                     const auto slot = libinput_event_touch_get_slot(touchEvent);
                     const QPointF position(libinput_event_touch_get_x(touchEvent), libinput_event_touch_get_y(touchEvent));
-                    const QPointF unalteredPosition(libevdev_get_slot_value(data->libevdev, slot, ABS_X), libevdev_get_slot_value(data->libevdev, slot, ABS_Y));
+                    const QPointF unalteredPosition(libevdev_get_slot_value(data->libevdev, slot, ABS_MT_POSITION_X), libevdev_get_slot_value(data->libevdev, slot, ABS_MT_POSITION_Y));
                     return touchscreenTouchDown(sender, slot, position, unalteredPosition);
                 }
-                case LIBINPUT_EVENT_TOUCH_FRAME:
-                    return touchscreenTouchFrame(sender);
                 case LIBINPUT_EVENT_TOUCH_MOTION: {
                     const auto slot = libinput_event_touch_get_slot(touchEvent);
                     const QPointF position(libinput_event_touch_get_x(touchEvent), libinput_event_touch_get_y(touchEvent));
-                    const QPointF unalteredPosition(libevdev_get_slot_value(data->libevdev, slot, ABS_X), libevdev_get_slot_value(data->libevdev, slot, ABS_Y));
+                    const QPointF unalteredPosition(libevdev_get_slot_value(data->libevdev, slot, ABS_MT_POSITION_X), libevdev_get_slot_value(data->libevdev, slot, ABS_MT_POSITION_Y));
                     return touchscreenTouchMotion(sender, slot, position, unalteredPosition);
                 }
                 case LIBINPUT_EVENT_TOUCH_UP:
@@ -614,22 +620,97 @@ void StandaloneInputBackend::restoreOutputDeviceState(InputDevice *device)
         return;
     }
 
-    for (auto &[devicePtr, data] : m_devices) {
-        if (devicePtr.get() == device) {
-            copyTouchpadState(data.get());
-            break;
+    const auto *data = findData(device);
+    if (!data) {
+        return;
+    }
+
+    for (int code = 0; code < KEY_MAX; code++) {
+        if (!libevdev_has_event_code(data->libevdev, EV_KEY, code)) {
+            continue;
+        }
+
+        libevdev_uinput_write_event(data->outputDevice, EV_KEY, code, libevdev_get_event_value(data->libevdev, EV_KEY, code));
+    }
+
+    for (int code = 0; code < ABS_MAX; code++) {
+        if ((code >= ABS_MT_SLOT && code <= ABS_MT_TOOL_Y) || !libevdev_has_event_code(data->libevdev, EV_ABS, code)) {
+            continue;
+        }
+
+        const auto *info = libevdev_get_abs_info(data->libevdev, code);
+        libevdev_uinput_write_event(data->outputDevice, EV_ABS, code, info->value);
+    }
+
+    for (const auto *point : device->validTouchPoints()) {
+        libevdev_uinput_write_event(data->outputDevice, EV_ABS, ABS_MT_SLOT, point->id);
+
+        libevdev_uinput_write_event(data->outputDevice, EV_ABS, ABS_MT_POSITION_X, point->unalteredInitialPosition.x());
+        libevdev_uinput_write_event(data->outputDevice, EV_ABS, ABS_MT_POSITION_Y, point->unalteredInitialPosition.y());
+        for (int code = ABS_MT_SLOT; code <= ABS_MT_TOOL_Y; code++) {
+            if (code == ABS_MT_SLOT || !libevdev_has_event_code(data->libevdev, EV_ABS, code)) {
+                continue;
+            }
+
+            libevdev_uinput_write_event(data->outputDevice, EV_ABS, code, libevdev_get_slot_value(data->libevdev, point->id, code));
         }
     }
+    libevdev_uinput_write_event(data->outputDevice, EV_SYN, SYN_REPORT, 0);
+
+    for (const auto *point : device->validTouchPoints()) {
+        libevdev_uinput_write_event(data->outputDevice, EV_ABS, ABS_MT_SLOT, point->id);
+        libevdev_uinput_write_event(data->outputDevice, EV_ABS, ABS_MT_POSITION_X, point->unalteredPosition.x());
+        libevdev_uinput_write_event(data->outputDevice, EV_ABS, ABS_MT_POSITION_Y, point->unalteredPosition.y());
+    }
+
+    libevdev_uinput_write_event(data->outputDevice, EV_ABS, ABS_MT_SLOT, libevdev_get_current_slot(data->libevdev));
+    libevdev_uinput_write_event(data->outputDevice, EV_SYN, SYN_REPORT, 0);
 }
 
 void StandaloneInputBackend::simulateTouchscreenTapDown(const InputDevice *device, const std::vector<QPointF> &points)
 {
+    const auto *data = findData(device);
+    if (!data) {
+        return;
+    }
 
+    for (size_t i = 0; i < points.size(); ++i) {
+        const auto &point = points[i];
+
+        libevdev_uinput_write_event(data->outputDevice, EV_ABS, ABS_MT_SLOT, i);
+        libevdev_uinput_write_event(data->outputDevice, EV_ABS, ABS_MT_TRACKING_ID, i);
+        libevdev_uinput_write_event(data->outputDevice, EV_ABS, ABS_MT_POSITION_X, point.x());
+        libevdev_uinput_write_event(data->outputDevice, EV_ABS, ABS_MT_POSITION_Y, point.y());
+    }
+
+    libevdev_uinput_write_event(data->outputDevice, EV_ABS, ABS_MT_SLOT, libevdev_get_current_slot(data->libevdev));
+    libevdev_uinput_write_event(data->outputDevice, EV_SYN, SYN_REPORT, 0);
 }
 
 void StandaloneInputBackend::simulateTouchscreenTapUp(const InputDevice *device, const std::vector<QPointF> &points)
 {
+    const auto *data = findData(device);
+    if (!data) {
+        return;
+    }
 
+    for (size_t i = 0; i < points.size(); ++i) {
+        libevdev_uinput_write_event(data->outputDevice, EV_ABS, ABS_MT_SLOT, i);
+        libevdev_uinput_write_event(data->outputDevice, EV_ABS, ABS_MT_TRACKING_ID, -1);
+    }
+
+    libevdev_uinput_write_event(data->outputDevice, EV_ABS, ABS_MT_SLOT, libevdev_get_current_slot(data->libevdev));
+    libevdev_uinput_write_event(data->outputDevice, EV_SYN, SYN_REPORT, 0);
+}
+
+StandaloneInputBackend::ExtraDeviceData *StandaloneInputBackend::findData(const InputDevice *device)
+{
+    for (const auto &[devicePtr, data] : m_devices) {
+        if (devicePtr.get() == device) {
+            return data.get();
+        }
+    }
+    return {};
 }
 
 int StandaloneInputBackend::openRestricted(const char *path, int flags, void *data)

@@ -1297,6 +1297,7 @@ FLAGS_DECODER(InputDeviceTypes, "input device type",
                   {"keyboard", InputDeviceType::Keyboard},
                   {"mouse", InputDeviceType::Mouse},
                   {"touchpad", InputDeviceType::Touchpad},
+                  {"touchscreen", InputDeviceType::Touchscreen},
               }))
 
 template<>

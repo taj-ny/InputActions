@@ -72,7 +72,7 @@ void InputBackend::initialize()
 
 void InputBackend::simulateTouchscreenTap(const InputDevice *device, const std::vector<QPointF> &points)
 {
-    if (m_touchscreenTapTimer.isActive()) {
+    if (m_touchscreenTapTimer.isActive() || !device->validTouchPoints().empty()) {
         return;
     }
 
@@ -80,7 +80,7 @@ void InputBackend::simulateTouchscreenTap(const InputDevice *device, const std::
 
     m_currentTouchscreenTapPoints = points;
     m_currentTouchscreenTapTarget = device;
-    m_touchscreenTapTimer.start(100);
+    m_touchscreenTapTimer.start(50);
 }
 
 InputDeviceProperties InputBackend::deviceProperties(const InputDevice *device) const
