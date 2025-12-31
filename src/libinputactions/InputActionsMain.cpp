@@ -168,36 +168,42 @@ void InputActionsMain::registerGlobalVariables(VariableManager *variableManager,
             value = window->title();
         }
     });
-    variableManager->registerRemoteVariable<QString>("window_under_class", [windowProvider](auto &value) {
+    variableManager->registerRemoteVariable<QString>("window_under_pointer_class", [windowProvider](auto &value) {
         if (const auto window = windowProvider->windowUnderPointer()) {
             value = window->resourceClass();
         }
     });
-    variableManager->registerRemoteVariable<bool>("window_under_fullscreen", [windowProvider](auto &value) {
+    variableManager->registerVariableAlias("window_under_class", "window_under_pointer_class");
+    variableManager->registerRemoteVariable<bool>("window_under_pointer_fullscreen", [windowProvider](auto &value) {
         if (const auto window = windowProvider->windowUnderPointer()) {
             value = window->fullscreen();
         }
     });
-    variableManager->registerRemoteVariable<QString>("window_under_id", [windowProvider](auto &value) {
+    variableManager->registerVariableAlias("window_under_fullscreen", "window_under_pointer_fullscreen");
+    variableManager->registerRemoteVariable<QString>("window_under_pointer_id", [windowProvider](auto &value) {
         if (const auto window = windowProvider->windowUnderPointer()) {
             value = window->id();
         }
     });
-    variableManager->registerRemoteVariable<bool>("window_under_maximized", [windowProvider](auto &value) {
+    variableManager->registerVariableAlias("window_under_id", "window_under_pointer_id");
+    variableManager->registerRemoteVariable<bool>("window_under_pointer_maximized", [windowProvider](auto &value) {
         if (const auto window = windowProvider->windowUnderPointer()) {
             value = window->maximized();
         }
     });
-    variableManager->registerRemoteVariable<QString>("window_under_name", [windowProvider](auto &value) {
+    variableManager->registerVariableAlias("window_under_maximized", "window_under_pointer_maximized");
+    variableManager->registerRemoteVariable<QString>("window_under_pointer_name", [windowProvider](auto &value) {
         if (const auto window = windowProvider->windowUnderPointer()) {
             value = window->resourceName();
         }
     });
-    variableManager->registerRemoteVariable<QString>("window_under_title", [windowProvider](auto &value) {
+    variableManager->registerVariableAlias("window_under_name", "window_under_pointer_name");
+    variableManager->registerRemoteVariable<QString>("window_under_pointer_title", [windowProvider](auto &value) {
         if (const auto window = windowProvider->windowUnderPointer()) {
             value = window->title();
         }
     });
+    variableManager->registerVariableAlias("window_under_title", "window_under_pointer_title");
 }
 
 }

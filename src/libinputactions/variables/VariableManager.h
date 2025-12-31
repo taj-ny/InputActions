@@ -118,6 +118,8 @@ public:
         registerVariable(name, std::make_unique<RemoteVariable>(typeid(T), anyGetter), hidden);
     }
 
+    void registerVariableAlias(const QString &variable, const QString &alias);
+
     /**
      * Compiles a set of extra environment variables for the specified command.
      *
@@ -129,6 +131,7 @@ public:
 
 private:
     std::map<QString, std::unique_ptr<Variable>> m_variables;
+    std::map<QString, QString> m_variableAliases;
 };
 
 inline std::shared_ptr<VariableManager> g_variableManager;

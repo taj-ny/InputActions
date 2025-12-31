@@ -31,16 +31,22 @@ VariableManager::~VariableManager() = default;
 
 bool VariableManager::hasVariable(const QString &name) const
 {
-    return m_variables.contains(name);
+    return m_variables.contains(name) || (m_variableAliases.contains(name) && m_variables.contains(m_variableAliases.at(name)));
 }
 
 Variable *VariableManager::getVariable(const QString &name) const
 {
-    if (!m_variables.contains(name)) {
-        qCDebug(INPUTACTIONS_VARIABLE_MANAGER).noquote() << QString("Variable %1 not found").arg(name);
-        return nullptr;
+    Variable *variable{};
+    if (m_variables.contains(name)) {
+        variable = m_variables.at(name).get();
+    } else if (m_variableAliases.contains(name) && m_variables.contains(m_variableAliases.at(name))) {
+        variable = m_variables.at(m_variableAliases.at(name)).get();
     }
-    return m_variables.at(name).get();
+
+    if (!variable) {
+        qCDebug(INPUTACTIONS_VARIABLE_MANAGER).noquote() << QString("Variable %1 not found").arg(name);
+    }
+    return variable;
 }
 
 Variable *VariableManager::registerVariable(const QString &name, std::unique_ptr<Variable> variable, bool hidden)
@@ -68,6 +74,11 @@ Variable *VariableManager::registerVariable(const QString &name, std::unique_ptr
     }
 
     return m_variables[name].get();
+}
+
+void VariableManager::registerVariableAlias(const QString &name, const QString &alias)
+{
+    m_variableAliases[name] = alias;
 }
 
 std::map<QString, QString> VariableManager::extraProcessEnvironment(const QString &command) const
