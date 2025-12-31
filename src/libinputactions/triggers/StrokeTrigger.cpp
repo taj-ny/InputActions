@@ -34,7 +34,6 @@
 */
 
 #include "StrokeTrigger.h"
-#include <QtGui/QVector2D>
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
@@ -230,16 +229,16 @@ void Stroke::ramerDouglasPeucker(const std::vector<QPointF> &points, qreal epsil
 
 qreal Stroke::angle(const QPointF &a, const QPointF &b, const QPointF &c)
 {
-    const auto ba = QVector2D(a - b);
-    const auto bc = QVector2D(c - b);
+    const auto ba = a - b;
+    const auto bc = c - b;
 
-    const auto dot = QVector2D::dotProduct(ba, bc);
-    const auto mag = ba.length() * bc.length();
+    const auto dot = ba.x() * bc.x() + ba.y() * bc.y();
+    const auto mag = std::hypot(ba.x(), ba.y()) * std::hypot(bc.x(), bc.y());
 
     if (mag == 0) {
         return 0;
     }
-    return std::acos(std::clamp(dot / mag, -1.0f, 1.0f));
+    return std::acos(std::clamp(dot / mag, -1.0, 1.0));
 }
 
 static inline double angle_difference(double alpha, double beta)
