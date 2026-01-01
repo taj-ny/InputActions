@@ -38,11 +38,6 @@ void StrokeRecorder::recordStroke(const std::function<void(const Stroke &stroke)
     m_strokeCallback = callback;
 }
 
-bool StrokeRecorder::acceptsEvent(const InputEvent &event)
-{
-    return true;
-}
-
 bool StrokeRecorder::pointerAxis(const MotionEvent &event)
 {
     if (event.sender()->type() != InputDeviceType::Touchpad || !m_isRecordingStroke) {

@@ -40,8 +40,6 @@ public:
     void recordStroke(const std::function<void(const Stroke &stroke)> &callback);
 
 protected:
-    bool acceptsEvent(const InputEvent &event) override;
-
     bool pointerAxis(const MotionEvent &event) override;
     bool pointerMotion(const MotionEvent &event) override;
 
