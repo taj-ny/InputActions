@@ -23,8 +23,6 @@
 namespace InputActions
 {
 
-static const uint32_t STROKE_RECORD_TIMEOUT = 250;
-
 bool LibinputInputBackend::keyboardKey(InputDevice *sender, uint32_t key, bool state)
 {
     if (m_ignoreEvents || !sender) {
@@ -42,15 +40,6 @@ bool LibinputInputBackend::pointerAxis(InputDevice *sender, const QPointF &delta
 
     if (sender->type() == InputDeviceType::Mouse) {
         return handleEvent(MotionEvent(sender, InputEventType::PointerAxis, {delta}));
-    }
-
-    if (m_isRecordingStroke) {
-        if (delta.isNull()) {
-            finishStrokeRecording();
-        } else {
-            m_strokePoints.push_back(delta);
-        }
-        return true;
     }
 
     if (delta.isNull() && sender->type() == InputDeviceType::Touchpad) {
@@ -74,12 +63,6 @@ bool LibinputInputBackend::pointerButton(InputDevice *sender, Qt::MouseButton bu
 bool LibinputInputBackend::pointerMotion(InputDevice *sender, const PointDelta &delta)
 {
     if (m_ignoreEvents || !sender) {
-        return false;
-    }
-
-    if (m_isRecordingStroke) {
-        m_strokePoints.push_back(delta.accelerated()); // accelerated for backwards compatibility
-        m_strokeRecordingTimeoutTimer.start(STROKE_RECORD_TIMEOUT);
         return false;
     }
 
@@ -159,8 +142,6 @@ bool LibinputInputBackend::touchpadSwipeBegin(InputDevice *sender, uint8_t finge
 {
     if (m_ignoreEvents || !sender) {
         return false;
-    } else if (m_isRecordingStroke) {
-        return true;
     }
 
     m_fingers = fingers;
@@ -172,11 +153,6 @@ bool LibinputInputBackend::touchpadSwipeUpdate(InputDevice *sender, const PointD
 {
     if (m_ignoreEvents || !sender) {
         return false;
-    }
-
-    if (m_isRecordingStroke) {
-        m_strokePoints.push_back(delta.unaccelerated());
-        return true;
     }
 
     const auto block = handleEvent(MotionEvent(sender, InputEventType::TouchpadSwipe, delta));
@@ -192,11 +168,6 @@ bool LibinputInputBackend::touchpadSwipeEnd(InputDevice *sender, bool cancelled)
 {
     if (m_ignoreEvents || !sender) {
         return false;
-    }
-
-    if (m_isRecordingStroke) {
-        finishStrokeRecording();
-        return true;
     }
 
     return handleEvent(TouchpadGestureLifecyclePhaseEvent(sender,

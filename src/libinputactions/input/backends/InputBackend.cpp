@@ -27,10 +27,10 @@
 #include <libinputactions/handlers/TouchpadTriggerHandler.h>
 #include <libinputactions/input/InputDeviceRule.h>
 #include <libinputactions/input/InputEventHandler.h>
+#include <libinputactions/input/StrokeRecorder.h>
 #include <libinputactions/input/events.h>
 #include <libinputactions/interfaces/NotificationManager.h>
 #include <libinputactions/interfaces/SessionLock.h>
-#include <libinputactions/triggers/StrokeTrigger.h>
 #include <libinputactions/variables/Variable.h>
 #include <libinputactions/variables/VariableManager.h>
 #include <ranges>
@@ -42,11 +42,6 @@ static const std::chrono::milliseconds EMERGENCY_COMBINATION_HOLD_DURATION{2000L
 
 InputBackend::InputBackend()
 {
-    m_strokeRecordingTimeoutTimer.setSingleShot(true);
-    connect(&m_strokeRecordingTimeoutTimer, &QTimer::timeout, this, [this] {
-        finishStrokeRecording();
-    });
-
     m_emergencyCombinationTimer.setSingleShot(true);
     connect(&m_emergencyCombinationTimer, &QTimer::timeout, this, &InputBackend::onEmergencyCombinationTimerTimeout);
 }
@@ -68,12 +63,6 @@ void InputBackend::initialize()
                                                                           ComparisonOperator::OneOf));
     ignoreOwnDevicesRule.properties().setIgnore(true);
     m_deviceRules.push_back(std::move(ignoreOwnDevicesRule));
-}
-
-void InputBackend::recordStroke(const std::function<void(const Stroke &stroke)> &callback)
-{
-    m_isRecordingStroke = true;
-    m_strokeCallback = callback;
 }
 
 InputDeviceProperties InputBackend::deviceProperties(const InputDevice *device) const
@@ -156,6 +145,7 @@ void InputBackend::createEventHandlerChain()
     };
 
     m_eventHandlerChain.clear();
+    m_eventHandlerChain.push_back(g_strokeRecorder.get());
     pushToChain(m_keyboardTriggerHandler);
     pushToChain(m_mouseTriggerHandler);
     for (const auto &device : m_devices) {
@@ -193,13 +183,6 @@ bool InputBackend::handleEvent(const InputEvent &event)
         }
     }
     return false;
-}
-
-void InputBackend::finishStrokeRecording()
-{
-    m_isRecordingStroke = false;
-    m_strokeCallback(Stroke(m_strokePoints));
-    m_strokePoints.clear();
 }
 
 void InputBackend::onEmergencyCombinationTimerTimeout()

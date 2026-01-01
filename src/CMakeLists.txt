@@ -37,8 +37,9 @@ if (INPUTACTIONS_BUILD_HYPRLAND OR INPUTACTIONS_BUILD_KWIN OR INPUTACTIONS_BUILD
         libinputactions/input/Delta.cpp
         libinputactions/input/InputDevice.cpp
         libinputactions/input/InputDeviceRule.cpp
-        libinputactions/input/events.cpp
         libinputactions/input/InputEventHandler.cpp
+        libinputactions/input/StrokeRecorder.cpp
+        libinputactions/input/events.cpp
         libinputactions/interfaces/implementations/DBusNotificationManager.cpp
         libinputactions/interfaces/implementations/DBusPlasmaGlobalShortcutInvoker.cpp
         libinputactions/interfaces/implementations/FileConfigProvider.cpp

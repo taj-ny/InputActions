@@ -24,7 +24,7 @@
 #include <libinputactions/actions/ActionExecutor.h>
 #include <libinputactions/config/Config.h>
 #include <libinputactions/globals.h>
-#include <libinputactions/input/backends/InputBackend.h>
+#include <libinputactions/input/StrokeRecorder.h>
 #include <libinputactions/interfaces/implementations/FileConfigProvider.h>
 #include <libinputactions/ipc/MessageSocketConnection.h>
 #include <libinputactions/utils/SessionUtils.h>
@@ -237,7 +237,7 @@ void SessionManager::recordStrokeRequestMessage(const std::shared_ptr<const Reco
             return;
         }
 
-        g_inputBackend->recordStroke([this, message](const auto &stroke) {
+        g_strokeRecorder->recordStroke([this, message](const auto &stroke) {
             RecordStrokeResponseMessage response;
             response.setStroke(m_dbusInterfaceBase.strokeToBase64(stroke));
             message->reply(response);
