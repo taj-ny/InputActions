@@ -89,11 +89,13 @@ public:
     void touchpadPinchBlockingStopped(uint32_t fingers) override;
     void touchpadSwipeBlockingStopped(uint32_t fingers) override;
 
+#ifdef KWIN_6_5_OR_GREATER
     void resetVirtualDeviceState(InputActions::InputDevice *device) override;
     void restoreVirtualDeviceState(InputActions::InputDevice *device) override;
 
     void simulateTouchscreenTapDown(const InputActions::InputDevice *device, const std::vector<QPointF> &points) override;
     void simulateTouchscreenTapUp(const InputActions::InputDevice *device, const std::vector<QPointF> &points) override;
+#endif
 
 private:
     void kwinDeviceAdded(KWin::InputDevice *kwinDevice);

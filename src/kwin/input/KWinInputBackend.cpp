@@ -202,6 +202,7 @@ bool KWinInputBackend::keyboardKey(KWin::KeyboardKeyEvent *event)
     return LibinputInputBackend::keyboardKey(findInputActionsDevice(event->device), event->nativeScanCode, event->state == KWin::KeyboardKeyState::Pressed);
 }
 
+#ifdef KWIN_6_5_OR_GREATER
 bool KWinInputBackend::touchDown(KWin::TouchDownEvent *event)
 {
     auto *sender = currentTouchscreen();
@@ -234,6 +235,7 @@ bool KWinInputBackend::touchFrame()
 {
     return touchscreenTouchFrame(currentTouchscreen());
 }
+#endif
 
 void KWinInputBackend::touchpadPinchBlockingStopped(uint32_t fingers)
 {
@@ -280,6 +282,7 @@ void KWinInputBackend::touchpadSwipeBlockingStopped(uint32_t fingers)
 }
 
 // Events generated during resetting and restoring must not go through TouchInputRedirection, as it would interfere with the physical state.
+#ifdef KWIN_6_5_OR_GREATER
 void KWinInputBackend::resetVirtualDeviceState(InputActions::InputDevice *device)
 {
     if (device->type() != InputDeviceType::Touchscreen) {
@@ -351,6 +354,7 @@ void KWinInputBackend::simulateTouchscreenTapUp(const InputActions::InputDevice 
     Q_EMIT kwinDevice->touchFrame(kwinDevice);
     m_ignoreEvents = false;
 }
+#endif
 
 void KWinInputBackend::kwinDeviceAdded(KWin::InputDevice *kwinDevice)
 {
