@@ -30,6 +30,8 @@ class StrokeRecorder
     : public QObject
     , public InputEventHandler
 {
+    Q_OBJECT
+
 public:
     StrokeRecorder();
 
