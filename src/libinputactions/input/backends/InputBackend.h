@@ -88,15 +88,15 @@ public:
     InputDevice *currentTouchscreen() const { return m_currentTouchscreen; }
 
     /**
-     * Do not call directly, use InputDevice::resetOutputDeviceState instead.
-     * @see InputDevice::resetOutputDeviceState
+     * Do not call directly, use InputDevice::resetVirtualDeviceState instead.
+     * @see InputDevice::resetVirtualDeviceState
      */
-    virtual void resetOutputDeviceState(InputDevice *device) {}
+    virtual void resetVirtualDeviceState(InputDevice *device) {}
     /**
-     * Do not call directly, use InputDevice::restoreOutputDeviceState instead.
-     * @see InputDevice::restoreOutputDeviceState
+     * Do not call directly, use InputDevice::restoreVirtualDeviceState instead.
+     * @see InputDevice::restoreVirtualDeviceState
      */
-    virtual void restoreOutputDeviceState(InputDevice *device) {}
+    virtual void restoreVirtualDeviceState(InputDevice *device) {}
 
     /**
      * @return Currently pressed keyboard modifiers, accumulated from all devices.

@@ -21,6 +21,7 @@
 namespace InputActions
 {
 
+class EvdevFrameEvent;
 class KeyboardKeyEvent;
 class InputEvent;
 class MotionEvent;
@@ -50,6 +51,8 @@ protected:
     InputEventHandler() = default;
 
     virtual bool acceptsEvent(const InputEvent &event);
+
+    virtual bool evdevFrame(const EvdevFrameEvent &event) { return false; }
 
     virtual bool keyboardKey(const KeyboardKeyEvent &event) { return false; }
 

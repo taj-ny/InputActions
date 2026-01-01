@@ -29,6 +29,8 @@ namespace InputActions
 
 enum class InputEventType
 {
+    EvdevFrame,
+
     KeyboardKey,
 
     PointerAxis,
@@ -69,6 +71,35 @@ protected:
 private:
     InputEventType m_type;
     InputDevice *m_sender;
+};
+
+class EvdevEvent
+{
+public:
+    EvdevEvent(uint16_t type, uint16_t code, int32_t value);
+
+    uint16_t type() const { return m_type; }
+    uint16_t code() const { return m_code; }
+    int32_t value() const { return m_value; }
+
+private:
+    uint16_t m_type;
+    uint16_t m_code;
+    int32_t m_value;
+};
+
+class EvdevFrameEvent : public InputEvent
+{
+public:
+    EvdevFrameEvent(InputDevice *sender, std::vector<EvdevEvent> events);
+
+    /**
+     * Always ends with {EV_SYN, SYN_REPORT, 0}.
+     */
+    const std::vector<EvdevEvent> &events() const { return m_events; }
+
+private:
+    std::vector<EvdevEvent> m_events;
 };
 
 class MotionEvent : public InputEvent

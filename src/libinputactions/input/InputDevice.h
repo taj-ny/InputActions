@@ -173,6 +173,12 @@ struct TouchPoint
     std::chrono::steady_clock::time_point downTimestamp;
 };
 
+/**
+ * Each device has two states:
+ *   - physical - actual state of the device,
+ *   - virtual - the state of the device as seen by another entity that is processing events - the compositor and its libinput instance, an external libinput
+ *    instance, evtest, etc. InputActions manipulates this state in various ways for the purposes of event filtering.
+ */
 class InputDevice
 {
 public:
@@ -184,16 +190,28 @@ public:
     ~InputDevice();
 
     /**
-     * Resets the output device seen by the compositor/libinput into a neutral state.
+     * Sets the device's virtual state into a neutral one. In the standalone implementation, the device must be grabbed, otherwise the call will be ignored.
+     *
+     * This operation is currently only used for touchscreens and touchpads (standalone only).
      */
-    TEST_VIRTUAL void resetOutputDeviceState();
+    TEST_VIRTUAL void resetVirtualDeviceState();
     /**
-     * Clones the device's state as seen by InputActions into the output device seen by the compositor/libinput.
+     * Restores the device's virtual state to the physical one. In the standalone implementation, the device must be grabbed, otherwise the call will be ignored.
+     *
+     * This operation is currently only used for touchscreens and touchpads (standalone only).
+     *
+     * The touchscreen restore sequence must include the following elements:
+     *   - Touch down - at **initial positions**, not current
+     *   - Touch frame
+     *   - Touch motion - from initial positions to current positions
+     *   - Touch frame
+     * More elements may be added by the implementation if necessary.
      */
-    TEST_VIRTUAL void restoreOutputDeviceState();
+    TEST_VIRTUAL void restoreVirtualDeviceState();
 
     /**
-     * @param points Must be unaltered points from events provided by the backend.
+     * @param points Unaltered points from events provided by the backend.
+     * @see TouchPoint::unalteredPosition
      */
     TEST_VIRTUAL void simulateTouchscreenTap(const std::vector<QPointF> &points);
 

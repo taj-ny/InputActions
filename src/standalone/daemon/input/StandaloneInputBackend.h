@@ -46,8 +46,8 @@ public:
     void initialize() override;
     void reset() final;
 
-    void resetOutputDeviceState(InputDevice *device) override;
-    void restoreOutputDeviceState(InputDevice *device) override;
+    void resetVirtualDeviceState(InputDevice *device) override;
+    void restoreVirtualDeviceState(InputDevice *device) override;
 
     libevdev_uinput *outputDevice(const InputDevice *device) const;
 
@@ -80,14 +80,6 @@ private:
      * @return Whether the specified device is in a neutral state.
      */
     bool isDeviceNeutral(const InputDevice *device, const ExtraDeviceData *data);
-    /**
-     * Resets the output device of the specified grabbed device into a neutral state.
-     */
-    void resetDevice(const InputDevice *device, const ExtraDeviceData *data);
-    /**
-     * Copies the current state of the specified grabbed touchpad to its neutral output device.
-     */
-    void copyTouchpadState(const ExtraDeviceData *data) const;
 
     ExtraDeviceData *findData(const InputDevice *device);
 

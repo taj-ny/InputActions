@@ -33,14 +33,14 @@ InputDevice::InputDevice(InputDeviceType type, QString name, QString sysName)
 
 InputDevice::~InputDevice() = default;
 
-void InputDevice::resetOutputDeviceState()
+void InputDevice::resetVirtualDeviceState()
 {
-    g_inputBackend->resetOutputDeviceState(this);
+    g_inputBackend->resetVirtualDeviceState(this);
 }
 
-void InputDevice::restoreOutputDeviceState()
+void InputDevice::restoreVirtualDeviceState()
 {
-    g_inputBackend->restoreOutputDeviceState(this);
+    g_inputBackend->restoreVirtualDeviceState(this);
 }
 
 void InputDevice::simulateTouchscreenTap(const std::vector<QPointF> &points)

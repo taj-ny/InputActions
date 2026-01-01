@@ -75,7 +75,7 @@ void StandaloneInputBackend::reset()
 {
     for (const auto &[device, data] : m_devices) {
         if (device->properties().grab()) {
-            resetDevice(device.get(), data.get());
+            device->resetVirtualDeviceState();
         }
         deviceRemoved(device.get());
     }
@@ -196,8 +196,8 @@ bool StandaloneInputBackend::tryAddEvdevDevice(const QString &path)
         if (deviceType == InputDeviceType::Touchpad) {
             LibevdevComplementaryInputBackend::addDevice(device.get(), data->libevdev, false);
 
-            connect(&data->touchpadStateResetTimer, &QTimer::timeout, this, [this, device = device.get(), data = data.get()]() {
-                resetDevice(device, data);
+            connect(&data->touchpadStateResetTimer, &QTimer::timeout, this, [this, device = device.get()]() {
+                device->resetVirtualDeviceState();
             });
         }
     } else {
@@ -449,8 +449,98 @@ bool StandaloneInputBackend::isDeviceNeutral(const InputDevice *device, const Ex
     return true;
 }
 
-void StandaloneInputBackend::resetDevice(const InputDevice *device, const ExtraDeviceData *data)
+void StandaloneInputBackend::poll()
 {
+    std::vector<EvdevEvent> frame;
+    for (auto &[device, data] : m_devices) {
+        if (!device->properties().grab()) {
+            handleLibinputEvents(device.get(), data.get(), data->libinput);
+            continue;
+        }
+
+        int status{};
+        while (true) {
+            input_event evdevEvent{};
+            auto flags = status == LIBEVDEV_READ_STATUS_SYNC ? LIBEVDEV_READ_FLAG_SYNC : LIBEVDEV_READ_FLAG_NORMAL;
+            status = libevdev_next_event(data->libevdev, flags, &evdevEvent);
+            if (status != LIBEVDEV_READ_STATUS_SUCCESS && status != LIBEVDEV_READ_STATUS_SYNC) {
+                // Handle events generated after a delay, e.g. pointer button after tapping
+                handleLibinputEvents(device.get(), data.get(), data->libinput);
+                break;
+            }
+
+            frame.emplace_back(evdevEvent.type, evdevEvent.code, evdevEvent.value);
+            LibevdevComplementaryInputBackend::handleEvdevEvent(device.get(), evdevEvent);
+
+            if (evdevEvent.type != EV_SYN) {
+                continue;
+            }
+
+            const auto blockFrame = InputBackend::handleEvent(EvdevFrameEvent(device.get(), frame));
+            for (const auto &event : frame) {
+                libevdev_uinput_write_event(data->libinputEventInjectionDevice, event.type(), event.code(), event.value());
+            }
+            const auto libinputResult = handleLibinputEvents(device.get(), data.get(), data->libinput);
+
+            if (device->type() == InputDeviceType::Touchpad) {
+                // TouchpadTriggerHandler does currently not currently handle evdev events, so no need to check for blockFrame
+
+                // Restore virtual state if events suddenly stop being blocked while the physical device is not in a neutral state
+                if (data->touchpadBlocked && !libinputResult.block && libinputResult.eventCount) {
+                    data->touchpadStateResetTimer.stop();
+                    data->touchpadBlocked = false;
+                    device->restoreVirtualDeviceState();
+                }
+
+                // Touchpad gestures are blocked by blocking the current and all next frames until all fingers are lifted, and changing the virtual state to
+                // neutral after 200ms. The delay is required to block tap gestures, but doesn't affect motion gesture blocking negatively.
+                if (libinputResult.block && !data->touchpadBlocked) {
+                    data->touchpadBlocked = true;
+                    data->touchpadStateResetTimer.start(200);
+                } else if (data->touchpadNeutral && data->touchpadStateResetTimer.isActive()) {
+                    data->touchpadStateResetTimer.stop();
+                    device->resetVirtualDeviceState();
+                }
+
+                data->touchpadNeutral = false;
+            }
+
+            if (!libinputResult.block && !data->touchpadBlocked && !blockFrame) {
+                for (const auto &event : frame) {
+                    libevdev_uinput_write_event(data->outputDevice, event.type(), event.code(), event.value());
+                }
+            }
+            frame.clear();
+        }
+
+        if (device->type() == InputDeviceType::Touchpad && device->validTouchPoints().empty()) {
+            data->touchpadNeutral = true;
+            data->touchpadBlocked = false;
+        }
+    }
+}
+
+libevdev_uinput *StandaloneInputBackend::outputDevice(const InputActions::InputDevice *device) const
+{
+    for (const auto &[libinputactionsDevice, data] : m_devices) {
+        if (libinputactionsDevice.get() == device) {
+            return data->outputDevice;
+        }
+    }
+    return nullptr;
+}
+
+void StandaloneInputBackend::resetVirtualDeviceState(InputDevice *device)
+{
+    if (!device->properties().grab()) {
+        return;
+    }
+
+    const auto *data = findData(device);
+    if (!data) {
+        return;
+    }
+
     switch (device->type()) {
         case InputDeviceType::Keyboard:
         case InputDeviceType::Mouse: {
@@ -487,136 +577,9 @@ void StandaloneInputBackend::resetDevice(const InputDevice *device, const ExtraD
     }
 }
 
-void StandaloneInputBackend::copyTouchpadState(const ExtraDeviceData *data) const
+void StandaloneInputBackend::restoreVirtualDeviceState(InputDevice *device)
 {
-    for (int code = 0; code < KEY_MAX; code++) {
-        if (!libevdev_has_event_code(data->libevdev, EV_KEY, code)) {
-            continue;
-        }
-
-        libevdev_uinput_write_event(data->outputDevice, EV_KEY, code, libevdev_get_event_value(data->libevdev, EV_KEY, code));
-    }
-
-    for (int code = 0; code < ABS_MAX; code++) {
-        if ((code >= ABS_MT_SLOT && code <= ABS_MT_TOOL_Y) || !libevdev_has_event_code(data->libevdev, EV_ABS, code)) {
-            continue;
-        }
-
-        const auto *info = libevdev_get_abs_info(data->libevdev, code);
-        libevdev_uinput_write_event(data->outputDevice, EV_ABS, code, info->value);
-    }
-
-    for (int slot = 0; slot < libevdev_get_num_slots(data->libevdev); slot++) {
-        libevdev_uinput_write_event(data->outputDevice, EV_ABS, ABS_MT_SLOT, slot);
-
-        for (int code = ABS_MT_SLOT; code <= ABS_MT_TOOL_Y; code++) {
-            if (code == ABS_MT_SLOT || !libevdev_has_event_code(data->libevdev, EV_ABS, code)) {
-                continue;
-            }
-
-            libevdev_uinput_write_event(data->outputDevice, EV_ABS, code, libevdev_get_slot_value(data->libevdev, slot, code));
-        }
-    }
-
-    libevdev_uinput_write_event(data->outputDevice, EV_ABS, ABS_MT_SLOT, libevdev_get_current_slot(data->libevdev));
-    libevdev_uinput_write_event(data->outputDevice, EV_SYN, SYN_REPORT, 0);
-}
-
-void StandaloneInputBackend::poll()
-{
-    std::vector<input_event> frame;
-    for (auto &[device, data] : m_devices) {
-        if (!device->properties().grab()) {
-            handleLibinputEvents(device.get(), data.get(), data->libinput);
-            continue;
-        }
-
-        int status{};
-        while (true) {
-            input_event evdevEvent{};
-            auto flags = status == LIBEVDEV_READ_STATUS_SYNC ? LIBEVDEV_READ_FLAG_SYNC : LIBEVDEV_READ_FLAG_NORMAL;
-            status = libevdev_next_event(data->libevdev, flags, &evdevEvent);
-            if (status != LIBEVDEV_READ_STATUS_SUCCESS && status != LIBEVDEV_READ_STATUS_SYNC) {
-                // Handle events generated after a delay, e.g. pointer button after tapping
-                handleLibinputEvents(device.get(), data.get(), data->libinput);
-                break;
-            }
-
-            frame.push_back(evdevEvent);
-            LibevdevComplementaryInputBackend::handleEvdevEvent(device.get(), evdevEvent);
-
-            if (evdevEvent.type != EV_SYN) {
-                continue;
-            }
-
-            for (const auto &event : frame) {
-                libevdev_uinput_write_event(data->libinputEventInjectionDevice, event.type, event.code, event.value);
-            }
-            const auto result = handleLibinputEvents(device.get(), data.get(), data->libinput);
-
-            if (device->type() == InputDeviceType::Touchpad) {
-                // Copy state of the real device to the output device if events suddenly stop being blocked while the device is not in a neutral state
-                if (data->touchpadBlocked && !result.block && result.eventCount) {
-                    data->touchpadStateResetTimer.stop();
-                    data->touchpadBlocked = false;
-                    copyTouchpadState(data.get());
-                }
-
-                // Touchpad gestures are blocked by blocking the current and all next frames until all fingers are lifted, and changing the state of the output
-                // device to neutral after 200ms. The delay is required to block tap gestures, but doesn't affect motion gesture blocking negatively.
-                if (result.block && !data->touchpadBlocked) {
-                    data->touchpadBlocked = true;
-                    data->touchpadStateResetTimer.start(200);
-                } else if (data->touchpadNeutral && data->touchpadStateResetTimer.isActive()) {
-                    data->touchpadStateResetTimer.stop();
-                    resetDevice(device.get(), data.get());
-                }
-            }
-
-            if (!result.block && !data->touchpadBlocked) {
-                for (const auto &event : frame) {
-                    libevdev_uinput_write_event(data->outputDevice, event.type, event.code, event.value);
-                }
-            }
-            frame.clear();
-
-            data->touchpadNeutral = false;
-        }
-
-        if (device->type() == InputDeviceType::Touchpad && device->validTouchPoints().empty()) {
-            data->touchpadNeutral = true;
-            data->touchpadBlocked = false;
-        }
-    }
-}
-
-libevdev_uinput *StandaloneInputBackend::outputDevice(const InputActions::InputDevice *device) const
-{
-    for (const auto &[libinputactionsDevice, data] : m_devices) {
-        if (libinputactionsDevice.get() == device) {
-            return data->outputDevice;
-        }
-    }
-    return nullptr;
-}
-
-void StandaloneInputBackend::resetOutputDeviceState(InputDevice *device)
-{
-    if (device->type() != InputDeviceType::Touchscreen) {
-        return;
-    }
-
-    for (auto &[devicePtr, data] : m_devices) {
-        if (devicePtr.get() == device) {
-            resetDevice(device, data.get());
-            break;
-        }
-    }
-}
-
-void StandaloneInputBackend::restoreOutputDeviceState(InputDevice *device)
-{
-    if (device->type() != InputDeviceType::Touchscreen) {
+    if (!device->properties().grab()) {
         return;
     }
 
@@ -625,46 +588,83 @@ void StandaloneInputBackend::restoreOutputDeviceState(InputDevice *device)
         return;
     }
 
-    for (int code = 0; code < KEY_MAX; code++) {
-        if (!libevdev_has_event_code(data->libevdev, EV_KEY, code)) {
-            continue;
-        }
+    switch (device->type()) {
+        case InputDeviceType::Touchpad:
+            for (int code = 0; code < KEY_MAX; code++) {
+                if (!libevdev_has_event_code(data->libevdev, EV_KEY, code)) {
+                    continue;
+                }
 
-        libevdev_uinput_write_event(data->outputDevice, EV_KEY, code, libevdev_get_event_value(data->libevdev, EV_KEY, code));
-    }
-
-    for (int code = 0; code < ABS_MAX; code++) {
-        if ((code >= ABS_MT_SLOT && code <= ABS_MT_TOOL_Y) || !libevdev_has_event_code(data->libevdev, EV_ABS, code)) {
-            continue;
-        }
-
-        const auto *info = libevdev_get_abs_info(data->libevdev, code);
-        libevdev_uinput_write_event(data->outputDevice, EV_ABS, code, info->value);
-    }
-
-    for (const auto *point : device->validTouchPoints()) {
-        libevdev_uinput_write_event(data->outputDevice, EV_ABS, ABS_MT_SLOT, point->id);
-
-        libevdev_uinput_write_event(data->outputDevice, EV_ABS, ABS_MT_POSITION_X, point->unalteredInitialPosition.x());
-        libevdev_uinput_write_event(data->outputDevice, EV_ABS, ABS_MT_POSITION_Y, point->unalteredInitialPosition.y());
-        for (int code = ABS_MT_SLOT; code <= ABS_MT_TOOL_Y; code++) {
-            if (code == ABS_MT_SLOT || !libevdev_has_event_code(data->libevdev, EV_ABS, code)) {
-                continue;
+                libevdev_uinput_write_event(data->outputDevice, EV_KEY, code, libevdev_get_event_value(data->libevdev, EV_KEY, code));
             }
 
-            libevdev_uinput_write_event(data->outputDevice, EV_ABS, code, libevdev_get_slot_value(data->libevdev, point->id, code));
-        }
-    }
-    libevdev_uinput_write_event(data->outputDevice, EV_SYN, SYN_REPORT, 0);
+            for (int code = 0; code < ABS_MAX; code++) {
+                if ((code >= ABS_MT_SLOT && code <= ABS_MT_TOOL_Y) || !libevdev_has_event_code(data->libevdev, EV_ABS, code)) {
+                    continue;
+                }
 
-    for (const auto *point : device->validTouchPoints()) {
-        libevdev_uinput_write_event(data->outputDevice, EV_ABS, ABS_MT_SLOT, point->id);
-        libevdev_uinput_write_event(data->outputDevice, EV_ABS, ABS_MT_POSITION_X, point->unalteredPosition.x());
-        libevdev_uinput_write_event(data->outputDevice, EV_ABS, ABS_MT_POSITION_Y, point->unalteredPosition.y());
-    }
+                const auto *info = libevdev_get_abs_info(data->libevdev, code);
+                libevdev_uinput_write_event(data->outputDevice, EV_ABS, code, info->value);
+            }
 
-    libevdev_uinput_write_event(data->outputDevice, EV_ABS, ABS_MT_SLOT, libevdev_get_current_slot(data->libevdev));
-    libevdev_uinput_write_event(data->outputDevice, EV_SYN, SYN_REPORT, 0);
+            for (int slot = 0; slot < libevdev_get_num_slots(data->libevdev); slot++) {
+                libevdev_uinput_write_event(data->outputDevice, EV_ABS, ABS_MT_SLOT, slot);
+
+                for (int code = ABS_MT_SLOT; code <= ABS_MT_TOOL_Y; code++) {
+                    if (code == ABS_MT_SLOT || !libevdev_has_event_code(data->libevdev, EV_ABS, code)) {
+                        continue;
+                    }
+
+                    libevdev_uinput_write_event(data->outputDevice, EV_ABS, code, libevdev_get_slot_value(data->libevdev, slot, code));
+                }
+            }
+
+            libevdev_uinput_write_event(data->outputDevice, EV_ABS, ABS_MT_SLOT, libevdev_get_current_slot(data->libevdev));
+            libevdev_uinput_write_event(data->outputDevice, EV_SYN, SYN_REPORT, 0);
+            break;
+        case InputDeviceType::Touchscreen:
+            for (int code = 0; code < KEY_MAX; code++) {
+                if (!libevdev_has_event_code(data->libevdev, EV_KEY, code)) {
+                    continue;
+                }
+
+                libevdev_uinput_write_event(data->outputDevice, EV_KEY, code, libevdev_get_event_value(data->libevdev, EV_KEY, code));
+            }
+
+            for (int code = 0; code < ABS_MAX; code++) {
+                if ((code >= ABS_MT_SLOT && code <= ABS_MT_TOOL_Y) || !libevdev_has_event_code(data->libevdev, EV_ABS, code)) {
+                    continue;
+                }
+
+                const auto *info = libevdev_get_abs_info(data->libevdev, code);
+                libevdev_uinput_write_event(data->outputDevice, EV_ABS, code, info->value);
+            }
+
+            for (const auto *point : device->validTouchPoints()) {
+                libevdev_uinput_write_event(data->outputDevice, EV_ABS, ABS_MT_SLOT, point->id);
+
+                libevdev_uinput_write_event(data->outputDevice, EV_ABS, ABS_MT_POSITION_X, point->unalteredInitialPosition.x());
+                libevdev_uinput_write_event(data->outputDevice, EV_ABS, ABS_MT_POSITION_Y, point->unalteredInitialPosition.y());
+                for (int code = ABS_MT_SLOT; code <= ABS_MT_TOOL_Y; code++) {
+                    if (code == ABS_MT_SLOT || !libevdev_has_event_code(data->libevdev, EV_ABS, code)) {
+                        continue;
+                    }
+
+                    libevdev_uinput_write_event(data->outputDevice, EV_ABS, code, libevdev_get_slot_value(data->libevdev, point->id, code));
+                }
+            }
+            libevdev_uinput_write_event(data->outputDevice, EV_SYN, SYN_REPORT, 0);
+
+            for (const auto *point : device->validTouchPoints()) {
+                libevdev_uinput_write_event(data->outputDevice, EV_ABS, ABS_MT_SLOT, point->id);
+                libevdev_uinput_write_event(data->outputDevice, EV_ABS, ABS_MT_POSITION_X, point->unalteredPosition.x());
+                libevdev_uinput_write_event(data->outputDevice, EV_ABS, ABS_MT_POSITION_Y, point->unalteredPosition.y());
+            }
+
+            libevdev_uinput_write_event(data->outputDevice, EV_ABS, ABS_MT_SLOT, libevdev_get_current_slot(data->libevdev));
+            libevdev_uinput_write_event(data->outputDevice, EV_SYN, SYN_REPORT, 0);
+            break;
+    }
 }
 
 void StandaloneInputBackend::simulateTouchscreenTapDown(const InputDevice *device, const std::vector<QPointF> &points)

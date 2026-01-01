@@ -27,6 +27,19 @@ InputEvent::InputEvent(InputEventType type, InputDevice *sender)
 {
 }
 
+EvdevEvent::EvdevEvent(uint16_t type, uint16_t code, int32_t value)
+    : m_type(type)
+    , m_code(code)
+    , m_value(value)
+{
+}
+
+EvdevFrameEvent::EvdevFrameEvent(InputDevice *sender, std::vector<EvdevEvent> events)
+    : InputEvent(InputEventType::EvdevFrame, sender)
+    , m_events(std::move(events))
+{
+}
+
 MotionEvent::MotionEvent(InputDevice *sender, InputEventType type, PointDelta delta, bool oneAxisPerEvent)
     : InputEvent(type, sender)
     , m_delta(std::move(delta))

@@ -29,6 +29,8 @@ bool InputEventHandler::handleEvent(const InputEvent &event)
     }
 
     switch (event.type()) {
+        case InputEventType::EvdevFrame:
+            return evdevFrame(dynamic_cast<const EvdevFrameEvent &>(event));
         case InputEventType::KeyboardKey:
             return keyboardKey(dynamic_cast<const KeyboardKeyEvent &>(event));
         case InputEventType::PointerAxis:

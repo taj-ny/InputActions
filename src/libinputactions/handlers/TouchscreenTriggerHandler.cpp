@@ -77,6 +77,17 @@ TouchscreenTriggerHandler::TouchscreenTriggerHandler(InputDevice *device)
     connect(&m_touchUpTimer, &QTimer::timeout, this, &TouchscreenTriggerHandler::handleTouchUp);
 }
 
+bool TouchscreenTriggerHandler::evdevFrame(const EvdevFrameEvent &event)
+{
+    // Block events that don't map to InputActions events (e.g. pressure change)
+    switch (m_state) {
+        case State::None:
+            setBlockAndUpdateVirtualDeviceState(true); // Block by default
+            break;
+    }
+    return m_block;
+}
+
 bool TouchscreenTriggerHandler::touchCancel(const TouchCancelEvent &event)
 {
     switch (m_state) {
@@ -108,7 +119,7 @@ bool TouchscreenTriggerHandler::touchDown(const TouchEvent &event)
             break;
     }
 
-    setBlockAndUpdateOutputDeviceState(true);
+    setBlockAndUpdateVirtualDeviceState(true); // Block by default
     beginGestureRecognition();
     updateVariables(m_device);
 
@@ -156,13 +167,13 @@ bool TouchscreenTriggerHandler::touchFrame(const TouchFrameEvent &event)
             }
             m_previousAngle = info.angle;
 
-            setBlockAndUpdateOutputDeviceState(handlePinch(scale, angleDelta));
+            setBlockAndUpdateVirtualDeviceState(handlePinch(scale, angleDelta));
 
             break;
         }
         case State::Swipe: {
             const auto center = touchCenter();
-            setBlockAndUpdateOutputDeviceState(handleMotion(m_device, center - m_previousCenter));
+            setBlockAndUpdateVirtualDeviceState(handleMotion(m_device, center - m_previousCenter));
             m_previousCenter = center;
             break;
         }
@@ -259,7 +270,7 @@ void TouchscreenTriggerHandler::onTouchDownTimerTimeout()
 {
     setState(State::Touch);
     if (blockingTriggers(TriggerType::All, {}).empty()) {
-        setBlockAndUpdateOutputDeviceState(false);
+        setBlockAndUpdateVirtualDeviceState(false);
     }
 }
 
@@ -310,8 +321,6 @@ void TouchscreenTriggerHandler::handleTap()
 
 void TouchscreenTriggerHandler::setState(State state)
 {
-    Q_ASSERT(m_state != state);
-
     // State exit
     switch (m_state) {
         case State::Touch:
@@ -346,7 +355,7 @@ void TouchscreenTriggerHandler::setState(State state)
     switch (state) {
         case State::Hold:
             if (!activateTriggers(TriggerType::Press).block && m_block) {
-                setBlockAndUpdateOutputDeviceState(false);
+                setBlockAndUpdateVirtualDeviceState(false);
             }
             break;
         case State::Pinch: {
@@ -354,12 +363,12 @@ void TouchscreenTriggerHandler::setState(State state)
             m_initialDistance = pinch.distance;;
             m_previousAngle = pinch.angle;
 
-            setBlockAndUpdateOutputDeviceState(activateTriggers(TriggerType::PinchRotate).block);
+            setBlockAndUpdateVirtualDeviceState(activateTriggers(TriggerType::PinchRotate).block);
             break;
         }
         case State::Swipe:
             m_previousCenter = touchCenter();
-            setBlockAndUpdateOutputDeviceState(activateTriggers(TriggerType::SinglePointMotion).block);
+            setBlockAndUpdateVirtualDeviceState(activateTriggers(TriggerType::SinglePointMotion).block);
             break;
         case State::Touch:
             m_holdTimer.start(HOLD_TIMEOUT);
@@ -388,13 +397,13 @@ void TouchscreenTriggerHandler::beginGestureRecognition()
     }
 }
 
-void TouchscreenTriggerHandler::setBlockAndUpdateOutputDeviceState(bool value)
+void TouchscreenTriggerHandler::setBlockAndUpdateVirtualDeviceState(bool value)
 {
     if (m_state != State::None) {
         if (value && !m_block) {
-            m_device->resetOutputDeviceState();
+            m_device->resetVirtualDeviceState();
         } else if (!value && m_block) {
-            m_device->restoreOutputDeviceState();
+            m_device->restoreVirtualDeviceState();
         }
     }
     m_block = value;

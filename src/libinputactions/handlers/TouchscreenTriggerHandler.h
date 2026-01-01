@@ -32,9 +32,10 @@ struct PinchInfo
 /**
  * Handles touchscreen triggers: hold, pinch, rotate, single-point motion, tap.
  *
- * Can handle one device. Each device has its own instance.
+ * Event filtering requires blocking events by default until a gesture is recognized. The device's virtual state is managed by this handler. The input backend
+ * must not do anything else other than blocking individual events.
  *
- * Manages the output device's state, the input backend must not do anything else other than blocking individual events.
+ * Can handle one device. Each device has its own instance.
  */
 class TouchscreenTriggerHandler : public MultiTouchMotionTriggerHandler
 {
@@ -42,6 +43,7 @@ public:
     TouchscreenTriggerHandler(InputDevice *device);
 
 protected:
+    bool evdevFrame(const EvdevFrameEvent &event) override;
     bool touchCancel(const TouchCancelEvent &event) override;
     bool touchChanged(const TouchChangedEvent &event) override;
     bool touchDown(const TouchEvent &event) override;
@@ -57,10 +59,10 @@ private:
     TEST_VIRTUAL void handleTap();
 
     TEST_VIRTUAL void beginGestureRecognition();
-    void setBlockAndUpdateOutputDeviceState(bool value);
+    void setBlockAndUpdateVirtualDeviceState(bool value);
 
     /**
-     * Initial point positions for gesture recognition. May be different than the actual initial position. Reset on touch up.
+     * Initial point positions for gesture recognition. May be different than the actual initial position.
      */
     std::map<const TouchPoint *, QPointF> m_pointInitialPositions;
     QTimer m_holdTimer;

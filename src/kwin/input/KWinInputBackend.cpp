@@ -279,8 +279,8 @@ void KWinInputBackend::touchpadSwipeBlockingStopped(uint32_t fingers)
     m_ignoreEvents = false;
 }
 
-// Events generated during resetting and restoring must not go through TouchInputRedirection, as it already contains the actual device state.
-void KWinInputBackend::resetOutputDeviceState(InputActions::InputDevice *device)
+// Events generated during resetting and restoring must not go through TouchInputRedirection, as it would interfere with the physical state.
+void KWinInputBackend::resetVirtualDeviceState(InputActions::InputDevice *device)
 {
     if (device->type() != InputDeviceType::Touchscreen) {
         return;
@@ -300,7 +300,7 @@ void KWinInputBackend::resetOutputDeviceState(InputActions::InputDevice *device)
     m_ignoreEvents = false;
 }
 
-void KWinInputBackend::restoreOutputDeviceState(InputActions::InputDevice *device)
+void KWinInputBackend::restoreVirtualDeviceState(InputActions::InputDevice *device)
 {
     if (device->type() != InputDeviceType::Touchscreen) {
         return;
