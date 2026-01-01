@@ -18,6 +18,7 @@
 
 #include "KWinInputBackend.h"
 #include "input_event.h"
+#include "interfaces/KWinInputEmitter.h"
 #include "utils.h"
 #include <libinputactions/input/events.h>
 #include <libinputactions/triggers/StrokeTrigger.h>
@@ -28,9 +29,6 @@ KWinInputBackend::KWinInputBackend()
     : InputEventFilter(KWin::InputFilterOrder::ScreenEdge)
     , m_input(KWin::input())
 {
-    connect(m_input, &KWin::InputRedirection::deviceAdded, this, &KWinInputBackend::kwinDeviceAdded);
-    connect(m_input, &KWin::InputRedirection::deviceRemoved, this, &KWinInputBackend::kwinDeviceRemoved);
-
     m_input->installInputEventFilter(this);
     m_input->installInputEventSpy(&m_keyboardModifierSpy);
 }
@@ -47,6 +45,8 @@ void KWinInputBackend::initialize()
 {
     LibinputInputBackend::initialize();
 
+    connect(m_input, &KWin::InputRedirection::deviceAdded, this, &KWinInputBackend::kwinDeviceAdded);
+    connect(m_input, &KWin::InputRedirection::deviceRemoved, this, &KWinInputBackend::kwinDeviceRemoved);
     for (auto *device : KWin::input()->devices()) {
         kwinDeviceAdded(device);
     }
@@ -54,6 +54,7 @@ void KWinInputBackend::initialize()
 
 void KWinInputBackend::reset()
 {
+    disconnect(m_input, nullptr, this, nullptr);
     for (auto &device : m_devices) {
         deviceRemoved(device.libinputactionsDevice.get());
     }
@@ -244,6 +245,10 @@ void KWinInputBackend::touchpadSwipeBlockingStopped(uint32_t fingers)
 
 void KWinInputBackend::kwinDeviceAdded(KWin::InputDevice *kwinDevice)
 {
+    if (kwinDevice == std::dynamic_pointer_cast<KWinInputEmitter>(g_inputEmitter)->device()) {
+        return;
+    }
+
     InputDeviceType type;
     if (isMouse(kwinDevice)) {
         type = InputDeviceType::Mouse;

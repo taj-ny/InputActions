@@ -18,6 +18,7 @@
 
 #include "HyprlandInputBackend.h"
 #include "Plugin.h"
+#include "interfaces/HyprlandInputEmitter.h"
 #include <aquamarine/input/Input.hpp>
 #include <hyprland/src/config/ConfigManager.hpp>
 #include <hyprland/src/devices/IKeyboard.hpp>
@@ -110,10 +111,10 @@ void HyprlandInputBackend::touchpadSwipeBlockingStopped(uint32_t fingers)
 
 void HyprlandInputBackend::checkDeviceChanges()
 {
-    auto &devices = g_pInputManager->m_hids;
-    for (auto &device : devices) {
-        if (std::ranges::any_of(m_hyprlandDevices, [&device](const auto &existingDevice) {
-                return existingDevice == device.get();
+    auto &hids = g_pInputManager->m_hids;
+    for (auto &device : hids) {
+        if (std::ranges::any_of(m_previousHids, [&device](const auto &existingDevice) {
+                return existingDevice.get() == device.get();
             })) {
             continue;
         }
@@ -124,6 +125,10 @@ void HyprlandInputBackend::checkDeviceChanges()
         InputDeviceType type;
         QString name;
         if (auto *keyboard = dynamic_cast<IKeyboard *>(device.get())) {
+            if (keyboard->aq().get() == std::dynamic_pointer_cast<HyprlandInputEmitter>(g_inputEmitter)->keyboard()) {
+                continue;
+            }
+
             type = InputDeviceType::Keyboard;
             name = QString::fromStdString(keyboard->m_deviceName);
         } else if (auto *pointer = dynamic_cast<IPointer *>(device.get())) {
@@ -168,11 +173,11 @@ void HyprlandInputBackend::checkDeviceChanges()
 
         deviceAdded(newDevice.libinputactionsDevice.get());
         m_devices.push_back(std::move(newDevice));
-        m_hyprlandDevices.push_back(device.get());
     }
+    m_previousHids = hids;
 
     for (auto it = m_devices.begin(); it != m_devices.end();) {
-        if (!std::ranges::any_of(devices, [it](const auto &device) {
+        if (!std::ranges::any_of(hids, [it](const auto &device) {
                 return device.get() == it->hyprlandDevice;
             })) {
             deviceRemoved(*it);
@@ -191,7 +196,6 @@ void HyprlandInputBackend::deviceRemoved(const HyprlandInputDevice &device)
     if (m_currentTouchpad == device.libinputactionsDevice.get()) {
         m_currentTouchpad = nullptr;
     }
-    std::erase(m_hyprlandDevices, device.hyprlandDevice);
     LibinputInputBackend::deviceRemoved(device.libinputactionsDevice.get());
 }
 

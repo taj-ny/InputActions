@@ -54,6 +54,8 @@ public:
     void mouseButton(uint32_t button, bool state, const InputActions::InputDevice *device = nullptr) override;
     void mouseMoveRelative(const QPointF &pos) override;
 
+    Aquamarine::IKeyboard *keyboard() const { return m_keyboard.get(); }
+
 private:
     void onNewTextInputV3(const WP<CTextInputV3> &textInput);
 
