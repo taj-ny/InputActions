@@ -17,7 +17,9 @@
 */
 
 #include "InputDevice.h"
+#include "backends/InputBackend.h"
 #include <libinputactions/handlers/TouchpadTriggerHandler.h>
+#include <libinputactions/handlers/TouchscreenTriggerHandler.h>
 
 namespace InputActions
 {
@@ -30,6 +32,21 @@ InputDevice::InputDevice(InputDeviceType type, QString name, QString sysName)
 }
 
 InputDevice::~InputDevice() = default;
+
+void InputDevice::resetVirtualDeviceState()
+{
+    g_inputBackend->resetVirtualDeviceState(this);
+}
+
+void InputDevice::restoreVirtualDeviceState()
+{
+    g_inputBackend->restoreVirtualDeviceState(this);
+}
+
+void InputDevice::simulateTouchscreenTap(const std::vector<QPointF> &points)
+{
+    g_inputBackend->simulateTouchscreenTap(this, points);
+}
 
 Qt::KeyboardModifiers InputDevice::modifiers() const
 {
@@ -68,6 +85,11 @@ std::vector<const TouchPoint *> InputDevice::validTouchPoints() const
 void InputDevice::setTouchpadTriggerHandler(std::unique_ptr<TouchpadTriggerHandler> value)
 {
     m_touchpadTriggerHandler = std::move(value);
+}
+
+void InputDevice::setTouchscreenTriggerHandler(std::unique_ptr<TouchscreenTriggerHandler> value)
+{
+    m_touchscreenTriggerHandler = std::move(value);
 }
 
 void InputDeviceProperties::apply(const InputDeviceProperties &other)

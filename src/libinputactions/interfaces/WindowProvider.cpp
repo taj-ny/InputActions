@@ -30,6 +30,11 @@ std::shared_ptr<Window> WindowProvider::activeWindow()
     return {};
 }
 
+std::shared_ptr<Window> WindowProvider::windowUnderFingers()
+{
+    return {};
+}
+
 std::shared_ptr<Window> WindowProvider::windowUnderPointer()
 {
     return {};

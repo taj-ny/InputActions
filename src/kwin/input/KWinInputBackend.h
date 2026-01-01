@@ -58,6 +58,12 @@ public:
     bool pinchGestureUpdate(KWin::PointerPinchGestureUpdateEvent *event) override;
     bool pinchGestureEnd(KWin::PointerPinchGestureEndEvent *event) override;
     bool pinchGestureCancelled(KWin::PointerPinchGestureCancelEvent *event) override;
+
+    bool touchDown(KWin::TouchDownEvent *event) override;
+    bool touchMotion(KWin::TouchMotionEvent *event) override;
+    bool touchUp(KWin::TouchUpEvent *event) override;
+    bool touchCancel() override;
+    bool touchFrame() override;
 #else
     bool holdGestureBegin(int fingerCount, std::chrono::microseconds time) override;
     bool holdGestureEnd(std::chrono::microseconds time) override;
@@ -83,14 +89,25 @@ public:
     void touchpadPinchBlockingStopped(uint32_t fingers) override;
     void touchpadSwipeBlockingStopped(uint32_t fingers) override;
 
+#ifdef KWIN_6_5_OR_GREATER
+    void resetVirtualDeviceState(InputActions::InputDevice *device) override;
+    void restoreVirtualDeviceState(InputActions::InputDevice *device) override;
+
+    void simulateTouchscreenTapDown(const InputActions::InputDevice *device, const std::vector<QPointF> &points) override;
+    void simulateTouchscreenTapUp(const InputActions::InputDevice *device, const std::vector<QPointF> &points) override;
+#endif
+
 private:
     void kwinDeviceAdded(KWin::InputDevice *kwinDevice);
     void kwinDeviceRemoved(const KWin::InputDevice *kwinDevice);
     InputActions::InputDevice *findInputActionsDevice(const KWin::InputDevice *kwinDevice);
+    KWin::InputDevice *findKwinDevice(const InputActions::InputDevice *inputactionsDevice);
+
     /**
      * @return The device that generated the last event.
      */
     InputActions::InputDevice *currentTouchpad();
+    InputActions::InputDevice *currentTouchscreen();
 
     bool isMouse(const KWin::InputDevice *device) const;
 

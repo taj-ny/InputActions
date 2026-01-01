@@ -21,10 +21,12 @@
 #include "InputEventHandler.h"
 #include <QObject>
 #include <QPointF>
-#include <libinputactions/triggers/StrokeTrigger.h>
+#include <QTimer>
 
 namespace InputActions
 {
+
+class Stroke;
 
 class StrokeRecorder
     : public QObject
@@ -42,8 +44,16 @@ public:
     void recordStroke(const std::function<void(const Stroke &stroke)> &callback);
 
 protected:
+    bool evdevFrame(const EvdevFrameEvent &event) override;
+
     bool pointerAxis(const MotionEvent &event) override;
     bool pointerMotion(const MotionEvent &event) override;
+
+    bool touchCancel(const TouchCancelEvent &event) override;
+    bool touchChanged(const TouchChangedEvent &event) override;
+    bool touchDown(const TouchEvent &event) override;
+    bool touchFrame(const TouchFrameEvent &event) override;
+    bool touchUp(const TouchEvent &event) override;
 
     bool touchpadGestureLifecyclePhase(const TouchpadGestureLifecyclePhaseEvent &event) override;
     bool touchpadPinch(const TouchpadPinchEvent &event) override;
@@ -56,6 +66,9 @@ private:
     std::function<void(const Stroke &stroke)> m_strokeCallback;
     std::vector<QPointF> m_strokePoints;
     QTimer m_strokeRecordingTimeoutTimer;
+
+    QPointF m_previousTouchscreenTouchCenter;
+    bool m_blockTouchscreenEventsUntilDeviceNeutral{};
 };
 
 inline std::shared_ptr<StrokeRecorder> g_strokeRecorder;

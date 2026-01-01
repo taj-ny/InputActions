@@ -34,6 +34,7 @@ class KeyboardTriggerHandler;
 class MouseTriggerHandler;
 class PointerTriggerHandler;
 class TouchpadTriggerHandler;
+class TouchscreenTriggerHandler;
 
 /**
  * Collects input events and forwards them to event handlers. Handlers can only be set before initialization.
@@ -67,6 +68,11 @@ public:
      * Detects and adds devices.
      */
     virtual void initialize();
+    /**
+     * Do not call directly, use InputDevice::simulateTouchscreenTap instead.
+     * @see InputDevice::simulateTouchscreenTap
+     */
+    void simulateTouchscreenTap(const InputDevice *device, const std::vector<QPointF> &points);
 
     /**
      * Evaluates device rules for the specified device and returns the properties without modifying the device's properties. Use this for devices that have not
@@ -75,6 +81,22 @@ public:
     InputDeviceProperties deviceProperties(const InputDevice *device) const;
 
     std::vector<InputDevice *> devices();
+
+    /**
+     * @return The touchscreen currently in use or nullptr if not available.
+     */
+    InputDevice *currentTouchscreen() const { return m_currentTouchscreen; }
+
+    /**
+     * Do not call directly, use InputDevice::resetVirtualDeviceState instead.
+     * @see InputDevice::resetVirtualDeviceState
+     */
+    virtual void resetVirtualDeviceState(InputDevice *device) {}
+    /**
+     * Do not call directly, use InputDevice::restoreVirtualDeviceState instead.
+     * @see InputDevice::restoreVirtualDeviceState
+     */
+    virtual void restoreVirtualDeviceState(InputDevice *device) {}
 
     /**
      * @return Currently pressed keyboard modifiers, accumulated from all devices.
@@ -98,6 +120,7 @@ public:
     void setMouseTriggerHandler(std::unique_ptr<MouseTriggerHandler> value);
     void setPointerTriggerHandler(std::unique_ptr<PointerTriggerHandler> value);
     void setTouchpadTriggerHandlerFactory(std::function<std::unique_ptr<TouchpadTriggerHandler>(InputDevice *device)> value);
+    void setTouchscreenTriggerHandlerFactory(std::function<std::unique_ptr<TouchscreenTriggerHandler>(InputDevice *device)> value);
 
     /**
      * A combination of keyboard keys, that when held for a specific amount of time, will cause InputActions to enter a suspended state.
@@ -105,6 +128,15 @@ public:
     void setEmergencyCombination(std::unordered_set<uint32_t> value) { m_emergencyCombination = value; }
 
 protected:
+    /**
+     * Must generate touch down events and a touch frame event for the specified points.
+     */
+    virtual void simulateTouchscreenTapDown(const InputDevice *device, const std::vector<QPointF> &points) {}
+    /**
+     * Must generate touch up events and a touch frame event for the specified points.
+     */
+    virtual void simulateTouchscreenTapUp(const InputDevice *device, const std::vector<QPointF> &points) {}
+
     /**
      * Backends should add device properties in this method.
      */
@@ -122,12 +154,18 @@ protected:
 
 private slots:
     void onEmergencyCombinationTimerTimeout();
+    void onTouchscreenTapTimerTimeout();
 
 private:
     void applyDeviceProperties(const InputDevice *device, InputDeviceProperties &properties) const;
 
     std::vector<InputEventHandler *> m_eventHandlerChain;
     std::vector<InputDevice *> m_devices;
+
+    InputDevice *m_currentTouchscreen{};
+    QTimer m_touchscreenTapTimer;
+    std::vector<QPointF> m_currentTouchscreenTapPoints;
+    const InputDevice *m_currentTouchscreenTapTarget{};
 
     QTimer m_emergencyCombinationTimer;
 
@@ -136,6 +174,7 @@ private:
     std::unique_ptr<MouseTriggerHandler> m_mouseTriggerHandler;
     std::unique_ptr<PointerTriggerHandler> m_pointerTriggerHandler;
     std::function<std::unique_ptr<TouchpadTriggerHandler>(InputDevice *device)> m_touchpadTriggerHandlerFactory;
+    std::function<std::unique_ptr<TouchscreenTriggerHandler>(InputDevice *device)> m_touchscreenTriggerHandlerFactory;
 
     std::unordered_set<uint32_t> m_emergencyCombination = {KEY_BACKSPACE, KEY_SPACE, KEY_ENTER};
 };

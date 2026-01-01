@@ -25,84 +25,6 @@ Q_LOGGING_CATEGORY(INPUTACTIONS_HANDLER_MULTITOUCH, "inputactions.handler.multit
 namespace InputActions
 {
 
-bool MultiTouchMotionTriggerHandler::touchChanged(const TouchChangedEvent &event)
-{
-    switch (m_state) {
-        case State::LibinputTapBegin:
-            return false;
-        case State::Touch:
-        case State::TouchIdle:
-            const auto diff = event.point().position - event.point().initialPosition;
-            if (std::hypot(diff.x(), diff.y()) >= 0.02) {
-                setState(State::Motion);
-            }
-            break;
-    }
-
-    updateVariables(event.sender());
-    return false;
-}
-
-bool MultiTouchMotionTriggerHandler::touchDown(const TouchEvent &event)
-{
-    switch (m_state) {
-        case State::LibinputTapBegin:
-            setState(State::TouchIdle);
-            break;
-        case State::None:
-            setState(State::TouchIdle);
-            m_firstTouchPoint = event.point();
-            break;
-    }
-
-    updateVariables(event.sender());
-    return false;
-}
-
-bool MultiTouchMotionTriggerHandler::touchUp(const TouchEvent &event)
-{
-    switch (m_state) {
-        case State::TapBegin:
-        case State::TouchIdle:
-            // 1-3 finger touchpad tap gestures are detected by listening for pointer button events, as it's more reliable. The child class should reset the
-            // state in case no pointer button events occur.
-            if (m_state == State::TouchIdle && event.sender()->type() == InputDeviceType::Touchpad
-                && g_variableManager->getVariable(BuiltinVariables::Fingers)->get() <= 3) {
-                setState(State::LibinputTapBegin);
-                break;
-            }
-
-            if (canTap()) {
-                if (m_state == State::TouchIdle) {
-                    setState(activateTriggers(TriggerType::Tap).success ? State::TapBegin : State::Touch);
-                }
-                if (m_state == State::TapBegin && event.sender()->validTouchPoints().empty()) {
-                    updateTriggers(TriggerType::Tap);
-                    endTriggers(TriggerType::Tap);
-                    setState(State::None);
-                }
-                break;
-            }
-            if (m_state == State::TapBegin) {
-                cancelTriggers(TriggerType::Tap);
-            }
-            setState(State::Touch);
-            break;
-    }
-
-    if (m_state == State::LibinputTapBegin) {
-        return false;
-    }
-
-    updateVariables(event.sender());
-    if (event.sender()->validTouchPoints().empty()) {
-        setState(State::None);
-        endTriggers(TriggerType::All);
-    }
-
-    return false;
-}
-
 bool MultiTouchMotionTriggerHandler::handlePinch(qreal scale, qreal angleDelta)
 {
     if (!hasActiveTriggers(TriggerType::PinchRotate)) {
@@ -187,7 +109,7 @@ void MultiTouchMotionTriggerHandler::updateVariables(const InputDevice *sender)
         auto position = g_variableManager->getVariable<QPointF>(QString("finger_%1_position_percentage").arg(fingerVariableNumber));
         auto pressure = g_variableManager->getVariable<qreal>(QString("finger_%1_pressure").arg(fingerVariableNumber));
 
-        if (touchPoints.size() <= i || !touchPoints[i]->valid) {
+        if (!sender || touchPoints.size() <= i || !touchPoints[i]->valid) {
             initialPosition->set({});
             position->set({});
             pressure->set({});
@@ -197,12 +119,12 @@ void MultiTouchMotionTriggerHandler::updateVariables(const InputDevice *sender)
         const auto *point = touchPoints[i];
         if (point->type == TouchPointType::Thumb) {
             hasThumb = true;
-            thumbInitialPosition->set(point->initialPosition);
-            thumbPosition->set(point->position);
+            thumbInitialPosition->set(point->initialPosition / sender->properties().size());
+            thumbPosition->set(point->position / sender->properties().size());
             thumbPresent->set(true);
         }
-        initialPosition->set(point->initialPosition);
-        position->set(point->position);
+        initialPosition->set(point->initialPosition / sender->properties().size());
+        position->set(point->position / sender->properties().size());
         pressure->set(point->pressure);
     }
 
@@ -213,22 +135,6 @@ void MultiTouchMotionTriggerHandler::updateVariables(const InputDevice *sender)
     }
 
     g_variableManager->getVariable(BuiltinVariables::Fingers)->set(touchPoints.size());
-}
-
-void MultiTouchMotionTriggerHandler::setState(State state)
-{
-    m_state = state;
-    switch (state) {
-        case State::None:
-            updateVariables();
-            break;
-    }
-}
-
-bool MultiTouchMotionTriggerHandler::canTap()
-{
-    return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - m_firstTouchPoint.downTimestamp).count()
-        <= TAP_TIMEOUT.count();
 }
 
 }

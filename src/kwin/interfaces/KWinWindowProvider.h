@@ -26,5 +26,6 @@ public:
     KWinWindowProvider() = default;
 
     std::shared_ptr<InputActions::Window> activeWindow() override;
+    std::shared_ptr<InputActions::Window> windowUnderFingers() override;
     std::shared_ptr<InputActions::Window> windowUnderPointer() override;
 };

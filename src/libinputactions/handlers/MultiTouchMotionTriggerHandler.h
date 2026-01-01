@@ -24,8 +24,6 @@
 
 Q_DECLARE_LOGGING_CATEGORY(INPUTACTIONS_HANDLER_MULTITOUCH)
 
-static const std::chrono::milliseconds TAP_TIMEOUT(200L);
-
 namespace InputActions
 {
 
@@ -43,10 +41,6 @@ enum class PinchType
 class MultiTouchMotionTriggerHandler : public MotionTriggerHandler
 {
 protected:
-    bool touchChanged(const TouchChangedEvent &event) override;
-    bool touchDown(const TouchEvent &event) override;
-    bool touchUp(const TouchEvent &event) override;
-
     /**
      * Does nothing if there are no active pinch or rotate triggers.
      * @return Whether there are any active pinch or rotate triggers.
@@ -60,61 +54,10 @@ protected:
      */
     static void updateVariables(const InputDevice *device = {});
 
-    enum State
-    {
-        TouchpadButtonDown,
-        /**
-         * TouchpadButtonDown but the press event was blocked.
-         */
-        TouchpadButtonDownBlocked,
-
-        None,
-        Scrolling,
-
-        /**
-         * Finger(s) present but no action had been performed other than adding more fingers.
-         */
-        TouchIdle,
-        /**
-         * Finger(s) present and an action had been performed (tap or click).
-         */
-        Touch,
-
-        /**
-         * At least one finger was moved.
-         */
-        Motion,
-        /**
-         * At least one finger was moved and no triggers were recognized.
-         */
-        MotionNoTrigger,
-        /**
-         * At least one finger was moved and a trigger was recognized.
-         */
-        MotionTrigger,
-
-        /**
-         * A tap gesture had been recognized and is being handled by InputActions.
-         */
-        TapBegin,
-        /**
-         * A tap gesture had been recognized and will be handled on libinput's pointer button event.
-         */
-        LibinputTapBegin
-    } m_state
-        = State::None;
-    virtual void setState(State state);
-
 private:
-    bool canTap();
-
-    TouchPoint m_firstTouchPoint;
-
     qreal m_previousPinchScale = 1;
     PinchType m_pinchType = PinchType::Unknown;
     qreal m_accumulatedRotateDelta = 0;
-
-    friend class TestTouchpadTriggerHandler;
 };
 
 }

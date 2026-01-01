@@ -46,7 +46,14 @@ public:
     void initialize() override;
     void reset() final;
 
+    void resetVirtualDeviceState(InputDevice *device) override;
+    void restoreVirtualDeviceState(InputDevice *device) override;
+
     libevdev_uinput *outputDevice(const InputDevice *device) const;
+
+protected:
+    void simulateTouchscreenTapDown(const InputDevice *device, const std::vector<QPointF> &points) override;
+    void simulateTouchscreenTapUp(const InputDevice *device, const std::vector<QPointF> &points) override;
 
 private slots:
     void inotifyTimerTick();
@@ -66,21 +73,15 @@ private:
     void finishLibinputDeviceInitialization(InputDevice *device, ExtraDeviceData *data);
     void evdevDeviceRemoved(const QString &path);
 
-    bool handleEvent(InputDevice *sender, libinput_event *event);
-    LibinputEventsProcessingResult handleLibinputEvents(InputDevice *device, libinput *libinput);
+    bool handleEvent(InputDevice *sender, ExtraDeviceData *data, libinput_event *event);
+    LibinputEventsProcessingResult handleLibinputEvents(InputDevice *device, ExtraDeviceData *data, libinput *libinput);
 
     /**
      * @return Whether the specified device is in a neutral state.
      */
     bool isDeviceNeutral(const InputDevice *device, const ExtraDeviceData *data);
-    /**
-     * Resets the output device of the specified grabbed device into a neutral state.
-     */
-    void resetDevice(const InputDevice *device, const ExtraDeviceData *data);
-    /**
-     * Copies the current state of the specified grabbed touchpad to its neutral output device.
-     */
-    void copyTouchpadState(const ExtraDeviceData *data) const;
+
+    ExtraDeviceData *findData(const InputDevice *device);
 
     libinput_interface m_libinputBlockingInterface;
     libinput_interface m_libinputNonBlockingInterface;
