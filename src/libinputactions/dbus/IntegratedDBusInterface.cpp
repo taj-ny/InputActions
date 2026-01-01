@@ -18,12 +18,12 @@
 
 #include "IntegratedDBusInterface.h"
 #include <QRegularExpression>
+#include <libinputactions/InputActionsMain.h>
 #include <libinputactions/config/Config.h>
-#include <libinputactions/input/backends/InputBackend.h>
+#include <libinputactions/input/StrokeRecorder.h>
 #include <libinputactions/interfaces/OnScreenMessageManager.h>
 #include <libinputactions/triggers/StrokeTrigger.h>
 #include <libinputactions/variables/VariableManager.h>
-#include <libinputactions/InputActionsMain.h>
 
 namespace InputActions
 {
@@ -49,7 +49,7 @@ void IntegratedDBusInterface::recordStroke(const QDBusMessage &message)
     message.setDelayedReply(true);
     m_reply = message.createReply();
 
-    g_inputBackend->recordStroke([this](const auto &stroke) {
+    g_strokeRecorder->recordStroke([this](const auto &stroke) {
         m_reply << strokeToBase64(stroke);
         m_bus.send(m_reply);
         g_onScreenMessageManager->hideMessage();

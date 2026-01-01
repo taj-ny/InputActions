@@ -1,6 +1,7 @@
 #include "InputActionsMain.h"
 #include "actions/ActionExecutor.h"
 #include "config/Config.h"
+#include "input/StrokeRecorder.h"
 #include "input/backends/InputBackend.h"
 #include "input/backends/LibevdevComplementaryInputBackend.h"
 #include "interfaces/ConfigProvider.h"
@@ -47,6 +48,7 @@ InputActionsMain::~InputActionsMain()
     g_config.reset();
     g_configProvider.reset();
     g_inputBackend.reset();
+    g_strokeRecorder.reset();
     g_variableManager.reset();
 }
 
@@ -86,6 +88,7 @@ void InputActionsMain::setMissingImplementations()
     setMissingImplementation(g_actionExecutor);
     setMissingImplementation(g_config);
     setMissingImplementation(g_inputBackend);
+    setMissingImplementation(g_strokeRecorder);
     setMissingImplementation(g_variableManager);
 }
 

@@ -33,7 +33,6 @@ class InputEventHandler;
 class KeyboardTriggerHandler;
 class MouseTriggerHandler;
 class PointerTriggerHandler;
-class Stroke;
 class TouchpadTriggerHandler;
 
 /**
@@ -68,12 +67,6 @@ public:
      * Detects and adds devices.
      */
     virtual void initialize();
-
-    /**
-     * @param callback Will be called when the stroke has been recorded.
-     * @remark Calling this when a stroke is already being recorded will result in the previous callback never being called.
-     */
-    void recordStroke(const std::function<void(const Stroke &stroke)> &callback);
 
     /**
      * Evaluates device rules for the specified device and returns the properties without modifying the device's properties. Use this for devices that have not
@@ -125,13 +118,7 @@ protected:
      */
     bool handleEvent(const InputEvent &event);
 
-    void finishStrokeRecording();
-
     bool m_ignoreEvents = false;
-
-    bool m_isRecordingStroke = false;
-    std::vector<QPointF> m_strokePoints;
-    QTimer m_strokeRecordingTimeoutTimer;
 
 private slots:
     void onEmergencyCombinationTimerTimeout();
@@ -142,7 +129,6 @@ private:
     std::vector<InputEventHandler *> m_eventHandlerChain;
     std::vector<InputDevice *> m_devices;
 
-    std::function<void(const Stroke &stroke)> m_strokeCallback;
     QTimer m_emergencyCombinationTimer;
 
     std::vector<InputDeviceRule> m_deviceRules;
