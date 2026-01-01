@@ -175,8 +175,8 @@ bool TouchpadTriggerHandler::touchChanged(const TouchChangedEvent &event)
             return false;
         case State::Touch:
         case State::TouchIdle:
-            const auto diff = (event.point().position - event.point().initialPosition) / event.sender()->properties().size();
-            if (std::hypot(diff.x(), diff.y()) >= 0.02) {
+            const auto diff = event.point().position - event.point().initialPosition;
+            if (std::hypot(diff.x(), diff.y()) >= 4) { // not physical units, horrible
                 setState(State::Motion);
             }
             break;

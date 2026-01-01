@@ -17,6 +17,7 @@ void TestTouchpadTriggerHandler::init()
 {
     m_touchpad = std::make_unique<InputDevice>(InputDeviceType::Touchpad);
     m_touchpad->setTouchPoints(std::vector<TouchPoint>(5));
+    m_touchpad->properties().setSize({100, 100});
     m_handler = std::make_unique<MockTouchpadTriggerHandler>(m_touchpad.get());
     m_activatingTriggerSpy = std::make_unique<QSignalSpy>(m_handler.get(), &TriggerHandler::activatingTrigger);
     m_activatingTriggersSpy = std::make_unique<QSignalSpy>(m_handler.get(), &TriggerHandler::activatingTriggers);
@@ -270,25 +271,25 @@ void TestTouchpadTriggerHandler::tap2_variablesSetDuringActivation()
 {
     m_handler->addTrigger(std::make_unique<Trigger>(TriggerType::Tap));
 
-    const QPointF first(0.1, 0.1);
-    const QPointF second(0.2, 0.2);
+    const QPointF first(10, 10);
+    const QPointF second(20, 20);
     addPoint(first);
     addPoint(second);
 
     const auto finger1Position = g_variableManager->getVariable<QPointF>("finger_1_position_percentage");
     const auto finger2Position = g_variableManager->getVariable<QPointF>("finger_2_position_percentage");
-    QCOMPARE(finger1Position->get(), first);
-    QCOMPARE(finger2Position->get(), second);
+    QCOMPARE(finger1Position->get(), QPointF(0.1, 0.1));
+    QCOMPARE(finger2Position->get(), QPointF(0.2, 0.2));
 
     m_handler->handleEvent(TouchChangedEvent(m_touchpad.get(), m_touchpad->touchPoints()[0], {}));
     removePoints(1);
-    QCOMPARE(finger1Position->get(), first);
-    QCOMPARE(finger2Position->get(), second);
+    QCOMPARE(finger1Position->get(), QPointF(0.1, 0.1));
+    QCOMPARE(finger2Position->get(), QPointF(0.2, 0.2));
 
     m_handler->handleEvent(TouchChangedEvent(m_touchpad.get(), m_touchpad->touchPoints()[0], {}));
     removePoints(1);
-    QCOMPARE(finger1Position->get(), first);
-    QCOMPARE(finger2Position->get(), second);
+    QCOMPARE(finger1Position->get(), QPointF(0.1, 0.1));
+    QCOMPARE(finger2Position->get(), QPointF(0.2, 0.2));
 
     m_handler->handleEvent(PointerButtonEvent(m_touchpad.get(), Qt::MouseButton::LeftButton, BTN_LEFT, true));
     m_handler->handleEvent(PointerButtonEvent(m_touchpad.get(), Qt::MouseButton::LeftButton, BTN_LEFT, false));
@@ -318,7 +319,7 @@ void TestTouchpadTriggerHandler::tap4_moved()
     m_handler->addTrigger(std::make_unique<Trigger>(TriggerType::Tap));
 
     addPoints(4);
-    movePoints({0.1, 0.1});
+    movePoints({10, 10});
     removePoints();
 
     QCOMPARE(m_activatingTriggersSpy->count(), 0);
