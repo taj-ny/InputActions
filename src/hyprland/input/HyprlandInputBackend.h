@@ -82,7 +82,7 @@ private:
     /**
      * Used to detect device changes.
      */
-    std::vector<IHID *> m_hyprlandDevices;
+    std::vector<WP<IHID>> m_previousHids;
     std::vector<HyprlandInputDevice> m_devices;
     QTimer m_deviceChangeTimer;
 
