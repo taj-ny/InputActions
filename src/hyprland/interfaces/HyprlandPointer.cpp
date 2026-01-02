@@ -25,7 +25,8 @@
 #include <QRectF>
 #include <libinputactions/input/backends/InputBackend.h>
 
-using namespace InputActions;
+namespace InputActions
+{
 
 typedef void (*setCursorFromName)(void *thisPtr, const std::string &name);
 
@@ -68,4 +69,6 @@ void HyprlandPointer::setCursorFromNameHook(void *thisPtr, const std::string &na
     auto *self = dynamic_cast<HyprlandPointer *>(g_cursorShapeProvider.get());
     (*(setCursorFromName)self->m_setCursorFromNameHook->m_original)(thisPtr, name);
     self->m_currentCursorShape = QString::fromStdString(name).replace('-', '_');
+}
+
 }

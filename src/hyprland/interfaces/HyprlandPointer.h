@@ -23,15 +23,18 @@
 #include <libinputactions/interfaces/PointerPositionGetter.h>
 #include <libinputactions/interfaces/PointerPositionSetter.h>
 
+namespace InputActions
+{
+
 class HyprlandPointer
-    : public InputActions::CursorShapeProvider
-    , public InputActions::PointerPositionGetter
-    , public InputActions::PointerPositionSetter
+    : public CursorShapeProvider
+    , public PointerPositionGetter
+    , public PointerPositionSetter
 {
 public:
     HyprlandPointer(void *handle);
 
-    std::optional<InputActions::CursorShape> cursorShape() override;
+    std::optional<CursorShape> cursorShape() override;
 
     std::optional<QPointF> globalPointerPosition() override;
     std::optional<QPointF> screenPointerPosition() override;
@@ -44,3 +47,5 @@ private:
     HyprlandFunctionHook m_setCursorFromNameHook;
     QString m_currentCursorShape;
 };
+
+}

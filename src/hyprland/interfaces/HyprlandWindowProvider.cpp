@@ -22,7 +22,8 @@
 #include <hyprland/src/desktop/state/FocusState.hpp>
 #include <hyprland/src/managers/PointerManager.hpp>
 
-using namespace InputActions;
+namespace InputActions
+{
 
 std::shared_ptr<Window> HyprlandWindowProvider::activeWindow()
 {
@@ -38,4 +39,6 @@ std::shared_ptr<Window> HyprlandWindowProvider::windowUnderPointer()
         return std::make_shared<HyprlandWindow>(window);
     }
     return {};
+}
+
 }

@@ -26,7 +26,8 @@
 #include "workspace.h"
 #include <libinputactions/input/backends/InputBackend.h>
 
-using namespace InputActions;
+namespace InputActions
+{
 
 std::optional<CursorShape> KWinPointer::cursorShape()
 {
@@ -82,4 +83,6 @@ void KWinPointer::setGlobalPointerPosition(const QPointF &position)
     Q_EMIT device->pointerMotionAbsolute(position, timestamp(), device);
     Q_EMIT device->pointerFrame(device);
     g_inputBackend->setIgnoreEvents(false);
+}
+
 }

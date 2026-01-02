@@ -25,7 +25,10 @@ namespace Desktop::View
 class CWindow;
 }
 
-class HyprlandWindow : public InputActions::Window
+namespace InputActions
+{
+
+class HyprlandWindow : public Window
 {
 public:
     HyprlandWindow(Desktop::View::CWindow *window);
@@ -39,3 +42,5 @@ public:
 private:
     Desktop::View::CWindow *m_window;
 };
+
+}

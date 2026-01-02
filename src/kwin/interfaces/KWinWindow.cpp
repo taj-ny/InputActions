@@ -21,6 +21,9 @@
 #include "effect/effecthandler.h"
 #include "window.h"
 
+namespace InputActions
+{
+
 KWinWindow::KWinWindow(KWin::Window *window)
     : m_window(window)
 {
@@ -59,4 +62,6 @@ std::optional<bool> KWinWindow::maximized()
 std::optional<bool> KWinWindow::fullscreen()
 {
     return m_window->isFullScreen();
+}
+
 }

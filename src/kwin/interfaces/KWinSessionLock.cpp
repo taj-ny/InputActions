@@ -19,7 +19,12 @@
 #include "KWinSessionLock.h"
 #include <kwin/wayland_server.h>
 
+namespace InputActions
+{
+
 bool KWinSessionLock::sessionLocked()
 {
     return KWin::waylandServer()->isScreenLocked();
+}
+
 }

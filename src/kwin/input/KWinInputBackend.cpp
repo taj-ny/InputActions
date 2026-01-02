@@ -23,7 +23,8 @@
 #include <libinputactions/input/events.h>
 #include <libinputactions/triggers/StrokeTrigger.h>
 
-using namespace InputActions;
+namespace InputActions
+{
 
 KWinInputBackend::KWinInputBackend()
     : InputEventFilter(KWin::InputFilterOrder::ScreenEdge)
@@ -262,7 +263,7 @@ void KWinInputBackend::kwinDeviceAdded(KWin::InputDevice *kwinDevice)
 
     KWinInputDevice device{
         .kwinDevice = kwinDevice,
-        .libinputactionsDevice = std::make_unique<InputActions::InputDevice>(type, kwinDevice->name(), kwinDevice->property("sysName").toString()),
+        .libinputactionsDevice = std::make_unique<InputDevice>(type, kwinDevice->name(), kwinDevice->property("sysName").toString()),
     };
     if (kwinDevice->property("lmrTapButtonMap").value<bool>()) {
         device.libinputactionsDevice->properties().setLmrTapButtonMap(true);
@@ -282,7 +283,7 @@ void KWinInputBackend::kwinDeviceRemoved(const KWin::InputDevice *kwinDevice)
     }
 }
 
-InputActions::InputDevice *KWinInputBackend::findInputActionsDevice(const KWin::InputDevice *kwinDevice)
+InputDevice *KWinInputBackend::findInputActionsDevice(const KWin::InputDevice *kwinDevice)
 {
     for (auto &device : m_devices) {
         if (device.kwinDevice == kwinDevice) {
@@ -292,7 +293,7 @@ InputActions::InputDevice *KWinInputBackend::findInputActionsDevice(const KWin::
     return {};
 }
 
-InputActions::InputDevice *KWinInputBackend::currentTouchpad()
+InputDevice *KWinInputBackend::currentTouchpad()
 {
     for (const auto *device : KWin::input()->devices()) {
         if (device->isTouchpad()) {
@@ -317,4 +318,6 @@ void KWinInputBackend::KeyboardModifierSpy::keyboardKey(KWin::KeyboardKeyEvent *
     if (auto *device = backend->findInputActionsDevice(event->device)) {
         device->setKeyState(event->nativeScanCode, event->state == KWin::KeyboardKeyState::Pressed);
     }
+}
+
 }

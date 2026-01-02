@@ -22,6 +22,9 @@
 
 class CFunctionHook;
 
+namespace InputActions
+{
+
 class HyprlandFunctionHook
 {
 public:
@@ -34,3 +37,5 @@ public:
 private:
     CFunctionHook *m_hook;
 };
+
+}

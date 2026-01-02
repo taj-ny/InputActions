@@ -22,10 +22,13 @@
 #include "input_event_spy.h"
 #include <libinputactions/input/backends/LibinputInputBackend.h>
 
+namespace InputActions
+{
+
 struct KWinInputDevice
 {
     KWin::InputDevice *kwinDevice;
-    std::unique_ptr<InputActions::InputDevice> libinputactionsDevice;
+    std::unique_ptr<InputDevice> libinputactionsDevice;
 };
 
 /**
@@ -34,7 +37,7 @@ struct KWinInputDevice
  * next filter.
  */
 class KWinInputBackend
-    : public InputActions::LibinputInputBackend
+    : public LibinputInputBackend
     , public KWin::InputEventFilter
 {
 public:
@@ -86,11 +89,11 @@ public:
 private:
     void kwinDeviceAdded(KWin::InputDevice *kwinDevice);
     void kwinDeviceRemoved(const KWin::InputDevice *kwinDevice);
-    InputActions::InputDevice *findInputActionsDevice(const KWin::InputDevice *kwinDevice);
+    InputDevice *findInputActionsDevice(const KWin::InputDevice *kwinDevice);
     /**
      * @return The device that generated the last event.
      */
-    InputActions::InputDevice *currentTouchpad();
+    InputDevice *currentTouchpad();
 
     bool isMouse(const KWin::InputDevice *device) const;
 
@@ -102,3 +105,5 @@ private:
         void keyboardKey(KWin::KeyboardKeyEvent *event) override;
     } m_keyboardModifierSpy;
 };
+
+}

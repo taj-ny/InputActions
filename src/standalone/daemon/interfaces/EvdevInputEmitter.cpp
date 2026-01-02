@@ -19,7 +19,8 @@
 #include "EvdevInputEmitter.h"
 #include "input/StandaloneInputBackend.h"
 
-using namespace InputActions;
+namespace InputActions
+{
 
 EvdevInputEmitter::~EvdevInputEmitter()
 {
@@ -161,4 +162,6 @@ QString EvdevInputEmitter::keyboardPath() const
 QString EvdevInputEmitter::mousePath() const
 {
     return m_mouse ? libevdev_uinput_get_devnode(m_mouse) : QString();
+}
+
 }

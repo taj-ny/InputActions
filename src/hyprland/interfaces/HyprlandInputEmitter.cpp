@@ -28,7 +28,8 @@
 #include <libinputactions/input/InputDevice.h>
 #include <libinputactions/input/backends/InputBackend.h>
 
-using namespace InputActions;
+namespace InputActions
+{
 
 HyprlandInputEmitter::HyprlandInputEmitter()
     : m_keyboard(makeShared<VirtualKeyboard>())
@@ -52,7 +53,7 @@ void HyprlandInputEmitter::keyboardClearModifiers()
     const auto modifiers = g_inputBackend->keyboardModifiers();
     for (auto &keyboard : g_pInputManager->m_keyboards) {
         if (auto aqKeyboard = keyboard->aq()) {
-            for (const auto &[key, modifier] : InputActions::KEYBOARD_MODIFIERS) {
+            for (const auto &[key, modifier] : KEYBOARD_MODIFIERS) {
                 if (modifiers & modifier) {
                     aqKeyboard->events.key.emit(Aquamarine::IKeyboard::SKeyEvent{
                         .key = key,
@@ -151,4 +152,6 @@ bool VirtualPointer::isVirtual()
 SP<Aquamarine::IPointer> VirtualPointer::aq()
 {
     return nullptr;
+}
+
 }

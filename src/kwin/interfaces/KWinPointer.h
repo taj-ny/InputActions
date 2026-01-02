@@ -22,13 +22,16 @@
 #include <libinputactions/interfaces/PointerPositionGetter.h>
 #include <libinputactions/interfaces/PointerPositionSetter.h>
 
+namespace InputActions
+{
+
 class KWinPointer
-    : public InputActions::CursorShapeProvider
-    , public InputActions::PointerPositionGetter
-    , public InputActions::PointerPositionSetter
+    : public CursorShapeProvider
+    , public PointerPositionGetter
+    , public PointerPositionSetter
 {
 public:
-    std::optional<InputActions::CursorShape> cursorShape() override;
+    std::optional<CursorShape> cursorShape() override;
 
     std::optional<QPointF> globalPointerPosition() override;
     std::optional<QPointF> screenPointerPosition() override;
@@ -36,5 +39,7 @@ public:
     void setGlobalPointerPosition(const QPointF &value) override;
 
 private:
-    std::optional<InputActions::CursorShape> m_cachedShape;
+    std::optional<CursorShape> m_cachedShape;
 };
+
+}

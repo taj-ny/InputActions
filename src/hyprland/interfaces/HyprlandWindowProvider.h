@@ -20,9 +20,14 @@
 
 #include <libinputactions/interfaces/WindowProvider.h>
 
-class HyprlandWindowProvider : public InputActions::WindowProvider
+namespace InputActions
+{
+
+class HyprlandWindowProvider : public WindowProvider
 {
 public:
-    std::shared_ptr<InputActions::Window> activeWindow() override;
-    std::shared_ptr<InputActions::Window> windowUnderPointer() override;
+    std::shared_ptr<Window> activeWindow() override;
+    std::shared_ptr<Window> windowUnderPointer() override;
 };
+
+}
