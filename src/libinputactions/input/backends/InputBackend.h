@@ -66,7 +66,7 @@ public:
     /**
      * Detects and adds devices.
      */
-    virtual void initialize();
+    virtual void initialize() {};
 
     /**
      * Evaluates device rules for the specified device and returns the properties without modifying the device's properties. Use this for devices that have not
