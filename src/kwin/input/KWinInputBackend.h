@@ -18,18 +18,13 @@
 
 #pragma once
 
+#include "KWinInputDevice.h"
 #include "input.h"
 #include "input_event_spy.h"
 #include <libinputactions/input/backends/LibinputInputBackend.h>
 
 namespace InputActions
 {
-
-struct KWinInputDevice
-{
-    KWin::InputDevice *kwinDevice;
-    std::unique_ptr<InputDevice> libinputactionsDevice;
-};
 
 /**
  * Installed before GlobalShortcutFilter, which is responsible for handling touchpad gestures.
@@ -89,16 +84,10 @@ public:
 private:
     void kwinDeviceAdded(KWin::InputDevice *kwinDevice);
     void kwinDeviceRemoved(const KWin::InputDevice *kwinDevice);
-    InputDevice *findInputActionsDevice(const KWin::InputDevice *kwinDevice);
-    /**
-     * @return The device that generated the last event.
-     */
-    InputDevice *currentTouchpad();
-
-    bool isMouse(const KWin::InputDevice *device) const;
+    KWinInputDevice *findDevice(KWin::InputDevice *kwinDevice);
 
     KWin::InputRedirection *m_input;
-    std::vector<KWinInputDevice> m_devices;
+    std::vector<std::unique_ptr<KWinInputDevice>> m_devices;
 
     class KeyboardModifierSpy : public KWin::InputEventSpy
     {

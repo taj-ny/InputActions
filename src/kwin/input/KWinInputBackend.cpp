@@ -57,7 +57,7 @@ void KWinInputBackend::reset()
 {
     disconnect(m_input, nullptr, this, nullptr);
     for (auto &device : m_devices) {
-        deviceRemoved(device.libinputactionsDevice.get());
+        deviceRemoved(device.get());
     }
     m_devices.clear();
     LibinputInputBackend::reset();
@@ -71,7 +71,7 @@ bool KWinInputBackend::holdGestureBegin(KWin::PointerHoldGestureBeginEvent *even
 bool KWinInputBackend::holdGestureBegin(int fingerCount, std::chrono::microseconds time)
 {
 #endif
-    return touchpadHoldBegin(currentTouchpad(), fingerCount);
+    return touchpadHoldBegin(firstTouchpad(), fingerCount);
 }
 
 #ifdef KWIN_6_5_OR_GREATER
@@ -80,7 +80,7 @@ bool KWinInputBackend::holdGestureEnd(KWin::PointerHoldGestureEndEvent *event)
 bool KWinInputBackend::holdGestureEnd(std::chrono::microseconds time)
 #endif
 {
-    return touchpadHoldEnd(currentTouchpad(), false);
+    return touchpadHoldEnd(firstTouchpad(), false);
 }
 
 #ifdef KWIN_6_5_OR_GREATER
@@ -89,7 +89,7 @@ bool KWinInputBackend::holdGestureCancelled(KWin::PointerHoldGestureCancelEvent 
 bool KWinInputBackend::holdGestureCancelled(std::chrono::microseconds time)
 #endif
 {
-    return touchpadHoldEnd(currentTouchpad(), true);
+    return touchpadHoldEnd(firstTouchpad(), true);
 }
 
 #ifdef KWIN_6_5_OR_GREATER
@@ -100,7 +100,7 @@ bool KWinInputBackend::swipeGestureBegin(KWin::PointerSwipeGestureBeginEvent *ev
 bool KWinInputBackend::swipeGestureBegin(int fingerCount, std::chrono::microseconds time)
 {
 #endif
-    return touchpadSwipeBegin(currentTouchpad(), fingerCount);
+    return touchpadSwipeBegin(firstTouchpad(), fingerCount);
 }
 
 #ifdef KWIN_6_5_OR_GREATER
@@ -111,7 +111,7 @@ bool KWinInputBackend::swipeGestureUpdate(KWin::PointerSwipeGestureUpdateEvent *
 bool KWinInputBackend::swipeGestureUpdate(const QPointF &delta, std::chrono::microseconds time)
 {
 #endif
-    return touchpadSwipeUpdate(currentTouchpad(), {delta});
+    return touchpadSwipeUpdate(firstTouchpad(), {delta});
 }
 
 #ifdef KWIN_6_5_OR_GREATER
@@ -120,7 +120,7 @@ bool KWinInputBackend::swipeGestureEnd(KWin::PointerSwipeGestureEndEvent *event)
 bool KWinInputBackend::swipeGestureEnd(std::chrono::microseconds time)
 #endif
 {
-    return touchpadSwipeEnd(currentTouchpad(), false);
+    return touchpadSwipeEnd(firstTouchpad(), false);
 }
 
 #ifdef KWIN_6_5_OR_GREATER
@@ -129,7 +129,7 @@ bool KWinInputBackend::swipeGestureCancelled(KWin::PointerSwipeGestureCancelEven
 bool KWinInputBackend::swipeGestureCancelled(std::chrono::microseconds time)
 #endif
 {
-    return touchpadSwipeEnd(currentTouchpad(), true);
+    return touchpadSwipeEnd(firstTouchpad(), true);
 }
 
 #ifdef KWIN_6_5_OR_GREATER
@@ -140,7 +140,7 @@ bool KWinInputBackend::pinchGestureBegin(KWin::PointerPinchGestureBeginEvent *ev
 bool KWinInputBackend::pinchGestureBegin(int fingerCount, std::chrono::microseconds time)
 {
 #endif
-    return touchpadPinchBegin(currentTouchpad(), fingerCount);
+    return touchpadPinchBegin(firstTouchpad(), fingerCount);
 }
 
 #ifdef KWIN_6_5_OR_GREATER
@@ -152,7 +152,7 @@ bool KWinInputBackend::pinchGestureUpdate(KWin::PointerPinchGestureUpdateEvent *
 bool KWinInputBackend::pinchGestureUpdate(qreal scale, qreal angleDelta, const QPointF &delta, std::chrono::microseconds time)
 {
 #endif
-    return touchpadPinchUpdate(currentTouchpad(), scale, angleDelta);
+    return touchpadPinchUpdate(firstTouchpad(), scale, angleDelta);
 }
 
 #ifdef KWIN_6_5_OR_GREATER
@@ -161,7 +161,7 @@ bool KWinInputBackend::pinchGestureEnd(KWin::PointerPinchGestureEndEvent *event)
 bool KWinInputBackend::pinchGestureEnd(std::chrono::microseconds time)
 #endif
 {
-    return touchpadPinchEnd(currentTouchpad(), false);
+    return touchpadPinchEnd(firstTouchpad(), false);
 }
 
 #ifdef KWIN_6_5_OR_GREATER
@@ -170,7 +170,7 @@ bool KWinInputBackend::pinchGestureCancelled(KWin::PointerPinchGestureCancelEven
 bool KWinInputBackend::pinchGestureCancelled(std::chrono::microseconds time)
 #endif
 {
-    return touchpadPinchEnd(currentTouchpad(), true);
+    return touchpadPinchEnd(firstTouchpad(), true);
 }
 
 bool KWinInputBackend::pointerAxis(KWin::PointerAxisEvent *event)
@@ -179,12 +179,12 @@ bool KWinInputBackend::pointerAxis(KWin::PointerAxisEvent *event)
     if (event->inverted) {
         delta *= -1;
     }
-    return LibinputInputBackend::pointerAxis(findInputActionsDevice(event->device), delta, true);
+    return LibinputInputBackend::pointerAxis(findDevice(event->device), delta, true);
 }
 
 bool KWinInputBackend::pointerButton(KWin::PointerButtonEvent *event)
 {
-    return LibinputInputBackend::pointerButton(findInputActionsDevice(event->device),
+    return LibinputInputBackend::pointerButton(findDevice(event->device),
                                                event->button,
                                                event->nativeButton,
                                                event->state == KWin::PointerButtonState::Pressed);
@@ -192,12 +192,12 @@ bool KWinInputBackend::pointerButton(KWin::PointerButtonEvent *event)
 
 bool KWinInputBackend::pointerMotion(KWin::PointerMotionEvent *event)
 {
-    return LibinputInputBackend::pointerMotion(findInputActionsDevice(event->device), {event->delta, event->deltaUnaccelerated});
+    return LibinputInputBackend::pointerMotion(findDevice(event->device), {event->delta, event->deltaUnaccelerated});
 }
 
 bool KWinInputBackend::keyboardKey(KWin::KeyboardKeyEvent *event)
 {
-    return LibinputInputBackend::keyboardKey(findInputActionsDevice(event->device), event->nativeScanCode, event->state == KWin::KeyboardKeyState::Pressed);
+    return LibinputInputBackend::keyboardKey(findDevice(event->device), event->nativeScanCode, event->state == KWin::KeyboardKeyState::Pressed);
 }
 
 void KWinInputBackend::touchpadPinchBlockingStopped(uint32_t fingers)
@@ -250,62 +250,35 @@ void KWinInputBackend::kwinDeviceAdded(KWin::InputDevice *kwinDevice)
         return;
     }
 
-    InputDeviceType type;
-    if (isMouse(kwinDevice)) {
-        type = InputDeviceType::Mouse;
-    } else if (kwinDevice->isKeyboard()) {
-        type = InputDeviceType::Keyboard;
-    } else if (kwinDevice->isTouchpad()) {
-        type = InputDeviceType::Touchpad;
-    } else {
+    auto device = KWinInputDevice::tryCreate(kwinDevice);
+    if (!device) {
         return;
     }
 
-    KWinInputDevice device{
-        .kwinDevice = kwinDevice,
-        .libinputactionsDevice = std::make_unique<InputDevice>(type, kwinDevice->name(), kwinDevice->property("sysName").toString()),
-    };
-    if (kwinDevice->property("lmrTapButtonMap").value<bool>()) {
-        device.libinputactionsDevice->properties().setLmrTapButtonMap(true);
-    }
-    deviceAdded(device.libinputactionsDevice.get());
+    deviceAdded(device.get());
     m_devices.push_back(std::move(device));
 }
 
 void KWinInputBackend::kwinDeviceRemoved(const KWin::InputDevice *kwinDevice)
 {
     for (auto it = m_devices.begin(); it != m_devices.end(); it++) {
-        if (it->kwinDevice == kwinDevice) {
-            deviceRemoved(it->libinputactionsDevice.get());
+        const auto *device = it->get();
+        if (device->kwinDevice() == kwinDevice) {
+            deviceRemoved(device);
             m_devices.erase(it);
             return;
         }
     }
 }
 
-InputDevice *KWinInputBackend::findInputActionsDevice(const KWin::InputDevice *kwinDevice)
+KWinInputDevice *KWinInputBackend::findDevice(KWin::InputDevice *kwinDevice)
 {
-    for (auto &device : m_devices) {
-        if (device.kwinDevice == kwinDevice) {
-            return device.libinputactionsDevice.get();
+    for (const auto &device : m_devices) {
+        if (device->kwinDevice() == kwinDevice) {
+            return device.get();
         }
     }
     return {};
-}
-
-InputDevice *KWinInputBackend::currentTouchpad()
-{
-    for (const auto *device : KWin::input()->devices()) {
-        if (device->isTouchpad()) {
-            return findInputActionsDevice(device);
-        }
-    }
-    return nullptr;
-}
-
-bool KWinInputBackend::isMouse(const KWin::InputDevice *device) const
-{
-    return device->isPointer() && !device->isTouch() && !device->isTouchpad();
 }
 
 void KWinInputBackend::KeyboardModifierSpy::keyboardKey(KWin::KeyboardKeyEvent *event)
@@ -315,7 +288,7 @@ void KWinInputBackend::KeyboardModifierSpy::keyboardKey(KWin::KeyboardKeyEvent *
         return;
     }
 
-    if (auto *device = backend->findInputActionsDevice(event->device)) {
+    if (auto *device = backend->findDevice(event->device)) {
         device->setKeyState(event->nativeScanCode, event->state == KWin::KeyboardKeyState::Pressed);
     }
 }

@@ -18,6 +18,7 @@ find_package(XKB REQUIRED)
 
 set(kwin_gestures_SOURCES
     input/KWinInputBackend.cpp
+    input/KWinInputDevice.cpp
     interfaces/KWinInputEmitter.cpp
     interfaces/KWinOnScreenMessageManager.cpp
     interfaces/KWinPointer.cpp
