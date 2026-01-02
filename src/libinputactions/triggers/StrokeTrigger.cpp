@@ -41,6 +41,8 @@
 namespace InputActions
 {
 
+static const qreal SHARP_TURN_ANGLE_THRESHOLD = 30 * M_PI / 180;
+
 StrokeTrigger::StrokeTrigger(std::vector<Stroke> strokes)
     : MotionTrigger(TriggerType::Stroke)
     , m_strokes(std::move(strokes))
@@ -168,6 +170,7 @@ qreal Stroke::perpendicularDistance(const QPointF &point, const QPointF &lineSta
     return d;
 }
 
+// TODO: This algorithm is not suitable for strokes and should be replaced with something else: https://github.com/taj-ny/InputActions/issues/335
 void Stroke::ramerDouglasPeucker(const std::vector<QPointF> &points, qreal epsilon, std::vector<QPointF> &out)
 {
     if (points.size() < 2) {
@@ -175,25 +178,39 @@ void Stroke::ramerDouglasPeucker(const std::vector<QPointF> &points, qreal epsil
         return;
     }
 
-    // Find the point with the maximum distance from line between start and end
+    // Find the point with the maximum distance from line between start and end or where a sharp turn occurs
     auto dmax = 0.0;
-    size_t index = 0;
+    int32_t splitIndex = -1;
     size_t end = points.size() - 1;
     for (size_t i = 1; i < end; i++) {
-        double d = perpendicularDistance(points[i], points[0], points[end]);
+        const auto lineStart = points[0];
+        const auto previous = points[i - 1];
+        const auto current = points[i];
+        const auto next = points[i + 1];
+        const auto lineEnd = points[end];
+
+        // Preserve sharp turns (workaround)
+        if (angle(previous, current, next) <= SHARP_TURN_ANGLE_THRESHOLD) {
+            splitIndex = i;
+            break;
+        }
+
+        double d = perpendicularDistance(current, lineStart, lineEnd);
         if (d > dmax) {
-            index = i;
+            if (dmax > epsilon) {
+                splitIndex = i;
+            }
             dmax = d;
         }
     }
 
-    // If max distance is greater than epsilon, recursively simplify
-    if (dmax > epsilon) {
+    // Recursively simplify
+    if (splitIndex != -1) {
         // Recursive call
         std::vector<QPointF> recResults1;
         std::vector<QPointF> recResults2;
-        std::vector<QPointF> firstLine(points.begin(), points.begin() + index + 1);
-        std::vector<QPointF> lastLine(points.begin() + index, points.end());
+        std::vector<QPointF> firstLine(points.begin(), points.begin() + splitIndex + 1);
+        std::vector<QPointF> lastLine(points.begin() + splitIndex, points.end());
         ramerDouglasPeucker(firstLine, epsilon, recResults1);
         ramerDouglasPeucker(lastLine, epsilon, recResults2);
 
@@ -208,6 +225,20 @@ void Stroke::ramerDouglasPeucker(const std::vector<QPointF> &points, qreal epsil
         out.push_back(points[0]);
         out.push_back(points[end]);
     }
+}
+
+qreal Stroke::angle(const QPointF &a, const QPointF &b, const QPointF &c)
+{
+    const auto ba = a - b;
+    const auto bc = c - b;
+
+    const auto dot = ba.x() * bc.x() + ba.y() * bc.y();
+    const auto mag = std::hypot(ba.x(), ba.y()) * std::hypot(bc.x(), bc.y());
+
+    if (mag == 0) {
+        return 0;
+    }
+    return std::acos(std::clamp(dot / mag, -1.0, 1.0));
 }
 
 static inline double angle_difference(double alpha, double beta)

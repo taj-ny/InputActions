@@ -77,6 +77,7 @@ private:
 
     static qreal perpendicularDistance(const QPointF &point, const QPointF &lineStart, const QPointF &lineEnd);
     static void ramerDouglasPeucker(const std::vector<QPointF> &points, qreal epsilon, std::vector<QPointF> &out);
+    static qreal angle(const QPointF &a, const QPointF &b, const QPointF &c);
 
     std::vector<Point> m_points;
 };
