@@ -18,6 +18,7 @@
 
 #pragma once
 
+#include <libevdev/libevdev-uinput.h>
 #include <libinputactions/interfaces/InputEmitter.h>
 
 /**
@@ -26,7 +27,7 @@
 class EvdevInputEmitter : public InputActions::InputEmitter
 {
 public:
-    EvdevInputEmitter();
+    EvdevInputEmitter() = default;
     ~EvdevInputEmitter() override;
 
     void initialize() override;
@@ -39,15 +40,18 @@ public:
     void mouseButton(uint32_t button, bool state, const InputActions::InputDevice *target = nullptr) override;
     void mouseMoveRelative(const QPointF &pos) override;
 
-private:
     /**
-     * Destroys the device, closes the fd and sets it to -1.
+     * @return Path of the virtual keyboard, or an empty string on failure.
      */
-    static void uinputDestroyDevice(int &fd);
-    static void uinputEmit(int fd, uint16_t type, uint16_t code, int32_t value = 0);
+    QString keyboardPath() const;
+    /**
+     * @return Path of the virtual mouse, or an empty string on failure.
+     */
+    QString mousePath() const;
 
-    int m_keyboardFd = -1;
-    int m_pointerFd = -1;
+private:
+    libevdev_uinput *m_keyboard{};
+    libevdev_uinput *m_mouse{};
 
     QPointF m_mouseAxisDelta;
     QPointF m_mouseMotionDelta;

@@ -19,7 +19,6 @@
 #include "InputBackend.h"
 #include <QObject>
 #include <libinputactions/InputActionsMain.h>
-#include <libinputactions/conditions/VariableCondition.h>
 #include <libinputactions/handlers/KeyboardTriggerHandler.h>
 #include <libinputactions/handlers/MotionTriggerHandler.h>
 #include <libinputactions/handlers/MouseTriggerHandler.h>
@@ -51,18 +50,6 @@ InputBackend::~InputBackend() = default;
 void InputBackend::setIgnoreEvents(bool value)
 {
     m_ignoreEvents = value;
-}
-
-void InputBackend::initialize()
-{
-    InputDeviceRule ignoreOwnDevicesRule;
-    ignoreOwnDevicesRule.setCondition(std::make_shared<VariableCondition>("name",
-                                                                          std::vector<Value<std::any>>{Value(QStringLiteral("inputactions")),
-                                                                                                       Value(QStringLiteral("InputActions Virtual Keyboard")),
-                                                                                                       Value(QStringLiteral("InputActions Virtual Mouse"))},
-                                                                          ComparisonOperator::OneOf));
-    ignoreOwnDevicesRule.properties().setIgnore(true);
-    m_deviceRules.push_back(std::move(ignoreOwnDevicesRule));
 }
 
 InputDeviceProperties InputBackend::deviceProperties(const InputDevice *device) const

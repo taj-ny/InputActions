@@ -17,6 +17,7 @@
 */
 
 #include "StandaloneInputBackend.h"
+#include "interfaces/EvdevInputEmitter.h"
 #include <QDir>
 #include <QSocketNotifier>
 #include <fcntl.h>
@@ -98,8 +99,10 @@ void StandaloneInputBackend::evdevDeviceAdded(const QString &path)
 
 bool StandaloneInputBackend::tryAddEvdevDevice(const QString &path)
 {
+    const auto *emitter = std::dynamic_pointer_cast<EvdevInputEmitter>(g_inputEmitter).get();
     for (const auto &[device, data] : m_devices) {
-        if (path == data->libinputEventInjectionDevicePath || path == data->outputDevicePath) {
+        if (path == data->libinputEventInjectionDevicePath || path == data->outputDevicePath || path == emitter->keyboardPath()
+            || path == emitter->mousePath()) {
             return true;
         }
     }
