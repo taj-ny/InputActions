@@ -31,9 +31,12 @@
 #include <kwin/input_event.h>
 #endif
 
+namespace InputActions
+{
+
 KWinInputEmitter::KWinInputEmitter()
     : m_input(KWin::input())
-    , m_device(std::make_unique<InputDevice>())
+    , m_device(std::make_unique<KWinVirtualInputDevice>())
 {
     m_input->addInputDevice(m_device.get());
 }
@@ -53,8 +56,8 @@ void KWinInputEmitter::keyboardClearModifiers()
         KWin::workspace()->disableGlobalShortcutsForClient(true);
     }
 
-    const auto modifiers = InputActions::g_inputBackend->keyboardModifiers(); // This is not the real state, but it's fine in this case.
-    for (const auto &[key, modifier] : InputActions::KEYBOARD_MODIFIERS) {
+    const auto modifiers = g_inputBackend->keyboardModifiers(); // This is not the real state, but it's fine in this case.
+    for (const auto &[key, modifier] : KEYBOARD_MODIFIERS) {
         if (modifiers & modifier) {
             keyboardKey(key, false);
         }
@@ -65,11 +68,11 @@ void KWinInputEmitter::keyboardClearModifiers()
     }
 }
 
-void KWinInputEmitter::keyboardKey(uint32_t key, bool state, const InputActions::InputDevice *target)
+void KWinInputEmitter::keyboardKey(uint32_t key, bool state, const InputDevice *target)
 {
-    InputActions::g_inputBackend->setIgnoreEvents(true);
+    g_inputBackend->setIgnoreEvents(true);
     Q_EMIT m_device->keyChanged(key, state ? KWin::KeyboardKeyState::Pressed : KWin::KeyboardKeyState::Released, timestamp(), m_device.get());
-    InputActions::g_inputBackend->setIgnoreEvents(false);
+    g_inputBackend->setIgnoreEvents(false);
 }
 
 void KWinInputEmitter::keyboardText(const QString &text)
@@ -96,7 +99,7 @@ void KWinInputEmitter::keyboardText(const QString &text)
 
 void KWinInputEmitter::mouseAxis(const QPointF &delta)
 {
-    InputActions::g_inputBackend->setIgnoreEvents(true);
+    g_inputBackend->setIgnoreEvents(true);
     if (delta.x()) {
         Q_EMIT m_device
             ->pointerAxisChanged(KWin::PointerAxis::Horizontal, delta.x(), delta.x(), KWin::PointerAxisSource::Wheel, false, timestamp(), m_device.get());
@@ -106,78 +109,80 @@ void KWinInputEmitter::mouseAxis(const QPointF &delta)
             ->pointerAxisChanged(KWin::PointerAxis::Vertical, delta.y(), delta.y(), KWin::PointerAxisSource::Wheel, false, timestamp(), m_device.get());
     }
     Q_EMIT m_device->pointerFrame(m_device.get());
-    InputActions::g_inputBackend->setIgnoreEvents(false);
+    g_inputBackend->setIgnoreEvents(false);
 }
 
-void KWinInputEmitter::mouseButton(uint32_t button, bool state, const InputActions::InputDevice *device)
+void KWinInputEmitter::mouseButton(uint32_t button, bool state, const InputDevice *device)
 {
-    InputActions::g_inputBackend->setIgnoreEvents(true);
+    g_inputBackend->setIgnoreEvents(true);
     Q_EMIT m_device->pointerButtonChanged(button, state ? KWin::PointerButtonState::Pressed : KWin::PointerButtonState::Released, timestamp(), m_device.get());
     Q_EMIT m_device->pointerFrame(m_device.get());
-    InputActions::g_inputBackend->setIgnoreEvents(false);
+    g_inputBackend->setIgnoreEvents(false);
 }
 
 void KWinInputEmitter::mouseMoveRelative(const QPointF &pos)
 {
-    InputActions::g_inputBackend->setIgnoreEvents(true);
+    g_inputBackend->setIgnoreEvents(true);
     Q_EMIT m_device->pointerMotion(pos, pos, timestamp(), m_device.get());
     Q_EMIT m_device->pointerFrame(m_device.get());
-    InputActions::g_inputBackend->setIgnoreEvents(false);
+    g_inputBackend->setIgnoreEvents(false);
 }
 
-InputDevice *KWinInputEmitter::device() const
+KWin::InputDevice *KWinInputEmitter::device() const
 {
     return m_device.get();
 }
 
-QString InputDevice::name() const
+QString KWinVirtualInputDevice::name() const
 {
     return "inputactions";
 }
 
-bool InputDevice::isEnabled() const
+bool KWinVirtualInputDevice::isEnabled() const
 {
     return true;
 }
 
-void InputDevice::setEnabled(bool enabled) {}
+void KWinVirtualInputDevice::setEnabled(bool enabled) {}
 
-bool InputDevice::isKeyboard() const
+bool KWinVirtualInputDevice::isKeyboard() const
 {
     return true;
 }
 
-bool InputDevice::isPointer() const
+bool KWinVirtualInputDevice::isPointer() const
 {
     return true;
 }
 
-bool InputDevice::isTouchpad() const
+bool KWinVirtualInputDevice::isTouchpad() const
 {
     return false;
 }
 
-bool InputDevice::isTouch() const
+bool KWinVirtualInputDevice::isTouch() const
 {
     return false;
 }
 
-bool InputDevice::isTabletTool() const
+bool KWinVirtualInputDevice::isTabletTool() const
 {
     return false;
 }
 
-bool InputDevice::isTabletPad() const
+bool KWinVirtualInputDevice::isTabletPad() const
 {
     return false;
 }
 
-bool InputDevice::isTabletModeSwitch() const
+bool KWinVirtualInputDevice::isTabletModeSwitch() const
 {
     return false;
 }
 
-bool InputDevice::isLidSwitch() const
+bool KWinVirtualInputDevice::isLidSwitch() const
 {
     return false;
+}
+
 }

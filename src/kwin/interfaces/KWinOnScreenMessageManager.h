@@ -20,9 +20,14 @@
 
 #include <libinputactions/interfaces/OnScreenMessageManager.h>
 
-class KWinOnScreenMessageManager : public InputActions::OnScreenMessageManager
+namespace InputActions
+{
+
+class KWinOnScreenMessageManager : public OnScreenMessageManager
 {
 public:
     void showMessage(const QString &message) override;
     void hideMessage() override;
 };
+
+}

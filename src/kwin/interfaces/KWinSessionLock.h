@@ -20,8 +20,13 @@
 
 #include <libinputactions/interfaces/SessionLock.h>
 
-class KWinSessionLock : public InputActions::SessionLock
+namespace InputActions
+{
+
+class KWinSessionLock : public SessionLock
 {
 public:
     bool sessionLocked() override;
 };
+
+}

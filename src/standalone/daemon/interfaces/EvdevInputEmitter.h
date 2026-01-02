@@ -21,10 +21,13 @@
 #include <libevdev/libevdev-uinput.h>
 #include <libinputactions/interfaces/InputEmitter.h>
 
+namespace InputActions
+{
+
 /**
  * Keyboard keys must be registered before initialization.
  */
-class EvdevInputEmitter : public InputActions::InputEmitter
+class EvdevInputEmitter : public InputEmitter
 {
 public:
     EvdevInputEmitter() = default;
@@ -34,10 +37,10 @@ public:
     void reset() final;
 
     void keyboardClearModifiers() override;
-    void keyboardKey(uint32_t key, bool state, const InputActions::InputDevice *target = nullptr) override;
+    void keyboardKey(uint32_t key, bool state, const InputDevice *target = nullptr) override;
 
     void mouseAxis(const QPointF &delta) override;
-    void mouseButton(uint32_t button, bool state, const InputActions::InputDevice *target = nullptr) override;
+    void mouseButton(uint32_t button, bool state, const InputDevice *target = nullptr) override;
     void mouseMoveRelative(const QPointF &pos) override;
 
     /**
@@ -56,3 +59,5 @@ private:
     QPointF m_mouseAxisDelta;
     QPointF m_mouseMotionDelta;
 };
+
+}

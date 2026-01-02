@@ -25,7 +25,10 @@ namespace KWin
 class Window;
 }
 
-class KWinWindow : public InputActions::Window
+namespace InputActions
+{
+
+class KWinWindow : public Window
 {
 public:
     KWinWindow(KWin::Window *window);
@@ -41,3 +44,5 @@ public:
 private:
     KWin::Window *m_window;
 };
+
+}

@@ -27,20 +27,20 @@
 
 namespace InputActions
 {
+
 class InputDevice;
-}
 
 struct HyprlandInputDevice
 {
     IHID *hyprlandDevice;
-    std::unique_ptr<InputActions::InputDevice> libinputactionsDevice;
+    std::unique_ptr<InputDevice> libinputactionsDevice;
     std::vector<CHyprSignalListener> listeners;
 };
 
 /**
  * Hold and pinch touchpad gestures require hooking, and therefore only work on x86_64.
  */
-class HyprlandInputBackend : public InputActions::LibinputInputBackend
+class HyprlandInputBackend : public LibinputInputBackend
 {
 public:
     HyprlandInputBackend(void *handle);
@@ -75,7 +75,7 @@ private:
     void pointerMotion(SCallbackInfo &info, const std::any &data);
 
     HyprlandInputDevice *findDevice(IHID *hyprlandDevice);
-    InputActions::InputDevice *findInputActionsDevice(IHID *hyprlandDevice);
+    InputDevice *findInputActionsDevice(IHID *hyprlandDevice);
 
     std::vector<SP<HOOK_CALLBACK_FN>> m_events;
 
@@ -89,8 +89,8 @@ private:
     /**
      * Mouse or touchpad.
      */
-    InputActions::InputDevice *m_currentPointingDevice{};
-    InputActions::InputDevice *m_currentTouchpad{};
+    InputDevice *m_currentPointingDevice{};
+    InputDevice *m_currentTouchpad{};
 
     Vector2D m_previousPointerPosition;
 
@@ -100,3 +100,5 @@ private:
     HyprlandFunctionHook m_pinchUpdateHook;
     HyprlandFunctionHook m_pinchEndHook;
 };
+
+}

@@ -24,7 +24,8 @@
 #include <linux/uinput.h>
 #include <sys/inotify.h>
 
-using namespace InputActions;
+namespace InputActions
+{
 
 static constexpr uint32_t MAX_INITIALIZATION_ATTEMPTS = 5;
 
@@ -551,7 +552,7 @@ void StandaloneInputBackend::poll()
     }
 }
 
-libevdev_uinput *StandaloneInputBackend::outputDevice(const InputActions::InputDevice *device) const
+libevdev_uinput *StandaloneInputBackend::outputDevice(const InputDevice *device) const
 {
     for (const auto &[libinputactionsDevice, data] : m_devices) {
         if (libinputactionsDevice.get() == device) {
@@ -597,4 +598,6 @@ StandaloneInputBackend::ExtraDeviceData::~ExtraDeviceData()
     if (outputDevice) {
         libevdev_uinput_destroy(outputDevice);
     }
+}
+
 }

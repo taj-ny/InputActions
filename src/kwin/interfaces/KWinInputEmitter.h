@@ -24,10 +24,10 @@
 
 namespace InputActions
 {
-class InputBackend;
-}
 
-class InputDevice : public KWin::InputDevice
+class InputBackend;
+
+class KWinVirtualInputDevice : public KWin::InputDevice
 {
 public:
     QString name() const override;
@@ -43,23 +43,25 @@ public:
     bool isLidSwitch() const override;
 };
 
-class KWinInputEmitter : public InputActions::InputEmitter
+class KWinInputEmitter : public InputEmitter
 {
 public:
     KWinInputEmitter();
     ~KWinInputEmitter() override;
 
     void keyboardClearModifiers() override;
-    void keyboardKey(uint32_t key, bool state, const InputActions::InputDevice *target = nullptr) override;
+    void keyboardKey(uint32_t key, bool state, const InputDevice *target = nullptr) override;
     void keyboardText(const QString &text) override;
 
     void mouseAxis(const QPointF &delta) override;
-    void mouseButton(uint32_t button, bool state, const InputActions::InputDevice *target = nullptr) override;
+    void mouseButton(uint32_t button, bool state, const InputDevice *target = nullptr) override;
     void mouseMoveRelative(const QPointF &pos) override;
 
-    InputDevice *device() const;
+    KWin::InputDevice *device() const;
 
 private:
     KWin::InputRedirection *m_input;
-    std::unique_ptr<InputDevice> m_device;
+    std::unique_ptr<KWin::InputDevice> m_device;
 };
+
+}

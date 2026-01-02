@@ -16,10 +16,17 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+#pragma once
+
 #include <libinputactions/interfaces/SessionLock.h>
 
-class HyprlandSessionLock : public InputActions::SessionLock
+namespace InputActions
+{
+
+class HyprlandSessionLock : public SessionLock
 {
 public:
     bool sessionLocked() override;
 };
+
+}

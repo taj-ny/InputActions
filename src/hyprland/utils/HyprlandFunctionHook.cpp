@@ -21,6 +21,9 @@
 #include <hyprland/src/plugins/HookSystem.hpp>
 #include <hyprland/src/plugins/PluginAPI.hpp>
 
+namespace InputActions
+{
+
 HyprlandFunctionHook::HyprlandFunctionHook(CFunctionHook *hook)
     : m_hook(hook)
 {
@@ -47,4 +50,6 @@ HyprlandFunctionHook::~HyprlandFunctionHook()
 CFunctionHook *HyprlandFunctionHook::operator->()
 {
     return m_hook;
+}
+
 }

@@ -30,7 +30,8 @@
 #undef HANDLE
 #include <libinputactions/input/InputDevice.h>
 
-using namespace InputActions;
+namespace InputActions
+{
 
 typedef void (*holdBegin)(void *thisPtr, uint32_t timeMs, uint32_t fingers);
 typedef void (*holdEnd)(void *thisPtr, uint32_t timeMs, bool cancelled);
@@ -320,4 +321,6 @@ InputDevice *HyprlandInputBackend::findInputActionsDevice(IHID *hyprlandDevice)
         return device->libinputactionsDevice.get();
     }
     return {};
+}
+
 }

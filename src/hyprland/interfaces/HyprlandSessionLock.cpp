@@ -19,7 +19,12 @@
 #include "HyprlandSessionLock.h"
 #include <hyprland/src/managers/SessionLockManager.hpp>
 
+namespace InputActions
+{
+
 bool HyprlandSessionLock::sessionLocked()
 {
     return g_pSessionLockManager->isSessionLocked();
+}
+
 }

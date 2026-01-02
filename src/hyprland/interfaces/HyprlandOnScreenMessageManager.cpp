@@ -19,6 +19,9 @@
 #include "HyprlandOnScreenMessageManager.h"
 #include <hyprland/src/debug/HyprNotificationOverlay.hpp>
 
+namespace InputActions
+{
+
 void HyprlandOnScreenMessageManager::showMessage(const QString &message)
 {
     g_pHyprNotificationOverlay->addNotification(QString("[%1] %2").arg(PROJECT_NAME, message).toStdString().c_str(), ICONS_COLORS[1], 5000);
@@ -27,4 +30,6 @@ void HyprlandOnScreenMessageManager::showMessage(const QString &message)
 void HyprlandOnScreenMessageManager::hideMessage()
 {
     g_pHyprNotificationOverlay->dismissNotifications(1);
+}
+
 }

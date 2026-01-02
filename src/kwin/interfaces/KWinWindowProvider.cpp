@@ -21,7 +21,10 @@
 #include "effect/effecthandler.h"
 #include "workspace.h"
 
-std::shared_ptr<InputActions::Window> KWinWindowProvider::activeWindow()
+namespace InputActions
+{
+
+std::shared_ptr<Window> KWinWindowProvider::activeWindow()
 {
     if (auto *window = KWin::effects->activeWindow()) {
         return std::make_shared<KWinWindow>(window->window());
@@ -29,10 +32,12 @@ std::shared_ptr<InputActions::Window> KWinWindowProvider::activeWindow()
     return {};
 }
 
-std::shared_ptr<InputActions::Window> KWinWindowProvider::windowUnderPointer()
+std::shared_ptr<Window> KWinWindowProvider::windowUnderPointer()
 {
     if (auto *window = KWin::workspace()->windowUnderMouse(KWin::workspace()->activeOutput())) {
         return std::make_shared<KWinWindow>(window);
     }
     return {};
+}
+
 }

@@ -19,6 +19,9 @@
 #include "KWinOnScreenMessageManager.h"
 #include "effect/effecthandler.h"
 
+namespace InputActions
+{
+
 void KWinOnScreenMessageManager::showMessage(const QString &message)
 {
     KWin::effects->showOnScreenMessage(message);
@@ -27,4 +30,6 @@ void KWinOnScreenMessageManager::showMessage(const QString &message)
 void KWinOnScreenMessageManager::hideMessage()
 {
     KWin::effects->hideOnScreenMessage();
+}
+
 }

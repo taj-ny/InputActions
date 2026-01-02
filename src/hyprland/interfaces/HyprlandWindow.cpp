@@ -19,6 +19,9 @@
 #include "HyprlandWindow.h"
 #include <hyprland/src/desktop/view/Window.hpp>
 
+namespace InputActions
+{
+
 HyprlandWindow::HyprlandWindow(Desktop::View::CWindow *window)
     : m_window(window)
 {
@@ -47,4 +50,6 @@ std::optional<QString> HyprlandWindow::resourceClass()
 std::optional<bool> HyprlandWindow::fullscreen()
 {
     return m_window->isFullscreen();
+}
+
 }

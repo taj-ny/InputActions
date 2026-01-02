@@ -20,9 +20,14 @@
 
 #include <libinputactions/interfaces/OnScreenMessageManager.h>
 
-class HyprlandOnScreenMessageManager : public InputActions::OnScreenMessageManager
+namespace InputActions
+{
+
+class HyprlandOnScreenMessageManager : public OnScreenMessageManager
 {
 public:
     void showMessage(const QString &message) override;
     void hideMessage() override;
 };
+
+}

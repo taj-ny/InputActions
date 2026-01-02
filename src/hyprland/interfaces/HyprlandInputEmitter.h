@@ -24,6 +24,9 @@
 #include <hyprland/src/protocols/TextInputV3.hpp>
 #include <libinputactions/interfaces/InputEmitter.h>
 
+namespace InputActions
+{
+
 class VirtualKeyboard : public Aquamarine::IKeyboard
 {
 public:
@@ -41,17 +44,17 @@ public:
     SP<Aquamarine::IPointer> aq() override;
 };
 
-class HyprlandInputEmitter : public InputActions::InputEmitter
+class HyprlandInputEmitter : public InputEmitter
 {
 public:
     HyprlandInputEmitter();
     ~HyprlandInputEmitter() override;
 
     void keyboardClearModifiers() override;
-    void keyboardKey(uint32_t key, bool state, const InputActions::InputDevice *device = nullptr) override;
+    void keyboardKey(uint32_t key, bool state, const InputDevice *device = nullptr) override;
     void keyboardText(const QString &text) override;
 
-    void mouseButton(uint32_t button, bool state, const InputActions::InputDevice *device = nullptr) override;
+    void mouseButton(uint32_t button, bool state, const InputDevice *device = nullptr) override;
     void mouseMoveRelative(const QPointF &pos) override;
 
     Aquamarine::IKeyboard *keyboard() const { return m_keyboard.get(); }
@@ -66,3 +69,5 @@ private:
     std::vector<std::pair<WP<CTextInputV3>, CHyprSignalListener>> m_v3TextInputs;
     std::vector<CHyprSignalListener> m_listeners;
 };
+
+}
