@@ -75,6 +75,11 @@ public:
     InputDeviceProperties deviceProperties(const InputDevice *device) const;
 
     std::vector<InputDevice *> devices();
+    /**
+     * Use in case the device is not provided by the compositor for some reason.
+     * @return May be nullptr.
+     */
+    InputDevice *firstTouchpad() const;
 
     /**
      * @return Currently pressed keyboard modifiers, accumulated from all devices.

@@ -64,6 +64,16 @@ std::vector<InputDevice *> InputBackend::devices()
     return m_devices;
 }
 
+InputDevice *InputBackend::firstTouchpad() const
+{
+    for (auto *device : m_devices) {
+        if (device->type() == InputDeviceType::Touchpad) {
+            return device;
+        }
+    }
+    return {};
+}
+
 Qt::KeyboardModifiers InputBackend::keyboardModifiers() const
 {
     Qt::KeyboardModifiers modifiers;

@@ -167,7 +167,7 @@ public:
      * @param sysName Name of the device in /dev/input (e.g. event6).
      */
     InputDevice(InputDeviceType type, QString name = {}, QString sysName = {});
-    ~InputDevice();
+    virtual ~InputDevice();
 
     /**
      * Current keyboard modifiers, derived from pressed keyboard keys.
