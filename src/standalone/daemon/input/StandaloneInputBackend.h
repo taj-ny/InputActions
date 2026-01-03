@@ -18,16 +18,17 @@
 
 #pragma once
 
-#include <QSocketNotifier>
-#include <libevdev/libevdev-uinput.h>
+#include <libinput-cpp/LibinputPathContext.h>
 #include <libinput.h>
 #include <libinputactions/input/backends/LibevdevComplementaryInputBackend.h>
 #include <libinputactions/input/backends/LibinputInputBackend.h>
-#include <libudev.h>
 #include <poll.h>
 
 namespace InputActions
 {
+
+class LibinputDevice;
+class LibevdevUinputDevice;
 
 struct LibinputEventsProcessingResult
 {
@@ -46,7 +47,7 @@ public:
     void initialize() override;
     void reset() final;
 
-    libevdev_uinput *outputDevice(const InputDevice *device) const;
+    LibevdevUinputDevice *outputDevice(const InputDevice *device) const;
 
 private slots:
     void inotifyTimerTick();
@@ -66,8 +67,8 @@ private:
     void finishLibinputDeviceInitialization(InputDevice *device, ExtraDeviceData *data);
     void evdevDeviceRemoved(const QString &path);
 
-    bool handleEvent(InputDevice *sender, libinput_event *event);
-    LibinputEventsProcessingResult handleLibinputEvents(InputDevice *device, libinput *libinput);
+    bool handleEvent(InputDevice *sender, const LibinputEvent *event);
+    LibinputEventsProcessingResult handleLibinputEvents(InputDevice *device, LibinputPathContext &libinput);
 
     /**
      * @return Whether the specified device is in a neutral state.
@@ -82,9 +83,6 @@ private:
      */
     void copyTouchpadState(const ExtraDeviceData *data) const;
 
-    libinput_interface m_libinputBlockingInterface;
-    libinput_interface m_libinputNonBlockingInterface;
-
     int m_inotifyFd;
     std::unique_ptr<QSocketNotifier> m_inotifyNotifier;
 
@@ -95,60 +93,39 @@ private:
     std::map<QString, uint32_t> m_deviceInitializationQueue;
     QTimer m_deviceInitializationRetryTimer;
 
-    static int openRestricted(const char *path, int flags, void *data);
-    static int openRestrictedGrab(const char *path, int flags, void *data);
-    static void closeRestricted(int fd, void *data);
-
     struct ExtraDeviceData
     {
-        ExtraDeviceData() = default;
+        ExtraDeviceData();
         ~ExtraDeviceData();
 
-        ExtraDeviceData(const ExtraDeviceData &) = delete;
-        ExtraDeviceData(ExtraDeviceData &&) = delete;
-        ExtraDeviceData &operator=(const ExtraDeviceData &) = delete;
-        ExtraDeviceData &operator=(ExtraDeviceData &&) = delete;
+        Q_DISABLE_COPY_MOVE(ExtraDeviceData);
 
+        std::shared_ptr<LibevdevDevice> libevdev;
+        QString path;
         uint32_t initializationAttempts{};
-
-        struct libevdev *libevdev{};
-        std::unique_ptr<QSocketNotifier> libevdevNotifier;
-        /**
-         * Absolute path of the device in /dev/input.
-         */
-        std::string path;
 
         /**
          * Libinput context containing only libinputDevice.
          */
-        struct libinput *libinput{};
-        std::unique_ptr<QSocketNotifier> libinputNotifier;
+        LibinputPathContext libinput;
         /**
          * If the device is grabbed, this is the same device as libinputInjectionDevice, otherwise it is the real device.
          */
-        libinput_device *libinputDevice{};
+        LibinputDevice *libinputDevice{};
 
         /**
          * The virtual device for injecting raw evdev events into libinput, as there is no API for that. Grabbed by libinput.
          *
          * Only available if the device is grabbed.
          */
-        libevdev_uinput *libinputEventInjectionDevice{};
-        /**
-         * Absolute path of libinputEventInjectionDevice.
-         */
-        std::string libinputEventInjectionDevicePath;
+        std::unique_ptr<LibevdevUinputDevice> libinputEventInjectionDevice{};
 
         /**
          * The virtual device where non-filtered events are written to.
          *
          * Only available if the device is grabbed.
          */
-        libevdev_uinput *outputDevice{};
-        /**
-         * Absolute path of outputDevice.
-         */
-        std::string outputDevicePath;
+        std::unique_ptr<LibevdevUinputDevice> outputDevice{};
 
         bool touchpadBlocked{};
         bool touchpadNeutral = true;

@@ -21,13 +21,14 @@ jobs:
       options: --user root
 
     steps:
+      - name: Install Dependencies
+        run: dnf -y install git cmake extra-cmake-modules gcc-g++ qt6-qtbase-devel qt6-qtbase cli11-devel
+
       - name: Check out repository
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
           persist-credentials: false
-
-      - name: Install Dependencies
-        run: dnf -y install cmake extra-cmake-modules gcc-g++ qt6-qtbase-devel qt6-qtbase cli11-devel
+          submodules: 'recursive'
 
       - name: Configure CMake
         run: cmake -B "${GITHUB_WORKSPACE}/build" -DINPUTACTIONS_BUILD_CTL=ON
@@ -43,13 +44,14 @@ jobs:
       options: --user root
 
     steps:
+      - name: Install Dependencies
+        run: dnf -y install git cmake extra-cmake-modules gcc-g++ qt6-qtbase-devel kwin-devel kf6-ki18n-devel kf6-kguiaddons-devel kf6-kcmutils-devel kf6-kconfigwidgets-devel qt6-qtbase kf6-kguiaddons kf6-ki18n wayland-devel yaml-cpp yaml-cpp-devel libepoxy-devel libevdev libevdev-devel libdrm-devel
+
       - name: Check out repository
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
           persist-credentials: false
-
-      - name: Install Dependencies
-        run: dnf -y install cmake extra-cmake-modules gcc-g++ qt6-qtbase-devel kwin-devel kf6-ki18n-devel kf6-kguiaddons-devel kf6-kcmutils-devel kf6-kconfigwidgets-devel qt6-qtbase kf6-kguiaddons kf6-ki18n wayland-devel yaml-cpp yaml-cpp-devel libepoxy-devel libevdev libevdev-devel libdrm-devel
+          submodules: 'recursive'
 
       - name: Configure CMake
         run: cmake -B "${GITHUB_WORKSPACE}/build" -DINPUTACTIONS_BUILD_KWIN=ON
@@ -65,13 +67,14 @@ jobs:
       options: --user root
 
     steps:
+      - name: Install Dependencies
+        run: dnf -y install git cmake extra-cmake-modules gcc-g++ qt6-qtbase-devel qt6-qtbase yaml-cpp yaml-cpp-devel libevdev libevdev-devel libinput-devel libudev-devel wayland-devel
+
       - name: Check out repository
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
           persist-credentials: false
-
-      - name: Install Dependencies
-        run: dnf -y install cmake extra-cmake-modules gcc-g++ qt6-qtbase-devel qt6-qtbase yaml-cpp yaml-cpp-devel libevdev libevdev-devel libinput-devel libudev-devel wayland-devel
+          submodules: 'recursive'
 
       - name: Configure CMake
         run: cmake -B "${GITHUB_WORKSPACE}/build" -DINPUTACTIONS_BUILD_STANDALONE=ON

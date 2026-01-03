@@ -14,6 +14,7 @@ add_executable(inputactionsd
 )
 target_compile_options(inputactionsd PUBLIC -fexceptions)
 target_link_libraries(inputactionsd PRIVATE
+    libinput-cpp
     libinputactions
     ${LIBINPUT_LIBRARIES}
     ${LIBUDEV_LIBRARIES}

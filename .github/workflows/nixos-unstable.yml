@@ -21,6 +21,7 @@ jobs:
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
           persist-credentials: false
+          submodules: 'recursive'
 
       - name: Install Nix
         uses: cachix/install-nix-action@fd24c48048070c1be9acd18c9d369a83f0fe94d7 # v31.8.1
@@ -31,7 +32,7 @@ jobs:
         run: nix flake update
 
       - name: Build
-        run: nix build -L .#inputactions-ctl
+        run: nix build -L .?submodules=1#inputactions-ctl
 
   build_hyprland:
     name: Build (Hyprland)
@@ -41,6 +42,7 @@ jobs:
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
           persist-credentials: false
+          submodules: 'recursive'
 
       - name: Install Nix
         uses: cachix/install-nix-action@fd24c48048070c1be9acd18c9d369a83f0fe94d7 # v31.8.1
@@ -51,7 +53,7 @@ jobs:
         run: nix flake update
 
       - name: Build
-        run: nix build -L .#inputactions-hyprland
+        run: nix build -L .?submodules=1#inputactions-hyprland
 
   build_kwin:
     name: Build (KWin)
@@ -61,6 +63,7 @@ jobs:
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
           persist-credentials: false
+          submodules: 'recursive'
 
       - name: Install Nix
         uses: cachix/install-nix-action@fd24c48048070c1be9acd18c9d369a83f0fe94d7 # v31.8.1
@@ -71,7 +74,7 @@ jobs:
         run: nix flake update
 
       - name: Build
-        run: nix build -L .#inputactions-kwin
+        run: nix build -L .?submodules=1#inputactions-kwin
 
   build_standalone:
     name: Build (standalone)
@@ -81,6 +84,7 @@ jobs:
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
           persist-credentials: false
+          submodules: 'recursive'
 
       - name: Install Nix
         uses: cachix/install-nix-action@fd24c48048070c1be9acd18c9d369a83f0fe94d7 # v31.8.1
@@ -91,7 +95,7 @@ jobs:
         run: nix flake update
 
       - name: Build
-        run: nix build -L .#inputactions
+        run: nix build -L .?submodules=1#inputactions
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
