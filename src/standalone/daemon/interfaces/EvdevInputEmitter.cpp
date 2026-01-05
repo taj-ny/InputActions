@@ -18,57 +18,45 @@
 
 #include "EvdevInputEmitter.h"
 #include "input/StandaloneInputBackend.h"
+#include <libevdev-cpp/LibevdevDevice.h>
+#include <libevdev-cpp/LibevdevUinputDevice.h>
 
 namespace InputActions
 {
 
-EvdevInputEmitter::~EvdevInputEmitter()
-{
-    reset();
-}
+EvdevInputEmitter::EvdevInputEmitter() = default;
+EvdevInputEmitter::~EvdevInputEmitter() = default;
 
 void EvdevInputEmitter::initialize()
 {
-    auto *keyboard = libevdev_new();
-    libevdev_set_name(keyboard, "InputActions Virtual Keyboard");
-
-    libevdev_enable_event_type(keyboard, EV_KEY);
+    LibevdevDevice keyboard;
+    keyboard.enableEventType(EV_KEY);
     for (const auto &key : m_keyboardRequiredKeys) {
-        libevdev_enable_event_code(keyboard, EV_KEY, key, nullptr);
+        keyboard.enableEventCode(EV_KEY, key, nullptr);
     }
 
-    libevdev_uinput_create_from_device(keyboard, LIBEVDEV_UINPUT_OPEN_MANAGED, &m_keyboard);
-    libevdev_free(keyboard);
+    m_keyboard = LibevdevUinputDevice::createManaged(&keyboard, "InputActions Virtual Keyboard");
 
-    auto *mouse = libevdev_new();
-    libevdev_set_name(mouse, "InputActions Virtual Mouse");
-
-    libevdev_enable_event_type(mouse, EV_KEY);
+    LibevdevDevice mouse;
+    mouse.enableEventType(EV_KEY);
     for (uint32_t button = BTN_LEFT; button < BTN_JOYSTICK; button++) {
-        libevdev_enable_event_code(mouse, EV_KEY, button, nullptr);
+        mouse.enableEventCode(EV_KEY, button, nullptr);
     }
 
-    libevdev_enable_event_type(mouse, EV_REL);
-    libevdev_enable_event_code(mouse, EV_REL, REL_X, nullptr);
-    libevdev_enable_event_code(mouse, EV_REL, REL_Y, nullptr);
-    libevdev_enable_event_code(mouse, EV_REL, REL_WHEEL_HI_RES, nullptr);
-    libevdev_enable_event_code(mouse, EV_REL, REL_HWHEEL_HI_RES, nullptr);
+    mouse.enableEventType(EV_REL);
+    mouse.enableEventCode(EV_REL, REL_X, nullptr);
+    mouse.enableEventCode(EV_REL, REL_Y, nullptr);
+    mouse.enableEventCode(EV_REL, REL_WHEEL_HI_RES, nullptr);
+    mouse.enableEventCode(EV_REL, REL_HWHEEL_HI_RES, nullptr);
 
-    libevdev_uinput_create_from_device(mouse, LIBEVDEV_UINPUT_OPEN_MANAGED, &m_mouse);
-    libevdev_free(mouse);
+    m_mouse = LibevdevUinputDevice::createManaged(&mouse, "InputActions Virtual Mouse");
 }
 
 void EvdevInputEmitter::reset()
 {
     InputEmitter::reset();
-    if (m_keyboard) {
-        libevdev_uinput_destroy(m_keyboard);
-        m_keyboard = {};
-    }
-    if (m_mouse) {
-        libevdev_uinput_destroy(m_mouse);
-        m_mouse = {};
-    }
+    m_keyboard = {};
+    m_mouse = {};
 }
 
 void EvdevInputEmitter::keyboardClearModifiers()
@@ -89,11 +77,11 @@ void EvdevInputEmitter::keyboardClearModifiers()
 void EvdevInputEmitter::keyboardKey(uint32_t key, bool state, const InputDevice *target)
 {
     if (auto *libevdevTarget = dynamic_cast<StandaloneInputBackend *>(g_inputBackend.get())->outputDevice(target)) {
-        libevdev_uinput_write_event(libevdevTarget, EV_KEY, key, state);
-        libevdev_uinput_write_event(libevdevTarget, EV_SYN, SYN_REPORT, 0);
+        libevdevTarget->writeEvent(EV_KEY, key, state);
+        libevdevTarget->writeSynReportEvent();
     } else if (m_keyboard) {
-        libevdev_uinput_write_event(m_keyboard, EV_KEY, key, state);
-        libevdev_uinput_write_event(m_keyboard, EV_SYN, SYN_REPORT, 0);
+        m_keyboard->writeEvent(EV_KEY, key, state);
+        m_keyboard->writeSynReportEvent();
     }
 }
 
@@ -106,28 +94,28 @@ void EvdevInputEmitter::mouseAxis(const QPointF &delta)
     m_mouseAxisDelta += delta;
     auto syn = false;
     if (std::abs(m_mouseAxisDelta.x()) > 1) {
-        libevdev_uinput_write_event(m_mouse, EV_REL, REL_HWHEEL_HI_RES, static_cast<int32_t>(m_mouseAxisDelta.x()));
+        m_mouse->writeEvent(EV_REL, REL_HWHEEL_HI_RES, static_cast<int32_t>(m_mouseAxisDelta.x()));
         m_mouseAxisDelta.setX(std::fmod(m_mouseAxisDelta.x(), 1));
         syn = true;
     }
     if (std::abs(m_mouseAxisDelta.y()) > 1) {
-        libevdev_uinput_write_event(m_mouse, EV_REL, REL_WHEEL_HI_RES, -static_cast<int32_t>(m_mouseAxisDelta.y()));
+        m_mouse->writeEvent(EV_REL, REL_WHEEL_HI_RES, -static_cast<int32_t>(m_mouseAxisDelta.y()));
         m_mouseAxisDelta.setY(std::fmod(m_mouseAxisDelta.y(), 1));
         syn = true;
     }
     if (syn) {
-        libevdev_uinput_write_event(m_mouse, EV_SYN, SYN_REPORT, 0);
+        m_mouse->writeSynReportEvent();
     }
 }
 
 void EvdevInputEmitter::mouseButton(uint32_t button, bool state, const InputDevice *target)
 {
     if (auto *libevdevTarget = dynamic_cast<StandaloneInputBackend *>(g_inputBackend.get())->outputDevice(target)) {
-        libevdev_uinput_write_event(libevdevTarget, EV_KEY, button, state);
-        libevdev_uinput_write_event(libevdevTarget, EV_SYN, SYN_REPORT, 0);
+        libevdevTarget->writeEvent(EV_KEY, button, state);
+        libevdevTarget->writeSynReportEvent();
     } else if (m_mouse) {
-        libevdev_uinput_write_event(m_mouse, EV_KEY, button, state);
-        libevdev_uinput_write_event(m_mouse, EV_SYN, SYN_REPORT, 0);
+        m_mouse->writeEvent(EV_KEY, button, state);
+        m_mouse->writeSynReportEvent();
     }
 }
 
@@ -140,28 +128,28 @@ void EvdevInputEmitter::mouseMoveRelative(const QPointF &pos)
     m_mouseMotionDelta += pos;
     auto syn = false;
     if (std::abs(m_mouseMotionDelta.x()) > 1) {
-        libevdev_uinput_write_event(m_mouse, EV_REL, REL_X, static_cast<int32_t>(m_mouseMotionDelta.x()));
+        m_mouse->writeEvent(EV_REL, REL_X, static_cast<int32_t>(m_mouseMotionDelta.x()));
         m_mouseMotionDelta.setX(std::fmod(m_mouseMotionDelta.x(), 1));
         syn = true;
     }
     if (std::abs(m_mouseMotionDelta.y()) > 1) {
-        libevdev_uinput_write_event(m_mouse, EV_REL, REL_Y, static_cast<int32_t>(m_mouseMotionDelta.y()));
+        m_mouse->writeEvent(EV_REL, REL_Y, static_cast<int32_t>(m_mouseMotionDelta.y()));
         m_mouseMotionDelta.setY(std::fmod(m_mouseMotionDelta.y(), 1));
         syn = true;
     }
     if (syn) {
-        libevdev_uinput_write_event(m_mouse, EV_SYN, SYN_REPORT, 0);
+        m_mouse->writeSynReportEvent();
     }
 }
 
 QString EvdevInputEmitter::keyboardPath() const
 {
-    return m_keyboard ? libevdev_uinput_get_devnode(m_keyboard) : QString();
+    return m_keyboard ? m_keyboard->devNode() : QString();
 }
 
 QString EvdevInputEmitter::mousePath() const
 {
-    return m_mouse ? libevdev_uinput_get_devnode(m_mouse) : QString();
+    return m_mouse ? m_mouse->devNode() : QString();
 }
 
 }

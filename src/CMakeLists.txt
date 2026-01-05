@@ -4,6 +4,8 @@ if (INPUTACTIONS_BUILD_HYPRLAND OR INPUTACTIONS_BUILD_KWIN OR INPUTACTIONS_BUILD
 
     pkg_search_module(LIBEVDEV REQUIRED libevdev)
 
+    add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../lib/libevdev-cpp ${CMAKE_CURRENT_BINARY_DIR}/../lib/libevdev-cpp)
+
     set(libinputactions_SRCS
         libinputactions/actions/Action.cpp
         libinputactions/actions/ActionExecutor.cpp
@@ -87,6 +89,7 @@ if (INPUTACTIONS_BUILD_HYPRLAND OR INPUTACTIONS_BUILD_KWIN OR INPUTACTIONS_BUILD
 
     add_library(libinputactions STATIC ${libinputactions_SRCS})
     target_link_libraries(libinputactions PUBLIC
+        libevdev-cpp
         Qt6::Core
         Qt6::DBus
         ${LIBEVDEV_LIBRARIES}
@@ -114,5 +117,6 @@ if (INPUTACTIONS_BUILD_KWIN)
     add_subdirectory(kwin)
 endif()
 if (INPUTACTIONS_BUILD_STANDALONE)
+    add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../lib/libinput-cpp ${CMAKE_CURRENT_BINARY_DIR}/../lib/libinput-cpp)
     add_subdirectory(standalone)
 endif()

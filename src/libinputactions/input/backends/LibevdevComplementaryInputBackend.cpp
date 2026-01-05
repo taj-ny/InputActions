@@ -18,47 +18,28 @@
 
 #include "LibevdevComplementaryInputBackend.h"
 #include <QDir>
-#include <QLoggingCategory>
 #include <QObject>
 #include <experimental/scope>
 #include <fcntl.h>
+#include <libevdev-cpp/LibevdevDevice.h>
+#include <libevdev/libevdev.h>
 #include <libinputactions/variables/VariableManager.h>
 
 namespace InputActions
 {
 
-Q_LOGGING_CATEGORY(INPUTACTIONS_BACKEND_LIBEVDEV, "inputactions.input.backend.libevdev", QtWarningMsg)
-
-libevdev *LibevdevComplementaryInputBackend::openDevice(const QString &sysName)
-{
-    const auto path = QString("/dev/input/%1").arg(sysName).toStdString();
-    const auto fd = open(path.c_str(), O_RDONLY | O_NONBLOCK);
-    if (fd == -1) {
-        qCDebug(INPUTACTIONS_BACKEND_LIBEVDEV).noquote() << QString("Failed to open %1 (error %2)").arg(QString::fromStdString(path), QString::number(errno));
-        return {};
-    }
-    fcntl(fd, F_SETFD, FD_CLOEXEC);
-
-    libevdev *libevdev{};
-    if (libevdev_new_from_fd(fd, &libevdev) == 0) {
-        return libevdev;
-    }
-    return nullptr;
-}
-
-void LibevdevComplementaryInputBackend::addDevice(InputDevice *device, libevdev *libevdev, bool owner)
+void LibevdevComplementaryInputBackend::addDevice(InputDevice *device, std::shared_ptr<LibevdevDevice> libevdevDevice, bool owner)
 {
     auto data = std::make_unique<ExtraDeviceData>();
-    data->libevdev = libevdev;
+    data->device = libevdevDevice;
     data->owner = owner;
 
-    if (!libevdev_has_event_type(libevdev, EV_ABS)) {
-        qCDebug(INPUTACTIONS_BACKEND_LIBEVDEV, "Device is not absolute");
+    if (!libevdevDevice->hasEventType(EV_ABS)) {
         return;
     }
 
-    const auto *x = libevdev_get_abs_info(libevdev, ABS_X);
-    const auto *y = libevdev_get_abs_info(libevdev, ABS_Y);
+    const auto *x = libevdevDevice->absInfo(ABS_X);
+    const auto *y = libevdevDevice->absInfo(ABS_Y);
     if (!x || !y) {
         return;
     }
@@ -66,20 +47,17 @@ void LibevdevComplementaryInputBackend::addDevice(InputDevice *device, libevdev 
     data->absMin = {std::abs(x->minimum), std::abs(y->minimum)};
     const QSize size(data->absMin.x() + x->maximum, data->absMin.y() + y->maximum);
     if (size.width() == 0 || size.height() == 0) {
-        qCDebug(INPUTACTIONS_BACKEND_LIBEVDEV, "Device has a size of 0");
         return;
     }
 
-    bool buttonPad = libevdev_has_property(libevdev, INPUT_PROP_BUTTONPAD) == 1;
+    bool buttonPad = libevdevDevice->hasProperty(INPUT_PROP_BUTTONPAD);
     bool multiTouch{};
     uint8_t slotCount = 1;
-    if (libevdev_has_event_code(libevdev, EV_ABS, ABS_MT_SLOT)) {
+    if (libevdevDevice->hasEventCode(EV_ABS, ABS_MT_SLOT)) {
         multiTouch = true;
-        slotCount = libevdev_get_abs_maximum(libevdev, ABS_MT_SLOT) + 1;
+        slotCount = libevdevDevice->slotCount();
     }
     device->setTouchPoints(std::vector<TouchPoint>(slotCount));
-    qCDebug(INPUTACTIONS_BACKEND_LIBEVDEV).noquote().nospace()
-        << "Found valid touchpad (size: " << size << ", multiTouch: " << multiTouch << ", slots: " << slotCount << ")";
 
     auto &properties = device->properties();
     properties.setSize(size);
@@ -87,8 +65,7 @@ void LibevdevComplementaryInputBackend::addDevice(InputDevice *device, libevdev 
     properties.setButtonPad(buttonPad);
 
     if (owner) {
-        data->notifier = std::make_unique<QSocketNotifier>(libevdev_get_fd(libevdev), QSocketNotifier::Read);
-        connect(data->notifier.get(), &QSocketNotifier::activated, this, [this, device] {
+        connect(data->device.get(), &LibevdevDevice::eventsAvailable, this, [this, device] {
             poll(device);
         });
     }
@@ -106,27 +83,26 @@ void LibevdevComplementaryInputBackend::deviceAdded(InputDevice *device)
         return;
     }
 
-    libevdev *libevdev{};
-    if (!device->sysName().isEmpty()) {
-        libevdev = openDevice(device->sysName());
+    std::shared_ptr<LibevdevDevice> libevdevDevice;
+    if (false) {
+        libevdevDevice = LibevdevDevice::createFromPath("/dev/input/" + device->sysName());
     } else {
         // If sysName is not available, go through all devices and find one with the same name
         for (const auto &entry : QDir("/dev/input").entryInfoList(QDir::Files | QDir::NoSymLinks | QDir::System)) {
-            libevdev = openDevice(entry.fileName());
-            if (!libevdev) {
+            auto candidate = LibevdevDevice::createFromPath(entry.filePath());
+            if (!candidate || candidate->name() != device->name()) {
                 continue;
             }
 
-            if (libevdev_get_name(libevdev) == device->name()) {
-                break;
-            }
+            libevdevDevice = std::move(candidate);
+            break;
         }
     }
-    if (!libevdev) {
+    if (!libevdevDevice) {
         return;
     }
 
-    addDevice(device, libevdev, true);
+    addDevice(device, std::move(libevdevDevice), true);
 }
 
 void LibevdevComplementaryInputBackend::deviceRemoved(const InputDevice *device)
@@ -235,7 +211,7 @@ void LibevdevComplementaryInputBackend::poll(InputDevice *device)
     }
 
     const auto &data = m_devices[device];
-    if (!data->owner || !data->libevdev) {
+    if (!data->owner || !data->device) {
         return;
     }
 
@@ -243,7 +219,7 @@ void LibevdevComplementaryInputBackend::poll(InputDevice *device)
     int status{};
     while (true) {
         auto flags = status == LIBEVDEV_READ_STATUS_SYNC ? LIBEVDEV_READ_FLAG_SYNC : LIBEVDEV_READ_FLAG_NORMAL;
-        status = libevdev_next_event(data->libevdev, flags, &event);
+        status = data->device->nextEvent(flags, event);
         if (status != LIBEVDEV_READ_STATUS_SUCCESS && status != LIBEVDEV_READ_STATUS_SYNC) {
             break;
         }
@@ -257,12 +233,7 @@ void LibevdevComplementaryInputBackend::setEnabled(bool value)
     m_enabled = value;
 }
 
-LibevdevComplementaryInputBackend::ExtraDeviceData::~ExtraDeviceData()
-{
-    if (owner && libevdev) {
-        close(libevdev_get_fd(libevdev));
-        libevdev_free(libevdev);
-    }
-}
+LibevdevComplementaryInputBackend::ExtraDeviceData::ExtraDeviceData() = default;
+LibevdevComplementaryInputBackend::ExtraDeviceData::~ExtraDeviceData() = default;
 
 }

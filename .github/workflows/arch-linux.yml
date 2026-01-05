@@ -21,16 +21,17 @@ jobs:
       options: --user root
 
     steps:
-      - name: Check out repository
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
-        with:
-          persist-credentials: false
-
       - name: Refresh Packages
         run: pacman -Syu --noconfirm
 
       - name: Install Dependencies
         run: pacman -S --needed --noconfirm base-devel git extra-cmake-modules qt6-tools cli11
+
+      - name: Check out repository
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          persist-credentials: false
+          submodules: 'recursive'
 
       - name: Configure CMake
         run: cmake -B "${GITHUB_WORKSPACE}/build" -DINPUTACTIONS_BUILD_CTL=ON
@@ -46,16 +47,17 @@ jobs:
       options: --user root
 
     steps:
-      - name: Check out repository
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
-        with:
-          persist-credentials: false
-
       - name: Refresh Packages
         run: pacman -Syu --noconfirm
 
       - name: Install Dependencies
         run: pacman -S --needed --noconfirm base-devel git extra-cmake-modules qt6-tools hyprland yaml-cpp libevdev
+
+      - name: Check out repository
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          persist-credentials: false
+          submodules: 'recursive'
 
       - name: Configure CMake
         run: cmake -B "${GITHUB_WORKSPACE}/build" -DINPUTACTIONS_BUILD_HYPRLAND=ON
@@ -71,16 +73,17 @@ jobs:
       options: --user root
 
     steps:
-      - name: Check out repository
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
-        with:
-          persist-credentials: false
-
       - name: Refresh Packages
         run: pacman -Syu --noconfirm
 
       - name: Install Dependencies
         run: pacman -S --needed --noconfirm base-devel git extra-cmake-modules qt6-tools kwin yaml-cpp libevdev
+
+      - name: Check out repository
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          persist-credentials: false
+          submodules: 'recursive'
 
       - name: Configure CMake
         run: cmake -B "${GITHUB_WORKSPACE}/build" -DINPUTACTIONS_BUILD_KWIN=ON
@@ -96,16 +99,17 @@ jobs:
       options: --user root
 
     steps:
-      - name: Check out repository
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
-        with:
-          persist-credentials: false
-
       - name: Refresh Packages
         run: pacman -Syu --noconfirm
 
       - name: Install Dependencies
         run: pacman -S --needed --noconfirm base-devel git extra-cmake-modules qt6-tools yaml-cpp libevdev
+
+      - name: Check out repository
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          persist-credentials: false
+          submodules: 'recursive'
 
       - name: Configure CMake
         run: cmake -B "${GITHUB_WORKSPACE}/build" -DINPUTACTIONS_BUILD_STANDALONE=ON

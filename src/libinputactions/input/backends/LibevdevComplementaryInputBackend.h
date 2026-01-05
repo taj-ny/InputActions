@@ -18,20 +18,19 @@
 
 #pragma once
 
-#include <QSocketNotifier>
-#include <libevdev-1.0/libevdev/libevdev.h>
 #include <libinputactions/input/backends/InputBackend.h>
 #include <libinputactions/input/events.h>
+#include <linux/input.h>
 #include <map>
 #include <memory>
 
 namespace InputActions
 {
 
+class LibevdevDevice;
+
 /**
  * Uses libevdev to get additional touchpad data that libinput does not provide.
- *
- * Emitted events: TouchpadClick, TouchpadSlot
  */
 class LibevdevComplementaryInputBackend : public InputBackend
 {
@@ -47,27 +46,25 @@ public:
 
 protected:
     void deviceAdded(InputDevice *device) override;
-    void addDevice(InputDevice *device, libevdev *libevdev, bool owner);
+    void addDevice(InputDevice *device, std::shared_ptr<LibevdevDevice> libevdevDevice, bool owner);
 
     void deviceRemoved(const InputDevice *device) override;
 
     void handleEvdevEvent(InputDevice *sender, const input_event &event);
 
 private:
-    libevdev *openDevice(const QString &sysName);
-
     bool m_enabled = true;
 
     struct ExtraDeviceData
     {
+        ExtraDeviceData();
         ~ExtraDeviceData();
 
-        struct libevdev *libevdev{};
+        std::shared_ptr<LibevdevDevice> device;
         /**
-         * Whether libevdev is owned by this input backend.
+         * Whether the device is owned by this input backend.
          */
         bool owner{};
-        std::unique_ptr<QSocketNotifier> notifier;
 
         uint8_t currentSlot{};
         /**

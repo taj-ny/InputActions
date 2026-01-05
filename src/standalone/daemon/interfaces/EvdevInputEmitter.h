@@ -18,11 +18,12 @@
 
 #pragma once
 
-#include <libevdev/libevdev-uinput.h>
 #include <libinputactions/interfaces/InputEmitter.h>
 
 namespace InputActions
 {
+
+class LibevdevUinputDevice;
 
 /**
  * Keyboard keys must be registered before initialization.
@@ -30,11 +31,11 @@ namespace InputActions
 class EvdevInputEmitter : public InputEmitter
 {
 public:
-    EvdevInputEmitter() = default;
+    EvdevInputEmitter();
     ~EvdevInputEmitter() override;
 
     void initialize() override;
-    void reset() final;
+    void reset() override;
 
     void keyboardClearModifiers() override;
     void keyboardKey(uint32_t key, bool state, const InputDevice *target = nullptr) override;
@@ -53,8 +54,8 @@ public:
     QString mousePath() const;
 
 private:
-    libevdev_uinput *m_keyboard{};
-    libevdev_uinput *m_mouse{};
+    std::unique_ptr<LibevdevUinputDevice> m_keyboard;
+    std::unique_ptr<LibevdevUinputDevice> m_mouse;
 
     QPointF m_mouseAxisDelta;
     QPointF m_mouseMotionDelta;
