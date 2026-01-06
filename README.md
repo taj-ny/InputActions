@@ -6,6 +6,10 @@ Supported environments: GNOME, Hyprland, Plasma 6, other Wayland compositors (av
 [Installation & getting started](https://wiki.inputactions.org/main/getting-started) | [Example triggers](https://wiki.inputactions.org/main/example-triggers) | [Wiki repository](https://github.com/InputActions/wiki)
 
 # Features
+> [!IMPORTANT]
+> Some features mentioned below are not available in all environments, see the
+> [feature comparison](https://wiki.inputactions.org/main/getting-started/installation/index.html) for more information.
+
 - Keyboard triggers: shortcut
 - Mouse:
   - Multiple activation mouse buttons can be specified, the press order can be set to exact (for rocker gestures) or any
@@ -30,6 +34,7 @@ Supported environments: GNOME, Hyprland, Plasma 6, other Wayland compositors (av
     - Swipe: 1-4 fingers
     - Tap: 1-5 fingers
 - Touchscreen:
+  - Absolute initial and current positions of all fingers are available, same as touchpads
   - Triggers:
     - Circle: 1-5 fingers
     - Hold: 1-5 fingers
