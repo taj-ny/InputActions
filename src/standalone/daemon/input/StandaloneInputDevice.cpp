@@ -42,7 +42,7 @@ std::unique_ptr<StandaloneInputDevice> StandaloneInputDevice::tryCreate(const QS
 
     if (!libinputDevice) {
         // May fail if opened before the udev rule sets ACLs, initialization will be attempted again later.
-        retry = errno == ENOENT;
+        retry = errno != ENOENT;
         return {};
     }
 

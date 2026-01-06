@@ -111,7 +111,7 @@ bool StandaloneInputBackend::tryAddEvdevDevice(const QString &path)
     bool retry{};
     auto device = StandaloneInputDevice::tryCreate(path, retry);
     if (!device) {
-        return retry;
+        return !retry;
     }
 
     if (device->type() == InputDeviceType::Touchpad) {
