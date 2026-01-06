@@ -63,8 +63,8 @@ private:
     bool tryAddEvdevDevice(const QString &path);
     void evdevDeviceRemoved(const QString &path);
 
-    bool handleEvent(InputDevice *sender, const LibinputEvent *event);
-    LibinputEventsProcessingResult handleLibinputEvents(InputDevice *device, LibinputPathContext *libinput);
+    bool handleEvent(StandaloneInputDevice *sender, const LibinputEvent *event);
+    LibinputEventsProcessingResult handleLibinputEvents(StandaloneInputDevice *device, LibinputPathContext *libinput);
 
     int m_inotifyFd;
     std::unique_ptr<QSocketNotifier> m_inotifyNotifier;

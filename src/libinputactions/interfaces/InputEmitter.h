@@ -18,7 +18,6 @@
 
 #pragma once
 
-#include <QPointF>
 #include <libinputactions/globals.h>
 #include <memory>
 #include <set>

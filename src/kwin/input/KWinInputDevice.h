@@ -24,17 +24,29 @@
 namespace InputActions
 {
 
+class KWinInputBackend;
+
 class KWinInputDevice : public InputDevice
 {
 public:
-    static std::unique_ptr<KWinInputDevice> tryCreate(KWin::InputDevice *device);
+    static std::unique_ptr<KWinInputDevice> tryCreate(KWinInputBackend *backend, KWin::InputDevice *device);
 
     KWin::InputDevice *kwinDevice() const { return m_kwinDevice; }
 
+#ifdef KWIN_6_5_OR_GREATER
+    void resetVirtualDeviceState() override;
+    void restoreVirtualDeviceState() override;
+
+protected:
+    void simulateTouchscreenTapDown(const std::vector<QPointF> &points) override;
+    void simulateTouchscreenTapUp(const std::vector<QPointF> &points) override;
+#endif
+
 private:
-    KWinInputDevice(KWin::InputDevice *device, InputDeviceType type);
+    KWinInputDevice(KWinInputBackend *backend, KWin::InputDevice *device, InputDeviceType type);
 
     KWin::InputDevice *m_kwinDevice;
+    KWinInputBackend *m_backend;
 };
 
 }

@@ -18,6 +18,7 @@
 
 #include "StrokeRecorder.h"
 #include "events.h"
+#include <libinputactions/triggers/StrokeTrigger.h>
 
 namespace InputActions
 {
@@ -36,6 +37,11 @@ void StrokeRecorder::recordStroke(const std::function<void(const Stroke &stroke)
 {
     m_isRecordingStroke = true;
     m_strokeCallback = callback;
+}
+
+bool StrokeRecorder::evdevFrame(const EvdevFrameEvent &event)
+{
+    return (m_isRecordingStroke || m_blockTouchscreenEventsUntilDeviceNeutral) && event.sender()->type() == InputDeviceType::Touchscreen;
 }
 
 bool StrokeRecorder::pointerAxis(const MotionEvent &event)
@@ -62,6 +68,73 @@ bool StrokeRecorder::pointerMotion(const MotionEvent &event)
     m_strokePoints.push_back(event.delta().accelerated()); // accelerated for backwards compatibility
     m_strokeRecordingTimeoutTimer.start(STROKE_RECORD_TIMEOUT);
     return false;
+}
+
+bool StrokeRecorder::touchCancel(const TouchCancelEvent &event)
+{
+    return m_isRecordingStroke || m_blockTouchscreenEventsUntilDeviceNeutral;
+}
+
+bool StrokeRecorder::touchChanged(const TouchChangedEvent &event)
+{
+    return (m_isRecordingStroke || m_blockTouchscreenEventsUntilDeviceNeutral) && event.sender()->type() == InputDeviceType::Touchscreen;
+}
+
+bool StrokeRecorder::touchDown(const TouchEvent &event)
+{
+    m_previousTouchscreenTouchCenter = {};
+    m_strokePoints.clear();
+    return (m_isRecordingStroke || m_blockTouchscreenEventsUntilDeviceNeutral) && event.sender()->type() == InputDeviceType::Touchscreen;
+}
+
+bool StrokeRecorder::touchFrame(const TouchFrameEvent &event)
+{
+    if (!m_isRecordingStroke || event.sender()->type() != InputDeviceType::Touchscreen) {
+        return false;
+    }
+
+    if (m_blockTouchscreenEventsUntilDeviceNeutral) {
+        return true;
+    }
+
+    QPointF center;
+    const auto validPoints = event.sender()->validTouchPoints();
+    for (const auto *point : validPoints) {
+        center += point->position;
+    }
+    center /= validPoints.size();
+
+    if (m_previousTouchscreenTouchCenter.isNull()) {
+        m_previousTouchscreenTouchCenter = center;
+        return true;
+    }
+
+    if (m_previousTouchscreenTouchCenter != center) {
+        m_strokePoints.push_back(center - m_previousTouchscreenTouchCenter);
+        m_previousTouchscreenTouchCenter = center;
+    }
+    return true;
+}
+
+bool StrokeRecorder::touchUp(const TouchEvent &event)
+{
+    if (event.sender()->type() != InputDeviceType::Touchscreen) {
+        return false;
+    }
+
+    if (m_isRecordingStroke) {
+        finishStrokeRecording();
+        if (!event.sender()->validTouchPoints().empty()) {
+            m_blockTouchscreenEventsUntilDeviceNeutral = true;
+        }
+        return true;
+    }
+
+    const auto block = m_blockTouchscreenEventsUntilDeviceNeutral;
+    if (event.sender()->validTouchPoints().empty()) {
+        m_blockTouchscreenEventsUntilDeviceNeutral = false;
+    }
+    return block;
 }
 
 bool StrokeRecorder::touchpadGestureLifecyclePhase(const TouchpadGestureLifecyclePhaseEvent &event)

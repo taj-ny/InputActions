@@ -35,6 +35,7 @@
 #include <libinputactions/handlers/MouseTriggerHandler.h>
 #include <libinputactions/handlers/PointerTriggerHandler.h>
 #include <libinputactions/handlers/TouchpadTriggerHandler.h>
+#include <libinputactions/handlers/TouchscreenTriggerHandler.h>
 #include <libinputactions/input/InputDeviceRule.h>
 #include <libinputactions/interfaces/CursorShapeProvider.h>
 #include <libinputactions/triggers/HoverTrigger.h>
@@ -1185,6 +1186,13 @@ std::unique_ptr<TouchpadTriggerHandler> asTouchpadTriggerHandler(const Node &nod
     return handler;
 }
 
+std::unique_ptr<TouchscreenTriggerHandler> asTouchscreenTriggerHandler(const Node &node, InputDevice *device)
+{
+    auto handler = std::make_unique<TouchscreenTriggerHandler>(device);
+    decodeMultiTouchMotionTriggerHandler(node, handler.get());
+    return handler;
+}
+
 #define ENUM_DECODER(type, error, map)                                                                    \
     template<>                                                                                            \
     struct convert<type>                                                                                  \
@@ -1289,6 +1297,7 @@ FLAGS_DECODER(InputDeviceTypes, "input device type",
                   {"keyboard", InputDeviceType::Keyboard},
                   {"mouse", InputDeviceType::Mouse},
                   {"touchpad", InputDeviceType::Touchpad},
+                  {"touchscreen", InputDeviceType::Touchscreen},
               }))
 
 template<>

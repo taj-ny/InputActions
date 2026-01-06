@@ -6,6 +6,10 @@ Supported environments: GNOME, Hyprland, Plasma 6, other Wayland compositors (av
 [Installation & getting started](https://wiki.inputactions.org/main/getting-started) | [Example triggers](https://wiki.inputactions.org/main/example-triggers) | [Wiki repository](https://github.com/InputActions/wiki)
 
 # Features
+> [!IMPORTANT]
+> Some features mentioned below are not available in all environments, see the
+> [feature comparison](https://wiki.inputactions.org/main/getting-started/installation/index.html) for more information.
+
 - Keyboard triggers: shortcut
 - Mouse:
   - Multiple activation mouse buttons can be specified, the press order can be set to exact (for rocker gestures) or any
@@ -28,6 +32,16 @@ Supported environments: GNOME, Hyprland, Plasma 6, other Wayland compositors (av
     - Rotate: 2-4 fingers
     - Stroke: 1-4 fingers
     - Swipe: 1-4 fingers
+    - Tap: 1-5 fingers
+- Touchscreen:
+  - Absolute initial and current positions of all fingers are available, same as touchpads
+  - Triggers:
+    - Circle: 1-5 fingers
+    - Hold: 1-5 fingers
+    - Pinch: 2-5 fingers
+    - Rotate: 2-5 fingers
+    - Stroke: 1-5 fingers
+    - Swipe: 1-5 fingers
     - Tap: 1-5 fingers
 - Pointer (any device capable of moving the pointer) triggers: hover
 - Conditions: can be set on individual triggers and actions and determine whether the trigger can be activated or the action can be executed. Triggers also
@@ -118,5 +132,6 @@ Supported environments: GNOME, Hyprland, Plasma 6, other Wayland compositors (av
 
 # Credits
 - [Strokognition](https://invent.kde.org/jpetso/strokognition), [wstroke](https://github.com/dkondor/wstroke), [easystroke](https://github.com/thjaeger/easystroke) - Stroke triggers
+- [libinput](https://gitlab.freedesktop.org/libinput/libinput) - Touchscreen gesture recognition
 - [circular-scrolling-improved](https://github.com/galundin/circular-scrolling-improved) - Circle triggers
 - [KWin](https://invent.kde.org/plasma/kwin) - Gesture handling code (heavily extended and modified)

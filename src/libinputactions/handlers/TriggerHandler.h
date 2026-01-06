@@ -96,6 +96,10 @@ protected:
      */
     std::vector<Trigger *> triggers(TriggerTypes types, const TriggerActivationEvent &event);
     /**
+     * @return Blocking triggers of the specified types eligible for activation.
+     */
+    std::vector<Trigger *> blockingTriggers(TriggerTypes types, const TriggerActivationEvent &event);
+    /**
      * @return Active triggers of the specified types.
      */
     std::vector<Trigger *> activeTriggers(TriggerTypes types);

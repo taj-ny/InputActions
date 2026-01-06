@@ -182,10 +182,10 @@ void LibevdevComplementaryInputBackend::handleEvdevEvent(InputDevice *sender, co
                         currentTouchPoint.active = value != -1;
                         break;
                     case ABS_MT_POSITION_X:
-                        currentTouchPoint.position.setX((value + data->absMin.x()) / properties.size().width());
+                        currentTouchPoint.position.setX(value + data->absMin.x());
                         break;
                     case ABS_MT_POSITION_Y:
-                        currentTouchPoint.position.setY((value + data->absMin.y()) / properties.size().height());
+                        currentTouchPoint.position.setY(value + data->absMin.y());
                         break;
                     case ABS_MT_PRESSURE:
                         currentTouchPoint.pressure = value;
@@ -194,10 +194,10 @@ void LibevdevComplementaryInputBackend::handleEvdevEvent(InputDevice *sender, co
             } else {
                 switch (code) {
                     case ABS_X:
-                        currentTouchPoint.position.setX((value + data->absMin.x()) / properties.size().width());
+                        currentTouchPoint.position.setX(value + data->absMin.x());
                         break;
                     case ABS_Y:
-                        currentTouchPoint.position.setY((value + data->absMin.y()) / properties.size().height());
+                        currentTouchPoint.position.setY(value + data->absMin.y());
                         break;
                     case ABS_PRESSURE:
                         currentTouchPoint.pressure = value;

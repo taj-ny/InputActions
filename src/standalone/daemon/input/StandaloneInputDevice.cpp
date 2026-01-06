@@ -57,6 +57,8 @@ std::unique_ptr<StandaloneInputDevice> StandaloneInputDevice::tryCreate(const QS
         type = InputDeviceType::Keyboard;
     } else if (udevDevice->propertyValue("ID_INPUT_TOUCHPAD")) {
         type = InputDeviceType::Touchpad;
+    } else if (udevDevice->propertyValue("ID_INPUT_TOUCHSCREEN")) {
+        type = InputDeviceType::Touchscreen;
     } else {
         return {};
     }
@@ -76,6 +78,10 @@ std::unique_ptr<StandaloneInputDevice> StandaloneInputDevice::tryCreate(const QS
 
 bool StandaloneInputDevice::finalize(const QString &name, const InputDeviceProperties &properties, bool &retry)
 {
+    if (type() == InputDeviceType::Touchscreen) {
+        this->properties().setSize(libinputDevice()->size());
+    }
+
     if (properties.grab()) {
         m_libevdev = LibevdevDevice::createFromPath(m_path);
         if (!m_libevdev) {
@@ -143,6 +149,7 @@ bool StandaloneInputDevice::isNeutral() const
             }
             break;
         case InputDeviceType::Touchpad:
+        case InputDeviceType::Touchscreen:
             return !m_libevdev->hasEventCode(EV_KEY, BTN_TOUCH) || !m_libevdev->eventValue(EV_KEY, BTN_TOUCH);
     }
     return true;
@@ -155,6 +162,10 @@ bool StandaloneInputDevice::isDeviceOwnedByThisDevice(const QString &path) const
 
 void StandaloneInputDevice::resetVirtualDeviceState()
 {
+    if (!properties().grab()) {
+        return;
+    }
+
     switch (type()) {
         case InputDeviceType::Keyboard:
         case InputDeviceType::Mouse: {
@@ -172,6 +183,7 @@ void StandaloneInputDevice::resetVirtualDeviceState()
             break;
         }
         case InputDeviceType::Touchpad:
+        case InputDeviceType::Touchscreen:
             // Reverse order so that ABS_MT_SLOT is equal to 0 after
             for (int i = touchPoints().size() - 1; i >= 0; i--) {
                 m_outputDevice->writeEvent(EV_ABS, ABS_MT_SLOT, i);
@@ -192,40 +204,114 @@ void StandaloneInputDevice::resetVirtualDeviceState()
 
 void StandaloneInputDevice::restoreVirtualDeviceState()
 {
+    if (!properties().grab()) {
+        return;
+    }
+
+    const auto restoreKey = [this]() {
+        for (int code = 0; code < KEY_MAX; code++) {
+            if (!m_libevdev->hasEventCode(EV_KEY, code)) {
+                continue;
+            }
+
+            m_outputDevice->writeEvent(EV_KEY, code, m_libevdev->eventValue(EV_KEY, code));
+        }
+    };
+    const auto restoreAbs = [this]() {
+        for (int code = 0; code < ABS_MAX; code++) {
+            if ((code >= ABS_MT_SLOT && code <= ABS_MT_TOOL_Y) || !m_libevdev->hasEventCode(EV_ABS, code)) {
+                continue;
+            }
+
+            m_outputDevice->writeEvent(EV_ABS, code, m_libevdev->absInfo(code)->value);
+        }
+    };
+    const auto restoreAbsMt = [this]() {
+        for (int slot = 0; slot < m_libevdev->slotCount(); slot++) {
+            m_outputDevice->writeEvent(EV_ABS, ABS_MT_SLOT, slot);
+
+            for (int code = ABS_MT_SLOT; code <= ABS_MT_TOOL_Y; code++) {
+                if (code == ABS_MT_SLOT || !m_libevdev->hasEventCode(EV_ABS, code)) {
+                    continue;
+                }
+
+                m_outputDevice->writeEvent(EV_ABS, code, m_libevdev->slotValue(slot, code));
+            }
+        }
+    };
+    const auto finish = [this]() {
+        m_outputDevice->writeEvent(EV_ABS, ABS_MT_SLOT, m_libevdev->currentSlot());
+        m_outputDevice->writeSynReportEvent();
+    };
+
     switch (type()) {
         case InputDeviceType::Touchpad:
-            for (int code = 0; code < KEY_MAX; code++) {
-                if (!m_libevdev->hasEventCode(EV_KEY, code)) {
-                    continue;
-                }
+            restoreKey();
+            restoreAbs();
+            restoreAbsMt();
+            break;
+        case InputDeviceType::Touchscreen:
+            restoreKey();
+            restoreAbs();
 
-                m_outputDevice->writeEvent(EV_KEY, code, m_libevdev->eventValue(EV_KEY, code));
-            }
-
-            for (int code = 0; code < ABS_MAX; code++) {
-                if ((code >= ABS_MT_SLOT && code <= ABS_MT_TOOL_Y) || !m_libevdev->hasEventCode(EV_ABS, code)) {
-                    continue;
-                }
-
-                m_outputDevice->writeEvent(EV_ABS, code, m_libevdev->absInfo(code)->value);
-            }
-
-            for (int slot = 0; slot < m_libevdev->slotCount(); slot++) {
-                m_outputDevice->writeEvent(EV_ABS, ABS_MT_SLOT, slot);
+            for (const auto *point : validTouchPoints()) {
+                m_outputDevice->writeEvent(EV_ABS, ABS_MT_SLOT, point->id);
+                m_outputDevice->writeEvent(EV_ABS, ABS_MT_POSITION_X, point->rawInitialPosition.x());
+                m_outputDevice->writeEvent(EV_ABS, ABS_MT_POSITION_Y, point->rawInitialPosition.y());
 
                 for (int code = ABS_MT_SLOT; code <= ABS_MT_TOOL_Y; code++) {
                     if (code == ABS_MT_SLOT || !m_libevdev->hasEventCode(EV_ABS, code)) {
                         continue;
                     }
 
-                    m_outputDevice->writeEvent(EV_ABS, code, m_libevdev->slotValue(slot, code));
+                    m_outputDevice->writeEvent(EV_ABS, code, m_libevdev->slotValue(point->id, code));
                 }
             }
-
-            m_outputDevice->writeEvent(EV_ABS, ABS_MT_SLOT, m_libevdev->currentSlot());
             m_outputDevice->writeSynReportEvent();
+
+            for (const auto *point : validTouchPoints()) {
+                m_outputDevice->writeEvent(EV_ABS, ABS_MT_SLOT, point->id);
+                m_outputDevice->writeEvent(EV_ABS, ABS_MT_POSITION_X, point->rawPosition.x());
+                m_outputDevice->writeEvent(EV_ABS, ABS_MT_POSITION_Y, point->rawPosition.y());
+            }
+
+            finish();
             break;
     }
+}
+
+void StandaloneInputDevice::simulateTouchscreenTapDown(const std::vector<QPointF> &points)
+{
+    if (!properties().grab()) {
+        return;
+    }
+
+    for (size_t i = 0; i < points.size(); ++i) {
+        const auto &point = points[i];
+
+        m_outputDevice->writeEvent(EV_ABS, ABS_MT_SLOT, i);
+        m_outputDevice->writeEvent(EV_ABS, ABS_MT_TRACKING_ID, i);
+        m_outputDevice->writeEvent(EV_ABS, ABS_MT_POSITION_X, point.x());
+        m_outputDevice->writeEvent(EV_ABS, ABS_MT_POSITION_Y, point.y());
+    }
+
+    m_outputDevice->writeEvent(EV_ABS, ABS_MT_SLOT, m_libevdev->currentSlot());
+    m_outputDevice->writeSynReportEvent();
+}
+
+void StandaloneInputDevice::simulateTouchscreenTapUp(const std::vector<QPointF> &points)
+{
+    if (!properties().grab()) {
+        return;
+    }
+
+    for (size_t i = 0; i < points.size(); ++i) {
+        m_outputDevice->writeEvent(EV_ABS, ABS_MT_SLOT, i);
+        m_outputDevice->writeEvent(EV_ABS, ABS_MT_TRACKING_ID, -1);
+    }
+
+    m_outputDevice->writeEvent(EV_ABS, ABS_MT_SLOT, m_libevdev->currentSlot());
+    m_outputDevice->writeSynReportEvent();
 }
 
 }

@@ -2,6 +2,8 @@
 
 #include <QLoggingCategory>
 #include <QObject>
+#include <QPointF>
+#include <QSizeF>
 
 Q_DECLARE_LOGGING_CATEGORY(INPUTACTIONS)
 
@@ -34,7 +36,8 @@ enum class InputDeviceType
     Unknown = 0,
     Keyboard = 1u << 0,
     Mouse = 1u << 1,
-    Touchpad = 1u << 2
+    Touchpad = 1u << 2,
+    Touchscreen = 1u << 3,
 };
 Q_DECLARE_FLAGS(InputDeviceTypes, InputDeviceType)
 Q_DECLARE_OPERATORS_FOR_FLAGS(InputDeviceTypes)
@@ -77,6 +80,11 @@ Q_DECLARE_OPERATORS_FOR_FLAGS(TriggerTypes)
 static inline TriggerType operator~(TriggerType value)
 {
     return TriggerType(~static_cast<uint32_t>(value));
+}
+
+static inline QPointF operator/(const QPointF &point, const QSizeF &size)
+{
+    return QPointF(point.x() / size.width(), point.y() / size.height());
 }
 
 template<class... Ts>

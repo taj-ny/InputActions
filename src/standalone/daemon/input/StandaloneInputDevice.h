@@ -80,8 +80,12 @@ public:
      */
     bool isDeviceOwnedByThisDevice(const QString &path) const;
 
-    void resetVirtualDeviceState();
-    void restoreVirtualDeviceState();
+    void resetVirtualDeviceState() override;
+    void restoreVirtualDeviceState() override;
+
+protected:
+    void simulateTouchscreenTapDown(const std::vector<QPointF> &points) override;
+    void simulateTouchscreenTapUp(const std::vector<QPointF> &points) override;
 
 private:
     StandaloneInputDevice(InputDeviceType type, QString name, QString sysName, QString path, std::unique_ptr<LibinputPathContext> libinput,

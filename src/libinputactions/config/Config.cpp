@@ -57,11 +57,18 @@ std::optional<QString> Config::load(const QString &config, bool preventCrashLoop
             auto mouseTriggerHandler = root["mouse"].as<std::unique_ptr<MouseTriggerHandler>>(nullptr);
             auto pointerTriggerHandler = root["pointer"].as<std::unique_ptr<PointerTriggerHandler>>(nullptr);
             std::function<std::unique_ptr<TouchpadTriggerHandler>(InputDevice * device)> touchpadTriggerHandlerFactory;
+            std::function<std::unique_ptr<TouchscreenTriggerHandler>(InputDevice * device)> touchscreenTriggerHandlerFactory;
             if (const auto &touchpadNode = root["touchpad"]) {
                 touchpadTriggerHandlerFactory = [touchpadNode](auto *device) {
                     return YAML::asTouchpadTriggerHandler(touchpadNode, device);
                 };
                 touchpadTriggerHandlerFactory(nullptr); // Make sure it doesn't throw
+            }
+            if (const auto &touchscreenNode = root["touchscreen"]) {
+                touchscreenTriggerHandlerFactory = [touchscreenNode](auto *device) {
+                    return YAML::asTouchscreenTriggerHandler(touchscreenNode, device);
+                };
+                touchscreenTriggerHandlerFactory(nullptr);
             }
 
             auto deviceRules = root.as<std::vector<InputDeviceRule>>();
@@ -77,6 +84,7 @@ std::optional<QString> Config::load(const QString &config, bool preventCrashLoop
             g_inputBackend->setMouseTriggerHandler(std::move(mouseTriggerHandler));
             g_inputBackend->setPointerTriggerHandler(std::move(pointerTriggerHandler));
             g_inputBackend->setTouchpadTriggerHandlerFactory(touchpadTriggerHandlerFactory);
+            g_inputBackend->setTouchscreenTriggerHandlerFactory(touchscreenTriggerHandlerFactory);
             g_inputBackend->setDeviceRules(deviceRules);
 
             g_inputEmitter->initialize();

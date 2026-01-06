@@ -34,6 +34,7 @@ class KeyboardTriggerHandler;
 class MouseTriggerHandler;
 class PointerTriggerHandler;
 class TouchpadTriggerHandler;
+class TouchscreenTriggerHandler;
 
 /**
  * Collects input events and forwards them to event handlers. Handlers can only be set before initialization.
@@ -82,6 +83,15 @@ public:
      * @return May be nullptr.
      */
     InputDevice *firstTouchpad() const;
+    /**
+     * Use in case the device is not provided by the compositor for some reason.
+     * @return May be nullptr.
+     */
+    InputDevice *firstTouchscreen() const;
+    /**
+     * @return The touchscreen currently in use or nullptr if not available.
+     */
+    InputDevice *currentTouchscreen() const { return m_currentTouchscreen; }
 
     /**
      * @return Currently pressed keyboard modifiers, accumulated from all devices.
@@ -105,6 +115,7 @@ public:
     void setMouseTriggerHandler(std::unique_ptr<MouseTriggerHandler> value);
     void setPointerTriggerHandler(std::unique_ptr<PointerTriggerHandler> value);
     void setTouchpadTriggerHandlerFactory(std::function<std::unique_ptr<TouchpadTriggerHandler>(InputDevice *device)> value);
+    void setTouchscreenTriggerHandlerFactory(std::function<std::unique_ptr<TouchscreenTriggerHandler>(InputDevice *device)> value);
 
     /**
      * A combination of keyboard keys, that when held for a specific amount of time, will cause InputActions to enter a suspended state.
@@ -132,6 +143,7 @@ private:
 
     std::vector<InputEventHandler *> m_eventHandlerChain;
     std::vector<InputDevice *> m_devices;
+    InputDevice *m_currentTouchscreen{};
 
     QTimer m_emergencyCombinationTimer;
 
@@ -140,6 +152,7 @@ private:
     std::unique_ptr<MouseTriggerHandler> m_mouseTriggerHandler;
     std::unique_ptr<PointerTriggerHandler> m_pointerTriggerHandler;
     std::function<std::unique_ptr<TouchpadTriggerHandler>(InputDevice *device)> m_touchpadTriggerHandlerFactory;
+    std::function<std::unique_ptr<TouchscreenTriggerHandler>(InputDevice *device)> m_touchscreenTriggerHandlerFactory;
 
     std::unordered_set<uint32_t> m_emergencyCombination = {KEY_BACKSPACE, KEY_SPACE, KEY_ENTER};
 };
