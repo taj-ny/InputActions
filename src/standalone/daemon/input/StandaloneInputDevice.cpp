@@ -19,9 +19,9 @@
 #include "StandaloneInputDevice.h"
 #include <libevdev-cpp/LibevdevDevice.h>
 #include <libevdev-cpp/LibevdevUinputDevice.h>
-#include <libinputactions/input/backends/InputBackend.h>
 #include <libinput-cpp/LibinputDevice.h>
 #include <libinput-cpp/UdevDevice.h>
+#include <libinputactions/input/backends/InputBackend.h>
 
 namespace InputActions
 {
@@ -150,8 +150,7 @@ bool StandaloneInputDevice::isNeutral() const
 
 bool StandaloneInputDevice::isDeviceOwnedByThisDevice(const QString &path) const
 {
-    return (m_libinputEventInjectionDevice && path == m_libinputEventInjectionDevice->devNode())
-        || (m_outputDevice && path == m_outputDevice->devNode());
+    return (m_libinputEventInjectionDevice && path == m_libinputEventInjectionDevice->devNode()) || (m_outputDevice && path == m_outputDevice->devNode());
 }
 
 void StandaloneInputDevice::resetVirtualDeviceState()
@@ -226,7 +225,7 @@ void StandaloneInputDevice::restoreVirtualDeviceState()
             m_outputDevice->writeEvent(EV_ABS, ABS_MT_SLOT, m_libevdev->currentSlot());
             m_outputDevice->writeSynReportEvent();
             break;
-    }   
+    }
 }
 
 }

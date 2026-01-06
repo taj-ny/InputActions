@@ -18,9 +18,9 @@
 
 #pragma once
 
-#include <libinputactions/input/InputDevice.h>
-#include <libinput-cpp/LibinputPathContext.h>
 #include <QTimer>
+#include <libinput-cpp/LibinputPathContext.h>
+#include <libinputactions/input/InputDevice.h>
 
 namespace InputActions
 {
@@ -39,12 +39,12 @@ public:
     const QString &path() const { return m_path; }
 
     /**
-     * The physical device.
+     * The physical device. Nullptr if the device is not grabbed.
      */
     const std::shared_ptr<LibevdevDevice> &libevdev() { return m_libevdev; }
 
     /**
-     * Libinput context containing only this device.
+     * Libinput context containing only libinputDevice.
      */
     LibinputPathContext *libinput() { return m_libinput.get(); }
     /**
