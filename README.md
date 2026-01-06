@@ -29,6 +29,15 @@ Supported environments: GNOME, Hyprland, Plasma 6, other Wayland compositors (av
     - Stroke: 1-4 fingers
     - Swipe: 1-4 fingers
     - Tap: 1-5 fingers
+- Touchscreen:
+  - Triggers:
+    - Circle: 1-5 fingers
+    - Hold: 1-5 fingers
+    - Pinch: 2-5 fingers
+    - Rotate: 2-5 fingers
+    - Stroke: 1-5 fingers
+    - Swipe: 1-5 fingers
+    - Tap: 1-5 fingers
 - Pointer (any device capable of moving the pointer) triggers: hover
 - Conditions: can be set on individual triggers and actions and determine whether the trigger can be activated or the action can be executed. Triggers also
   support end conditions, which are checked at the end and determine whether the trigger is ended or cancelled. Complex AND, OR and NOT conditions are
@@ -118,5 +127,6 @@ Supported environments: GNOME, Hyprland, Plasma 6, other Wayland compositors (av
 
 # Credits
 - [Strokognition](https://invent.kde.org/jpetso/strokognition), [wstroke](https://github.com/dkondor/wstroke), [easystroke](https://github.com/thjaeger/easystroke) - Stroke triggers
+- [libinput](https://gitlab.freedesktop.org/libinput/libinput) - Touchscreen gesture recognition
 - [circular-scrolling-improved](https://github.com/galundin/circular-scrolling-improved) - Circle triggers
 - [KWin](https://invent.kde.org/plasma/kwin) - Gesture handling code (heavily extended and modified)

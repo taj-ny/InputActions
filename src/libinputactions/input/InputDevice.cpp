@@ -17,7 +17,9 @@
 */
 
 #include "InputDevice.h"
+#include "backends/InputBackend.h"
 #include <libinputactions/handlers/TouchpadTriggerHandler.h>
+#include <libinputactions/handlers/TouchscreenTriggerHandler.h>
 
 namespace InputActions
 {
@@ -27,9 +29,28 @@ InputDevice::InputDevice(InputDeviceType type, QString name, QString sysName)
     , m_name(std::move(name))
     , m_sysName(std::move(sysName))
 {
+    m_touchscreenTapTimer.setSingleShot(true);
+    m_touchscreenTapTimer.setTimerType(Qt::PreciseTimer);
+    connect(&m_touchscreenTapTimer, &QTimer::timeout, this, &InputDevice::onTouchscreenTapTimerTimeout);
 }
 
 InputDevice::~InputDevice() = default;
+
+void InputDevice::simulateTouchscreenTap(const std::vector<QPointF> &points)
+{
+    if (m_touchscreenTapTimer.isActive() || !validTouchPoints().empty()) {
+        return;
+    }
+
+    simulateTouchscreenTapDown(points);
+    m_touchscreenTapPoints = points;
+    m_touchscreenTapTimer.start(10);
+}
+
+void InputDevice::onTouchscreenTapTimerTimeout()
+{
+    simulateTouchscreenTapUp(m_touchscreenTapPoints);
+}
 
 Qt::KeyboardModifiers InputDevice::modifiers() const
 {
@@ -68,6 +89,11 @@ std::vector<const TouchPoint *> InputDevice::validTouchPoints() const
 void InputDevice::setTouchpadTriggerHandler(std::unique_ptr<TouchpadTriggerHandler> value)
 {
     m_touchpadTriggerHandler = std::move(value);
+}
+
+void InputDevice::setTouchscreenTriggerHandler(std::unique_ptr<TouchscreenTriggerHandler> value)
+{
+    m_touchscreenTriggerHandler = std::move(value);
 }
 
 void InputDeviceProperties::apply(const InputDeviceProperties &other)

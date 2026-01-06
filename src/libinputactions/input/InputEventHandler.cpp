@@ -29,6 +29,8 @@ bool InputEventHandler::handleEvent(const InputEvent &event)
     }
 
     switch (event.type()) {
+        case InputEventType::EvdevFrame:
+            return evdevFrame(dynamic_cast<const EvdevFrameEvent &>(event));
         case InputEventType::KeyboardKey:
             return keyboardKey(dynamic_cast<const KeyboardKeyEvent &>(event));
         case InputEventType::PointerAxis:
@@ -39,8 +41,12 @@ bool InputEventHandler::handleEvent(const InputEvent &event)
             return pointerMotion(dynamic_cast<const MotionEvent &>(event));
         case InputEventType::TouchChanged:
             return touchChanged(dynamic_cast<const TouchChangedEvent &>(event));
+        case InputEventType::TouchCancel:
+            return touchCancel(dynamic_cast<const TouchCancelEvent &>(event));
         case InputEventType::TouchDown:
             return touchDown(dynamic_cast<const TouchEvent &>(event));
+        case InputEventType::TouchFrame:
+            return touchFrame(dynamic_cast<const TouchFrameEvent &>(event));
         case InputEventType::TouchUp:
             return touchUp(dynamic_cast<const TouchEvent &>(event));
         case InputEventType::TouchpadClick:

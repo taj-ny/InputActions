@@ -21,12 +21,15 @@
 namespace InputActions
 {
 
+class EvdevFrameEvent;
 class KeyboardKeyEvent;
 class InputEvent;
 class MotionEvent;
 class PointerButtonEvent;
+class TouchCancelEvent;
 class TouchChangedEvent;
 class TouchEvent;
+class TouchFrameEvent;
 class TouchpadClickEvent;
 class TouchpadGestureLifecyclePhaseEvent;
 class TouchpadPinchEvent;
@@ -49,14 +52,18 @@ protected:
 
     virtual bool acceptsEvent(const InputEvent &event);
 
+    virtual bool evdevFrame(const EvdevFrameEvent &event) { return false; }
+
     virtual bool keyboardKey(const KeyboardKeyEvent &event) { return false; }
 
     virtual bool pointerAxis(const MotionEvent &event) { return false; }
     virtual bool pointerButton(const PointerButtonEvent &event) { return false; }
     virtual bool pointerMotion(const MotionEvent &event) { return false; }
 
+    virtual bool touchCancel(const TouchCancelEvent &event) { return false; }
     virtual bool touchChanged(const TouchChangedEvent &event) { return false; }
     virtual bool touchDown(const TouchEvent &event) { return false; }
+    virtual bool touchFrame(const TouchFrameEvent &event) { return false; }
     virtual bool touchUp(const TouchEvent &event) { return false; }
 
     virtual bool touchpadClick(const TouchpadClickEvent &event) { return false; }

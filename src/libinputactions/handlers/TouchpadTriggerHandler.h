@@ -51,17 +51,21 @@ protected:
      */
     bool pointerMotion(const MotionEvent &event) override;
 
+    bool touchDown(const TouchEvent &event) override;
+    bool touchChanged(const TouchChangedEvent &event) override;
+    bool touchUp(const TouchEvent &event) override;
+
     bool touchpadClick(const TouchpadClickEvent &event) override;
     bool touchpadGestureLifecyclePhase(const TouchpadGestureLifecyclePhaseEvent &event) override;
     bool touchpadPinch(const TouchpadPinchEvent &event) override;
     bool touchpadSwipe(const MotionEvent &event) override;
 
-    void setState(State state) override;
-
 private slots:
     void onLibinputTapTimeout();
 
 private:
+    bool canTap();
+
     std::set<uint32_t> m_blockedButtons;
     bool m_gestureBeginBlocked{};
 
@@ -72,6 +76,53 @@ private:
     PointDelta m_pointerAxisDelta;
 
     std::chrono::milliseconds m_clickTimeout{200L};
+
+    TouchPoint m_firstTouchPoint;
+
+    enum State
+    {
+        TouchpadButtonDown,
+        /**
+         * TouchpadButtonDown but the press event was blocked.
+         */
+        TouchpadButtonDownBlocked,
+
+        None,
+        Scrolling,
+
+        /**
+         * Finger(s) present but no action had been performed other than adding more fingers.
+         */
+        TouchIdle,
+        /**
+         * Finger(s) present and an action had been performed (tap or click).
+         */
+        Touch,
+
+        /**
+         * At least one finger was moved.
+         */
+        Motion,
+        /**
+         * At least one finger was moved and no triggers were recognized.
+         */
+        MotionNoTrigger,
+        /**
+         * At least one finger was moved and a trigger was recognized.
+         */
+        MotionTrigger,
+
+        /**
+         * A tap gesture had been recognized and is being handled by InputActions.
+         */
+        TapBegin,
+        /**
+         * A tap gesture had been recognized and will be handled on libinput's pointer button event.
+         */
+        LibinputTapBegin
+    } m_state
+        = State::None;
+    void setState(State state);
 
     friend class MockTouchpadTriggerHandler;
     friend class TestTouchpadTriggerHandler;

@@ -232,6 +232,18 @@ std::vector<Trigger *> TriggerHandler::triggers(TriggerTypes types, const Trigge
     return result;
 }
 
+std::vector<Trigger *> TriggerHandler::blockingTriggers(TriggerTypes types, const TriggerActivationEvent &event)
+{
+    std::vector<Trigger *> result;
+    for (auto &trigger : m_triggers) {
+        if (!(types & trigger->type()) || !trigger->canActivate(event) || !trigger->blockEvents()) {
+            continue;
+        }
+        result.push_back(trigger.get());
+    }
+    return result;
+}
+
 std::vector<Trigger *> TriggerHandler::activeTriggers(TriggerTypes types)
 {
     std::vector<Trigger *> result;
@@ -275,9 +287,7 @@ void TriggerHandler::updateTimedTriggers()
         events[type] = event;
     }
 
-    qCDebug(INPUTACTIONS_HANDLER_TRIGGER).nospace() << "Event (type: Time, delta: " << m_timedTriggerUpdateDelta << ")";
-    const auto hasTriggers = updateTriggers(events).success;
-    qCDebug(INPUTACTIONS_HANDLER_TRIGGER).nospace() << "Event processed (type: Time, hasTriggers: " << hasTriggers << ")";
+    updateTriggers(events);
 
     for (auto &[_, event] : events) {
         delete event;

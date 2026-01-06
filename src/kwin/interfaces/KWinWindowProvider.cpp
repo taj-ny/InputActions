@@ -20,6 +20,9 @@
 #include "KWinWindow.h"
 #include "effect/effecthandler.h"
 #include "workspace.h"
+#include <libinputactions/input/InputDevice.h>
+#include <libinputactions/input/backends/InputBackend.h>
+#include <window.h>
 
 namespace InputActions
 {
@@ -28,6 +31,33 @@ std::shared_ptr<Window> KWinWindowProvider::activeWindow()
 {
     if (auto *window = KWin::effects->activeWindow()) {
         return std::make_shared<KWinWindow>(window->window());
+    }
+    return {};
+}
+
+std::shared_ptr<Window> KWinWindowProvider::windowUnderFingers()
+{
+    const auto *device = g_inputBackend->currentTouchscreen();
+    if (!device) {
+        return {};
+    }
+
+    QPointF center;
+    const auto validTouchPoints = device->validTouchPoints();
+    for (const auto &touchPoint : device->validTouchPoints()) {
+        center += touchPoint->unalteredPosition / validTouchPoints.size();
+    }
+
+    if (center.isNull()) {
+        return {};
+    }
+
+    const auto windows = KWin::workspace()->stackingOrder();
+    for (auto it = windows.rbegin(); it != windows.rend(); ++it) {
+        auto *window = *it;
+        if (window->frameGeometry().contains(center)) {
+            return std::make_shared<KWinWindow>(window);
+        }
     }
     return {};
 }

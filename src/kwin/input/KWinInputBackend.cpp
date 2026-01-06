@@ -17,10 +17,14 @@
 */
 
 #include "KWinInputBackend.h"
+#include "KWinInputDevice.h"
+#include "core/output.h"
 #include "input_event.h"
 #include "interfaces/KWinInputEmitter.h"
 #include "utils.h"
+#include "workspace.h"
 #include <libinputactions/input/events.h>
+#include <libinputactions/interfaces/InputEmitter.h>
 #include <libinputactions/triggers/StrokeTrigger.h>
 
 namespace InputActions
@@ -200,6 +204,49 @@ bool KWinInputBackend::keyboardKey(KWin::KeyboardKeyEvent *event)
     return LibinputInputBackend::keyboardKey(findDevice(event->device), event->nativeScanCode, event->state == KWin::KeyboardKeyState::Pressed);
 }
 
+#ifdef KWIN_6_5_OR_GREATER
+bool KWinInputBackend::touchDown(KWin::TouchDownEvent *event)
+{
+    auto *sender = firstTouchscreen();
+    if (!sender) {
+        return false;
+    }
+
+    auto *output = KWin::workspace()->outputAt(event->pos);
+    const QPointF position((event->pos.x() - output->geometry().x()) / output->geometry().width() * sender->properties().size().width(),
+                           (event->pos.y() - output->geometry().y()) / output->geometry().height() * sender->properties().size().height());
+    return touchscreenTouchDown(firstTouchscreen(), event->id, position, event->pos);
+}
+
+bool KWinInputBackend::touchMotion(KWin::TouchMotionEvent *event)
+{
+    auto *sender = firstTouchscreen();
+    if (!sender) {
+        return false;
+    }
+
+    auto *output = KWin::workspace()->outputAt(event->pos);
+    const QPointF position((event->pos.x() - output->geometry().x()) / output->geometry().width() * sender->properties().size().width(),
+                           (event->pos.y() - output->geometry().y()) / output->geometry().height() * sender->properties().size().height());
+    return touchscreenTouchMotion(firstTouchscreen(), event->id, position, event->pos);
+}
+
+bool KWinInputBackend::touchUp(KWin::TouchUpEvent *event)
+{
+    return touchscreenTouchUp(firstTouchscreen(), event->id);
+}
+
+bool KWinInputBackend::touchCancel()
+{
+    return touchscreenTouchCancel(firstTouchscreen());
+}
+
+bool KWinInputBackend::touchFrame()
+{
+    return touchscreenTouchFrame(firstTouchscreen());
+}
+#endif
+
 void KWinInputBackend::touchpadPinchBlockingStopped(uint32_t fingers)
 {
     m_ignoreEvents = true;
@@ -250,8 +297,8 @@ void KWinInputBackend::kwinDeviceAdded(KWin::InputDevice *kwinDevice)
         return;
     }
 
-    auto device = KWinInputDevice::tryCreate(kwinDevice);
-    if (!device) {
+    auto device = KWinInputDevice::tryCreate(this, kwinDevice);
+    if (!device || deviceProperties(device.get()).ignore()) {
         return;
     }
 

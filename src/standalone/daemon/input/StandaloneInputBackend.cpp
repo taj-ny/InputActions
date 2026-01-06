@@ -29,6 +29,7 @@
 #include <libinput-cpp/LibinputGestureEvent.h>
 #include <libinput-cpp/LibinputKeyboardEvent.h>
 #include <libinput-cpp/LibinputPointerEvent.h>
+#include <libinput-cpp/LibinputTouchEvent.h>
 #include <libinput-cpp/UdevDevice.h>
 #include <linux/uinput.h>
 #include <sys/inotify.h>
@@ -193,7 +194,7 @@ void StandaloneInputBackend::deviceInitializationRetryTimerTick()
     }
 }
 
-bool StandaloneInputBackend::handleEvent(InputDevice *sender, const LibinputEvent *event)
+bool StandaloneInputBackend::handleEvent(StandaloneInputDevice *sender, const LibinputEvent *event)
 {
     const auto type = event->type();
     switch (type) {
@@ -251,7 +252,7 @@ bool StandaloneInputBackend::handleEvent(InputDevice *sender, const LibinputEven
         }
         case LIBINPUT_EVENT_POINTER_AXIS:
         case LIBINPUT_EVENT_POINTER_BUTTON:
-        case LIBINPUT_EVENT_POINTER_MOTION:
+        case LIBINPUT_EVENT_POINTER_MOTION: {
             const auto pointerEvent = event->pointerEvent();
             switch (type) {
                 case LIBINPUT_EVENT_POINTER_AXIS: {
@@ -267,11 +268,46 @@ bool StandaloneInputBackend::handleEvent(InputDevice *sender, const LibinputEven
                 case LIBINPUT_EVENT_POINTER_MOTION:
                     return pointerMotion(sender, {pointerEvent->delta(), pointerEvent->deltaUnaccelerated()});
             }
+            break;
+        }
+        case LIBINPUT_EVENT_TOUCH_CANCEL:
+            return touchscreenTouchCancel(sender);
+        case LIBINPUT_EVENT_TOUCH_FRAME:
+            return touchscreenTouchFrame(sender);
+        case LIBINPUT_EVENT_TOUCH_DOWN:
+        case LIBINPUT_EVENT_TOUCH_MOTION:
+        case LIBINPUT_EVENT_TOUCH_UP: {
+            const auto touchEvent = event->touchEvent();
+            switch (type) {
+                case LIBINPUT_EVENT_TOUCH_DOWN: {
+                    const auto slot = touchEvent->slot();
+                    QPointF unalteredPosition;
+                    if (sender->libevdev()) {
+                        unalteredPosition = QPointF(sender->libevdev()->slotValue(slot, ABS_MT_POSITION_X),
+                                                    sender->libevdev()->slotValue(slot, ABS_MT_POSITION_Y));
+                    }
+                    return touchscreenTouchDown(sender, slot, touchEvent->position(), unalteredPosition);
+                }
+                case LIBINPUT_EVENT_TOUCH_MOTION: {
+                    const auto slot = touchEvent->slot();
+                    ;
+                    QPointF unalteredPosition;
+                    if (sender->libevdev()) {
+                        unalteredPosition = QPointF(sender->libevdev()->slotValue(slot, ABS_MT_POSITION_X),
+                                                    sender->libevdev()->slotValue(slot, ABS_MT_POSITION_Y));
+                    }
+                    return touchscreenTouchMotion(sender, slot, touchEvent->position(), unalteredPosition);
+                }
+                case LIBINPUT_EVENT_TOUCH_UP:
+                    return touchscreenTouchUp(sender, touchEvent->slot());
+            }
+            break;
+        }
     }
     return false;
 }
 
-LibinputEventsProcessingResult StandaloneInputBackend::handleLibinputEvents(InputDevice *device, LibinputPathContext *libinput)
+LibinputEventsProcessingResult StandaloneInputBackend::handleLibinputEvents(StandaloneInputDevice *device, LibinputPathContext *libinput)
 {
     libinput->dispatch();
 
@@ -286,7 +322,7 @@ LibinputEventsProcessingResult StandaloneInputBackend::handleLibinputEvents(Inpu
 
 void StandaloneInputBackend::poll()
 {
-    std::vector<input_event> frame;
+    std::vector<EvdevEvent> frame;
     for (const auto &device : m_devices) {
         if (!device->properties().grab()) {
             handleLibinputEvents(device.get(), device->libinput());
@@ -304,46 +340,51 @@ void StandaloneInputBackend::poll()
                 break;
             }
 
-            frame.push_back(evdevEvent);
+            frame.emplace_back(evdevEvent.type, evdevEvent.code, evdevEvent.value);
             LibevdevComplementaryInputBackend::handleEvdevEvent(device.get(), evdevEvent);
 
             if (evdevEvent.type != EV_SYN) {
                 continue;
             }
 
+            const auto blockFrame = InputBackend::handleEvent(EvdevFrameEvent(device.get(), frame));
             for (const auto &event : frame) {
-                device->libinputEventInjectionDevice()->writeEvent(event.type, event.code, event.value);
+                device->libinputEventInjectionDevice()->writeEvent(event.type(), event.code(), event.value());
             }
-            const auto result = handleLibinputEvents(device.get(), device->libinput());
+            const auto libinputResult = handleLibinputEvents(device.get(), device->libinput());
 
-            // Copy state of the real device to the output device if events suddenly stop being blocked while the device is not in a neutral state
-            if (device->isTouchpadBlocked() && !result.block && result.eventCount) {
-                device->touchpadStateResetTimer().stop();
-                device->setTouchpadBlocked(false);
-                device->restoreVirtualDeviceState();
+            if (device->type() == InputDeviceType::Touchpad) {
+                // TouchpadTriggerHandler does currently not currently handle evdev events, so no need to check for blockFrame
+
+                // Copy state of the real device to the output device if events suddenly stop being blocked while the device is not in a neutral state
+                if (device->isTouchpadBlocked() && !libinputResult.block && libinputResult.eventCount) {
+                    device->touchpadStateResetTimer().stop();
+                    device->setTouchpadBlocked(false);
+                    device->restoreVirtualDeviceState();
+                }
+
+                // Touchpad gestures are blocked by blocking the current and all next frames until all fingers are lifted, and changing the state of the output
+                // device to neutral after 200ms. The delay is required to block tap gestures, but doesn't affect motion gesture blocking negatively.
+                if (libinputResult.block && device->type() == InputDeviceType::Touchpad && !device->isTouchpadBlocked()) {
+                    device->setTouchpadBlocked(true);
+                    device->touchpadStateResetTimer().start(200);
+                } else if (device->isTouchpadNeutral() && device->touchpadStateResetTimer().isActive()) {
+                    device->touchpadStateResetTimer().stop();
+                    device->resetVirtualDeviceState();
+                }
+
+                device->setTouchpadNeutral(false);
             }
 
-            // Touchpad gestures are blocked by blocking the current and all next frames until all fingers are lifted, and changing the state of the output
-            // device to neutral after 200ms. The delay is required to block tap gestures, but doesn't affect motion gesture blocking negatively.
-            if (result.block && device->type() == InputDeviceType::Touchpad && !device->isTouchpadBlocked()) {
-                device->setTouchpadBlocked(true);
-                device->touchpadStateResetTimer().start(200);
-            } else if (device->isTouchpadNeutral() && device->touchpadStateResetTimer().isActive()) {
-                device->touchpadStateResetTimer().stop();
-                device->resetVirtualDeviceState();
-            }
-
-            if (!result.block && !device->isTouchpadBlocked()) {
+            if (!libinputResult.block && !device->isTouchpadBlocked() && !blockFrame) {
                 for (const auto &event : frame) {
-                    device->outputDevice()->writeEvent(event.type, event.code, event.value);
+                    device->outputDevice()->writeEvent(event.type(), event.code(), event.value());
                 }
             }
             frame.clear();
-
-            device->setTouchpadNeutral(false);
         }
 
-        if (device->validTouchPoints().empty()) {
+        if (device->type() == InputDeviceType::Touchpad && device->validTouchPoints().empty()) {
             device->setTouchpadNeutral(true);
             device->setTouchpadBlocked(false);
         }

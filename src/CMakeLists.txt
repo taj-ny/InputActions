@@ -32,6 +32,7 @@ if (INPUTACTIONS_BUILD_HYPRLAND OR INPUTACTIONS_BUILD_KWIN OR INPUTACTIONS_BUILD
         libinputactions/handlers/MultiTouchMotionTriggerHandler.cpp
         libinputactions/handlers/PointerTriggerHandler.cpp
         libinputactions/handlers/TouchpadTriggerHandler.cpp
+        libinputactions/handlers/TouchscreenTriggerHandler.cpp
         libinputactions/handlers/TriggerHandler.cpp
         libinputactions/input/backends/InputBackend.cpp
         libinputactions/input/backends/LibevdevComplementaryInputBackend.cpp

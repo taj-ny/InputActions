@@ -21,6 +21,7 @@
 #include <QPointF>
 #include <QRegularExpression>
 #include <QSizeF>
+#include <QTimer>
 #include <libinputactions/globals.h>
 #include <linux/input-event-codes.h>
 #include <optional>
@@ -30,6 +31,7 @@ namespace InputActions
 {
 
 class TouchpadTriggerHandler;
+class TouchscreenTriggerHandler;
 
 static const std::map<uint32_t, Qt::KeyboardModifier> KEYBOARD_MODIFIERS{
     {KEY_LEFTALT, Qt::KeyboardModifier::AltModifier},
@@ -145,6 +147,10 @@ struct TouchPoint
      */
     bool valid{};
     TouchPointType type = TouchPointType::None;
+    /**
+     * May be unused.
+     */
+    int32_t id{};
 
     /**
      * Whether this touch point is active.
@@ -153,21 +159,65 @@ struct TouchPoint
     bool active{};
 
     // These members must not be reset if the point becomes invalid or inactive.
-    QPointF initialPosition;
+    /**
+     * Unaltered current position, as provided by the compositor/evdev. Only used for touchscreens.
+     */
+    QPointF unalteredPosition;
+    /**
+     * Unaltered current position, as provided by the compositor/evdev. Only used for touchscreens.
+     */
+    QPointF unalteredInitialPosition;
+
     QPointF position;
+    QPointF initialPosition;
     uint32_t pressure{};
     std::chrono::steady_clock::time_point downTimestamp;
 };
 
-class InputDevice
+/**
+ * Each device has two states:
+ *   - physical - actual state of the device,
+ *   - virtual - the state of the device as seen by another entity that is processing events - the compositor and its libinput instance, an external libinput
+ *    instance, evtest, etc. InputActions manipulates this state in various ways for the purposes of event filtering.
+ */
+class InputDevice : public QObject
 {
+    Q_OBJECT
+
 public:
     /**
      * @param name Full name of the device.
      * @param sysName Name of the device in /dev/input (e.g. event6).
      */
     InputDevice(InputDeviceType type, QString name = {}, QString sysName = {});
-    virtual ~InputDevice();
+    ~InputDevice() override;
+
+    /**
+     * Sets the device's virtual state into a neutral one. In the standalone implementation, the device must be grabbed, otherwise the call will be ignored.
+     *
+     * This operation is currently only used for touchscreens and touchpads (standalone only).
+     */
+    virtual void resetVirtualDeviceState() {}
+    /**
+     * Restores the device's virtual state to the physical one. In the standalone implementation, the device must be grabbed, otherwise the call will be
+     * ignored.
+     *
+     * This operation is currently only used for touchscreens and touchpads (standalone only).
+     *
+     * The touchscreen restore sequence must include the following elements:
+     *   - Touch down - at **initial positions**, not current
+     *   - Touch frame
+     *   - Touch motion - from initial positions to current positions
+     *   - Touch frame
+     * More elements may be added by the implementation if necessary.
+     */
+    virtual void restoreVirtualDeviceState() {}
+
+    /**
+     * @param points Unaltered points from events provided by the backend.
+     * @see TouchPoint::unalteredPosition
+     */
+    void simulateTouchscreenTap(const std::vector<QPointF> &points);
 
     /**
      * Current keyboard modifiers, derived from pressed keyboard keys.
@@ -198,6 +248,22 @@ public:
     TouchpadTriggerHandler *touchpadTriggerHandler() const { return m_touchpadTriggerHandler.get(); }
     void setTouchpadTriggerHandler(std::unique_ptr<TouchpadTriggerHandler> value);
 
+    TouchscreenTriggerHandler *touchscreenTriggerHandler() const { return m_touchscreenTriggerHandler.get(); }
+    void setTouchscreenTriggerHandler(std::unique_ptr<TouchscreenTriggerHandler> value);
+
+protected:
+    /**
+     * Must generate touch down events and a touch frame event for the specified points.
+     */
+    virtual void simulateTouchscreenTapDown(const std::vector<QPointF> &points) {}
+    /**
+     * Must generate touch up events and a touch frame event for the specified points.
+     */
+    virtual void simulateTouchscreenTapUp(const std::vector<QPointF> &points) {}
+
+private slots:
+    void onTouchscreenTapTimerTimeout();
+
 private:
     InputDeviceType m_type;
     QString m_name;
@@ -206,6 +272,10 @@ private:
     std::unordered_set<uint32_t> m_keys;
     std::vector<TouchPoint> m_touchPoints;
     std::unique_ptr<TouchpadTriggerHandler> m_touchpadTriggerHandler;
+
+    QTimer m_touchscreenTapTimer;
+    std::vector<QPointF> m_touchscreenTapPoints;
+    std::unique_ptr<TouchscreenTriggerHandler> m_touchscreenTriggerHandler;
 };
 
 }

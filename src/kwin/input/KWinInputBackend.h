@@ -18,13 +18,14 @@
 
 #pragma once
 
-#include "KWinInputDevice.h"
 #include "input.h"
 #include "input_event_spy.h"
 #include <libinputactions/input/backends/LibinputInputBackend.h>
 
 namespace InputActions
 {
+
+class KWinInputDevice;
 
 /**
  * Installed before GlobalShortcutFilter, which is responsible for handling touchpad gestures.
@@ -56,6 +57,12 @@ public:
     bool pinchGestureUpdate(KWin::PointerPinchGestureUpdateEvent *event) override;
     bool pinchGestureEnd(KWin::PointerPinchGestureEndEvent *event) override;
     bool pinchGestureCancelled(KWin::PointerPinchGestureCancelEvent *event) override;
+
+    bool touchDown(KWin::TouchDownEvent *event) override;
+    bool touchMotion(KWin::TouchMotionEvent *event) override;
+    bool touchUp(KWin::TouchUpEvent *event) override;
+    bool touchCancel() override;
+    bool touchFrame() override;
 #else
     bool holdGestureBegin(int fingerCount, std::chrono::microseconds time) override;
     bool holdGestureEnd(std::chrono::microseconds time) override;

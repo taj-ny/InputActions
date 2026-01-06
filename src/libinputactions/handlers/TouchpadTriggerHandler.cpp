@@ -24,6 +24,7 @@
 namespace InputActions
 {
 
+static const std::chrono::milliseconds TAP_TIMEOUT(200L);
 static const std::chrono::milliseconds LIBINPUT_TAP_TIMEOUT(300L);
 
 TouchpadTriggerHandler::TouchpadTriggerHandler(InputDevice *device)
@@ -151,6 +152,84 @@ bool TouchpadTriggerHandler::pointerMotion(const MotionEvent &event)
     return false;
 }
 
+bool TouchpadTriggerHandler::touchDown(const TouchEvent &event)
+{
+    switch (m_state) {
+        case State::LibinputTapBegin:
+            setState(State::TouchIdle);
+            break;
+        case State::None:
+            setState(State::TouchIdle);
+            m_firstTouchPoint = event.point();
+            break;
+    }
+
+    updateVariables(event.sender());
+    return false;
+}
+
+bool TouchpadTriggerHandler::touchChanged(const TouchChangedEvent &event)
+{
+    switch (m_state) {
+        case State::LibinputTapBegin:
+            return false;
+        case State::Touch:
+        case State::TouchIdle:
+            const auto diff = event.point().position - event.point().initialPosition;
+            if (std::hypot(diff.x(), diff.y()) >= 4) { // not physical units, horrible
+                setState(State::Motion);
+            }
+            break;
+    }
+
+    updateVariables(event.sender());
+    return false;
+}
+
+bool TouchpadTriggerHandler::touchUp(const TouchEvent &event)
+{
+    switch (m_state) {
+        case State::TapBegin:
+        case State::TouchIdle:
+            // 1-3 finger touchpad tap gestures are detected by listening for pointer button events, as it's more reliable. The child class should reset the
+            // state in case no pointer button events occur.
+            if (m_state == State::TouchIdle && event.sender()->type() == InputDeviceType::Touchpad
+                && g_variableManager->getVariable(BuiltinVariables::Fingers)->get() <= 3) {
+                setState(State::LibinputTapBegin);
+                break;
+            }
+
+            if (canTap()) {
+                if (m_state == State::TouchIdle) {
+                    setState(activateTriggers(TriggerType::Tap).success ? State::TapBegin : State::Touch);
+                }
+                if (m_state == State::TapBegin && event.sender()->validTouchPoints().empty()) {
+                    updateTriggers(TriggerType::Tap);
+                    endTriggers(TriggerType::Tap);
+                    setState(State::None);
+                }
+                break;
+            }
+            if (m_state == State::TapBegin) {
+                cancelTriggers(TriggerType::Tap);
+            }
+            setState(State::Touch);
+            break;
+    }
+
+    if (m_state == State::LibinputTapBegin) {
+        return false;
+    }
+
+    updateVariables(event.sender());
+    if (event.sender()->validTouchPoints().empty()) {
+        setState(State::None);
+        endTriggers(TriggerType::All);
+    }
+
+    return false;
+}
+
 bool TouchpadTriggerHandler::touchpadClick(const TouchpadClickEvent &event)
 {
     if (event.state()) {
@@ -216,6 +295,12 @@ bool TouchpadTriggerHandler::touchpadSwipe(const MotionEvent &event)
     return handleMotion(event.sender(), event.delta());
 }
 
+bool TouchpadTriggerHandler::canTap()
+{
+    return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - m_firstTouchPoint.downTimestamp).count()
+        <= TAP_TIMEOUT.count();
+}
+
 void TouchpadTriggerHandler::setState(State state)
 {
     switch (m_state) {
@@ -227,8 +312,12 @@ void TouchpadTriggerHandler::setState(State state)
         case State::LibinputTapBegin:
             m_libinputTapTimeoutTimer.start(LIBINPUT_TAP_TIMEOUT);
             break;
+        case State::None:
+            updateVariables();
+            break;
     }
-    MultiTouchMotionTriggerHandler::setState(state);
+
+    m_state = state;
 }
 
 void TouchpadTriggerHandler::onLibinputTapTimeout()
