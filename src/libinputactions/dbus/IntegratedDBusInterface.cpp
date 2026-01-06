@@ -43,8 +43,8 @@ IntegratedDBusInterface::~IntegratedDBusInterface()
 
 void IntegratedDBusInterface::recordStroke(const QDBusMessage &message)
 {
-    g_onScreenMessageManager->showMessage(PROJECT_NAME " is recording input. Perform a stroke gesture by moving your mouse or performing a touchpad "
-                                                       "swipe. Recording will end after 250 ms of inactivity.");
+    g_onScreenMessageManager->showMessage(PROJECT_NAME " is recording input. Perform a stroke gesture by moving the mouse or any amount of fingers in the one "
+                                                       "direction on a touchpad or a touchscreen. Recording will end after 250 ms of inactivity.");
 
     message.setDelayedReply(true);
     m_reply = message.createReply();

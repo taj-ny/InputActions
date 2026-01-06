@@ -31,10 +31,10 @@
 1. If using a mouse, place the window so that the record button
 is located where you would like to start the stroke
 2. Press record
-3. Perform the stroke using a mouse or touchpad
+3. Perform the stroke using a mouse, touchpad or a touchscreen
 4. If using a mouse, wait a short amount of time after stopping
 movement
-5. Copy the output below and assign it to the stroke property
+5. Copy the output below and assign it to the strokes property
 of a gesture (it is a list)</string>
          </property>
         </widget>
