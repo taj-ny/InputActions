@@ -69,7 +69,7 @@ void HyprlandInputEmitter::keyboardClearModifiers()
     g_inputBackend->setIgnoreEvents(false);
 }
 
-void HyprlandInputEmitter::keyboardKey(uint32_t key, bool state, const InputDevice *device)
+void HyprlandInputEmitter::keyboardKey(uint32_t key, bool state, InputDevice *device)
 {
     g_inputBackend->setIgnoreEvents(true);
     if (const auto modifier = g_pKeybindManager->keycodeToModifier(key + 8)) {
@@ -107,7 +107,7 @@ void HyprlandInputEmitter::keyboardText(const QString &text)
     }
 }
 
-void HyprlandInputEmitter::mouseButton(uint32_t button, bool state, const InputDevice *device)
+void HyprlandInputEmitter::mouseButton(uint32_t button, bool state, InputDevice *device)
 {
     g_inputBackend->setIgnoreEvents(true);
     g_pInputManager->onMouseButton(IPointer::SButtonEvent{

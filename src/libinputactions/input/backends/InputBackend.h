@@ -38,8 +38,10 @@ class TouchpadTriggerHandler;
 /**
  * Collects input events and forwards them to event handlers. Handlers can only be set before initialization.
  *
- * Primary backends are responsible for managing (adding and removing) devices. Complementary backends are only allowed to set properties when a device is
- * being added.
+ * Primary backends are responsible for managing (adding and removing) devices. When a device is added, the primary backend must call InputBackend::addDevice
+ * and optionally, complementary backends' addDevice methods before that if available. When a device is removed, the primary backend must call deviceRemoved.
+ *
+ * Complementary backends are only allowed to set properties in their addDevice methods.
  *
  * On keyboard key events, the backend must call InputDevice::setKeyState before InputBackend::handleEvent.
  *
@@ -110,11 +112,8 @@ public:
     void setEmergencyCombination(std::unordered_set<uint32_t> value) { m_emergencyCombination = value; }
 
 protected:
-    /**
-     * Backends should add device properties in this method.
-     */
-    virtual void deviceAdded(InputDevice *device);
-    virtual void deviceRemoved(const InputDevice *device);
+    void addDevice(InputDevice *device);
+    virtual void removeDevice(const InputDevice *device);
     void createEventHandlerChain();
 
     /**

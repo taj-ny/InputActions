@@ -45,14 +45,22 @@ public:
     void setEnabled(bool value);
 
 protected:
-    void deviceAdded(InputDevice *device) override;
-    void addDevice(InputDevice *device, std::shared_ptr<LibevdevDevice> libevdevDevice, bool owner);
-
-    void deviceRemoved(const InputDevice *device) override;
+    /**
+     * Adds a device whose libevdev instance is not managed by a primary input backend. This backend will poll the device.
+     */
+    void addDevice(InputDevice *device);
+    /**
+     * Adds a device whose libevdev instance is managed by a primary input backend. This backend will not poll the device, the primary backend must call
+     * handleEvdevEvent.
+     */
+    void addDevice(InputDevice *device, std::shared_ptr<LibevdevDevice> libevdevDevice);
+    void removeDevice(const InputDevice *device) override;
 
     void handleEvdevEvent(InputDevice *sender, const input_event &event);
 
 private:
+    void addDevice(InputDevice *device, std::shared_ptr<LibevdevDevice> libevdevDevice, bool owner);
+
     bool m_enabled = true;
 
     struct ExtraDeviceData

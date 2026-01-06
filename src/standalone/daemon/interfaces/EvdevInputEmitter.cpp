@@ -18,6 +18,7 @@
 
 #include "EvdevInputEmitter.h"
 #include "input/StandaloneInputBackend.h"
+#include "input/StandaloneInputDevice.h"
 #include <libevdev-cpp/LibevdevDevice.h>
 #include <libevdev-cpp/LibevdevUinputDevice.h>
 
@@ -74,11 +75,13 @@ void EvdevInputEmitter::keyboardClearModifiers()
     }
 }
 
-void EvdevInputEmitter::keyboardKey(uint32_t key, bool state, const InputDevice *target)
+void EvdevInputEmitter::keyboardKey(uint32_t key, bool state, InputDevice *target)
 {
-    if (auto *libevdevTarget = dynamic_cast<StandaloneInputBackend *>(g_inputBackend.get())->outputDevice(target)) {
-        libevdevTarget->writeEvent(EV_KEY, key, state);
-        libevdevTarget->writeSynReportEvent();
+    if (target) {
+        if (auto *output = dynamic_cast<StandaloneInputDevice *>(target)->outputDevice()) {
+            output->writeEvent(EV_KEY, key, state);
+            output->writeSynReportEvent();
+        }
     } else if (m_keyboard) {
         m_keyboard->writeEvent(EV_KEY, key, state);
         m_keyboard->writeSynReportEvent();
@@ -108,11 +111,13 @@ void EvdevInputEmitter::mouseAxis(const QPointF &delta)
     }
 }
 
-void EvdevInputEmitter::mouseButton(uint32_t button, bool state, const InputDevice *target)
+void EvdevInputEmitter::mouseButton(uint32_t button, bool state, InputDevice *target)
 {
-    if (auto *libevdevTarget = dynamic_cast<StandaloneInputBackend *>(g_inputBackend.get())->outputDevice(target)) {
-        libevdevTarget->writeEvent(EV_KEY, button, state);
-        libevdevTarget->writeSynReportEvent();
+    if (target) {
+        if (auto *output = dynamic_cast<StandaloneInputDevice *>(target)->outputDevice()) {
+            output->writeEvent(EV_KEY, button, state);
+            output->writeSynReportEvent();
+        }
     } else if (m_mouse) {
         m_mouse->writeEvent(EV_KEY, button, state);
         m_mouse->writeSynReportEvent();

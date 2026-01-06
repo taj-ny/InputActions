@@ -19,7 +19,6 @@
 #include "LibevdevComplementaryInputBackend.h"
 #include <QDir>
 #include <QObject>
-#include <experimental/scope>
 #include <fcntl.h>
 #include <libevdev-cpp/LibevdevDevice.h>
 #include <libevdev/libevdev.h>
@@ -27,6 +26,43 @@
 
 namespace InputActions
 {
+
+void LibevdevComplementaryInputBackend::addDevice(InputDevice *device)
+{
+    if (!m_enabled || device->type() != InputDeviceType::Touchpad) {
+        return;
+    }
+
+    std::shared_ptr<LibevdevDevice> libevdevDevice;
+    if (!device->sysName().isEmpty()) {
+        libevdevDevice = LibevdevDevice::createFromPath("/dev/input/" + device->sysName());
+    } else {
+        // If sysName is not available, go through all devices and find one with the same name
+        for (const auto &entry : QDir("/dev/input").entryInfoList(QDir::Files | QDir::NoSymLinks | QDir::System)) {
+            auto candidate = LibevdevDevice::createFromPath(entry.filePath());
+            if (!candidate || candidate->name() != device->name()) {
+                continue;
+            }
+
+            libevdevDevice = std::move(candidate);
+            break;
+        }
+    }
+    if (!libevdevDevice) {
+        return;
+    }
+
+    addDevice(device, std::move(libevdevDevice), true);
+}
+
+void LibevdevComplementaryInputBackend::addDevice(InputDevice *device, std::shared_ptr<LibevdevDevice> libevdevDevice)
+{
+    if (!m_enabled || device->type() != InputDeviceType::Touchpad) {
+        return;
+    }
+
+    addDevice(device, std::move(libevdevDevice), false);
+}
 
 void LibevdevComplementaryInputBackend::addDevice(InputDevice *device, std::shared_ptr<LibevdevDevice> libevdevDevice, bool owner)
 {
@@ -73,42 +109,10 @@ void LibevdevComplementaryInputBackend::addDevice(InputDevice *device, std::shar
     m_devices[device] = std::move(data);
 }
 
-void LibevdevComplementaryInputBackend::deviceAdded(InputDevice *device)
+void LibevdevComplementaryInputBackend::removeDevice(const InputDevice *device)
 {
-    std::experimental::scope_exit guard([this, device]() {
-        InputBackend::deviceAdded(device);
-    });
-
-    if (!m_enabled || device->type() != InputDeviceType::Touchpad) {
-        return;
-    }
-
-    std::shared_ptr<LibevdevDevice> libevdevDevice;
-    if (false) {
-        libevdevDevice = LibevdevDevice::createFromPath("/dev/input/" + device->sysName());
-    } else {
-        // If sysName is not available, go through all devices and find one with the same name
-        for (const auto &entry : QDir("/dev/input").entryInfoList(QDir::Files | QDir::NoSymLinks | QDir::System)) {
-            auto candidate = LibevdevDevice::createFromPath(entry.filePath());
-            if (!candidate || candidate->name() != device->name()) {
-                continue;
-            }
-
-            libevdevDevice = std::move(candidate);
-            break;
-        }
-    }
-    if (!libevdevDevice) {
-        return;
-    }
-
-    addDevice(device, std::move(libevdevDevice), true);
-}
-
-void LibevdevComplementaryInputBackend::deviceRemoved(const InputDevice *device)
-{
-    InputBackend::deviceRemoved(device);
     m_devices.erase(const_cast<InputDevice *>(device));
+    InputBackend::removeDevice(device);
 }
 
 void LibevdevComplementaryInputBackend::handleEvdevEvent(InputDevice *sender, const input_event &event)

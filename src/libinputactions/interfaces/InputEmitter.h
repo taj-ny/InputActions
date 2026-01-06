@@ -47,7 +47,7 @@ public:
      * @param key See <linux/input-event-codes.h>. If the key is not in m_keyboardRequiredKeys, the call may fail.
      * @param state True - press, false - release
      */
-    virtual void keyboardKey(uint32_t key, bool state, const InputDevice *target = nullptr) {}
+    virtual void keyboardKey(uint32_t key, bool state, InputDevice *target = nullptr) {}
     virtual void keyboardText(const QString &text) {}
 
     /**
@@ -58,7 +58,7 @@ public:
      * @param button <linux/input-event-codes.h>
      * @param state True - press, false - release
      */
-    virtual void mouseButton(uint32_t button, bool state, const InputDevice *target = nullptr) {}
+    virtual void mouseButton(uint32_t button, bool state, InputDevice *target = nullptr) {}
     virtual void mouseMoveRelative(const QPointF &pos) {}
 
 protected:

@@ -38,10 +38,10 @@ public:
     void reset() override;
 
     void keyboardClearModifiers() override;
-    void keyboardKey(uint32_t key, bool state, const InputDevice *target = nullptr) override;
+    void keyboardKey(uint32_t key, bool state, InputDevice *target = nullptr) override;
 
     void mouseAxis(const QPointF &delta) override;
-    void mouseButton(uint32_t button, bool state, const InputDevice *target = nullptr) override;
+    void mouseButton(uint32_t button, bool state, InputDevice *target = nullptr) override;
     void mouseMoveRelative(const QPointF &pos) override;
 
     /**
