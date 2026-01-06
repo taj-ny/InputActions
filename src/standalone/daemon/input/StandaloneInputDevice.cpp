@@ -98,7 +98,6 @@ bool StandaloneInputDevice::finalize(const QString &name, const InputDevicePrope
         m_libinputEventInjectionDevice->removeNonBlockFlag();
 
         m_libinput->removeDevice(m_libinputDevice);
-        m_libinput->setGrab(true);
         tryInitializeLibinputEventInjectionDevice();
         // If libinputDevice is nullptr, initialization will be reattempted later.
 
@@ -116,7 +115,7 @@ bool StandaloneInputDevice::finalize(const QString &name, const InputDevicePrope
 
 uint32_t StandaloneInputDevice::tryInitializeLibinputEventInjectionDevice()
 {
-    m_libinputDevice = m_libinput->addDevice(m_libinputEventInjectionDevice->devNode());
+    m_libinputDevice = m_libinput->addDevice(m_libinputEventInjectionDevice->devNode(), true);
     if (m_libinputDevice) {
         finishLibinputDeviceInitialization();
         return 0;
