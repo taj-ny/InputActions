@@ -113,7 +113,7 @@ void InputBackend::reset()
     m_eventHandlerChain.clear();
 }
 
-void InputBackend::deviceAdded(InputDevice *device)
+void InputBackend::addDevice(InputDevice *device)
 {
     qCDebug(INPUTACTIONS).noquote().nospace() << "Device added (name: " << device->name() << ")";
     applyDeviceProperties(device, device->properties());
@@ -126,7 +126,7 @@ void InputBackend::deviceAdded(InputDevice *device)
     createEventHandlerChain();
 }
 
-void InputBackend::deviceRemoved(const InputDevice *device)
+void InputBackend::removeDevice(const InputDevice *device)
 {
     qCDebug(INPUTACTIONS).noquote().nospace() << "Device removed (name: " << device->name() << ")";
     std::erase(m_devices, device);

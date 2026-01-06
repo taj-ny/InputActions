@@ -260,7 +260,7 @@ bool MouseTriggerHandler::shouldBlockMouseButton(Qt::MouseButton button)
     return false;
 }
 
-void MouseTriggerHandler::pressBlockedMouseButtons(const InputDevice *target)
+void MouseTriggerHandler::pressBlockedMouseButtons(InputDevice *target)
 {
     for (const auto &button : m_blockedMouseButtons) {
         g_inputEmitter->mouseButton(button, true, target);

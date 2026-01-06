@@ -57,7 +57,7 @@ void KWinInputBackend::reset()
 {
     disconnect(m_input, nullptr, this, nullptr);
     for (auto &device : m_devices) {
-        deviceRemoved(device.get());
+        removeDevice(device.get());
     }
     m_devices.clear();
     LibinputInputBackend::reset();
@@ -255,7 +255,8 @@ void KWinInputBackend::kwinDeviceAdded(KWin::InputDevice *kwinDevice)
         return;
     }
 
-    deviceAdded(device.get());
+    LibevdevComplementaryInputBackend::addDevice(device.get());
+    InputBackend::addDevice(device.get());
     m_devices.push_back(std::move(device));
 }
 
@@ -264,7 +265,7 @@ void KWinInputBackend::kwinDeviceRemoved(const KWin::InputDevice *kwinDevice)
     for (auto it = m_devices.begin(); it != m_devices.end(); it++) {
         const auto *device = it->get();
         if (device->kwinDevice() == kwinDevice) {
-            deviceRemoved(device);
+            removeDevice(device);
             m_devices.erase(it);
             return;
         }

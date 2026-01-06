@@ -17,6 +17,7 @@
 */
 
 #include "StandaloneInputBackend.h"
+#include "StandaloneInputDevice.h"
 #include "interfaces/EvdevInputEmitter.h"
 #include <QDir>
 #include <QSocketNotifier>
@@ -74,11 +75,12 @@ void StandaloneInputBackend::initialize()
 
 void StandaloneInputBackend::reset()
 {
-    for (const auto &[device, data] : m_devices) {
+    for (const auto &device : m_devices) {
         if (device->properties().grab()) {
-            resetDevice(device.get(), data.get());
+            // The compositor will take long enough to detect device removal that it will start generating key repeat events, reset the device to prevent that
+            device->resetVirtualDeviceState();
         }
-        deviceRemoved(device.get());
+        removeDevice(device.get());
     }
     m_devices.clear();
     m_inotifyNotifier->setEnabled(false);
@@ -100,114 +102,45 @@ void StandaloneInputBackend::evdevDeviceAdded(const QString &path)
 bool StandaloneInputBackend::tryAddEvdevDevice(const QString &path)
 {
     const auto *emitter = std::dynamic_pointer_cast<EvdevInputEmitter>(g_inputEmitter).get();
-    for (const auto &[device, data] : m_devices) {
-        if (path == emitter->keyboardPath() || path == emitter->mousePath()
-            || (data->libinputEventInjectionDevice && path == data->libinputEventInjectionDevice->devNode())
-            || (data->outputDevice && path == data->outputDevice->devNode())) {
+    for (const auto &device : m_devices) {
+        if (path == emitter->keyboardPath() || path == emitter->mousePath() || device->isDeviceOwnedByThisDevice(path)) {
             return true;
         }
     }
 
-    auto data = std::make_unique<ExtraDeviceData>();
-    data->path = path;
-    data->libinputDevice = data->libinput.addDevice(path);
-    if (!data->libinputDevice) {
-        // May fail if opened before the udev rule sets ACLs, initialization will be attempted again later.
-        return errno == ENOENT;
+    bool retry{};
+    auto device = StandaloneInputDevice::tryCreate(path, retry);
+    if (!device) {
+        return retry;
     }
 
-    const auto name = data->libinputDevice->name();
-    const auto sysName = data->libinputDevice->sysName();
-    InputDeviceType deviceType{};
-    const auto udevDevice = data->libinputDevice->udevDevice();
-    if (udevDevice->propertyValue("ID_INPUT_MOUSE")) {
-        deviceType = InputDeviceType::Mouse;
-    } else if (udevDevice->propertyValue("ID_INPUT_KEYBOARD")) {
-        deviceType = InputDeviceType::Keyboard;
-    } else if (udevDevice->propertyValue("ID_INPUT_TOUCHPAD")) {
-        deviceType = InputDeviceType::Touchpad;
-    } else {
-        return true;
-    }
-    auto device = std::make_unique<InputDevice>(deviceType, name, sysName);
-    const auto properties = deviceProperties(device.get());
-
-    if (properties.ignore()) {
-        return true;
-    }
-
-    if (properties.grab()) {
-        data->libevdev = LibevdevDevice::createFromPath(path);
-        if (!data->libevdev) {
-            return false;
-        }
-
-        if (!isDeviceNeutral(device.get(), data.get())) {
-            qWarning(INPUTACTIONS).noquote().nospace()
-                << QString("Failed to initialize device '%1': device is not in a neutral state and cannot be grabbed").arg(device->name());
-            return false;
-        }
-        data->libevdev->grab();
-        connect(data->libevdev.get(), &LibevdevDevice::eventsAvailable, this, &StandaloneInputBackend::poll);
-
-        data->libinputEventInjectionDevice = LibevdevUinputDevice::createManaged(data->libevdev.get(), name + " (InputActions internal)");
-        if (!data->libinputEventInjectionDevice) {
-            return false;
-        }
-
-        data->libinputEventInjectionDevice->removeNonBlockFlag();
-        data->libinput.removeDevice(data->libinputDevice);
-        data->libinput.setGrab(true);
-        data->libinputDevice = data->libinput.addDevice(data->libinputEventInjectionDevice->devNode());
-        // If libinputDevice is nullptr, initialization will be reattempted later.
-
-        data->outputDevice = LibevdevUinputDevice::createManaged(data->libevdev.get(), name + " (InputActions output)");
-        if (!data->outputDevice) {
-            return false;
-        }
-
-        if (deviceType == InputDeviceType::Touchpad) {
-            LibevdevComplementaryInputBackend::addDevice(device.get(), data->libevdev, false);
-
-            connect(&data->touchpadStateResetTimer, &QTimer::timeout, this, [this, device = device.get(), data = data.get()]() {
-                resetDevice(device, data);
-            });
-        }
-    } else {
-        LibevdevComplementaryInputBackend::deviceAdded(device.get());
-    }
-
-    if (data->libinputDevice) {
-        finishLibinputDeviceInitialization(device.get(), data.get());
-    }
-
-    connect(&data->libinput, &LibinputPathContext::eventsAvailable, this, &StandaloneInputBackend::poll);
-
-    InputBackend::deviceAdded(device.get());
-    m_devices.emplace_back(std::move(device), std::move(data));
-    return true;
-}
-
-void StandaloneInputBackend::finishLibinputDeviceInitialization(InputDevice *device, ExtraDeviceData *data)
-{
     if (device->type() == InputDeviceType::Touchpad) {
-        data->libinputDevice->configTapSetEnabled(true);
+        connect(&device->touchpadStateResetTimer(), &QTimer::timeout, this, [device = device.get()]() {
+            device->resetVirtualDeviceState();
+        });
     }
 
-    data->libinput.dispatch();
-    // Drain events
-    while (const auto libinputEvent = data->libinput.getEvent()) {
+    if (auto *libevdev = device->libevdev().get()) {
+        LibevdevComplementaryInputBackend::addDevice(device.get(), device->libevdev());
+        connect(libevdev, &LibevdevDevice::eventsAvailable, this, &StandaloneInputBackend::poll);
+    } else {
+        LibevdevComplementaryInputBackend::addDevice(device.get());
     }
+    connect(device->libinput(), &LibinputPathContext::eventsAvailable, this, &StandaloneInputBackend::poll);
+
+    InputBackend::addDevice(device.get());
+    m_devices.push_back(std::move(device));
+    return true;
 }
 
 void StandaloneInputBackend::evdevDeviceRemoved(const QString &path)
 {
-    for (auto it = m_devices.begin(); it != m_devices.end(); ++it) {
-        if (it->second->path == path) {
-            deviceRemoved(it->first.get());
-            m_devices.erase(it);
-            break;
-        }
+    auto it = std::ranges::find_if(m_devices, [&path](const auto &device) {
+        return device->path() == path;
+    });
+    if (it != m_devices.end()) {
+        removeDevice(it->get());
+        m_devices.erase(it);
     }
 }
 
@@ -249,19 +182,11 @@ void StandaloneInputBackend::deviceInitializationRetryTimerTick()
     }
 
     for (auto it = m_devices.begin(); it != m_devices.end();) {
-        const auto &device = it->first;
-        const auto &data = it->second;
+        const auto &device = it->get();
 
-        if (!data->libinputDevice) {
-            data->libinputDevice = data->libinput.addDevice(data->libinputEventInjectionDevice->devNode());
-            if (data->libinputDevice) {
-                finishLibinputDeviceInitialization(device.get(), data.get());
-            } else {
-                if (++data->initializationAttempts == MAX_INITIALIZATION_ATTEMPTS) {
-                    it = m_devices.erase(it);
-                    continue;
-                }
-            }
+        if (!device->isLibinputEventInjectionDeviceInitialized() && device->tryInitializeLibinputEventInjectionDevice() == MAX_INITIALIZATION_ATTEMPTS) {
+            it = m_devices.erase(it);
+            continue;
         }
 
         ++it;
@@ -346,113 +271,25 @@ bool StandaloneInputBackend::handleEvent(InputDevice *sender, const LibinputEven
     return false;
 }
 
-LibinputEventsProcessingResult StandaloneInputBackend::handleLibinputEvents(InputDevice *device, LibinputPathContext &libinput)
+LibinputEventsProcessingResult StandaloneInputBackend::handleLibinputEvents(InputDevice *device, LibinputPathContext *libinput)
 {
-    libinput.dispatch();
+    libinput->dispatch();
 
     // FIXME: One evdev frame can result in multiple libinput events, but one blocked libinput event will block the entire evdev frame.
     LibinputEventsProcessingResult result;
-    while (const auto event = libinput.getEvent()) {
+    while (const auto event = libinput->getEvent()) {
         result.block = handleEvent(device, event.get()) || result.block;
         result.eventCount++;
     }
     return result;
 }
 
-bool StandaloneInputBackend::isDeviceNeutral(const InputDevice *device, const ExtraDeviceData *data)
-{
-    switch (device->type()) {
-        case InputDeviceType::Keyboard:
-        case InputDeviceType::Mouse:
-            for (int code = 0; code < KEY_MAX; code++) {
-                if (data->libevdev->hasEventCode(EV_KEY, code) && data->libevdev->eventValue(EV_KEY, code)) {
-                    return false;
-                }
-            }
-            break;
-        case InputDeviceType::Touchpad:
-            return !data->libevdev->hasEventCode(EV_KEY, BTN_TOUCH) || !data->libevdev->eventValue(EV_KEY, BTN_TOUCH);
-    }
-    return true;
-}
-
-void StandaloneInputBackend::resetDevice(const InputDevice *device, const ExtraDeviceData *data)
-{
-    switch (device->type()) {
-        case InputDeviceType::Keyboard:
-        case InputDeviceType::Mouse: {
-            bool syn{};
-            for (int code = 0; code < KEY_MAX; code++) {
-                if (data->libevdev->hasEventCode(EV_KEY, code) && data->libevdev->eventValue(EV_KEY, code)) {
-                    syn = true;
-                    data->outputDevice->writeEvent(EV_KEY, code, 0);
-                }
-            }
-
-            if (syn) {
-                data->outputDevice->writeSynReportEvent();
-            }
-            break;
-        }
-        case InputDeviceType::Touchpad:
-            // Reverse order so that ABS_MT_SLOT is equal to 0 after
-            for (int i = device->touchPoints().size() - 1; i >= 0; i--) {
-                data->outputDevice->writeEvent(EV_ABS, ABS_MT_SLOT, i);
-                data->outputDevice->writeEvent(EV_ABS, ABS_MT_TRACKING_ID, -1);
-            }
-
-            data->outputDevice->writeEvent(EV_KEY, BTN_TOOL_QUINTTAP, 0);
-            data->outputDevice->writeEvent(EV_KEY, BTN_TOOL_QUADTAP, 0);
-            data->outputDevice->writeEvent(EV_KEY, BTN_TOOL_TRIPLETAP, 0);
-            data->outputDevice->writeEvent(EV_KEY, BTN_TOUCH, 0);
-            data->outputDevice->writeEvent(EV_KEY, BTN_TOOL_DOUBLETAP, 0);
-            data->outputDevice->writeEvent(EV_KEY, BTN_TOOL_FINGER, 0);
-            data->outputDevice->writeEvent(EV_ABS, ABS_PRESSURE, 0);
-            data->outputDevice->writeSynReportEvent();
-            break;
-    }
-}
-
-void StandaloneInputBackend::copyTouchpadState(const ExtraDeviceData *data) const
-{
-    for (int code = 0; code < KEY_MAX; code++) {
-        if (!data->libevdev->hasEventCode(EV_KEY, code)) {
-            continue;
-        }
-
-        data->outputDevice->writeEvent(EV_KEY, code, data->libevdev->eventValue(EV_KEY, code));
-    }
-
-    for (int code = 0; code < ABS_MAX; code++) {
-        if ((code >= ABS_MT_SLOT && code <= ABS_MT_TOOL_Y) || !data->libevdev->hasEventCode(EV_ABS, code)) {
-            continue;
-        }
-
-        data->outputDevice->writeEvent(EV_ABS, code, data->libevdev->absInfo(code)->value);
-    }
-
-    for (int slot = 0; slot < data->libevdev->slotCount(); slot++) {
-        data->outputDevice->writeEvent(EV_ABS, ABS_MT_SLOT, slot);
-
-        for (int code = ABS_MT_SLOT; code <= ABS_MT_TOOL_Y; code++) {
-            if (code == ABS_MT_SLOT || !data->libevdev->hasEventCode(EV_ABS, code)) {
-                continue;
-            }
-
-            data->outputDevice->writeEvent(EV_ABS, code, data->libevdev->slotValue(slot, code));
-        }
-    }
-
-    data->outputDevice->writeEvent(EV_ABS, ABS_MT_SLOT, data->libevdev->currentSlot());
-    data->outputDevice->writeSynReportEvent();
-}
-
 void StandaloneInputBackend::poll()
 {
     std::vector<input_event> frame;
-    for (auto &[device, data] : m_devices) {
+    for (const auto &device : m_devices) {
         if (!device->properties().grab()) {
-            handleLibinputEvents(device.get(), data->libinput);
+            handleLibinputEvents(device.get(), device->libinput());
             continue;
         }
 
@@ -460,10 +297,10 @@ void StandaloneInputBackend::poll()
         while (true) {
             input_event evdevEvent{};
             auto flags = status == LIBEVDEV_READ_STATUS_SYNC ? LIBEVDEV_READ_FLAG_SYNC : LIBEVDEV_READ_FLAG_NORMAL;
-            status = data->libevdev->nextEvent(flags, evdevEvent);
+            status = device->libevdev()->nextEvent(flags, evdevEvent);
             if (status != LIBEVDEV_READ_STATUS_SUCCESS && status != LIBEVDEV_READ_STATUS_SYNC) {
                 // Handle events generated after a delay, e.g. pointer button after tapping
-                handleLibinputEvents(device.get(), data->libinput);
+                handleLibinputEvents(device.get(), device->libinput());
                 break;
             }
 
@@ -475,55 +312,42 @@ void StandaloneInputBackend::poll()
             }
 
             for (const auto &event : frame) {
-                data->libinputEventInjectionDevice->writeEvent(event.type, event.code, event.value);
+                device->libinputEventInjectionDevice()->writeEvent(event.type, event.code, event.value);
             }
-            const auto result = handleLibinputEvents(device.get(), data->libinput);
+            const auto result = handleLibinputEvents(device.get(), device->libinput());
 
             // Copy state of the real device to the output device if events suddenly stop being blocked while the device is not in a neutral state
-            if (data->touchpadBlocked && !result.block && result.eventCount) {
-                data->touchpadStateResetTimer.stop();
-                data->touchpadBlocked = false;
-                copyTouchpadState(data.get());
+            if (device->isTouchpadBlocked() && !result.block && result.eventCount) {
+                device->touchpadStateResetTimer().stop();
+                device->setTouchpadBlocked(false);
+                device->restoreVirtualDeviceState();
             }
 
             // Touchpad gestures are blocked by blocking the current and all next frames until all fingers are lifted, and changing the state of the output
             // device to neutral after 200ms. The delay is required to block tap gestures, but doesn't affect motion gesture blocking negatively.
-            if (result.block && device->type() == InputDeviceType::Touchpad && !data->touchpadBlocked) {
-                data->touchpadBlocked = true;
-                data->touchpadStateResetTimer.start(200);
-            } else if (data->touchpadNeutral && data->touchpadStateResetTimer.isActive()) {
-                data->touchpadStateResetTimer.stop();
-                resetDevice(device.get(), data.get());
+            if (result.block && device->type() == InputDeviceType::Touchpad && !device->isTouchpadBlocked()) {
+                device->setTouchpadBlocked(true);
+                device->touchpadStateResetTimer().start(200);
+            } else if (device->isTouchpadNeutral() && device->touchpadStateResetTimer().isActive()) {
+                device->touchpadStateResetTimer().stop();
+                device->resetVirtualDeviceState();
             }
 
-            if (!result.block && !data->touchpadBlocked) {
+            if (!result.block && !device->isTouchpadBlocked()) {
                 for (const auto &event : frame) {
-                    data->outputDevice->writeEvent(event.type, event.code, event.value);
+                    device->outputDevice()->writeEvent(event.type, event.code, event.value);
                 }
             }
             frame.clear();
 
-            data->touchpadNeutral = false;
+            device->setTouchpadNeutral(false);
         }
 
         if (device->validTouchPoints().empty()) {
-            data->touchpadNeutral = true;
-            data->touchpadBlocked = false;
+            device->setTouchpadNeutral(true);
+            device->setTouchpadBlocked(false);
         }
     }
 }
-
-LibevdevUinputDevice *StandaloneInputBackend::outputDevice(const InputDevice *device) const
-{
-    for (const auto &[libinputactionsDevice, data] : m_devices) {
-        if (libinputactionsDevice.get() == device) {
-            return data->outputDevice.get();
-        }
-    }
-    return nullptr;
-}
-
-StandaloneInputBackend::ExtraDeviceData::ExtraDeviceData() = default;
-StandaloneInputBackend::ExtraDeviceData::~ExtraDeviceData() = default;
 
 }

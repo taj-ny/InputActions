@@ -3,6 +3,7 @@ pkg_search_module(LIBUDEV REQUIRED libudev)
 
 add_executable(inputactionsd
     input/StandaloneInputBackend.cpp
+    input/StandaloneInputDevice.cpp
     interfaces/EvdevInputEmitter.cpp
     interfaces/IPCEnvironmentInterfaces.cpp
     interfaces/IPCNotificationManager.cpp

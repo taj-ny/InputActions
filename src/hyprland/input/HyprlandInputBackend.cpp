@@ -172,7 +172,8 @@ void HyprlandInputBackend::checkDeviceChanges()
             newDevice.libinputactionsDevice->properties().setLmrTapButtonMap(true);
         }
 
-        deviceAdded(newDevice.libinputactionsDevice.get());
+        LibevdevComplementaryInputBackend::addDevice(newDevice.libinputactionsDevice.get());
+        InputBackend::addDevice(newDevice.libinputactionsDevice.get());
         m_devices.push_back(std::move(newDevice));
     }
     m_previousHids = hids;
@@ -197,7 +198,7 @@ void HyprlandInputBackend::deviceRemoved(const HyprlandInputDevice &device)
     if (m_currentTouchpad == device.libinputactionsDevice.get()) {
         m_currentTouchpad = nullptr;
     }
-    LibinputInputBackend::deviceRemoved(device.libinputactionsDevice.get());
+    removeDevice(device.libinputactionsDevice.get());
 }
 
 void HyprlandInputBackend::keyboardKey(SCallbackInfo &info, const std::any &data)
