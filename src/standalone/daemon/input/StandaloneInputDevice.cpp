@@ -208,7 +208,7 @@ void StandaloneInputDevice::restoreVirtualDeviceState()
         return;
     }
 
-    static const auto restoreKey = [this]() {
+    const auto restoreKey = [this]() {
         for (int code = 0; code < KEY_MAX; code++) {
             if (!m_libevdev->hasEventCode(EV_KEY, code)) {
                 continue;
@@ -217,7 +217,7 @@ void StandaloneInputDevice::restoreVirtualDeviceState()
             m_outputDevice->writeEvent(EV_KEY, code, m_libevdev->eventValue(EV_KEY, code));
         }
     };
-    static const auto restoreAbs = [this]() {
+    const auto restoreAbs = [this]() {
         for (int code = 0; code < ABS_MAX; code++) {
             if ((code >= ABS_MT_SLOT && code <= ABS_MT_TOOL_Y) || !m_libevdev->hasEventCode(EV_ABS, code)) {
                 continue;
@@ -226,7 +226,7 @@ void StandaloneInputDevice::restoreVirtualDeviceState()
             m_outputDevice->writeEvent(EV_ABS, code, m_libevdev->absInfo(code)->value);
         }
     };
-    static const auto restoreAbsMt = [this]() {
+    const auto restoreAbsMt = [this]() {
         for (int slot = 0; slot < m_libevdev->slotCount(); slot++) {
             m_outputDevice->writeEvent(EV_ABS, ABS_MT_SLOT, slot);
 
@@ -239,7 +239,7 @@ void StandaloneInputDevice::restoreVirtualDeviceState()
             }
         }
     };
-    static const auto finish = [this]() {
+    const auto finish = [this]() {
         m_outputDevice->writeEvent(EV_ABS, ABS_MT_SLOT, m_libevdev->currentSlot());
         m_outputDevice->writeSynReportEvent();
     };
@@ -282,6 +282,10 @@ void StandaloneInputDevice::restoreVirtualDeviceState()
 
 void StandaloneInputDevice::simulateTouchscreenTapDown(const std::vector<QPointF> &points)
 {
+    if (!properties().grab()) {
+        return;
+    }
+
     for (size_t i = 0; i < points.size(); ++i) {
         const auto &point = points[i];
 
@@ -297,6 +301,10 @@ void StandaloneInputDevice::simulateTouchscreenTapDown(const std::vector<QPointF
 
 void StandaloneInputDevice::simulateTouchscreenTapUp(const std::vector<QPointF> &points)
 {
+    if (!properties().grab()) {
+        return;
+    }
+
     for (size_t i = 0; i < points.size(); ++i) {
         m_outputDevice->writeEvent(EV_ABS, ABS_MT_SLOT, i);
         m_outputDevice->writeEvent(EV_ABS, ABS_MT_TRACKING_ID, -1);
