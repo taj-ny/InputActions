@@ -45,9 +45,9 @@ std::shared_ptr<Window> KWinWindowProvider::windowUnderFingers()
     QPointF center;
     const auto validTouchPoints = device->validTouchPoints();
     for (const auto &touchPoint : device->validTouchPoints()) {
-        center += touchPoint->unalteredPosition / validTouchPoints.size();
+        center += touchPoint->rawPosition;
     }
-
+    center /= validTouchPoints.size();
     if (center.isNull()) {
         return {};
     }

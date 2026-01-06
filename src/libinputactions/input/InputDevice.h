@@ -160,13 +160,13 @@ struct TouchPoint
 
     // These members must not be reset if the point becomes invalid or inactive.
     /**
-     * Unaltered current position, as provided by the compositor/evdev. Only used for touchscreens.
+     * Raw position provided by the compositor or evdev. Required for simulating taps. Only used for touchscreens.
      */
-    QPointF unalteredPosition;
+    QPointF rawPosition;
     /**
-     * Unaltered current position, as provided by the compositor/evdev. Only used for touchscreens.
+     * Raw position provided by the compositor or evdev. Required for simulating taps. Only used for touchscreens.
      */
-    QPointF unalteredInitialPosition;
+    QPointF rawInitialPosition;
 
     QPointF position;
     QPointF initialPosition;
@@ -178,7 +178,7 @@ struct TouchPoint
  * Each device has two states:
  *   - physical - actual state of the device,
  *   - virtual - the state of the device as seen by another entity that is processing events - the compositor and its libinput instance, an external libinput
- *    instance, evtest, etc. InputActions manipulates this state in various ways for the purposes of event filtering.
+ *     instance, evtest, etc. InputActions manipulates this state in various ways for the purposes of event filtering.
  */
 class InputDevice : public QObject
 {
@@ -205,17 +205,17 @@ public:
      * This operation is currently only used for touchscreens and touchpads (standalone only).
      *
      * The touchscreen restore sequence must include the following elements:
-     *   - Touch down - at **initial positions**, not current
+     *   - Touch down - at initial raw positions
      *   - Touch frame
-     *   - Touch motion - from initial positions to current positions
+     *   - Touch motion - from initial raw positions to current raw positions (accounts for InputActions' motion threshold)
      *   - Touch frame
      * More elements may be added by the implementation if necessary.
      */
     virtual void restoreVirtualDeviceState() {}
 
     /**
-     * @param points Unaltered points from events provided by the backend.
-     * @see TouchPoint::unalteredPosition
+     * @param points Raw positions.
+     * @see TouchPoint::rawPosition
      */
     void simulateTouchscreenTap(const std::vector<QPointF> &points);
 
@@ -254,10 +254,14 @@ public:
 protected:
     /**
      * Must generate touch down events and a touch frame event for the specified points.
+     * @param points Raw positions.
+     * @see TouchPoint::rawPosition
      */
     virtual void simulateTouchscreenTapDown(const std::vector<QPointF> &points) {}
     /**
      * Must generate touch up events and a touch frame event for the specified points.
+     * @param points Raw positions.
+     * @see TouchPoint::rawPosition
      */
     virtual void simulateTouchscreenTapUp(const std::vector<QPointF> &points) {}
 

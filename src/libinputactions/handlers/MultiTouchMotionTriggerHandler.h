@@ -19,7 +19,6 @@
 #pragma once
 
 #include "MotionTriggerHandler.h"
-#include <chrono>
 #include <libinputactions/input/InputDevice.h>
 
 Q_DECLARE_LOGGING_CATEGORY(INPUTACTIONS_HANDLER_MULTITOUCH)

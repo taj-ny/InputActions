@@ -105,9 +105,17 @@ protected:
     bool touchpadSwipeEnd(InputDevice *sender, bool cancelled);
 
     bool touchscreenTouchCancel(InputDevice *sender);
-    bool touchscreenTouchDown(InputDevice *sender, int32_t id, const QPointF &position, const QPointF &unmodifiedPosition);
+    /**
+     * @param position Physical position in millimeters relative to the top-left corner.
+     * @param rawPosition Raw position provided by the compositor or evdev. Required for simulating taps.
+     */
+    bool touchscreenTouchDown(InputDevice *sender, int32_t id, const QPointF &position, const QPointF &rawPosition);
     bool touchscreenTouchFrame(InputDevice *sender);
-    bool touchscreenTouchMotion(InputDevice *sender, int32_t id, const QPointF &position, const QPointF &unmodifiedPosition);
+    /**
+     * @param position Physical position in millimeters relative to the top-left corner.
+     * @param rawPosition Raw position provided by the compositor or evdev. Required for simulating taps.
+     */
+    bool touchscreenTouchMotion(InputDevice *sender, int32_t id, const QPointF &position, const QPointF &rawPosition);
     bool touchscreenTouchUp(InputDevice *sender, int32_t id);
 
     Qt::MouseButton scanCodeToMouseButton(uint32_t scanCode) const;

@@ -256,8 +256,8 @@ void StandaloneInputDevice::restoreVirtualDeviceState()
 
             for (const auto *point : validTouchPoints()) {
                 m_outputDevice->writeEvent(EV_ABS, ABS_MT_SLOT, point->id);
-                m_outputDevice->writeEvent(EV_ABS, ABS_MT_POSITION_X, point->unalteredInitialPosition.x());
-                m_outputDevice->writeEvent(EV_ABS, ABS_MT_POSITION_Y, point->unalteredInitialPosition.y());
+                m_outputDevice->writeEvent(EV_ABS, ABS_MT_POSITION_X, point->rawInitialPosition.x());
+                m_outputDevice->writeEvent(EV_ABS, ABS_MT_POSITION_Y, point->rawInitialPosition.y());
 
                 for (int code = ABS_MT_SLOT; code <= ABS_MT_TOOL_Y; code++) {
                     if (code == ABS_MT_SLOT || !m_libevdev->hasEventCode(EV_ABS, code)) {
@@ -271,8 +271,8 @@ void StandaloneInputDevice::restoreVirtualDeviceState()
 
             for (const auto *point : validTouchPoints()) {
                 m_outputDevice->writeEvent(EV_ABS, ABS_MT_SLOT, point->id);
-                m_outputDevice->writeEvent(EV_ABS, ABS_MT_POSITION_X, point->unalteredPosition.x());
-                m_outputDevice->writeEvent(EV_ABS, ABS_MT_POSITION_Y, point->unalteredPosition.y());
+                m_outputDevice->writeEvent(EV_ABS, ABS_MT_POSITION_X, point->rawPosition.x());
+                m_outputDevice->writeEvent(EV_ABS, ABS_MT_POSITION_Y, point->rawPosition.y());
             }
 
             finish();

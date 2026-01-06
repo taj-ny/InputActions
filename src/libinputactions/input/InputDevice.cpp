@@ -24,6 +24,8 @@
 namespace InputActions
 {
 
+static const std::chrono::milliseconds TOUCHSCREEN_SIMULATED_TAP_TURATION{10L};
+
 InputDevice::InputDevice(InputDeviceType type, QString name, QString sysName)
     : m_type(type)
     , m_name(std::move(name))
@@ -44,7 +46,7 @@ void InputDevice::simulateTouchscreenTap(const std::vector<QPointF> &points)
 
     simulateTouchscreenTapDown(points);
     m_touchscreenTapPoints = points;
-    m_touchscreenTapTimer.start(10);
+    m_touchscreenTapTimer.start(TOUCHSCREEN_SIMULATED_TAP_TURATION);
 }
 
 void InputDevice::onTouchscreenTapTimerTimeout()

@@ -59,7 +59,7 @@ protected:
     /**
      * Cancels all active triggers and activates triggers of the specified types eligible for activation.
      */
-    TEST_VIRTUAL TriggerManagementOperationResult activateTriggers(TriggerTypes types, const TriggerActivationEvent &event);
+    TriggerManagementOperationResult activateTriggers(TriggerTypes types, const TriggerActivationEvent &event);
     /**
      * @see activateTriggers(const TriggerTypes &, const TriggerActivationEvent *)
      */
@@ -80,12 +80,12 @@ protected:
     /**
      * Ends the specified types of triggers.
      */
-    TEST_VIRTUAL TriggerManagementOperationResult endTriggers(TriggerTypes types);
+    TriggerManagementOperationResult endTriggers(TriggerTypes types);
 
     /**
      * Cancels the specified types of triggers.
      */
-    TEST_VIRTUAL TriggerManagementOperationResult cancelTriggers(TriggerTypes types);
+    TriggerManagementOperationResult cancelTriggers(TriggerTypes types);
     /**
      * Cancels all triggers leaving only the specified one.
      */

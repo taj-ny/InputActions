@@ -1,6 +1,6 @@
 /*
     Input Actions - Input handler that executes user-defined actions
-    Copyright (C) 2024-2025 Marcin Woźniak
+    Copyright (C) 2024-2026 Marcin Woźniak
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -145,7 +145,7 @@ bool TouchscreenTriggerHandler::touchFrame(const TouchFrameEvent &event)
         for (auto &preTouchUpPoint : m_preTouchUpPoints) {
             if (point->id == preTouchUpPoint.id) {
                 preTouchUpPoint.position = point->position;
-                preTouchUpPoint.unalteredPosition = point->unalteredPosition;
+                preTouchUpPoint.rawPosition = point->rawPosition;
             }
         }
     }
@@ -181,7 +181,7 @@ bool TouchscreenTriggerHandler::touchFrame(const TouchFrameEvent &event)
         case State::Hold:
         case State::Touch: {
             const auto fingerPassedThreshold = [this](const auto *point) {
-                return hypot(point->position - m_pointInitialPositions[point]) >= MOTION_THRESHOLD_MM;
+                return hypot(point->position - m_pointInitialPositions[point->id]) >= MOTION_THRESHOLD_MM;
             };
             if (std::ranges::any_of(points, fingerPassedThreshold)) {
                 setState(State::MotionOnePointReachedThreshold);
@@ -192,7 +192,7 @@ bool TouchscreenTriggerHandler::touchFrame(const TouchFrameEvent &event)
         }
         case State::MotionOnePointReachedThreshold: {
             const auto fingerPassedThreshold = [this](const auto *point) {
-                return hypot(point->position - m_pointInitialPositions[point]) >= MOTION_THRESHOLD_MM;
+                return hypot(point->position - m_pointInitialPositions[point->id]) >= MOTION_THRESHOLD_MM;
             };
             if (std::ranges::all_of(points, fingerPassedThreshold)) {
                 setState(State::Motion);
@@ -202,12 +202,14 @@ bool TouchscreenTriggerHandler::touchFrame(const TouchFrameEvent &event)
             [[fallthrough]];
         }
         case State::Motion:
-            bool sameDirection = true;
+            auto sameDirection = true;
             uint32_t firstDirection{};
             QPointF totalDelta;
             for (size_t i = 0; i < points.size(); i++) {
-                totalDelta += m_pointInitialPositions[points[i]] - points[i]->position;
-                const auto direction = directionFromPoint(m_pointInitialPositions[points[i]] - points[i]->position);
+                const auto &point = points[i];
+
+                totalDelta += m_pointInitialPositions[point->id] - point->position;
+                const auto direction = directionFromPoint(m_pointInitialPositions[point->id] - point->position);
                 if (i == 0) {
                     firstDirection = direction;
                     continue;
@@ -313,7 +315,7 @@ void TouchscreenTriggerHandler::handleTap()
     if (!result.block && m_block) {
         std::vector<QPointF> points;
         for (const auto &point : m_preTouchUpPoints) {
-            points.push_back(point.unalteredPosition);
+            points.push_back(point.rawPosition);
         }
         m_device->simulateTouchscreenTap(points);
     }
@@ -393,8 +395,8 @@ void TouchscreenTriggerHandler::beginGestureRecognition()
     m_previousAngle = {};
 
     m_pointInitialPositions.clear();
-    for (const auto &point : points) {
-        m_pointInitialPositions[point] = point->position;
+    for (const auto *point : points) {
+        m_pointInitialPositions[point->id] = point->position;
     }
 }
 

@@ -1,6 +1,6 @@
 /*
     Input Actions - Input handler that executes user-defined actions
-    Copyright (C) 2024-2025 Marcin Woźniak
+    Copyright (C) 2024-2026 Marcin Woźniak
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -62,9 +62,9 @@ private:
     void setBlockAndUpdateVirtualDeviceState(bool value);
 
     /**
-     * Initial point positions for gesture recognition. May be different than the actual initial position.
+     * Initial point positions for gesture recognition. May be different than the actual initial position. Key is the point id.
      */
-    std::map<const TouchPoint *, QPointF> m_pointInitialPositions;
+    std::map<int32_t, QPointF> m_pointInitialPositions;
     QTimer m_holdTimer;
 
     QTimer m_touchDownTimer;
@@ -80,7 +80,7 @@ private:
     bool m_block{};
     bool m_blockNextFrame{};
 
-    enum State
+    enum class State
     {
         None,
 

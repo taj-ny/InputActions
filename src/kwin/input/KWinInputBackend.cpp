@@ -215,7 +215,7 @@ bool KWinInputBackend::touchDown(KWin::TouchDownEvent *event)
     auto *output = KWin::workspace()->outputAt(event->pos);
     const QPointF position((event->pos.x() - output->geometry().x()) / output->geometry().width() * sender->properties().size().width(),
                            (event->pos.y() - output->geometry().y()) / output->geometry().height() * sender->properties().size().height());
-    return touchscreenTouchDown(firstTouchscreen(), event->id, position, event->pos);
+    return touchscreenTouchDown(sender, event->id, position, event->pos);
 }
 
 bool KWinInputBackend::touchMotion(KWin::TouchMotionEvent *event)
@@ -228,7 +228,7 @@ bool KWinInputBackend::touchMotion(KWin::TouchMotionEvent *event)
     auto *output = KWin::workspace()->outputAt(event->pos);
     const QPointF position((event->pos.x() - output->geometry().x()) / output->geometry().width() * sender->properties().size().width(),
                            (event->pos.y() - output->geometry().y()) / output->geometry().height() * sender->properties().size().height());
-    return touchscreenTouchMotion(firstTouchscreen(), event->id, position, event->pos);
+    return touchscreenTouchMotion(sender, event->id, position, event->pos);
 }
 
 bool KWinInputBackend::touchUp(KWin::TouchUpEvent *event)

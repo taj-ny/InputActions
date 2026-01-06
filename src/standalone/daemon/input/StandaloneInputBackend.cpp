@@ -281,22 +281,19 @@ bool StandaloneInputBackend::handleEvent(StandaloneInputDevice *sender, const Li
             switch (type) {
                 case LIBINPUT_EVENT_TOUCH_DOWN: {
                     const auto slot = touchEvent->slot();
-                    QPointF unalteredPosition;
+                    QPointF rawPosition;
                     if (sender->libevdev()) {
-                        unalteredPosition = QPointF(sender->libevdev()->slotValue(slot, ABS_MT_POSITION_X),
-                                                    sender->libevdev()->slotValue(slot, ABS_MT_POSITION_Y));
+                        rawPosition = QPointF(sender->libevdev()->slotValue(slot, ABS_MT_POSITION_X), sender->libevdev()->slotValue(slot, ABS_MT_POSITION_Y));
                     }
-                    return touchscreenTouchDown(sender, slot, touchEvent->position(), unalteredPosition);
+                    return touchscreenTouchDown(sender, slot, touchEvent->position(), rawPosition);
                 }
                 case LIBINPUT_EVENT_TOUCH_MOTION: {
                     const auto slot = touchEvent->slot();
-                    ;
-                    QPointF unalteredPosition;
+                    QPointF rawPosition;
                     if (sender->libevdev()) {
-                        unalteredPosition = QPointF(sender->libevdev()->slotValue(slot, ABS_MT_POSITION_X),
-                                                    sender->libevdev()->slotValue(slot, ABS_MT_POSITION_Y));
+                        rawPosition = QPointF(sender->libevdev()->slotValue(slot, ABS_MT_POSITION_X), sender->libevdev()->slotValue(slot, ABS_MT_POSITION_Y));
                     }
-                    return touchscreenTouchMotion(sender, slot, touchEvent->position(), unalteredPosition);
+                    return touchscreenTouchMotion(sender, slot, touchEvent->position(), rawPosition);
                 }
                 case LIBINPUT_EVENT_TOUCH_UP:
                     return touchscreenTouchUp(sender, touchEvent->slot());

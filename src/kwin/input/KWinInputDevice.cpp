@@ -89,7 +89,7 @@ void KWinInputDevice::restoreVirtualDeviceState()
     for (const auto &point : validTouchPoints()) {
         KWin::TouchDownEvent event{
             .id = point->id,
-            .pos = point->unalteredInitialPosition,
+            .pos = point->rawInitialPosition,
             .time = timestamp(),
         };
         KWin::input()->processSpies(&KWin::InputEventSpy::touchDown, &event);
@@ -100,7 +100,7 @@ void KWinInputDevice::restoreVirtualDeviceState()
     for (const auto &point : validTouchPoints()) {
         KWin::TouchMotionEvent event{
             .id = point->id,
-            .pos = point->unalteredPosition,
+            .pos = point->rawPosition,
             .time = timestamp(),
         };
         KWin::input()->processSpies(&KWin::InputEventSpy::touchMotion, &event);
@@ -134,7 +134,6 @@ void KWinInputDevice::simulateTouchscreenTapUp(const std::vector<QPointF> &point
 
     m_backend->setIgnoreEvents(false);
 }
-
 #endif
 
 }

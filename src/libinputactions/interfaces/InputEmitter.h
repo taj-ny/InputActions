@@ -27,12 +27,11 @@ namespace InputActions
 
 class InputDevice;
 
-class InputEmitter : public QObject
+class InputEmitter
 {
-    Q_OBJECT
-
 public:
     InputEmitter();
+    virtual ~InputEmitter() = default;
 
     virtual void initialize() {}
     virtual void reset() {}
