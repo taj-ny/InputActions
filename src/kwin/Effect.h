@@ -34,6 +34,9 @@ public:
     static bool supported() { return true; }
     static bool enabledByDefault() { return false; }
 
+    bool isActive() const override { return false; }
+    bool blocksDirectScanout() const override { return false; }
+
     void reconfigure(ReconfigureFlags flags) override;
 
 protected:
