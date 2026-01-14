@@ -47,12 +47,12 @@ Effect::Effect()
 
     setMissingImplementations();
     initialize();
-    g_config->load(true);
+    Config::load(true);
 }
 
 void Effect::reconfigure(ReconfigureFlags flags)
 {
-    g_config->load();
+    Config::load();
 }
 
 void Effect::registerGlobalVariables(VariableManager *variableManager, std::shared_ptr<PointerPositionGetter> pointerPositionGetter,

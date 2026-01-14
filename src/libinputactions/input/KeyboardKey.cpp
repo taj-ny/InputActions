@@ -1,6 +1,6 @@
 /*
     Input Actions - Input handler that executes user-defined actions
-    Copyright (C) 2024-2025 Marcin Woźniak
+    Copyright (C) 2024-2026 Marcin Woźniak
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -16,31 +16,27 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#pragma once
-
-#include "Trigger.h"
-#include <libinputactions/input/KeyboardKey.h>
+#include "KeyboardKey.h"
 
 namespace InputActions
 {
 
-struct KeyboardShortcut
+KeyboardKey::KeyboardKey()
+    : KeyboardKey(0)
 {
-    /**
-     * Keys that must be pressed, modifier keys are allowed. Only 1 non-modifier key is allowed.
-     */
-    std::set<KeyboardKey> keys;
-};
+}
 
-class KeyboardShortcutTrigger : public Trigger
+KeyboardKey::KeyboardKey(uint32_t scanCode)
+    : m_scanCode(scanCode)
 {
-public:
-    KeyboardShortcutTrigger(KeyboardShortcut shortcut);
+}
 
-    bool canActivate(const TriggerActivationEvent &event) const override;
-
-private:
-    KeyboardShortcut m_shortcut;
-};
+std::optional<KeyboardKey> KeyboardKey::fromString(const QString &s)
+{
+    if (!KEYBOARD_KEYS.contains(s)) {
+        return {};
+    }
+    return KEYBOARD_KEYS.at(s);
+}
 
 }

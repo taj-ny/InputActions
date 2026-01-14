@@ -49,6 +49,10 @@ int main(int argc, char **argv)
     QDBusInterface dbusInterface("org.inputactions", "/", "org.inputactions");
 
     auto *config = app.add_subcommand("config", "Manage config")->require_subcommand();
+    config->add_subcommand("issues", "Show issues")->callback([&dbusInterface]() {
+        ensureInterfaceIsValid(dbusInterface);
+        printResponse(dbusInterface.asyncCall("issues"));
+    });
     config->add_subcommand("reload", "Reload config")->callback([&dbusInterface]() {
         ensureInterfaceIsValid(dbusInterface);
         printResponse(dbusInterface.asyncCall("reloadConfig"));

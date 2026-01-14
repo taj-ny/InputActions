@@ -18,29 +18,18 @@
 
 #pragma once
 
-#include "Trigger.h"
-#include <libinputactions/input/KeyboardKey.h>
-
-namespace InputActions
+namespace InputActions::AnsiEscapeCode
 {
 
-struct KeyboardShortcut
+namespace Color
 {
-    /**
-     * Keys that must be pressed, modifier keys are allowed. Only 1 non-modifier key is allowed.
-     */
-    std::set<KeyboardKey> keys;
-};
+static const QString Bold = QStringLiteral("\033[1m");
 
-class KeyboardShortcutTrigger : public Trigger
-{
-public:
-    KeyboardShortcutTrigger(KeyboardShortcut shortcut);
+static const QString Red = QStringLiteral("\033[31m");
+static const QString Yellow = QStringLiteral("\033[33m");
+static const QString Blue = QStringLiteral("\033[34m");
 
-    bool canActivate(const TriggerActivationEvent &event) const override;
-
-private:
-    KeyboardShortcut m_shortcut;
-};
+static const QString Reset = QStringLiteral("\033[0m");
+}
 
 }
