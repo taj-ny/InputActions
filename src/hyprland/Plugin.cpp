@@ -60,7 +60,7 @@ Plugin::Plugin(void *handle)
 
     setMissingImplementations();
     initialize();
-    g_config->load(true);
+    Config::load(true);
 }
 
 void Plugin::registerGlobalVariables(VariableManager *variableManager, std::shared_ptr<PointerPositionGetter> pointerPositionGetter,

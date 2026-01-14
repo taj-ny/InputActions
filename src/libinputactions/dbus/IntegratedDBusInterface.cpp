@@ -41,6 +41,11 @@ IntegratedDBusInterface::~IntegratedDBusInterface()
     m_bus.unregisterObject(INPUTACTIONS_DBUS_PATH);
 }
 
+QString IntegratedDBusInterface::issues()
+{
+    return DBusInterfaceBase::issues();
+}
+
 void IntegratedDBusInterface::recordStroke(const QDBusMessage &message)
 {
     g_onScreenMessageManager->showMessage(PROJECT_NAME " is recording input. Perform a stroke gesture by moving the mouse or any amount of fingers in the one "
@@ -58,11 +63,8 @@ void IntegratedDBusInterface::recordStroke(const QDBusMessage &message)
 
 QString IntegratedDBusInterface::reloadConfig()
 {
-    const auto error = g_config->load();
-    if (error) {
-        return error.value();
-    }
-    return "success";
+    Config::load();
+    return g_config->issuesToString();
 }
 
 QString IntegratedDBusInterface::suspend()

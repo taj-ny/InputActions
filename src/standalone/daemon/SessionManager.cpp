@@ -188,6 +188,19 @@ void SessionManager::beginSessionRequestMessage(const std::shared_ptr<const Begi
     });
 }
 
+void SessionManager::configIssuesRequestMessage(const std::shared_ptr<const ConfigIssuesRequestMessage> &message)
+{
+    if (auto *session = sessionForClient(message->sender())) {
+        ConfigIssuesResponseMessage response;
+        if (&currentSession() == session) {
+            response.setIssues(g_config->issuesToString(session->m_config));
+        } else {
+            response.setError("Session must be active in order to check issues.");
+        }
+        message->reply(response);
+    }
+}
+
 void SessionManager::environmentStateMessage(const std::shared_ptr<const EnvironmentStateMessage> &message)
 {
     if (auto *session = sessionForClient(message->sender())) {
@@ -218,9 +231,10 @@ void SessionManager::loadConfigRequestMessage(const std::shared_ptr<const LoadCo
 
         session->m_config = config;
         if (&currentSession() == session) {
-            if (const auto error = g_config->load(config)) {
-                response.setError(error.value());
+            if (!Config::load(config)) {
+                response.setError(g_config->issuesToString());
             }
+            response.setIssues(g_config->issuesToString(session->m_config));
         }
     }
 
@@ -282,8 +296,8 @@ void SessionManager::activateSession(const Session &session, bool loadConfig)
         return;
     }
 
-    if (loadConfig && g_config->load(session.m_config)) {
-        g_config->load(QString(""));
+    if (loadConfig && !Config::load(session.m_config)) {
+        Config::load(QString(""));
     }
 
     g_pointerPositionGetter = session.m_ipcEnvironmentInterfaces;

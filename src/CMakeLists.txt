@@ -16,8 +16,18 @@ if (INPUTACTIONS_BUILD_HYPRLAND OR INPUTACTIONS_BUILD_KWIN OR INPUTACTIONS_BUILD
         libinputactions/actions/PlasmaGlobalShortcutAction.cpp
         libinputactions/actions/SleepAction.cpp
         libinputactions/actions/TriggerAction.cpp
+        libinputactions/config/parsers/base.cpp
+        libinputactions/config/parsers/containers.h
+        libinputactions/config/parsers/core.cpp
+        libinputactions/config/parsers/enums.cpp
+        libinputactions/config/parsers/flags.cpp
+        libinputactions/config/parsers/NodeParser.h
+        libinputactions/config/parsers/qt.cpp
+        libinputactions/config/parsers/std.cpp
+        libinputactions/config/parsers/utils.h
         libinputactions/config/Config.cpp
-        libinputactions/config/yaml.h
+        libinputactions/config/Config.cpp
+        libinputactions/config/Node.cpp
         libinputactions/conditions/Condition.cpp
         libinputactions/conditions/ConditionGroup.cpp
         libinputactions/conditions/CustomCondition.cpp
@@ -41,6 +51,7 @@ if (INPUTACTIONS_BUILD_HYPRLAND OR INPUTACTIONS_BUILD_KWIN OR INPUTACTIONS_BUILD
         libinputactions/input/InputDevice.cpp
         libinputactions/input/InputDeviceRule.cpp
         libinputactions/input/InputEventHandler.cpp
+        libinputactions/input/KeyboardKey.cpp
         libinputactions/input/StrokeRecorder.cpp
         libinputactions/input/events.cpp
         libinputactions/interfaces/implementations/DBusNotificationManager.cpp

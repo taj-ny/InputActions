@@ -46,6 +46,7 @@ public:
     ~IntegratedDBusInterface() override;
 
 public slots:
+    QString issues();
     Q_NOREPLY void recordStroke(const QDBusMessage &message);
     QString reloadConfig();
     QString suspend();

@@ -49,6 +49,15 @@ void ClientDBusInterface::environmentState(QString state)
     m_client->socketConnection()->sendMessage(message);
 }
 
+QString ClientDBusInterface::issues()
+{
+    ConfigIssuesRequestMessage request;
+    if (const auto response = m_client->socketConnection()->sendMessageAndWaitForResponse<ConfigIssuesResponseMessage>(request)) {
+        return response->success() ? response->issues() : response->error();
+    }
+    return ERROR_NO_REPLY;
+}
+
 QString ClientDBusInterface::recordStroke()
 {
     RecordStrokeRequestMessage request;
@@ -63,7 +72,7 @@ QString ClientDBusInterface::reloadConfig()
     LoadConfigRequestMessage request;
     request.setConfig(m_client->configProvider.currentConfig());
     if (const auto response = m_client->socketConnection()->sendMessageAndWaitForResponse<LoadConfigResponseMessage>(request)) {
-        return response->success() ? "success" : response->error();
+        return response->success() ? response->issues() : response->error();
     }
     return ERROR_NO_REPLY;
 }
