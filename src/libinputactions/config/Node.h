@@ -53,7 +53,7 @@ public:
     /**
      * Permanently disables map key access tracking for this wrapper instance.
      */
-    void disableMapAccessCheck() const { m_mapAccessCheckEnabled = false;}
+    void disableMapAccessCheck() const { m_mapAccessCheckEnabled = false; }
     /**
      * Permanently disables map key access tracking in this wrapper instance for the specified key.
      */
@@ -79,26 +79,32 @@ public:
      */
     Node clone() const;
 
+    bool isSequence() const;
     /**
      * @return Children of this sequence node.
      * @throws ConfigParserException The node is not a sequence.
      */
-    std::vector<std::shared_ptr<const Node>> sequenceChildren() const;
+    std::vector<std::shared_ptr<const Node>> sequenceChildren(bool disableMapAccessCheck = false) const;
     /**
      * @return Children of this sequence node.
      * @throws ConfigParserException The node is not a sequence.
      */
-    std::vector<std::shared_ptr<Node>> sequenceChildren();
+    std::vector<std::shared_ptr<Node>> sequenceChildren(bool disableMapAccessCheck = false);
 
-     /**
-      * @return Keys and values of this sequence node.
-      * @throws ConfigParserException The node is not a map.
-      */
+    bool isMap() const;
+    /**
+     * @return Keys and values of this sequence node.
+     * @throws ConfigParserException The node is not a map.
+     */
     std::map<std::shared_ptr<const Node>, std::shared_ptr<const Node>> mapChildren() const;
 
     int32_t line() const { return m_line; }
     int32_t column() const { return m_column; }
-    void setPosition(int32_t line, int32_t column) { m_line = line; m_column = column; }
+    void setPosition(int32_t line, int32_t column)
+    {
+        m_line = line;
+        m_column = column;
+    }
 
     const YAML::Node *raw() const { return &m_node; }
     /**

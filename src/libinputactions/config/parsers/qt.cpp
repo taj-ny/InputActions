@@ -16,14 +16,14 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include <libinputactions/config/Config.h>
-#include <libinputactions/config/Node.h>
-#include "containers.h"
 #include "NodeParser.h"
+#include "containers.h"
 #include <QPointF>
 #include <QRegularExpression>
 #include <QString>
 #include <QStringList>
+#include <libinputactions/config/ConfigIssueManager.h>
+#include <libinputactions/config/Node.h>
 
 namespace InputActions
 {

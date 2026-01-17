@@ -25,8 +25,9 @@ if (INPUTACTIONS_BUILD_HYPRLAND OR INPUTACTIONS_BUILD_KWIN OR INPUTACTIONS_BUILD
         libinputactions/config/parsers/qt.cpp
         libinputactions/config/parsers/std.cpp
         libinputactions/config/parsers/utils.h
-        libinputactions/config/Config.cpp
-        libinputactions/config/Config.cpp
+        libinputactions/config/ConfigIssueManager.cpp
+        libinputactions/config/ConfigLoader.cpp
+        libinputactions/config/GlobalConfig.cpp
         libinputactions/config/Node.cpp
         libinputactions/conditions/Condition.cpp
         libinputactions/conditions/ConditionGroup.cpp

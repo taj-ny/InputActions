@@ -22,7 +22,8 @@
 #include <QDBusArgument>
 #include <libinputactions/InputActionsMain.h>
 #include <libinputactions/actions/ActionExecutor.h>
-#include <libinputactions/config/Config.h>
+#include <libinputactions/config/ConfigIssueManager.h>
+#include <libinputactions/config/ConfigLoader.h>
 #include <libinputactions/globals.h>
 #include <libinputactions/input/StrokeRecorder.h>
 #include <libinputactions/interfaces/implementations/FileConfigProvider.h>
@@ -41,6 +42,8 @@ static const QString ERROR_SESSION_INACTIVE = "This client's session is inactive
 SessionManager::SessionManager(Server *server)
     : m_freedesktopLoginDbusInterface("org.freedesktop.login1", "/org/freedesktop/login1", "org.freedesktop.login1.Manager", QDBusConnection::systemBus())
 {
+    m_currentTty = SessionUtils::currentTty();
+
     connect(server, &Server::messageReceived, this, [this](const auto &message) {
         handleMessage(message);
     });
@@ -59,7 +62,7 @@ SessionManager::~SessionManager() = default;
 
 Session &SessionManager::currentSession()
 {
-    return m_sessions[m_currentTty];
+    return *m_currentSession;
 }
 
 Session *SessionManager::sessionForClient(MessageSocketConnection *client)
@@ -193,7 +196,7 @@ void SessionManager::configIssuesRequestMessage(const std::shared_ptr<const Conf
     if (auto *session = sessionForClient(message->sender())) {
         ConfigIssuesResponseMessage response;
         if (&currentSession() == session) {
-            response.setIssues(g_config->issuesToString(session->m_config));
+            response.setIssues(g_configIssueManager->issuesToString());
         } else {
             response.setError("Session must be active in order to check issues.");
         }
@@ -231,10 +234,12 @@ void SessionManager::loadConfigRequestMessage(const std::shared_ptr<const LoadCo
 
         session->m_config = config;
         if (&currentSession() == session) {
-            if (!Config::load(config)) {
-                response.setError(g_config->issuesToString());
+            if (!g_configLoader->load({
+                    .config = config,
+                })) {
+                response.setError(g_configIssueManager->issuesToString());
             }
-            response.setIssues(g_config->issuesToString(session->m_config));
+            response.setIssues(g_configIssueManager->issuesToString());
         }
     }
 
@@ -281,11 +286,11 @@ void SessionManager::variableListRequestMessage(const std::shared_ptr<const Vari
     }
 }
 
-void SessionManager::activateSession(const Session &session, bool loadConfig)
+void SessionManager::activateSession(Session &session, bool loadConfig)
 {
-    g_inputActions->suspend();
-    g_actionExecutor->clearQueue();
-    g_actionExecutor->waitForDone();
+    g_configLoader->loadEmpty();
+
+    m_currentSession = &session;
 
     if (session.m_suspended) {
         qCDebug(INPUTACTIONS) << "Session is suspended";
@@ -296,8 +301,10 @@ void SessionManager::activateSession(const Session &session, bool loadConfig)
         return;
     }
 
-    if (loadConfig && !Config::load(session.m_config)) {
-        Config::load(QString(""));
+    if (loadConfig) {
+        g_configLoader->load({
+            .config = session.m_config,
+        });
     }
 
     g_pointerPositionGetter = session.m_ipcEnvironmentInterfaces;
@@ -309,9 +316,9 @@ void SessionManager::onSessionChangeDetectionTimerTick()
 {
     const auto tty = SessionUtils::currentTty();
     if (m_currentTty != tty) {
+        m_currentTty = tty;
         qCDebug(INPUTACTIONS).noquote().nospace() << "TTY changed to " << tty;
         activateSession(m_sessions[tty]);
-        m_currentTty = tty;
     }
 }
 

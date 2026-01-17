@@ -17,7 +17,7 @@
 */
 
 #include "Condition.h"
-#include <libinputactions/config/Config.h>
+#include <libinputactions/config/GlobalConfig.h>
 #include <libinputactions/interfaces/NotificationManager.h>
 #include <libinputactions/variables/VariableManager.h>
 
@@ -44,7 +44,7 @@ bool Condition::evaluate(const ConditionEvaluationArguments &arguments)
         return evaluateImpl(arguments) == !m_negate;
     } catch (const std::exception &e) {
         qWarning(INPUTACTIONS).noquote() << "Failed to evaluate condition: " << e.what();
-        if (g_config->sendNotificationOnError() && !m_exceptionNotificationShown) {
+        if (g_globalConfig->sendNotificationOnError() && !m_exceptionNotificationShown) {
             g_notificationManager->sendNotification("Failed to evaluate condition", e.what());
             m_exceptionNotificationShown = true;
         }

@@ -36,6 +36,8 @@ public:
      */
     LazyCondition(std::function<std::shared_ptr<Condition>(const ConditionEvaluationArguments &arguments)> constructor);
 
+    const Condition *condition() const { return m_condition.get(); }
+
 protected:
     bool evaluateImpl(const ConditionEvaluationArguments &arguments) override;
 

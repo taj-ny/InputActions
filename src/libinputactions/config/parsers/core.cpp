@@ -16,15 +16,12 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include <libinputactions/config/Config.h>
-#include <libinputactions/config/Node.h>
 #include "core.h"
 #include "containers.h"
 #include "utils.h"
 #include <QPointF>
 #include <QRegularExpression>
 #include <QString>
-
 #include <libinputactions/Value.h>
 #include <libinputactions/actions/ActionGroup.h>
 #include <libinputactions/actions/CommandAction.h>
@@ -35,6 +32,8 @@
 #include <libinputactions/conditions/ConditionGroup.h>
 #include <libinputactions/conditions/LazyCondition.h>
 #include <libinputactions/conditions/VariableCondition.h>
+#include <libinputactions/config/ConfigIssueManager.h>
+#include <libinputactions/config/Node.h>
 #include <libinputactions/handlers/KeyboardTriggerHandler.h>
 #include <libinputactions/handlers/MouseTriggerHandler.h>
 #include <libinputactions/handlers/PointerTriggerHandler.h>
@@ -198,7 +197,7 @@ static std::shared_ptr<Condition> parseVariableCondition(const Node *node, std::
         const auto rightRaw = raw.mid(secondSpace + 1);
         Node rightNode(rightRaw, node);
 
-        if (!isEnum(variable->type()) && rightNode.raw()->IsSequence()) {
+        if (!isEnum(variable->type()) && rightNode.isSequence()) {
             for (auto child : rightNode.sequenceChildren()) {
                 child->setPosition(node->line(), node->column());
                 right.push_back(asAny(child.get(), variable->type()));
@@ -269,200 +268,196 @@ void NodeParser<ActionInterval>::parse(const Node *node, ActionInterval &result)
 }
 
 template<>
-struct NodeParser<std::shared_ptr<Condition>>
+void NodeParser<std::shared_ptr<Condition>>::parse(const Node *node, std::shared_ptr<Condition> &condition)
 {
-    static bool isLegacy(const YAML::Node &node) { return node.IsMap() && (node["negate"] || node["window_class"] || node["window_state"]); }
+    static const auto isLegacy = [](const YAML::Node &node) {
+        return node.IsMap() && (node["negate"] || node["window_class"] || node["window_state"]);
+    };
 
-    static void parse(const Node *node, std::shared_ptr<Condition> &condition)
-    {
-        if (node->raw()->IsMap()) {
-            std::optional<ConditionGroupMode> groupMode;
-            std::shared_ptr<const Node> groupChildren;
-            if (const auto allNode = node->at("all")) {
-                groupMode = ConditionGroupMode::All;
-                groupChildren = allNode;
-            } else if (const auto anyNode = node->at("any")) {
-                groupMode = ConditionGroupMode::Any;
-                groupChildren = anyNode;
-            } else if (const auto noneNode = node->at("node")) {
-                groupMode = ConditionGroupMode::None;
-                groupChildren = noneNode;
-            }
-            if (groupMode) {
-                auto group = std::make_shared<ConditionGroup>(*groupMode);
-                for (const auto &child : groupChildren->sequenceChildren()) {
-                    group->add(child->as<std::shared_ptr<Condition>>());
-                }
-                condition = group;
-                return;
-            }
-
-            if (isLegacy(*node->raw())) {
-                g_config->addIssue(node, ConfigIssueSeverity::Deprecation, "This method of defining conditions is deprecated.");
-
-                auto group = std::make_shared<ConditionGroup>();
-                QStringList negate;
-                loadMember(negate, node->at("negate").get());
-
-                if (const auto windowClassNode = node->at("window_class")) {
-                    const auto value = Value(windowClassNode->as<QString>());
-                    auto classGroup = std::make_shared<ConditionGroup>(ConditionGroupMode::Any);
-                    classGroup->add(std::make_shared<VariableCondition>("window_class", value, ComparisonOperator::Regex));
-                    classGroup->add(std::make_shared<VariableCondition>("window_name", value, ComparisonOperator::Regex));
-                    classGroup->setNegate(negate.contains("window_class"));
-                    group->add(classGroup);
-                }
-                if (const auto &windowStateNode = node->at("window_state")) {
-                    QStringList value;
-                    loadMember(value, windowStateNode.get());
-
-                    const auto trueValue = Value<bool>(true);
-                    auto classGroup = std::make_shared<ConditionGroup>(ConditionGroupMode::Any);
-                    if (value.contains("fullscreen")) {
-                        classGroup->add(std::make_shared<VariableCondition>("window_fullscreen", trueValue, ComparisonOperator::EqualTo));
-                    }
-                    if (value.contains("maximized")) {
-                        classGroup->add(std::make_shared<VariableCondition>("window_maximized", trueValue, ComparisonOperator::EqualTo));
-                    }
-                    classGroup->setNegate(negate.contains("window_state"));
-                    group->add(classGroup);
-                }
-                condition = group;
-                return;
-            }
+    if (node->isMap()) {
+        std::optional<ConditionGroupMode> groupMode;
+        std::shared_ptr<const Node> groupChildren;
+        if (const auto allNode = node->at("all")) {
+            groupMode = ConditionGroupMode::All;
+            groupChildren = allNode;
+        } else if (const auto anyNode = node->at("any")) {
+            groupMode = ConditionGroupMode::Any;
+            groupChildren = anyNode;
+        } else if (const auto noneNode = node->at("node")) {
+            groupMode = ConditionGroupMode::None;
+            groupChildren = noneNode;
         }
-
-        // Not in any group
-        if (node->raw()->IsSequence()) {
-            auto group = std::make_shared<ConditionGroup>(isLegacy(node->raw()[0]) ? ConditionGroupMode::Any : ConditionGroupMode::All);
-            for (const auto &child : node->sequenceChildren()) {
-                group->add(child->as<std::shared_ptr<Condition>>());
+        if (groupMode) {
+            auto group = std::make_shared<ConditionGroup>(*groupMode);
+            for (const auto &child : groupChildren->sequenceChildren()) {
+                group->append(child->as<std::shared_ptr<Condition>>());
             }
             condition = group;
             return;
         }
 
-        if (node->raw()->IsScalar()) {
-            // Hack to load negated conditions without forcing users to quote the entire thing
-            auto conditionNode = node->clone();
-            const auto tag = node->raw()->Tag();
-            if (tag != "!" && tag.starts_with('!')) {
-                *conditionNode.raw() = QString("%1 %2").arg(QString::fromStdString(tag), node->as<QString>()).trimmed().toStdString();
-            }
+        if (isLegacy(*node->raw())) {
+            g_configIssueManager->addIssue(node, ConfigIssueSeverity::Deprecation, "This method of defining conditions is deprecated.");
 
-            const auto raw = conditionNode.as<QString>();
-            if (raw.startsWith("$") || raw.startsWith("!$")) {
-                condition = parseVariableCondition(&conditionNode);
+            auto group = std::make_shared<ConditionGroup>();
+            QStringList negate;
+            loadMember(negate, node->at("negate").get());
+
+            if (const auto windowClassNode = node->at("window_class")) {
+                const auto value = Value(windowClassNode->as<QString>());
+                auto classGroup = std::make_shared<ConditionGroup>(ConditionGroupMode::Any);
+                classGroup->append(std::make_shared<VariableCondition>("window_class", value, ComparisonOperator::Regex));
+                classGroup->append(std::make_shared<VariableCondition>("window_name", value, ComparisonOperator::Regex));
+                classGroup->setNegate(negate.contains("window_class"));
+                group->append(classGroup);
             }
+            if (const auto windowStateNode = node->at("window_state")) {
+                QStringList value;
+                loadMember(value, windowStateNode.get());
+
+                const auto trueValue = Value<bool>(true);
+                auto classGroup = std::make_shared<ConditionGroup>(ConditionGroupMode::Any);
+                if (value.contains("fullscreen")) {
+                    classGroup->append(std::make_shared<VariableCondition>("window_fullscreen", trueValue, ComparisonOperator::EqualTo));
+                }
+                if (value.contains("maximized")) {
+                    classGroup->append(std::make_shared<VariableCondition>("window_maximized", trueValue, ComparisonOperator::EqualTo));
+                }
+                classGroup->setNegate(negate.contains("window_state"));
+                group->append(classGroup);
+            }
+            condition = group;
+            return;
         }
     }
-};
+
+    // Not in any group
+    if (node->isSequence()) {
+        auto group = std::make_shared<ConditionGroup>(isLegacy(*node->sequenceChildren(true)[0]->raw()) ? ConditionGroupMode::Any : ConditionGroupMode::All);
+        for (const auto &child : node->sequenceChildren()) {
+            group->append(child->as<std::shared_ptr<Condition>>());
+        }
+        condition = group;
+        return;
+    }
+
+    if (node->raw()->IsScalar()) {
+        // Hack to load negated conditions without forcing users to quote the entire thing
+        auto conditionNode = node->clone();
+        const auto tag = node->raw()->Tag();
+        if (tag != "!" && tag.starts_with('!')) {
+            *conditionNode.raw() = QString("%1 %2").arg(QString::fromStdString(tag), node->as<QString>()).trimmed().toStdString();
+        }
+
+        const auto raw = conditionNode.as<QString>();
+        if (raw.startsWith("$") || raw.startsWith("!$")) {
+            condition = parseVariableCondition(&conditionNode);
+        }
+    }
+}
 
 template<>
-struct NodeParser<std::vector<InputAction::Item>>
+void NodeParser<std::vector<InputAction::Item>>::parse(const Node *node, std::vector<InputAction::Item> &result)
 {
-    static void parse(const Node *node, std::vector<InputAction::Item> &result)
-    {
-        for (const auto &device : node->sequenceChildren()) {
-            if (const auto keyboardNode = device->at("keyboard")) {
-                for (const auto &actionNode : keyboardNode->sequenceChildren()) {
-                    if (actionNode->raw()->IsMap()) {
-                        if (const auto textNode = actionNode->at("text")) {
-                            result.push_back({
-                                .keyboardText = textNode->as<Value<QString>>(),
-                            });
-                        }
-                    } else {
-                        const auto actionRaw = actionNode->as<QString>().toUpper();
-                        if (actionRaw.startsWith("+") || actionRaw.startsWith("-")) {
-                            const auto key = parseKeyboardKey(actionNode.get(), actionRaw.mid(1));
-
-                            if (actionRaw[0] == '+') {
-                                result.push_back({
-                                    .keyboardPress = key,
-                                });
-                            } else {
-                                result.push_back({
-                                    .keyboardRelease = key,
-                                });
-                            }
-                        } else {
-                            std::vector<uint32_t> keys;
-                            for (const auto &keyRaw : actionRaw.split("+")) {
-                                keys.push_back(parseKeyboardKey(actionNode.get(), keyRaw));
-                            }
-
-                            for (const auto key : keys) {
-                                result.push_back({
-                                    .keyboardPress = key,
-                                });
-                            }
-                            std::reverse(keys.begin(), keys.end());
-                            for (const auto key : keys) {
-                                result.push_back({
-                                    .keyboardRelease = key,
-                                });
-                            }
-                        }
+    for (const auto &device : node->sequenceChildren()) {
+        if (const auto keyboardNode = device->at("keyboard")) {
+            for (const auto &actionNode : keyboardNode->sequenceChildren()) {
+                if (actionNode->isMap()) {
+                    if (const auto textNode = actionNode->at("text")) {
+                        result.push_back({
+                            .keyboardText = textNode->as<Value<QString>>(),
+                        });
                     }
-                }
-            } else if (const auto mouseNode = device->at("mouse")) {
-                for (const auto &actionRaw : mouseNode->as<QStringList>()) {
-                    const auto split = actionRaw.split(' ');
-                    const auto action = split[0].toUpper();
-                    const auto arguments = split.mid(1);
+                } else {
+                    const auto actionRaw = actionNode->as<QString>().toUpper();
+                    if (actionRaw.startsWith("+") || actionRaw.startsWith("-")) {
+                        const auto key = parseKeyboardKey(actionNode.get(), actionRaw.mid(1));
 
-                    if (action.startsWith("+") || action.startsWith("-")) {
-                        const auto button = parseMouseButton(mouseNode.get(), action.mid(1));
-
-                        if (action[0] == '+') {
+                        if (actionRaw[0] == '+') {
                             result.push_back({
-                                .mousePress = button,
+                                .keyboardPress = key,
                             });
                         } else {
                             result.push_back({
-                                .mouseRelease = button,
+                                .keyboardRelease = key,
                             });
                         }
-                    } else if (action.startsWith("MOVE_BY_DELTA")) {
-                        result.push_back({
-                            .mouseMoveRelativeByDelta = true,
-                        });
-                    } else if (action.startsWith("MOVE_BY")) {
-                        result.push_back({
-                            .mouseMoveRelative = parseMouseInputActionPoint(mouseNode.get(), arguments),
-                        });
-                    } else if (action.startsWith("MOVE_TO")) {
-                        result.push_back({
-                            .mouseMoveAbsolute = parseMouseInputActionPoint(mouseNode.get(), arguments),
-                        });
-                    } else if (action.startsWith("WHEEL")) {
-                        result.push_back({
-                            .mouseAxis = parseMouseInputActionPoint(mouseNode.get(), arguments),
-                        });
                     } else {
-                        std::vector<uint32_t> buttons;
-                        for (const auto &buttonRaw : action.split("+")) {
-                            buttons.push_back(parseMouseButton(mouseNode.get(), buttonRaw));
+                        std::vector<uint32_t> keys;
+                        for (const auto &keyRaw : actionRaw.split("+")) {
+                            keys.push_back(parseKeyboardKey(actionNode.get(), keyRaw));
                         }
 
-                        for (const auto button : buttons) {
+                        for (const auto key : keys) {
                             result.push_back({
-                                .mousePress = button,
+                                .keyboardPress = key,
                             });
                         }
-                        std::reverse(buttons.begin(), buttons.end());
-                        for (const auto button : buttons) {
+                        std::reverse(keys.begin(), keys.end());
+                        for (const auto key : keys) {
                             result.push_back({
-                                .mouseRelease = button,
+                                .keyboardRelease = key,
                             });
                         }
                     }
                 }
             }
+        } else if (const auto mouseNode = device->at("mouse")) {
+            for (const auto &actionRaw : mouseNode->as<QStringList>()) {
+                const auto split = actionRaw.split(' ');
+                const auto action = split[0].toUpper();
+                const auto arguments = split.mid(1);
+
+                if (action.startsWith("+") || action.startsWith("-")) {
+                    const auto button = parseMouseButton(mouseNode.get(), action.mid(1));
+
+                    if (action[0] == '+') {
+                        result.push_back({
+                            .mousePress = button,
+                        });
+                    } else {
+                        result.push_back({
+                            .mouseRelease = button,
+                        });
+                    }
+                } else if (action.startsWith("MOVE_BY_DELTA")) {
+                    result.push_back({
+                        .mouseMoveRelativeByDelta = true,
+                    });
+                } else if (action.startsWith("MOVE_BY")) {
+                    result.push_back({
+                        .mouseMoveRelative = parseMouseInputActionPoint(mouseNode.get(), arguments),
+                    });
+                } else if (action.startsWith("MOVE_TO")) {
+                    result.push_back({
+                        .mouseMoveAbsolute = parseMouseInputActionPoint(mouseNode.get(), arguments),
+                    });
+                } else if (action.startsWith("WHEEL")) {
+                    result.push_back({
+                        .mouseAxis = parseMouseInputActionPoint(mouseNode.get(), arguments),
+                    });
+                } else {
+                    std::vector<uint32_t> buttons;
+                    for (const auto &buttonRaw : action.split("+")) {
+                        buttons.push_back(parseMouseButton(mouseNode.get(), buttonRaw));
+                    }
+
+                    for (const auto button : buttons) {
+                        result.push_back({
+                            .mousePress = button,
+                        });
+                    }
+                    std::reverse(buttons.begin(), buttons.end());
+                    for (const auto button : buttons) {
+                        result.push_back({
+                            .mouseRelease = button,
+                        });
+                    }
+                }
+            }
         }
     }
-};
+}
 
 template<>
 void NodeParser<InputDeviceProperties>::parse(const Node *node, InputDeviceProperties &result)
@@ -494,10 +489,12 @@ void NodeParser<std::vector<InputDeviceRule>>::parse(const Node *node, std::vect
 
     // Legacy
     if (const auto touchpadNode = node->mapAt("touchpad")) {
-    touchpadNode->disableMapAccessCheck("gestures");
+        touchpadNode->disableMapAccessCheck("gestures");
 
         if (const auto devicesNode = touchpadNode->mapAt("devices")) {
-            g_config->addIssue(devicesNode.get(), ConfigIssueSeverity::Deprecation, "This method of defining device properties is deprecated. Use device_rules instead.");
+            g_configIssueManager->addIssue(devicesNode.get(),
+                                           ConfigIssueSeverity::Deprecation,
+                                           "This method of defining device properties is deprecated. Use device_rules instead.");
             devicesNode->disableMapAccessCheck();
 
             for (auto [key, value] : devicesNode->mapChildren()) {
@@ -527,7 +524,7 @@ void NodeParser<KeyboardKey>::parse(const Node *node, KeyboardKey &result)
 template<>
 void NodeParser<KeyboardShortcut>::parse(const Node *node, KeyboardShortcut &result)
 {
-    loadMember(result.keys, std::move(node));
+    loadMember(result.keys, node);
 }
 
 template<typename T>
@@ -560,25 +557,29 @@ void NodeParser<std::unique_ptr<Trigger>>::parse(const Node *node, std::unique_p
     auto type = typeNode->as<QString>();
 
     if (type == "circle") {
-        result = std::make_unique<DirectionalMotionTrigger>(TriggerType::Circle, static_cast<TriggerDirection>(node->at("direction", true)->as<RotateDirection>()));
+        result = std::make_unique<DirectionalMotionTrigger>(TriggerType::Circle,
+                                                            static_cast<TriggerDirection>(node->at("direction", true)->as<RotateDirection>()));
     } else if (type == "click") {
         result = std::make_unique<Trigger>(TriggerType::Click);
     } else if (type == "hold" || type == "press") {
-        auto pressTrigger = new PressTrigger;
+        auto *pressTrigger = new PressTrigger;
         loadSetter(pressTrigger, &PressTrigger::setInstant, node->at("instant").get());
         result.reset(pressTrigger);
     } else if (type == "hover") {
         result = std::make_unique<HoverTrigger>();
     } else if (type == "pinch") {
-        result = std::make_unique<DirectionalMotionTrigger>(TriggerType::Pinch, static_cast<TriggerDirection>(node->at("direction", true)->as<PinchDirection>()));
+        result = std::make_unique<DirectionalMotionTrigger>(TriggerType::Pinch,
+                                                            static_cast<TriggerDirection>(node->at("direction", true)->as<PinchDirection>()));
     } else if (type == "rotate") {
-        result = std::make_unique<DirectionalMotionTrigger>(TriggerType::Rotate, static_cast<TriggerDirection>(node->at("direction", true)->as<RotateDirection>()));
+        result = std::make_unique<DirectionalMotionTrigger>(TriggerType::Rotate,
+                                                            static_cast<TriggerDirection>(node->at("direction", true)->as<RotateDirection>()));
     } else if (type == "shortcut") {
         result = std::make_unique<KeyboardShortcutTrigger>(node->at("shortcut", true)->as<KeyboardShortcut>());
     } else if (type == "stroke") {
         result = std::make_unique<StrokeTrigger>(node->at("strokes", true)->asSequence().as<std::vector<Stroke>>());
     } else if (type == "swipe") {
-        result = std::make_unique<DirectionalMotionTrigger>(TriggerType::Swipe, static_cast<TriggerDirection>(node->at("direction", true)->as<SwipeDirection>()));
+        result = std::make_unique<DirectionalMotionTrigger>(TriggerType::Swipe,
+                                                            static_cast<TriggerDirection>(node->at("direction", true)->as<SwipeDirection>()));
     } else if (type == "tap") {
         result = std::make_unique<Trigger>(TriggerType::Tap);
     } else if (type == "wheel") {
@@ -605,20 +606,17 @@ void NodeParser<std::unique_ptr<Trigger>>::parse(const Node *node, std::unique_p
     if (const auto fingersNode = node->at("fingers")) {
         auto range = fingersNode->as<Range<qreal>>();
         if (!range.max()) {
-            conditionGroup->add(std::make_shared<VariableCondition>(BuiltinVariables::Fingers,
-                                                                    Value<qreal>(range.min().value()),
-                                                                    ComparisonOperator::EqualTo));
+            conditionGroup->append(std::make_shared<VariableCondition>(BuiltinVariables::Fingers, Value<qreal>(range.min().value()), ComparisonOperator::EqualTo));
         } else {
-            conditionGroup->add(std::make_shared<VariableCondition>(BuiltinVariables::Fingers,
+            conditionGroup->append(std::make_shared<VariableCondition>(BuiltinVariables::Fingers,
                                                                     std::vector<Value<std::any>>{
-                                                                        Value<qreal>(range.min().value()),
-                                                                        Value<qreal>(range.max().value())},
+                                                                        Value<qreal>(range.min().value()), Value<qreal>(range.max().value())},
                                                                     ComparisonOperator::Between));
         }
     }
     if (const auto modifiersNode = node->at("keyboard_modifiers")) {
         std::optional<Qt::KeyboardModifiers> modifiers;
-        if (modifiersNode->raw()->IsSequence()) {
+        if (modifiersNode->isSequence()) {
             modifiers = modifiersNode->as<Qt::KeyboardModifiers>();
         } else {
             const auto modifierMatchingMode = modifiersNode->as<QString>();
@@ -630,15 +628,20 @@ void NodeParser<std::unique_ptr<Trigger>>::parse(const Node *node, std::unique_p
         }
 
         if (modifiers) {
-            conditionGroup->add(std::make_shared<VariableCondition>(BuiltinVariables::KeyboardModifiers,
+            conditionGroup->append(std::make_shared<VariableCondition>(BuiltinVariables::KeyboardModifiers,
                                                                     Value<Qt::KeyboardModifiers>(modifiers.value()),
                                                                     ComparisonOperator::EqualTo));
         }
     }
     if (const auto conditionsNode = node->at("conditions")) {
-        conditionGroup->add(conditionsNode->as<std::shared_ptr<Condition>>());
+        conditionGroup->append(conditionsNode->as<std::shared_ptr<Condition>>());
     }
-    result->setActivationCondition(conditionGroup);
+
+    if (conditionGroup->conditions().size() == 1) {
+        result->setActivationCondition(conditionGroup->conditions()[0]);
+    } else if (conditionGroup->conditions().size()) {
+        result->setActivationCondition(conditionGroup);
+    }
 
     bool accelerated{};
     loadMember(accelerated, node->at("accelerated").get());
@@ -654,7 +657,7 @@ void NodeParser<std::unique_ptr<Trigger>>::parse(const Node *node, std::unique_p
             result->addAction(std::move(action));
         }
     } else {
-        g_config->addIssue(node, ConfigIssueSeverity::Warning, "Trigger has no 'actions' property.");
+        g_configIssueManager->addIssue(node, ConfigIssueSeverity::Warning, "Trigger has no 'actions' property.");
     }
 }
 
@@ -662,17 +665,16 @@ void NodeParser<std::unique_ptr<Trigger>>::parse(const Node *node, std::unique_p
 template<>
 void NodeParser<std::vector<std::unique_ptr<Trigger>>>::parse(const Node *node, std::vector<std::unique_ptr<Trigger>> &result)
 {
-    for (auto triggerNode : node->sequenceChildren()) {
+    for (const auto &triggerNode : node->sequenceChildren()) {
         if (auto subTriggersNode = triggerNode->at("gestures")) {
             triggerNode->disableMapAccessCheck();
             subTriggersNode->disableMapAccessCheck();
 
             // Trigger group
-            for (auto subTriggerNode : subTriggersNode->sequenceChildren()) {
+            for (const auto &subTriggerNode : subTriggersNode->sequenceChildren()) {
                 subTriggerNode->disableMapAccessCheck();
 
-                // A copy of subTriggerNode is not used intentionally to preserve the mark. This effectively makes the node single-use only.
-
+                // Not cloned to preserve the mark.
                 auto clonedNode = *subTriggerNode->raw();
 
                 std::shared_ptr<Condition> groupCondition;
@@ -691,12 +693,18 @@ void NodeParser<std::vector<std::unique_ptr<Trigger>>>::parse(const Node *node, 
 
                 for (auto &trigger : processedNode.asSequence().as<std::vector<std::unique_ptr<Trigger>>>()) {
                     if (groupCondition) {
-                        auto conditionGroup = std::make_shared<ConditionGroup>();
                         if (const auto triggerCondition = trigger->activationCondition()) {
-                            conditionGroup->add(triggerCondition);
+                            if (const auto triggerConditionGroup = std::dynamic_pointer_cast<ConditionGroup>(triggerCondition); triggerConditionGroup && triggerConditionGroup->mode() == ConditionGroupMode::All) {
+                                triggerConditionGroup->prepend(groupCondition);
+                            } else {
+                                auto conditionGroup = std::make_shared<ConditionGroup>();
+                                conditionGroup->append(groupCondition);
+                                conditionGroup->append(trigger->activationCondition());
+                                trigger->setActivationCondition(conditionGroup);
+                            }
+                        } else {
+                            trigger->setActivationCondition(groupCondition);
                         }
-                        conditionGroup->add(groupCondition);
-                        trigger->setActivationCondition(conditionGroup);
                     }
 
                     result.push_back(std::move(trigger));
@@ -756,7 +764,7 @@ struct NodeParser<Value<T>>
 {
     static void parse(const Node *node, Value<T> &result)
     {
-        if (node->raw()->IsMap()) {
+        if (node->isMap()) {
             if (const auto commandNode = node->at("command")) {
                 result = Value<T>::command(commandNode->as<Value<QString>>());
             }

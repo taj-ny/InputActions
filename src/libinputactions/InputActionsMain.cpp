@@ -1,6 +1,8 @@
 #include "InputActionsMain.h"
 #include "actions/ActionExecutor.h"
-#include "config/Config.h"
+#include "config/ConfigIssueManager.h"
+#include "config/ConfigLoader.h"
+#include "config/GlobalConfig.h"
 #include "input/StrokeRecorder.h"
 #include "input/backends/InputBackend.h"
 #include "input/backends/LibevdevComplementaryInputBackend.h"
@@ -45,7 +47,9 @@ InputActionsMain::~InputActionsMain()
     g_windowProvider.reset();
 
     g_actionExecutor.reset();
-    g_config.reset();
+    g_globalConfig.reset();
+    g_configIssueManager.reset();
+    g_configLoader.reset();
     g_configProvider.reset();
     g_inputBackend.reset();
     g_strokeRecorder.reset();
@@ -62,12 +66,16 @@ void InputActionsMain::initialize()
 {
     connect(g_configProvider.get(), &ConfigProvider::configChanged, this, &InputActionsMain::onConfigChanged);
     registerGlobalVariables(g_variableManager.get());
+
+    g_configLoader->loadEmpty(); // Initialize default values
 }
 
 void InputActionsMain::onConfigChanged(const QString &config)
 {
-    if (g_config->autoReload()) {
-        Config::load(config);
+    if (g_globalConfig->autoReload()) {
+        g_configLoader->load({
+            .config = config
+        });
     }
 }
 
@@ -86,7 +94,9 @@ void InputActionsMain::setMissingImplementations()
     setMissingImplementation(g_windowProvider);
 
     setMissingImplementation(g_actionExecutor);
-    setMissingImplementation(g_config);
+    setMissingImplementation(g_configIssueManager);
+    setMissingImplementation(g_configLoader);
+    setMissingImplementation(g_globalConfig);
     setMissingImplementation(g_inputBackend);
     setMissingImplementation(g_strokeRecorder);
     setMissingImplementation(g_variableManager);

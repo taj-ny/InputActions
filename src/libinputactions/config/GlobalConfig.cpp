@@ -1,6 +1,6 @@
 /*
     Input Actions - Input handler that executes user-defined actions
-    Copyright (C) 2024-2025 Marcin Woźniak
+    Copyright (C) 2024-2026 Marcin Woźniak
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -16,22 +16,8 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#pragma once
+#include "GlobalConfig.h"
 
-#include <QString>
-
-namespace InputActions::AnsiEscapeCode
+namespace InputActions
 {
-
-namespace Color
-{
-static const QString Bold = QStringLiteral("\033[1m");
-
-static const QString Red = QStringLiteral("\033[31m");
-static const QString Yellow = QStringLiteral("\033[33m");
-static const QString Blue = QStringLiteral("\033[34m");
-
-static const QString Reset = QStringLiteral("\033[0m");
-}
-
 }

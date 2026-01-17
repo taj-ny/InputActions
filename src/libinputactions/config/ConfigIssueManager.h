@@ -30,6 +30,15 @@ class ConfigParserException : public std::exception
 {
 public:
     ConfigParserException(const Node *node, const QString &message);
+
+    int32_t line() const { return m_line; }
+    int32_t column() const { return m_column; }
+    const char *what() const noexcept override { return m_what.c_str(); }
+
+private:
+    int32_t m_line;
+    int32_t m_column;
+    std::string m_what;
 };
 
 enum class ConfigIssueSeverity
@@ -59,39 +68,23 @@ private:
     QString m_message;
 };
 
-class Config
+class ConfigIssueManager
 {
 public:
-    /**
-     * Use issuesToString to get detailed information about issues.
-     * @return Whether the operation was successful.
-     */
-    static bool load(const QString &config, bool preventCrashLoops = false);
-    /**
-     * Use issuesToString to get detailed information about issues.
-     * @return Whether the operation was successful.
-     */
-    static bool load(bool preventCrashLoops = false);
-
-    bool autoReload() const { return m_autoReload; }
-    void setAutoReload(bool value) { m_autoReload = value; }
-
-    bool sendNotificationOnError() const { return m_sendNotificationOnError; }
-    void setSendNotificationOnError(bool value) { m_sendNotificationOnError = value; }
+    ConfigIssueManager(QString config = "");
 
     void addIssue(const Node *node, ConfigIssueSeverity severity, const QString &message);
     void addIssue(int32_t line, int32_t column, ConfigIssueSeverity severity, const QString &message);
+
     const std::vector<ConfigIssue> &issues() const { return m_issues; }
 
-    QString issuesToString(QString config = {}) const;
+    QString issuesToString() const;
 
 private:
-    bool m_autoReload = true;
-    bool m_sendNotificationOnError = true;
-
     std::vector<ConfigIssue> m_issues;
+    QString m_config;
 };
 
-inline std::shared_ptr<Config> g_config;
+inline std::shared_ptr<ConfigIssueManager> g_configIssueManager;
 
 }

@@ -17,9 +17,9 @@
 */
 
 #include "NodeParser.h"
-#include <libinputactions/config/Config.h>
-#include <libinputactions/config/Node.h>
 #include <chrono>
+#include <libinputactions/config/ConfigIssueManager.h>
+#include <libinputactions/config/Node.h>
 
 namespace InputActions
 {

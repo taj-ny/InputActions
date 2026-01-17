@@ -17,9 +17,8 @@
 */
 
 #include "DBusInterfaceBase.h"
-#include "config/Config.h"
-#include "interfaces/ConfigProvider.h"
 #include <QRegularExpression>
+#include <libinputactions/config/ConfigIssueManager.h>
 #include <libinputactions/triggers/StrokeTrigger.h>
 #include <libinputactions/variables/VariableManager.h>
 
@@ -28,7 +27,7 @@ namespace InputActions
 
 QString DBusInterfaceBase::issues()
 {
-    return g_config->issuesToString();
+    return g_configIssueManager->issuesToString();
 }
 
 QString DBusInterfaceBase::strokeToBase64(const Stroke &stroke)

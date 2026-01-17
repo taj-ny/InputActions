@@ -19,7 +19,7 @@
 #pragma once
 
 #include "NodeParser.h"
-#include <libinputactions/config/Config.h>
+#include <libinputactions/config/ConfigIssueManager.h>
 #include <libinputactions/config/Node.h>
 #include <set>
 #include <vector>

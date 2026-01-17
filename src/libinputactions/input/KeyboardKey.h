@@ -18,12 +18,12 @@
 
 #pragma once
 
+#include <QString>
+#include <QVector>
 #include <linux/input-event-codes.h>
 #include <memory>
 #include <optional>
 #include <unordered_map>
-#include <QString>
-#include <QVector>
 
 inline const std::unordered_map<QString, uint32_t> KEYBOARD_KEYS = {
     {"RESERVED", KEY_RESERVED},

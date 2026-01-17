@@ -17,7 +17,7 @@
 */
 
 #include "Node.h"
-#include "Config.h"
+#include "ConfigIssueManager.h"
 
 namespace InputActions
 {
@@ -38,7 +38,7 @@ Node::Node(QString text, const Node *parentNode)
 
 Node::~Node()
 {
-    if (!m_node.IsMap() || !m_mapAccessCheckEnabled || !g_config) {
+    if (!isMap() || !m_mapAccessCheckEnabled) {
         return;
     }
 
@@ -46,7 +46,9 @@ Node::~Node()
         if (const auto key = QString::fromStdString(it->first.as<std::string>("")); !key.isEmpty()) {
             if (!m_accessedMapNodes.contains(key)) {
                 Node tmp = m_node[key.toStdString().c_str()];
-                g_config->addIssue(&tmp, ConfigIssueSeverity::UnusedProperty, QString("Property '%1' does not exist or has no effect in this context.").arg(key));
+                g_configIssueManager->addIssue(&tmp,
+                                               ConfigIssueSeverity::UnusedProperty,
+                                               QString("Property '%1' does not exist or has no effect in this context.").arg(key));
             }
         }
     }
@@ -107,6 +109,11 @@ Node Node::clone() const
     return newNode;
 }
 
+bool Node::isMap() const
+{
+    return m_node.IsMap();
+}
+
 std::map<std::shared_ptr<const Node>, std::shared_ptr<const Node>> Node::mapChildren() const
 {
     std::map<std::shared_ptr<const Node>, std::shared_ptr<const Node>> result;
@@ -116,7 +123,12 @@ std::map<std::shared_ptr<const Node>, std::shared_ptr<const Node>> Node::mapChil
     return result;
 }
 
-std::vector<std::shared_ptr<const Node>> Node::sequenceChildren() const
+bool Node::isSequence() const
+{
+    return m_node.IsSequence();
+}
+
+std::vector<std::shared_ptr<const Node>> Node::sequenceChildren(bool disableMapAccessCheck) const
 {
     if (!m_node.IsSequence()) {
         throw ConfigParserException(this, "Expected a list.");
@@ -124,12 +136,17 @@ std::vector<std::shared_ptr<const Node>> Node::sequenceChildren() const
 
     std::vector<std::shared_ptr<const Node>> result;
     for (const auto &child : m_node) {
-        result.emplace_back(std::make_shared<const Node>(child));
+        auto node = std::make_shared<const Node>(child);
+        if (disableMapAccessCheck) {
+            node->disableMapAccessCheck();
+        }
+
+        result.push_back(std::move(node));
     }
     return result;
 }
 
-std::vector<std::shared_ptr<Node>> Node::sequenceChildren()
+std::vector<std::shared_ptr<Node>> Node::sequenceChildren(bool disableMapAccessCheck)
 {
     if (!m_node.IsSequence()) {
         throw ConfigParserException(this, "Expected a list.");
@@ -137,7 +154,12 @@ std::vector<std::shared_ptr<Node>> Node::sequenceChildren()
 
     std::vector<std::shared_ptr<Node>> result;
     for (const auto &child : m_node) {
-        result.emplace_back(std::make_shared<Node>(child));
+        auto node = std::make_shared<Node>(child);
+        if (disableMapAccessCheck) {
+            node->disableMapAccessCheck();
+        }
+
+        result.push_back(std::move(node));
     }
     return result;
 }

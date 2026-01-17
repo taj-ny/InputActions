@@ -16,9 +16,9 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include <libinputactions/config/Node.h>
 #include "NodeParser.h"
 #include <chrono>
+#include <libinputactions/config/Node.h>
 
 namespace InputActions
 {
