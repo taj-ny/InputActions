@@ -249,6 +249,7 @@ void StandaloneInputDevice::restoreVirtualDeviceState()
             restoreKey();
             restoreAbs();
             restoreAbsMt();
+            finish();
             break;
         case InputDeviceType::Touchscreen:
             restoreKey();
