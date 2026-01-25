@@ -17,51 +17,54 @@
 */
 
 #include "Node.h"
+#include "ConfigIssue.h"
 #include "ConfigIssueManager.h"
+#include "config/TextPosition.h"
+#include "UnusedNodePropertyTracker.h"
+#include <QLoggingCategory>
 
 namespace InputActions
 {
 
-Node::Node(YAML::Node node)
+Node::Node(YAML::Node node, const Node *substringParent)
     : m_node(node)
-    , m_line(node.Mark().line)
-    , m_column(node.Mark().column)
+    , m_position(node.Mark().line, node.Mark().column)
 {
-}
+    if (substringParent && substringParent->m_isSubstringNode) {
+        m_position = substringParent->position();
+    }
 
-Node::Node(QString text, const Node *parentNode)
-    : m_node(YAML::Load(text.toStdString()))
-    , m_line(parentNode->line())
-    , m_column(parentNode->column())
-{
+    // if (isMap()) {
+        m_unusedPropertyTracker = std::make_shared<UnusedNodePropertyTracker>();
+    // }
 }
 
 Node::~Node()
 {
-    if (!isMap() || !m_mapAccessCheckEnabled) {
-        return;
+    if (m_unusedPropertyTracker && isMap() && m_unusedPropertyTracker->enabled()) {
+        m_unusedPropertyTracker->check(this);
     }
+}
 
-    for (auto it = m_node.begin(); it != m_node.end(); ++it) {
-        if (const auto key = QString::fromStdString(it->first.as<std::string>("")); !key.isEmpty()) {
-            if (!m_accessedMapNodes.contains(key)) {
-                Node tmp = m_node[key.toStdString().c_str()];
-                g_configIssueManager->addIssue(&tmp,
-                                               ConfigIssueSeverity::UnusedProperty,
-                                               QString("Property '%1' does not exist or has no effect in this context.").arg(key));
-            }
-        }
+Node Node::load(const QString &s)
+{
+    try {
+        return {YAML::Load(s.toStdString())};
+    } catch (const YAML::Exception &e) {
+        throw YamlCppConfigException({e.mark.line, e.mark.column}, e.what());
     }
 }
 
 std::shared_ptr<const Node> Node::at(const char *key, bool required) const
 {
-    m_accessedMapNodes.insert(key);
+    if (m_unusedPropertyTracker) {
+        m_unusedPropertyTracker->registerPropertyAccess(key);
+    }
 
     auto node = m_node[key];
     if (!node.IsDefined()) {
         if (required) {
-            throw ConfigParserException(this, QString("Required property '%1' is missing.").arg(key));
+            throw MissingRequiredPropertyConfigException(m_position, key);
         }
         return {};
     }
@@ -71,42 +74,114 @@ std::shared_ptr<const Node> Node::at(const char *key, bool required) const
 
 std::shared_ptr<const Node> Node::mapAt(const char *key, bool required) const
 {
-    m_accessedMapNodes.insert(key);
+    if (m_unusedPropertyTracker) {
+        m_unusedPropertyTracker->registerPropertyAccess(key);
+    }
 
     auto node = m_node[key];
     if (!node.IsDefined()) {
         if (required) {
-            throw ConfigParserException(this, QString("Required property '%1' is missing.").arg(key));
+            throw MissingRequiredPropertyConfigException(m_position, key);
         }
         return {};
     }
 
     if (!node.IsMap()) {
         Node tmp = node;
-        throw ConfigParserException(&tmp, "Expected a map.");
+        throw InvalidNodeTypeConfigException(m_position, NodeType::Map, tmp.type());
     }
     return std::make_shared<const Node>(node);
 }
 
 Node Node::asSequence() const
 {
-    YAML::Node result(YAML::NodeType::Sequence);
-    if (m_node.IsSequence()) {
-        for (const auto &child : m_node) {
-            result.push_back(child);
-        }
-    } else {
-        result.push_back(m_node);
-    }
-
-    return result;
+    Node node = *this;
+    node.m_allowImplicitConversionToSequence = true;
+    return node;
 }
 
 Node Node::clone() const
 {
-    Node newNode = YAML::Clone(m_node);
-    newNode.setPosition(m_line, m_column);
-    return newNode;
+    Node node = YAML::Clone(m_node);
+    node.setPosition(m_position);
+    return node;
+}
+
+Node Node::substringNode(const QString &substring) const
+{
+    try {
+        Node node = Node::load(substring);
+        node.setPosition(m_position);
+        node.m_isSubstringNode = true;
+        return node;
+    } catch (const YamlCppConfigException &e) {
+        auto copy = e;
+        copy.setPosition(m_position);
+        throw std::move(copy);
+    }
+}
+
+std::map<std::shared_ptr<const Node>, std::shared_ptr<const Node>> Node::mapChildren() const
+{
+    std::map<std::shared_ptr<const Node>, std::shared_ptr<const Node>> result;
+    for (auto it = m_node.begin(); it != m_node.end(); ++it) {
+        result.emplace(std::make_shared<const Node>(it->first, this), std::make_shared<const Node>(it->second, this));
+    }
+    return result;
+}
+
+std::vector<std::shared_ptr<const Node>> Node::sequenceChildren(bool disableUnusedPropertyCheck) const
+{
+    if (!isSequence()) {
+        if (m_allowImplicitConversionToSequence) {
+            return {std::make_shared<const Node>(*this)};
+        }
+        throw InvalidNodeTypeConfigException(m_position, NodeType::Sequence, type());
+    }
+
+    std::vector<std::shared_ptr<const Node>> result;
+    for (const auto &child : m_node) {
+        auto node = std::make_shared<const Node>(child, this);
+        if (disableUnusedPropertyCheck && node->m_unusedPropertyTracker) {
+            node->m_unusedPropertyTracker->setEnabled(false);
+        }
+
+        result.push_back(std::move(node));
+    }
+    return result;
+}
+
+std::vector<std::shared_ptr<Node>> Node::sequenceChildren(bool disableUnusedPropertyCheck)
+{
+    if (!isSequence()) {
+        if (m_allowImplicitConversionToSequence) {
+            return {std::make_shared<Node>(*this)};
+        }
+        throw InvalidNodeTypeConfigException(m_position, NodeType::Sequence, type());
+    }
+
+    std::vector<std::shared_ptr<Node>> result;
+    for (const auto &child : m_node) {
+        auto node = std::make_shared<Node>(child, this);
+        if (disableUnusedPropertyCheck && node->m_unusedPropertyTracker) {
+            node->m_unusedPropertyTracker->setEnabled(false);
+        }
+
+        result.push_back(std::move(node));
+    }
+    return result;
+}
+
+NodeType Node::type() const
+{
+    if (isMap()) {
+        return NodeType::Map;
+    } else if (isScalar()) {
+        return NodeType::Scalar;
+    } else if (isSequence()) {
+        return NodeType::Sequence;
+    }
+    return NodeType::Null;
 }
 
 bool Node::isMap() const
@@ -114,13 +189,9 @@ bool Node::isMap() const
     return m_node.IsMap();
 }
 
-std::map<std::shared_ptr<const Node>, std::shared_ptr<const Node>> Node::mapChildren() const
+bool Node::isScalar() const
 {
-    std::map<std::shared_ptr<const Node>, std::shared_ptr<const Node>> result;
-    for (auto it = m_node.begin(); it != m_node.end(); ++it) {
-        result.emplace(std::make_shared<const Node>(it->first), std::make_shared<const Node>(it->second));
-    }
-    return result;
+    return m_node.IsScalar();
 }
 
 bool Node::isSequence() const
@@ -128,45 +199,9 @@ bool Node::isSequence() const
     return m_node.IsSequence();
 }
 
-std::vector<std::shared_ptr<const Node>> Node::sequenceChildren(bool disableMapAccessCheck) const
+QString Node::tag() const
 {
-    if (!m_node.IsSequence()) {
-        throw ConfigParserException(this, "Expected a list.");
-    }
-
-    std::vector<std::shared_ptr<const Node>> result;
-    for (const auto &child : m_node) {
-        auto node = std::make_shared<const Node>(child);
-        if (disableMapAccessCheck) {
-            node->disableMapAccessCheck();
-        }
-
-        result.push_back(std::move(node));
-    }
-    return result;
-}
-
-std::vector<std::shared_ptr<Node>> Node::sequenceChildren(bool disableMapAccessCheck)
-{
-    if (!m_node.IsSequence()) {
-        throw ConfigParserException(this, "Expected a list.");
-    }
-
-    std::vector<std::shared_ptr<Node>> result;
-    for (const auto &child : m_node) {
-        auto node = std::make_shared<Node>(child);
-        if (disableMapAccessCheck) {
-            node->disableMapAccessCheck();
-        }
-
-        result.push_back(std::move(node));
-    }
-    return result;
-}
-
-Node::operator bool() const
-{
-    return static_cast<bool>(m_node);
+    return QString::fromStdString(m_node.Tag());
 }
 
 }

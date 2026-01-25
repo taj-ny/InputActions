@@ -288,6 +288,7 @@ void SessionManager::variableListRequestMessage(const std::shared_ptr<const Vari
 
 void SessionManager::activateSession(Session &session, bool loadConfig)
 {
+    // Ensure the previous session's config doesn't remain active if this session's config fails to load
     g_configLoader->loadEmpty();
 
     m_currentSession = &session;

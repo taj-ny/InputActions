@@ -16,10 +16,7 @@ class TestNodeParser : public Test
 private slots:
     void init();
 
-    void variableCondition_boolVariableWithoutOperator__constructedCorrectly();
-    void variableCondition_negatedBoolVariableWithoutOperator__constructedCorrectly();
-
-    void triggerGroup_propertyAppliedToTrigger();
+    void triggerGroup__propertyAppliedToTrigger();
     void triggerGroup_nested_propertyInFirstGroup__propertyAppliedToTrigger();
     void triggerGroup_nested_propertyInSecondGroup__propertyAppliedToTrigger();
 
@@ -27,11 +24,10 @@ private slots:
     void triggerGroup_condition_triggerWithSingleCondition__conditionsMergedIntoGroup();
     void triggerGroup_nested_condition_triggerWithSingleCondition__conditionsMergedIntoGroup();
     void triggerGroup_condition_triggerWithAllConditionGroup__groupConditionPrependedIntoTriggerCondition();
-    void triggerGroup_condition_triggerWithAnyConditionGroup__();
+    void triggerGroup_condition_triggerWithAnyConditionGroup__groupConditionAndTriggerConditionMergedIntoGroup();
 
 private:
     static Node load(const QString &s);
-    static const VariableCondition *lazyConditionToVariable(const std::shared_ptr<Condition> &condition);
 };
 
 }

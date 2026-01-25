@@ -74,7 +74,7 @@ void InputActionsMain::onConfigChanged(const QString &config)
 {
     if (g_globalConfig->autoReload()) {
         g_configLoader->load({
-            .config = config
+            .config = config,
         });
     }
 }

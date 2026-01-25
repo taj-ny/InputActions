@@ -18,22 +18,25 @@
 
 #pragma once
 
-#include <QString>
+#include "containers.h"
+#include "NodeParser.h"
+#include <typeindex>
 
-namespace InputActions::AnsiEscapeCode
+namespace InputActions
 {
 
-namespace Color
+template<typename T>
+struct NodeParser<QFlags<T>>
 {
+    static void parse(const Node *node, QFlags<T> &result)
+    {
+        result = {0};
+        for (const auto flag : node->as<std::set<T>>()) {
+            result |= flag;
+        }
+    }
+};
 
-static const QString Bold = QStringLiteral("\033[1m");
-
-static const QString Red = QStringLiteral("\033[31m");
-static const QString Yellow = QStringLiteral("\033[33m");
-static const QString Blue = QStringLiteral("\033[34m");
-
-static const QString Reset = QStringLiteral("\033[0m");
-
-}
+bool isTypeFlags(const std::type_index &type);
 
 }

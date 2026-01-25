@@ -16,24 +16,39 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#pragma once
+#include "TextPosition.h"
 
-#include <QString>
-
-namespace InputActions::AnsiEscapeCode
+namespace InputActions
 {
 
-namespace Color
+TextPosition::TextPosition()
+    : TextPosition(-1, -1)
 {
+}
 
-static const QString Bold = QStringLiteral("\033[1m");
+TextPosition::TextPosition(int32_t line, int32_t column)
+    : m_line(line)
+    , m_column(column)
+{
+}
 
-static const QString Red = QStringLiteral("\033[31m");
-static const QString Yellow = QStringLiteral("\033[33m");
-static const QString Blue = QStringLiteral("\033[34m");
+bool TextPosition::isValid() const
+{
+    return m_line >= 0 && m_column >= 0;
+}
 
-static const QString Reset = QStringLiteral("\033[0m");
+QString TextPosition::toString() const
+{
+    if (!isValid()) {
+        return {};
+    }
 
+    return QString("%1:%2: ").arg(QString::number(m_line + 1), QString::number(m_column + 1));
+}
+
+TextPosition::operator bool() const
+{
+    return isValid();
 }
 
 }

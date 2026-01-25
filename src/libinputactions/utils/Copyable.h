@@ -1,6 +1,6 @@
 /*
     Input Actions - Input handler that executes user-defined actions
-    Copyright (C) 2024-2026 Marcin Woźniak
+    Copyright (C) 2024-2025 Marcin Woźniak
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -18,22 +18,26 @@
 
 #pragma once
 
-#include <QString>
+#include <memory>
 
-namespace InputActions::AnsiEscapeCode
+namespace InputActions
 {
 
-namespace Color
+template<typename T>
+class CopyableBase
 {
+public:
+    virtual std::unique_ptr<T> copy() const = 0;
+};
 
-static const QString Bold = QStringLiteral("\033[1m");
-
-static const QString Red = QStringLiteral("\033[31m");
-static const QString Yellow = QStringLiteral("\033[33m");
-static const QString Blue = QStringLiteral("\033[34m");
-
-static const QString Reset = QStringLiteral("\033[0m");
-
-}
+template<typename TThis, typename TBase>
+class Copyable : public virtual CopyableBase<TBase>
+{
+public:
+    std::unique_ptr<TBase> copy() const override
+    {
+        return std::make_unique<TThis>(dynamic_cast<const TThis &>(*this));
+    }
+};
 
 }

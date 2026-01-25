@@ -22,7 +22,7 @@
 #include <QRegularExpression>
 #include <QString>
 #include <QStringList>
-#include <libinputactions/config/ConfigIssueManager.h>
+#include <libinputactions/config/ConfigIssue.h>
 #include <libinputactions/config/Node.h>
 
 namespace InputActions
@@ -33,18 +33,18 @@ void NodeParser<QPointF>::parse(const Node *node, QPointF &result)
 {
     const auto raw = node->as<QString>().split(",");
     if (raw.size() != 2) {
-        throw ConfigParserException(node, "Invalid point, format: x,y (where both values are floats).");
+        throw InvalidValueConfigException(node->position(), "Invalid point, format: x,y (where both values are floats).");
     }
 
     bool ok{};
     const auto x = raw[0].toDouble(&ok);
     if (!ok) {
-        throw ConfigParserException(node, "Failed to parse X value as a number.");
+        throw InvalidValueConfigException(node->position(), QString("Value '%1' is not a number.").arg(raw[0]));
     }
 
     const auto y = raw[1].toDouble(&ok);
     if (!ok) {
-        throw ConfigParserException(node, "Failed to parse Y value as a number.");
+        throw InvalidValueConfigException(node->position(), QString("Value '%1' is not a number.").arg(raw[1]));
     }
 
     result.setX(x);
@@ -56,7 +56,7 @@ void NodeParser<QRegularExpression>::parse(const Node *node, QRegularExpression 
 {
     result = QRegularExpression(node->as<QString>());
     if (!result.isValid()) {
-        throw ConfigParserException(node, "Invalid regular expression: " + result.errorString());
+        throw InvalidValueConfigException(node->position(), QString("Invalid regular expression: %1.").arg( result.errorString()));
     }
 }
 
@@ -69,8 +69,8 @@ void NodeParser<QString>::parse(const Node *node, QString &result)
 template<>
 void NodeParser<QStringList>::parse(const Node *node, QStringList &result)
 {
-    for (auto string : node->as<std::vector<QString>>()) {
-        result << string;
+    for (const auto &s : node->as<std::vector<QString>>()) {
+        result << s;
     }
 }
 

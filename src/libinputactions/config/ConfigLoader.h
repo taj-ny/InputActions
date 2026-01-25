@@ -32,9 +32,6 @@ struct ConfigLoadSettings
      * If not set, the config returned by ConfigProvider will be used.
      */
     std::optional<QString> config;
-    bool keepPreviousConfigOnFailure = true;
-    bool sendNotificationOnError = true;
-    bool preventCrashLoops = false;
 };
 
 class ConfigLoader
@@ -44,7 +41,7 @@ public:
      * Use issuesToString to get detailed information about issues.
      * @return Whether the operation was successful.
      */
-    bool load(ConfigLoadSettings settings = {});
+    bool load(const ConfigLoadSettings &settings = {});
 
     /**
      * Loads an empty config with default values without initializing any components.

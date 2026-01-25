@@ -16,43 +16,20 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include "NodeParser.h"
-#include <QString>
-#include <libinputactions/config/ConfigIssueManager.h>
-#include <libinputactions/config/Node.h>
+#include "flags.h"
+#include <set>
 #include <libinputactions/globals.h>
-#include <libinputactions/triggers/DirectionalMotionTrigger.h>
-#include <unordered_map>
 
 namespace InputActions
 {
 
-#define NODEPARSER_FLAGS(T, name, map)                                                           \
-    template<>                                                                                   \
-    void NodeParser<T>::parse(const Node *node, T &result)                                       \
-    {                                                                                            \
-        result = {0};                                                                            \
-        for (const auto &raw : node->as<QStringList>()) {                                        \
-            if (!map.contains(raw)) {                                                            \
-                throw ConfigParserException(node, QString("Invalid %1 ('%2').").arg(name, raw)); \
-            }                                                                                    \
-            result |= map.at(raw);                                                               \
-        }                                                                                        \
-    }
-
-NODEPARSER_FLAGS(Qt::KeyboardModifiers, "keyboard modifier",
-                 (std::unordered_map<QString, Qt::KeyboardModifier>{
-                     {"alt", Qt::KeyboardModifier::AltModifier},
-                     {"ctrl", Qt::KeyboardModifier::ControlModifier},
-                     {"meta", Qt::KeyboardModifier::MetaModifier},
-                     {"shift", Qt::KeyboardModifier::ShiftModifier},
-                 }))
-NODEPARSER_FLAGS(InputDeviceTypes, "input device type",
-                 (std::unordered_map<QString, InputDeviceType>{
-                     {"keyboard", InputDeviceType::Keyboard},
-                     {"mouse", InputDeviceType::Mouse},
-                     {"touchpad", InputDeviceType::Touchpad},
-                     {"touchscreen", InputDeviceType::Touchscreen},
-                 }))
+bool isTypeFlags(const std::type_index &type)
+{
+    static const std::set<std::type_index> flags{
+        typeid(Qt::KeyboardModifiers),
+        typeid(InputDeviceTypes),
+    };
+    return flags.contains(type);
+}
 
 }

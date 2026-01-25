@@ -18,6 +18,8 @@
 
 #include "core.h"
 #include "containers.h"
+#include "flags.h"
+#include "input/backends/InputBackend.h"
 #include "utils.h"
 #include <QPointF>
 #include <QRegularExpression>
@@ -30,17 +32,20 @@
 #include <libinputactions/actions/SleepAction.h>
 #include <libinputactions/actions/TriggerAction.h>
 #include <libinputactions/conditions/ConditionGroup.h>
-#include <libinputactions/conditions/LazyCondition.h>
 #include <libinputactions/conditions/VariableCondition.h>
 #include <libinputactions/config/ConfigIssueManager.h>
+#include <libinputactions/config/ConfigIssue.h>
 #include <libinputactions/config/Node.h>
+#include <libinputactions/config/UnusedNodePropertyTracker.h>
 #include <libinputactions/handlers/KeyboardTriggerHandler.h>
 #include <libinputactions/handlers/MouseTriggerHandler.h>
 #include <libinputactions/handlers/PointerTriggerHandler.h>
 #include <libinputactions/handlers/TouchpadTriggerHandler.h>
 #include <libinputactions/handlers/TouchscreenTriggerHandler.h>
+#include <libinputactions/input/backends/InputBackend.h>
 #include <libinputactions/input/InputDeviceRule.h>
 #include <libinputactions/input/KeyboardKey.h>
+#include <libinputactions/input/MouseButton.h>
 #include <libinputactions/interfaces/CursorShapeProvider.h>
 #include <libinputactions/triggers/HoverTrigger.h>
 #include <libinputactions/triggers/KeyboardShortcutTrigger.h>
@@ -53,50 +58,9 @@
 namespace InputActions
 {
 
-// https://invent.kde.org/plasma/kwin/-/blob/cc4d99ae/src/mousebuttons.cpp#L14
-static const std::unordered_map<QString, uint32_t> MOUSE = {
-    {"LEFT", BTN_LEFT},
-    {"MIDDLE", BTN_MIDDLE},
-    {"RIGHT", BTN_RIGHT},
-
-    // Those 5 buttons are supposed to be like this (I think)
-    {"BACK", BTN_SIDE},
-    {"FORWARD", BTN_EXTRA},
-    {"TASK", BTN_FORWARD},
-    {"SIDE", BTN_BACK},
-    {"EXTRA", BTN_TASK},
-
-    {"EXTRA6", 0x118},
-    {"EXTRA7", 0x119},
-    {"EXTRA8", 0x11a},
-    {"EXTRA9", 0x11b},
-    {"EXTRA10", 0x11c},
-    {"EXTRA11", 0x11d},
-    {"EXTRA12", 0x11e},
-    {"EXTRA13", 0x11f},
-};
-
 class ConfigParser;
 
-inline KeyboardKey parseKeyboardKey(const Node *node, const QString &raw)
-{
-    if (const auto key = KeyboardKey::fromString(raw.toUpper())) {
-        return key.value();
-    }
-
-    throw ConfigParserException(node, QString("Invalid keyboard key '%1'.").arg(raw));
-}
-
-inline uint32_t parseMouseButton(const Node *node, const QString &raw)
-{
-    if (MOUSE.contains(raw)) {
-        return MOUSE.at(raw);
-    }
-
-    throw ConfigParserException(node, QString("Invalid mouse button '%1'.").arg(raw));
-}
-
-static Value<std::any> asAny(const Node *node, const std::type_index &type)
+static Value<std::any> parseAny(const Node *node, const std::type_index &type)
 {
     if (type == typeid(bool)) {
         return node->as<Value<bool>>();
@@ -113,13 +77,7 @@ static Value<std::any> asAny(const Node *node, const std::type_index &type)
     } else if (type == typeid(QString)) {
         return node->as<Value<QString>>();
     }
-    throw ConfigParserException(node, "Unexpected type");
-}
-
-static bool isEnum(const std::type_index &type)
-{
-    static const std::unordered_set<std::type_index> enums{typeid(Qt::KeyboardModifiers), typeid(InputDeviceTypes)};
-    return enums.contains(type);
+    throw InvalidValueConfigException(node->position(), "Unexpected type.");
 }
 
 /**
@@ -128,7 +86,7 @@ static bool isEnum(const std::type_index &type)
 static QPointF parseMouseInputActionPoint(const Node *node, const QStringList &arguments)
 {
     if (arguments.length() != 2) {
-        throw ConfigParserException(node, "Invalid point (wrong argument count)");
+        throw InvalidValueConfigException(node->position(), "Invalid point: wrong argument count.");
     }
 
     bool ok1{};
@@ -136,16 +94,16 @@ static QPointF parseMouseInputActionPoint(const Node *node, const QStringList &a
     const QPointF point(arguments[0].toDouble(&ok1), arguments[1].toDouble(&ok2));
 
     if (!ok1) {
-        throw ConfigParserException(node, "Invalid point (argument 1 is not a number)");
+        throw InvalidValueConfigException(node->position(), QString("Invalid argument 1 '%1': not a number.").arg(arguments[0]));
     }
     if (!ok2) {
-        throw ConfigParserException(node, "Invalid point (argument 2 is not a number)");
+        throw InvalidValueConfigException(node->position(), QString("Invalid argument 2 '%1': not a number.").arg(arguments[1]));
     }
 
     return point;
 }
 
-static std::shared_ptr<Condition> parseVariableCondition(const Node *node, std::optional<ConditionEvaluationArguments> constructionArguments = {})
+static std::shared_ptr<Condition> parseVariableCondition(const Node *node, const VariableManager *variableManager)
 {
     auto raw = node->as<QString>();
     bool negate{};
@@ -159,17 +117,12 @@ static std::shared_ptr<Condition> parseVariableCondition(const Node *node, std::
     const auto secondSpace = raw.indexOf(' ', firstSpace + 1);
 
     const auto variableName = raw.left(firstSpace);
-    if (!constructionArguments) {
+    const auto *variable = variableManager->getVariable(variableName);
+    if (!variable) {
         // Variable type must be known in order to parse the right side of the condition
-        return std::make_shared<LazyCondition>([variableName, node = node->clone()](const ConditionEvaluationArguments &arguments) {
-            if (!arguments.variableManager->getVariable(variableName)) {
-                throw ConfigParserException(&node, QString("Variable %1 does not exist.").arg(variableName.toStdString().c_str()));
-            }
-            return parseVariableCondition(&node, arguments);
-        });
+        throw InvalidVariableConfigException(node->position(), variableName);
     }
 
-    const auto variable = constructionArguments->variableManager->getVariable(variableName);
     ComparisonOperator comparisonOperator;
     std::vector<Value<std::any>> right;
     if (firstSpace == -1 && variable->type() == typeid(bool)) { // bool variable condition without operator
@@ -190,27 +143,31 @@ static std::shared_ptr<Condition> parseVariableCondition(const Node *node, std::
         };
         const auto operatorRaw = raw.mid(firstSpace + 1, secondSpace - firstSpace - 1);
         if (!operators.contains(operatorRaw)) {
-            throw ConfigParserException(node, "Invalid operator");
+            throw InvalidValueConfigException(node->position(), QString("Invalid operator '%1'.").arg(operatorRaw));
         }
         comparisonOperator = operators.at(operatorRaw);
 
         const auto rightRaw = raw.mid(secondSpace + 1);
-        Node rightNode(rightRaw, node);
+        auto rightNode = node->substringNode(rightRaw);
 
-        if (!isEnum(variable->type()) && rightNode.isSequence()) {
-            for (auto child : rightNode.sequenceChildren()) {
-                child->setPosition(node->line(), node->column());
-                right.push_back(asAny(child.get(), variable->type()));
+        if (comparisonOperator == ComparisonOperator::Regex) {
+            rightNode.as<QRegularExpression>();
+        }
+
+        if (!isTypeFlags(variable->type()) && rightNode.isSequence()) {
+            for (auto &child : rightNode.sequenceChildren()) {
+                child->setPosition(node->position());
+                right.push_back(parseAny(child.get(), variable->type()));
             }
         } else if (rightRaw.contains(';')) {
             const auto split = rightRaw.split(';');
-            Node tmp1(split[0], node);
-            Node tmp2(split[1], node);
+            const auto minNode = node->substringNode(split[0]);
+            const auto maxNode = node->substringNode(split[1]);
 
-            right.push_back(asAny(&tmp1, variable->type()));
-            right.push_back(asAny(&tmp2, variable->type()));
+            right.push_back(parseAny(&minNode, variable->type()));
+            right.push_back(parseAny(&maxNode, variable->type()));
         } else {
-            right.push_back(asAny(&rightNode, variable->type()));
+            right.push_back(parseAny(&rightNode, variable->type()));
         }
     }
 
@@ -220,7 +177,7 @@ static std::shared_ptr<Condition> parseVariableCondition(const Node *node, std::
 }
 
 template<>
-inline void NodeParser<std::shared_ptr<Action>>::parse(const Node *node, std::shared_ptr<Action> &result)
+void NodeParser<std::shared_ptr<Action>>::parse(const Node *node, std::shared_ptr<Action> &result)
 {
     if (const auto commandNode = node->at("command")) {
         auto action = std::make_shared<CommandAction>(commandNode->as<Value<QString>>());
@@ -233,7 +190,7 @@ inline void NodeParser<std::shared_ptr<Action>>::parse(const Node *node, std::sh
     } else if (const auto plasmaShortcutNode = node->at("plasma_shortcut")) {
         const auto split = plasmaShortcutNode->as<QString>().split(",");
         if (split.length() != 2) {
-            throw ConfigParserException(node, "Invalid Plasma shortcut format");
+            throw InvalidValueConfigException(node->position(), "Invalid Plasma shortcut format");
         }
         result = std::make_shared<PlasmaGlobalShortcutAction>(split[0], split[1]);
     } else if (const auto sleepActionNode = node->at("sleep")) {
@@ -241,7 +198,7 @@ inline void NodeParser<std::shared_ptr<Action>>::parse(const Node *node, std::sh
     } else if (const auto oneNode = node->at("one")) {
         result = std::make_shared<ActionGroup>(oneNode->as<std::vector<std::shared_ptr<Action>>>(), ActionGroup::ExecutionMode::First);
     } else {
-        throw ConfigParserException(node, "Action is missing a required property that determines its type.");
+        throw InvalidValueConfigException(node->position(), "Action is missing a required property that determines its type.");
     }
 
     loadSetter(result, &Action::setCondition, node->at("conditions").get());
@@ -267,11 +224,14 @@ void NodeParser<ActionInterval>::parse(const Node *node, ActionInterval &result)
     }
 }
 
-template<>
-void NodeParser<std::shared_ptr<Condition>>::parse(const Node *node, std::shared_ptr<Condition> &condition)
+std::shared_ptr<Condition> parseCondition(const Node *node, const VariableManager *variableManager)
 {
-    static const auto isLegacy = [](const YAML::Node &node) {
-        return node.IsMap() && (node["negate"] || node["window_class"] || node["window_state"]);
+    if (!variableManager) {
+        variableManager = g_variableManager.get();
+    }
+
+    static const auto isLegacy = [](const Node *node) {
+        return node->isMap() && (node->at("negate") || node->at("window_class") || node->at("window_state"));
     };
 
     if (node->isMap()) {
@@ -283,21 +243,20 @@ void NodeParser<std::shared_ptr<Condition>>::parse(const Node *node, std::shared
         } else if (const auto anyNode = node->at("any")) {
             groupMode = ConditionGroupMode::Any;
             groupChildren = anyNode;
-        } else if (const auto noneNode = node->at("node")) {
+        } else if (const auto noneNode = node->at("none")) {
             groupMode = ConditionGroupMode::None;
             groupChildren = noneNode;
         }
         if (groupMode) {
             auto group = std::make_shared<ConditionGroup>(*groupMode);
             for (const auto &child : groupChildren->sequenceChildren()) {
-                group->append(child->as<std::shared_ptr<Condition>>());
+                group->append(parseCondition(child.get(), variableManager));
             }
-            condition = group;
-            return;
+            return group;
         }
 
-        if (isLegacy(*node->raw())) {
-            g_configIssueManager->addIssue(node, ConfigIssueSeverity::Deprecation, "This method of defining conditions is deprecated.");
+        if (isLegacy(node)) {
+            g_configIssueManager->addIssue(DeprecatedFeatureConfigIssue(node->position(), DeprecatedFeature::LegacyConditions));
 
             auto group = std::make_shared<ConditionGroup>();
             QStringList negate;
@@ -326,41 +285,62 @@ void NodeParser<std::shared_ptr<Condition>>::parse(const Node *node, std::shared
                 classGroup->setNegate(negate.contains("window_state"));
                 group->append(classGroup);
             }
-            condition = group;
-            return;
+
+            const auto &groupChildren = group->conditions();
+            if (groupChildren.size() == 1) {
+                return groupChildren[0];
+            }
+            return group;
         }
     }
 
     // Not in any group
     if (node->isSequence()) {
-        auto group = std::make_shared<ConditionGroup>(isLegacy(*node->sequenceChildren(true)[0]->raw()) ? ConditionGroupMode::Any : ConditionGroupMode::All);
-        for (const auto &child : node->sequenceChildren()) {
-            group->append(child->as<std::shared_ptr<Condition>>());
+        static const auto legacyPred = [](const auto &node) {
+            return isLegacy(node.get());
+        };
+
+        const auto children = node->sequenceChildren(true);
+        const auto hasLegacyCondition = std::ranges::any_of(children, legacyPred);
+        if (hasLegacyCondition && !std::ranges::all_of(children, legacyPred)) {
+            throw InvalidValueConfigException(node->position(), "Mixing legacy and normal conditions is not allowed.");
         }
-        condition = group;
-        return;
+
+        auto group = std::make_shared<ConditionGroup>(hasLegacyCondition ? ConditionGroupMode::Any : ConditionGroupMode::All);
+        for (const auto &child : node->sequenceChildren()) {
+            group->append(parseCondition(child.get(), variableManager));
+        }
+        return group;
     }
 
-    if (node->raw()->IsScalar()) {
+    if (node->isScalar()) {
         // Hack to load negated conditions without forcing users to quote the entire thing
         auto conditionNode = node->clone();
-        const auto tag = node->raw()->Tag();
-        if (tag != "!" && tag.starts_with('!')) {
-            *conditionNode.raw() = QString("%1 %2").arg(QString::fromStdString(tag), node->as<QString>()).trimmed().toStdString();
+        const auto tag = node->tag();
+        if (tag != "!" && tag.startsWith('!')) {
+            conditionNode.raw() = QString("%1 %2").arg(tag, node->as<QString>()).trimmed().toStdString();
         }
 
         const auto raw = conditionNode.as<QString>();
         if (raw.startsWith("$") || raw.startsWith("!$")) {
-            condition = parseVariableCondition(&conditionNode);
+            return parseVariableCondition(&conditionNode, variableManager);
         }
     }
+
+    return {};
+}
+
+template<>
+void NodeParser<std::shared_ptr<Condition>>::parse(const Node *node, std::shared_ptr<Condition> &condition)
+{
+    condition = parseCondition(node);
 }
 
 template<>
 void NodeParser<std::vector<InputAction::Item>>::parse(const Node *node, std::vector<InputAction::Item> &result)
 {
-    for (const auto &device : node->sequenceChildren()) {
-        if (const auto keyboardNode = device->at("keyboard")) {
+    for (const auto &deviceNode : node->sequenceChildren()) {
+        if (const auto keyboardNode = deviceNode->at("keyboard")) {
             for (const auto &actionNode : keyboardNode->sequenceChildren()) {
                 if (actionNode->isMap()) {
                     if (const auto textNode = actionNode->at("text")) {
@@ -371,7 +351,7 @@ void NodeParser<std::vector<InputAction::Item>>::parse(const Node *node, std::ve
                 } else {
                     const auto actionRaw = actionNode->as<QString>().toUpper();
                     if (actionRaw.startsWith("+") || actionRaw.startsWith("-")) {
-                        const auto key = parseKeyboardKey(actionNode.get(), actionRaw.mid(1));
+                        const auto key = actionNode->substringNode(actionRaw.mid(1)).as<KeyboardKey>();
 
                         if (actionRaw[0] == '+') {
                             result.push_back({
@@ -383,9 +363,16 @@ void NodeParser<std::vector<InputAction::Item>>::parse(const Node *node, std::ve
                             });
                         }
                     } else {
+                        if (actionRaw.contains("++")) {
+                            throw InvalidValueConfigException(actionNode->position(), "Syntax error: found at least two '+' characters next to each other with no key in between.");
+                        }
+                        if (actionRaw.endsWith("+")) {
+                            throw InvalidValueConfigException(actionNode->position(), "Syntax error: found trailing '+' character with no key after.");
+                        }
+
                         std::vector<uint32_t> keys;
                         for (const auto &keyRaw : actionRaw.split("+")) {
-                            keys.push_back(parseKeyboardKey(actionNode.get(), keyRaw));
+                            keys.push_back(actionNode->substringNode(keyRaw).as<KeyboardKey>());
                         }
 
                         for (const auto key : keys) {
@@ -393,7 +380,7 @@ void NodeParser<std::vector<InputAction::Item>>::parse(const Node *node, std::ve
                                 .keyboardPress = key,
                             });
                         }
-                        std::reverse(keys.begin(), keys.end());
+                        std::ranges::reverse(keys);
                         for (const auto key : keys) {
                             result.push_back({
                                 .keyboardRelease = key,
@@ -402,14 +389,19 @@ void NodeParser<std::vector<InputAction::Item>>::parse(const Node *node, std::ve
                     }
                 }
             }
-        } else if (const auto mouseNode = device->at("mouse")) {
-            for (const auto &actionRaw : mouseNode->as<QStringList>()) {
+        } else if (const auto mouseNode = deviceNode->at("mouse")) {
+            for (const auto &actionNode : mouseNode->sequenceChildren()) {
+                const auto actionRaw = actionNode->as<QString>();
+                if (actionRaw.contains("  ")) {
+                    throw InvalidValueConfigException(actionNode->position(), "Syntax error: found at least two space characters next to each other.");
+                }
+
                 const auto split = actionRaw.split(' ');
                 const auto action = split[0].toUpper();
                 const auto arguments = split.mid(1);
 
                 if (action.startsWith("+") || action.startsWith("-")) {
-                    const auto button = parseMouseButton(mouseNode.get(), action.mid(1));
+                    const auto button = actionNode->substringNode(action.mid(1)).as<MouseButton>();
 
                     if (action[0] == '+') {
                         result.push_back({
@@ -426,20 +418,27 @@ void NodeParser<std::vector<InputAction::Item>>::parse(const Node *node, std::ve
                     });
                 } else if (action.startsWith("MOVE_BY")) {
                     result.push_back({
-                        .mouseMoveRelative = parseMouseInputActionPoint(mouseNode.get(), arguments),
+                        .mouseMoveRelative = parseMouseInputActionPoint(actionNode.get(), arguments),
                     });
                 } else if (action.startsWith("MOVE_TO")) {
                     result.push_back({
-                        .mouseMoveAbsolute = parseMouseInputActionPoint(mouseNode.get(), arguments),
+                        .mouseMoveAbsolute = parseMouseInputActionPoint(actionNode.get(), arguments),
                     });
                 } else if (action.startsWith("WHEEL")) {
                     result.push_back({
-                        .mouseAxis = parseMouseInputActionPoint(mouseNode.get(), arguments),
+                        .mouseAxis = parseMouseInputActionPoint(actionNode.get(), arguments),
                     });
                 } else {
+                    if (actionRaw.contains("++")) {
+                        throw InvalidValueConfigException(actionNode->position(), "Syntax error: found at least two '+' characters next to each other with no button in between.");
+                    }
+                    if (actionRaw.endsWith("+")) {
+                        throw InvalidValueConfigException(actionNode->position(), "Syntax error: found trailing '+' character with no button after.");
+                    }
+
                     std::vector<uint32_t> buttons;
-                    for (const auto &buttonRaw : action.split("+")) {
-                        buttons.push_back(parseMouseButton(mouseNode.get(), buttonRaw));
+                    for (const auto &buttonRaw : actionRaw.split("+")) {
+                        buttons.push_back(actionNode->substringNode(buttonRaw).as<MouseButton>());
                     }
 
                     for (const auto button : buttons) {
@@ -447,7 +446,7 @@ void NodeParser<std::vector<InputAction::Item>>::parse(const Node *node, std::ve
                             .mousePress = button,
                         });
                     }
-                    std::reverse(buttons.begin(), buttons.end());
+                    std::ranges::reverse(buttons);
                     for (const auto button : buttons) {
                         result.push_back({
                             .mouseRelease = button,
@@ -455,6 +454,8 @@ void NodeParser<std::vector<InputAction::Item>>::parse(const Node *node, std::ve
                     }
                 }
             }
+        } else {
+            throw InvalidValueConfigException(deviceNode->position(), "Invalid device type.");
         }
     }
 }
@@ -481,7 +482,9 @@ void NodeParser<std::vector<InputDeviceRule>>::parse(const Node *node, std::vect
     if (const auto rulesNode = node->at("device_rules")) {
         for (const auto &ruleNode : rulesNode->sequenceChildren()) {
             InputDeviceRule rule;
-            loadSetter(rule, &InputDeviceRule::setCondition, ruleNode->at("conditions").get());
+            if (const auto conditionsNode = ruleNode->at("conditions")) {
+                rule.setCondition(parseCondition(conditionsNode.get(), g_inputBackend->deviceRulesVariableManager()));
+            }
             loadSetter(rule, &InputDeviceRule::setProperties, ruleNode.get());
             result.push_back(std::move(rule));
         }
@@ -489,21 +492,17 @@ void NodeParser<std::vector<InputDeviceRule>>::parse(const Node *node, std::vect
 
     // Legacy
     if (const auto touchpadNode = node->mapAt("touchpad")) {
-        touchpadNode->disableMapAccessCheck("gestures");
+        touchpadNode->unusedPropertyTracker()->setEnabled(false); // Handled when parsing trigger handler
 
         if (const auto devicesNode = touchpadNode->mapAt("devices")) {
-            g_configIssueManager->addIssue(devicesNode.get(),
-                                           ConfigIssueSeverity::Deprecation,
-                                           "This method of defining device properties is deprecated. Use device_rules instead.");
-            devicesNode->disableMapAccessCheck();
+            g_configIssueManager->addIssue(DeprecatedFeatureConfigIssue(devicesNode->position(), DeprecatedFeature::TouchpadDevicesNode));
+            devicesNode->unusedPropertyTracker()->setEnabled(false);
 
-            for (auto [key, value] : devicesNode->mapChildren()) {
+            for (const auto &[key, value] : devicesNode->mapChildren()) {
                 InputDeviceRule rule;
                 rule.setCondition(std::make_shared<VariableCondition>("name", Value(key->as<QString>()), ComparisonOperator::EqualTo));
                 loadSetter(rule, &InputDeviceRule::setProperties, value.get());
                 result.push_back(std::move(rule));
-
-                key->disableMapAccessCheck();
             }
         }
     }
@@ -518,7 +517,19 @@ void NodeParser<KeyboardKey>::parse(const Node *node, KeyboardKey &result)
         return;
     }
 
-    throw ConfigParserException(node, QString("Invalid keyboard key '%1'").arg(raw));
+    throw InvalidValueConfigException(node->position(), QString("Invalid keyboard key '%1'.").arg(raw));
+}
+
+template<>
+void NodeParser<MouseButton>::parse(const Node *node, MouseButton &result)
+{
+    const auto raw = node->as<QString>();
+    if (const auto button = MouseButton::fromString(raw.toUpper())) {
+        result = button.value();
+        return;
+    }
+
+    throw InvalidValueConfigException(node->position(), QString("Invalid mouse button '%1'.").arg(raw));
 }
 
 template<>
@@ -540,13 +551,10 @@ struct NodeParser<Range<T>>
 
         const auto split = raw.split("-", Qt::SkipEmptyParts);
         if (split.count() != 2) {
-            throw ConfigParserException(node, "Invalid range, correct format is 'min-max'.");
+            throw InvalidValueConfigException(node->position(), "Invalid range, correct format is 'min-max'.");
         }
 
-        Node minNode(split[0], node);
-        Node maxNode(split[1], node);
-
-        result = Range<T>(minNode.as<T>(), maxNode.as<T>());
+        result = Range<T>(node->substringNode(split[0]).as<T>(), node->substringNode(split[1]).as<T>());
     }
 };
 
@@ -585,7 +593,7 @@ void NodeParser<std::unique_ptr<Trigger>>::parse(const Node *node, std::unique_p
     } else if (type == "wheel") {
         result = std::make_unique<WheelTrigger>(static_cast<TriggerDirection>(node->at("direction", true)->as<SwipeDirection>()));
     } else {
-        throw ConfigParserException(typeNode.get(), "Invalid trigger type.");
+        throw InvalidValueConfigException(typeNode->position(), QString("Invalid trigger type '%1'.").arg(type));
     }
 
     loadSetter(result, &Trigger::setBlockEvents, node->at("block_events").get());
@@ -606,12 +614,14 @@ void NodeParser<std::unique_ptr<Trigger>>::parse(const Node *node, std::unique_p
     if (const auto fingersNode = node->at("fingers")) {
         auto range = fingersNode->as<Range<qreal>>();
         if (!range.max()) {
-            conditionGroup->append(std::make_shared<VariableCondition>(BuiltinVariables::Fingers, Value<qreal>(range.min().value()), ComparisonOperator::EqualTo));
+            conditionGroup->append(std::make_shared<VariableCondition>(BuiltinVariables::Fingers,
+                                                                       Value<qreal>(range.min().value()),
+                                                                       ComparisonOperator::EqualTo));
         } else {
             conditionGroup->append(std::make_shared<VariableCondition>(BuiltinVariables::Fingers,
-                                                                    std::vector<Value<std::any>>{
-                                                                        Value<qreal>(range.min().value()), Value<qreal>(range.max().value())},
-                                                                    ComparisonOperator::Between));
+                                                                       std::vector<Value<std::any>>{
+                                                                           Value<qreal>(range.min().value()), Value<qreal>(range.max().value())},
+                                                                       ComparisonOperator::Between));
         }
     }
     if (const auto modifiersNode = node->at("keyboard_modifiers")) {
@@ -623,14 +633,14 @@ void NodeParser<std::unique_ptr<Trigger>>::parse(const Node *node, std::unique_p
             if (modifierMatchingMode == "none") {
                 modifiers = Qt::KeyboardModifier::NoModifier;
             } else if (modifierMatchingMode != "any") {
-                throw ConfigParserException(node, "Invalid keyboard modifier");
+                throw InvalidValueConfigException(node->position(), "Invalid keyboard modifier.");
             }
         }
 
         if (modifiers) {
             conditionGroup->append(std::make_shared<VariableCondition>(BuiltinVariables::KeyboardModifiers,
-                                                                    Value<Qt::KeyboardModifiers>(modifiers.value()),
-                                                                    ComparisonOperator::EqualTo));
+                                                                       Value<Qt::KeyboardModifiers>(modifiers.value()),
+                                                                       ComparisonOperator::EqualTo));
         }
     }
     if (const auto conditionsNode = node->at("conditions")) {
@@ -650,14 +660,12 @@ void NodeParser<std::unique_ptr<Trigger>>::parse(const Node *node, std::unique_p
         for (const auto &actionNode : actionsNode->sequenceChildren()) {
             auto action = actionNode->as<std::unique_ptr<TriggerAction>>();
             if (dynamic_cast<StrokeTrigger *>(result.get()) && action->on() != On::End) {
-                throw ConfigParserException(actionNode.get(), "Stroke triggers only support 'on: end' actions.");
+                throw InvalidValueConfigException(actionNode->position(), "Stroke triggers only support 'on: end' actions.");
             }
 
             action->setAccelerated(accelerated);
             result->addAction(std::move(action));
         }
-    } else {
-        g_configIssueManager->addIssue(node, ConfigIssueSeverity::Warning, "Trigger has no 'actions' property.");
     }
 }
 
@@ -667,34 +675,33 @@ void NodeParser<std::vector<std::unique_ptr<Trigger>>>::parse(const Node *node, 
 {
     for (const auto &triggerNode : node->sequenceChildren()) {
         if (auto subTriggersNode = triggerNode->at("gestures")) {
-            triggerNode->disableMapAccessCheck();
-            subTriggersNode->disableMapAccessCheck();
+            triggerNode->unusedPropertyTracker()->setEnabled(false);
+            subTriggersNode->unusedPropertyTracker()->setEnabled(false);
 
             // Trigger group
             for (const auto &subTriggerNode : subTriggersNode->sequenceChildren()) {
-                subTriggerNode->disableMapAccessCheck();
+                subTriggerNode->unusedPropertyTracker()->setEnabled(false);
 
-                // Not cloned to preserve the mark.
-                auto clonedNode = *subTriggerNode->raw();
+                // Not cloned to preserve the mark. Touchpads and touchscreens require parsing the trigger list node multiple times.
+                auto rawNode = subTriggerNode->raw();
 
                 std::shared_ptr<Condition> groupCondition;
-                for (auto [key, value] : triggerNode->mapChildren()) {
+                for (const auto &[key, value] : triggerNode->mapChildren()) {
                     const auto name = key->as<QString>();
 
                     if (name == "conditions") {
                         groupCondition = triggerNode->at("conditions")->as<std::shared_ptr<Condition>>();
                     } else if (name != "gestures") {
-                        clonedNode[name.toStdString()] = *value->raw();
+                        rawNode[key->raw()] = value->raw();
                     }
                 }
 
-                Node processedNode(clonedNode);
-                processedNode.disableMapAccessCheck();
-
+                Node processedNode(rawNode);
                 for (auto &trigger : processedNode.asSequence().as<std::vector<std::unique_ptr<Trigger>>>()) {
                     if (groupCondition) {
                         if (const auto triggerCondition = trigger->activationCondition()) {
-                            if (const auto triggerConditionGroup = std::dynamic_pointer_cast<ConditionGroup>(triggerCondition); triggerConditionGroup && triggerConditionGroup->mode() == ConditionGroupMode::All) {
+                            if (const auto triggerConditionGroup = std::dynamic_pointer_cast<ConditionGroup>(triggerCondition);
+                                triggerConditionGroup && triggerConditionGroup->mode() == ConditionGroupMode::All) {
                                 triggerConditionGroup->prepend(groupCondition);
                             } else {
                                 auto conditionGroup = std::make_shared<ConditionGroup>();
@@ -725,15 +732,15 @@ void NodeParser<std::unique_ptr<TriggerAction>>::parse(const Node *node, std::un
     loadSetter(result, &TriggerAction::setOn, node->at("on").get());
 
     if (const auto intervalNode = node->at("interval")) {
-        if (result->on() != On::Update) {
-            throw ConfigParserException(intervalNode.get(), "Intervals can only be set on 'on: update' actions.");
+        if (result->on() != On::Update && result->on() != On::Tick) {
+            throw InvalidValueConfigException(intervalNode->position(), "Intervals can only be set on update and tick actions.");
         }
         loadSetter(result, &TriggerAction::setInterval, intervalNode.get());
     }
 
     if (const auto thresholdNode = node->at("threshold")) {
         if (result->on() == On::Begin) {
-            throw ConfigParserException(thresholdNode.get(), "Thresholds cannot be set on 'on: begin' actions.");
+            throw InvalidValueConfigException(thresholdNode->position(), "Thresholds cannot be set on begin actions.");
         }
         loadSetter(result, &TriggerAction::setThreshold, thresholdNode.get());
     }
@@ -744,7 +751,7 @@ void NodeParser<Stroke>::parse(const Node *node, Stroke &result)
 {
     const auto bytes = QByteArray::fromBase64(node->as<QString>().toUtf8());
     if (bytes.size() % 4 != 0) {
-        throw ConfigParserException(node, "Invalid stroke.");
+        throw InvalidValueConfigException(node->position(), "Invalid stroke.");
     }
     std::vector<Point> points;
     for (qsizetype i = 0; i < bytes.size(); i += 4) {
@@ -782,21 +789,17 @@ struct NodeParser<Value<T>>
 
 inline void parseTriggerHandler(const Node *node, TriggerHandler *handler)
 {
-    const auto triggersNode = node->at("gestures");
-    if (!triggersNode) {
-        throw ConfigParserException(node, "No gestures specified");
-    }
-    for (auto &trigger : triggersNode->as<std::vector<std::unique_ptr<Trigger>>>()) {
+    for (auto &trigger : node->at("gestures", true)->as<std::vector<std::unique_ptr<Trigger>>>()) {
         handler->addTrigger(std::move(trigger));
     }
     loadSetter(handler, &TriggerHandler::setTimedTriggerUpdateDelta, node->at("__time_delta").get());
 }
 
-inline void parseMotionTriggerHandler(const Node *node, MotionTriggerHandler *handler)
+inline void parseMotionTriggerHandler(const Node *node, const std::shared_ptr<const Node> &speedNode, MotionTriggerHandler *handler)
 {
     parseTriggerHandler(node, handler);
 
-    if (const auto speedNode = node->mapAt("speed")) {
+    if (speedNode) {
         loadSetter(handler, &MotionTriggerHandler::setInputEventsToSample, speedNode->at("events").get());
         if (auto thresholdNode = speedNode->at("swipe_threshold")) {
             handler->setSpeedThreshold(TriggerType::Swipe, thresholdNode->as<qreal>());
@@ -806,9 +809,10 @@ inline void parseMotionTriggerHandler(const Node *node, MotionTriggerHandler *ha
 
 inline void parseMultiTouchMotionTriggerHandler(const Node *node, MultiTouchMotionTriggerHandler *handler)
 {
-    parseMotionTriggerHandler(node, handler);
+    const auto speedNode = node->mapAt("speed");
+    parseMotionTriggerHandler(node, speedNode, handler);
 
-    if (const auto speedNode = node->mapAt("speed")) {
+    if (speedNode) {
         if (const auto thresholdNode = speedNode->at("pinch_in_threshold")) {
             handler->setSpeedThreshold(TriggerType::Pinch, thresholdNode->as<qreal>(), static_cast<TriggerDirection>(PinchDirection::In));
         }
@@ -849,7 +853,7 @@ void NodeParser<std::unique_ptr<MouseTriggerHandler>>::parse(const Node *node, s
 {
     auto *mouseTriggerHandler = new MouseTriggerHandler;
     result.reset(mouseTriggerHandler);
-    parseMotionTriggerHandler(node, result.get());
+    parseMotionTriggerHandler(node, node->mapAt("speed"), result.get());
 
     loadSetter(mouseTriggerHandler, &MouseTriggerHandler::setMotionTimeout, node->at("motion_timeout").get());
     loadSetter(mouseTriggerHandler, &MouseTriggerHandler::setPressTimeout, node->at("press_timeout").get());

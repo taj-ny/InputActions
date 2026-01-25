@@ -18,6 +18,8 @@
 
 #include <CLI/CLI.hpp>
 #include <QDBusInterface>
+#include <QRegularExpression>
+#include <QtEnvironmentVariables>
 
 void printResponse(QDBusPendingCall call)
 {
@@ -30,7 +32,14 @@ void printResponse(QDBusPendingCall call)
     }
 
     if (reply.arguments().size() > 0) {
-        std::cout << reply.arguments().at(0).toString().toStdString() << '\n';
+        auto output = reply.arguments().at(0).toString();
+        if (!qEnvironmentVariableIsEmpty("NO_COLOR")) {
+            output.replace(QRegularExpression("\033\\[\\d+m"), "");
+        }
+
+        if (!output.isEmpty()) {
+            std::cout << output.toStdString() << '\n';
+        }
     }
 }
 

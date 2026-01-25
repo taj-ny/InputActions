@@ -18,6 +18,7 @@
 
 #pragma once
 
+#include "ConfigIssue.h"
 #include <QString>
 #include <memory>
 
@@ -26,62 +27,51 @@ namespace InputActions
 
 class Node;
 
-class ConfigParserException : public std::exception
-{
-public:
-    ConfigParserException(const Node *node, const QString &message);
-
-    int32_t line() const { return m_line; }
-    int32_t column() const { return m_column; }
-    const char *what() const noexcept override { return m_what.c_str(); }
-
-private:
-    int32_t m_line;
-    int32_t m_column;
-    std::string m_what;
-};
-
-enum class ConfigIssueSeverity
-{
-    UnusedProperty,
-    Deprecation,
-    Warning,
-    Error,
-};
-
-class ConfigIssue
-{
-public:
-    ConfigIssue(int32_t line, int32_t column, ConfigIssueSeverity severity, QString message);
-
-    int32_t line() const { return m_line; }
-    int32_t column() const { return m_column; }
-    ConfigIssueSeverity severity() const { return m_severity; }
-    const QString &message() const { return m_message; }
-
-    bool operator==(const ConfigIssue &) const = default;
-
-private:
-    int32_t m_line;
-    int32_t m_column;
-    ConfigIssueSeverity m_severity;
-    QString m_message;
-};
-
 class ConfigIssueManager
 {
 public:
     ConfigIssueManager(QString config = "");
 
-    void addIssue(const Node *node, ConfigIssueSeverity severity, const QString &message);
-    void addIssue(int32_t line, int32_t column, ConfigIssueSeverity severity, const QString &message);
+    void addIssue(const ConfigIssue &issue)
+    {
+        if (std::ranges::any_of(m_issues, [&issue](const auto &x) {
+            return *x == issue;
+        })) {
+            return;
+        }
 
-    const std::vector<ConfigIssue> &issues() const { return m_issues; }
+        const auto pos = std::ranges::lower_bound(m_issues, &issue, [](const auto &a, const auto &b) {
+            // severity desc, line asc, column asc
+            if (a->severity() != b->severity()) {
+                return a->severity() > b->severity();
+            }
+            if (a->position().line() != b->position().line()) {
+                return a->position().line() < b->position().line();
+            }
+            return a->position().column() < b->position().column();
+        });
+
+        m_issues.insert(pos, issue.copy());
+    }
+
+    template<typename T>
+    requires std::is_base_of_v<ConfigIssue, T>
+    const T *findIssueByType() const
+    {
+        for (const auto &issue : m_issues) {
+            if (const auto *ptr = dynamic_cast<const T *>(issue.get())) {
+                return ptr;
+            }
+        }
+        return {};
+    }
+
+    std::vector<const ConfigIssue *> issues() const;
 
     QString issuesToString() const;
 
 private:
-    std::vector<ConfigIssue> m_issues;
+    std::vector<std::unique_ptr<ConfigIssue>> m_issues;
     QString m_config;
 };
 

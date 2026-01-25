@@ -16,24 +16,22 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#pragma once
+#include "MouseButton.h"
 
-#include <QString>
-
-namespace InputActions::AnsiEscapeCode
+namespace InputActions
 {
 
-namespace Color
+MouseButton::MouseButton(uint32_t scanCode)
+    : m_scanCode(scanCode)
 {
+}
 
-static const QString Bold = QStringLiteral("\033[1m");
-
-static const QString Red = QStringLiteral("\033[31m");
-static const QString Yellow = QStringLiteral("\033[33m");
-static const QString Blue = QStringLiteral("\033[34m");
-
-static const QString Reset = QStringLiteral("\033[0m");
-
+std::optional<MouseButton> MouseButton::fromString(const QString &s)
+{
+    if (!MOUSE_BUTTONS.contains(s)) {
+        return {};
+    }
+    return MOUSE_BUTTONS.at(s);
 }
 
 }

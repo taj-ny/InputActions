@@ -18,6 +18,8 @@
 
 #pragma once
 
+#include "TextPosition.h"
+#include "libinputactions/config/ConfigIssue.h"
 #include "parsers/NodeParser.h"
 #include <QString>
 #include <yaml-cpp/yaml.h>
@@ -26,16 +28,53 @@ namespace InputActions
 {
 
 class ConfigParser;
+class UnusedNodePropertyTracker;
+
+enum class NodeType
+{
+    Null,
+    Map,
+    Scalar,
+    Sequence
+};
 
 /**
- * Minimal read-only wrapper for yaml-cpp's Node that tracks accessed map keys for unused property detection.
+ * Minimal wrapper for yaml-cpp's Node.
  */
 class Node
 {
 public:
-    Node(YAML::Node node = {});
-    Node(QString text, const Node *parentNode);
+    Node(YAML::Node node, const Node *substringParent = nullptr);
     ~Node();
+
+    static Node load(const QString &s);
+
+    const TextPosition &position() const { return m_position; }
+    void setPosition(TextPosition value) { m_position = value; }
+
+    NodeType type() const;
+    bool isMap() const;
+    bool isScalar() const;
+    bool isSequence() const;
+
+    QString tag() const;
+
+    bool allowImplicitConversionToSequence() const { return m_allowImplicitConversionToSequence; }
+
+    const YAML::Node &raw() const { return m_node; }
+    /**
+     * Can be manipulated.
+     */
+    YAML::Node &raw() { return m_node; }
+
+    /**
+     * Converts this node into a sequence node containing only this node. If this node is a sequence, the same node is returned with no changes.
+     */
+    Node asSequence() const;
+    /**
+     * Clones this node using YAML::Clone.
+     */
+    Node clone() const;
 
     /**
      * Parses the node's value as the specified type.
@@ -50,14 +89,9 @@ public:
         return result;
     }
 
-    /**
-     * Permanently disables map key access tracking for this wrapper instance.
-     */
-    void disableMapAccessCheck() const { m_mapAccessCheckEnabled = false; }
-    /**
-     * Permanently disables map key access tracking in this wrapper instance for the specified key.
-     */
-    void disableMapAccessCheck(const char *key) const { m_accessedMapNodes.insert(key); }
+    Node substringNode(const QString &substring) const;
+
+    UnusedNodePropertyTracker *unusedPropertyTracker() const { return m_unusedPropertyTracker.get(); }
 
     /**
      * @return The node at this map node's specified key or nullptr if no node exists at the specified key.
@@ -71,56 +105,31 @@ public:
     std::shared_ptr<const Node> mapAt(const char *key, bool required = false) const;
 
     /**
-     * Converts this node into a sequence node containing only this node. If this node is a sequence, the same node is returned with no changes.
-     */
-    Node asSequence() const;
-    /**
-     * @return This node cloned with YAML::Clone.
-     */
-    Node clone() const;
-
-    bool isSequence() const;
-    /**
+     * @param disableUnusedPropertyCheck Disable the unused property check for all returned wrappers.
      * @return Children of this sequence node.
      * @throws ConfigParserException The node is not a sequence.
      */
-    std::vector<std::shared_ptr<const Node>> sequenceChildren(bool disableMapAccessCheck = false) const;
+    std::vector<std::shared_ptr<const Node>> sequenceChildren(bool disableUnusedPropertyCheck = false) const;
     /**
+     * @param disableUnusedPropertyCheck Disable the unused property check for all returned wrappers.
      * @return Children of this sequence node.
      * @throws ConfigParserException The node is not a sequence.
      */
-    std::vector<std::shared_ptr<Node>> sequenceChildren(bool disableMapAccessCheck = false);
+    std::vector<std::shared_ptr<Node>> sequenceChildren(bool disableUnusedPropertyCheck = false);
 
-    bool isMap() const;
     /**
-     * @return Keys and values of this sequence node.
+     * @return Keys and values of this map node.
      * @throws ConfigParserException The node is not a map.
      */
     std::map<std::shared_ptr<const Node>, std::shared_ptr<const Node>> mapChildren() const;
 
-    int32_t line() const { return m_line; }
-    int32_t column() const { return m_column; }
-    void setPosition(int32_t line, int32_t column)
-    {
-        m_line = line;
-        m_column = column;
-    }
-
-    const YAML::Node *raw() const { return &m_node; }
-    /**
-     * Can be manipulated.
-     */
-    YAML::Node *raw() { return &m_node; }
-
-    operator bool() const;
-
 private:
     YAML::Node m_node;
-    int32_t m_line{};
-    int32_t m_column{};
+    TextPosition m_position;
+    bool m_allowImplicitConversionToSequence = false;
+    bool m_isSubstringNode = false;
 
-    mutable std::set<QString> m_accessedMapNodes;
-    mutable bool m_mapAccessCheckEnabled = true;
+    std::shared_ptr<UnusedNodePropertyTracker> m_unusedPropertyTracker;
 };
 
 }

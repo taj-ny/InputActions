@@ -18,7 +18,7 @@
 
 #include "ConfigIssueManager.h"
 #include "../../common/ansi-escape-codes.h"
-#include "Node.h"
+#include "config/ConfigIssue.h"
 #include <QStringList>
 
 namespace InputActions
@@ -29,121 +29,88 @@ ConfigIssueManager::ConfigIssueManager(QString config)
 {
 }
 
-void ConfigIssueManager::addIssue(const Node *node, ConfigIssueSeverity severity, const QString &message)
+std::vector<const ConfigIssue *> ConfigIssueManager::issues() const
 {
-    addIssue(node->line(), node->column(), severity, message);
-}
-
-void ConfigIssueManager::addIssue(int32_t line, int32_t column, ConfigIssueSeverity severity, const QString &message)
-{
-    ConfigIssue issue(line, column, severity, message);
-    if (std::ranges::contains(m_issues, issue)) {
-        return;
+    std::vector<const ConfigIssue *> result;
+    for (const auto &issue : m_issues) {
+        result.emplace_back(issue.get());
     }
-
-    const auto pos = std::ranges::lower_bound(m_issues, issue, [](const auto &a, const auto &b) {
-        // severity desc, line asc, column asc
-        if (a.severity() != b.severity()) {
-            return a.severity() > b.severity();
-        }
-        if (a.line() != b.line()) {
-            return a.line() < b.line();
-        }
-        return a.column() < b.column();
-    });
-    m_issues.emplace(pos, line, column, severity, message);
+    return result;
 }
 
 QString ConfigIssueManager::issuesToString() const
 {
     QString result;
     const auto configLines = m_config.split("\n");
-    const auto maxLineNumberLength = QString::number(m_config.size() + 1).size();
+    const auto maxLineNumberLength = QString::number(configLines.size() + 1).size();
 
     bool hasError{};
     for (const auto &issue : m_issues) {
-        if (issue.severity() == ConfigIssueSeverity::Error) {
+        if (issue->severity() == ConfigIssueSeverity::Error) {
             hasError = true;
-        } else if (issue.severity() == ConfigIssueSeverity::UnusedProperty && hasError) {
-            // An error (exception) will result in most unused property issues generated after it being false-positives
+        } else if (dynamic_cast<UnusedPropertyConfigIssue *>(issue.get()) && hasError) {
+            // An exception will result in most unused property issues generated after it being false-positives
             continue;
         }
 
-        const auto hasPosition = issue.line() != -1;
-        QString positionString;
-        if (hasPosition) {
-            positionString = QString("%1:%2: ").arg(QString::number(issue.line() + 1), QString::number(issue.column() + 1));
-        }
+        result += issue->toString() + "\n";
 
-        QString severityString;
-        QString color;
-        switch (issue.severity()) {
-            case ConfigIssueSeverity::Deprecation:
-                severityString = "deprecation";
-                color = AnsiEscapeCode::Color::Blue;
-                break;
-            case ConfigIssueSeverity::UnusedProperty:
-                severityString = "unused_property";
-                color = AnsiEscapeCode::Color::Blue;
-                break;
-            case ConfigIssueSeverity::Warning:
-                severityString = "warning";
-                color = AnsiEscapeCode::Color::Yellow;
-                break;
-            case ConfigIssueSeverity::Error:
-                severityString = "error";
-                color = AnsiEscapeCode::Color::Red;
-                break;
-        }
-
-        // Message
-        result += QString("%1%2: %3\n")
-                      .arg(positionString, AnsiEscapeCode::Color::Bold + color + severityString + AnsiEscapeCode::Color::Reset, issue.message());
-
-        // Returns line number in the following format: "[number][padding] | "
+        // Returns line number in the following format: "[number][padding] |"
         const auto lineNumber = [&maxLineNumberLength](int32_t line) {
             line++;
             const auto padding = QString(" ").repeated(maxLineNumberLength - QString::number(line).size());
             return QString("%1%2 | ").arg(QString::number(line), padding);
         };
 
-        if (hasPosition) {
+        if (issue->position()) {
+            const auto lineIndex = issue->position().line();
+            const auto column = issue->position().column();
+            const auto &line = configLines[lineIndex];
+            const auto surroundingLines = 3;
+
             // Lines before offending line
-            for (auto line = std::max(issue.line() - 5, 0); line < issue.line(); line++) {
-                result += QString("%1%2\n").arg(lineNumber(line), configLines[line]);
+            for (auto i = std::max(lineIndex - surroundingLines, 0); i < lineIndex; i++) {
+                result += QString("%1%2\n").arg(lineNumber(i), configLines[i]);
             }
 
             // Offending line
-            result += QString("%1%2\n").arg(lineNumber(issue.line()),
-                                            AnsiEscapeCode::Color::Bold + color + configLines[issue.line()] + AnsiEscapeCode::Color::Reset);
+            const auto color = issue->colorAnsiSequence();
+            result += QString("%1%2\n").arg(lineNumber(lineIndex), AnsiEscapeCode::Color::Bold + color + line + AnsiEscapeCode::Color::Reset);
 
             // Highlight offending line
             result += QString("%1 | %2").arg(QString(" ").repeated(maxLineNumberLength), AnsiEscapeCode::Color::Bold + color);
-            auto skipWhitespace = true;
-            for (qsizetype i = 0; i < configLines[issue.line()].size(); i++) {
-                const auto c = configLines[issue.line()][i];
-                const auto isWhitespace = c == ' ' || c == '\t';
 
-                if (i == issue.column()) {
-                    result += "^";
+            auto highlight = QString("~").repeated(line.size());
+
+            // Remove highlight for leading and trailing whitespace
+            for (auto i = 0; i < line.size(); i++) {
+                const auto &c = line[i];
+                if (c == ' ' || c == '\t') {
+                    highlight[i] = ' ';
                     continue;
                 }
-
-                if (skipWhitespace) {
-                    if (isWhitespace) {
-                        result += " ";
-                        continue;
-                    }
-                    skipWhitespace = false;
-                }
-
-                result += "~";
+                break;
             }
-            result += AnsiEscapeCode::Color::Reset + "\n";
+            for (auto i = line.size() - 1; i >= 0; i--) {
+                const auto &c = line[i];
+                if (c == ' ' || c == '\t') {
+                    highlight[i] = ' ';
+                    continue;
+                }
+                break;
+            }
+
+            if (column < line.size()) {
+                highlight[column] = '^';
+            } else if (!column) {
+                highlight += "^";
+            }
+
+            result += highlight + AnsiEscapeCode::Color::Reset + "\n";
 
             // Lines after offending line
-            for (auto line = issue.line() + 1; line < std::min(configLines.size(), static_cast<qsizetype>(issue.line() + 6)); line++) {
-                result += QString("%1%2\n").arg(lineNumber(line), configLines[line]);
+            for (auto i = lineIndex + 1; i < std::min(configLines.size(), static_cast<qsizetype>(lineIndex + surroundingLines + 1)); i++) {
+                result += QString("%1%2\n").arg(lineNumber(i), configLines[i]);
             }
         }
         result += "\n";
@@ -152,24 +119,10 @@ QString ConfigIssueManager::issuesToString() const
     if (hasError) {
         result += "At least one error was found, which may have suppressed other issues. Run the command again after fixing it to ensure other problems are "
                   "not missed.";
+    } else {
+        result.chop(2);
     }
     return result;
-}
-
-ConfigIssue::ConfigIssue(int32_t line, int32_t column, ConfigIssueSeverity severity, QString message)
-    : m_line(line)
-    , m_column(column)
-    , m_severity(severity)
-    , m_message(std::move(message))
-{
-}
-
-ConfigParserException::ConfigParserException(const Node *node, const QString &message)
-    : m_line(node->line())
-    , m_column(node->column())
-    , m_what(message.toStdString())
-{
-    node->disableMapAccessCheck();
 }
 
 }

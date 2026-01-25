@@ -17,22 +17,25 @@
 */
 
 #include "NodeParser.h"
-#include <chrono>
-#include <libinputactions/config/ConfigIssueManager.h>
+#include <libinputactions/config/ConfigIssue.h>
 #include <libinputactions/config/Node.h>
 
 namespace InputActions
 {
 
-#define NODEPARSER_BASE(T, name)                                                  \
-    template<>                                                                    \
-    void NodeParser<T>::parse(const Node *node, T &result)                        \
-    {                                                                             \
-        try {                                                                     \
-            result = node->raw()->as<T>();                                        \
-        } catch (const YAML::Exception &) {                                       \
-            throw ConfigParserException(node, QString("Expected %1.").arg(name)); \
-        }                                                                         \
+#define NODEPARSER_BASE(T, name)                                                                        \
+    template<>                                                                                          \
+    void NodeParser<T>::parse(const Node *node, T &result)                                              \
+    {                                                                                                   \
+        if (!node->isScalar()) {                                                                        \
+            throw InvalidNodeTypeConfigException(node->position(), NodeType::Scalar, node->type());     \
+        }                                                                                               \
+                                                                                                        \
+        try {                                                                                           \
+            result = node->raw().as<T>();                                                               \
+        } catch (const YAML::Exception &) {                                                             \
+            throw InvalidValueConfigException(node->position(), QString("Value is not %1.").arg(name)); \
+        }                                                                                               \
     }
 
 NODEPARSER_BASE(bool, "a boolean");

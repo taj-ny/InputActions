@@ -20,11 +20,11 @@
 #include "ConfigIssueManager.h"
 #include "GlobalConfig.h"
 #include "Node.h"
+#include "ConfigIssue.h"
+#include "UnusedNodePropertyTracker.h"
 #include "interfaces/ConfigProvider.h"
 #include "parsers/core.h"
 #include "parsers/utils.h"
-#include <QFile>
-#include <QStandardPaths>
 #include <libinputactions/actions/ActionExecutor.h>
 #include <libinputactions/handlers/KeyboardTriggerHandler.h>
 #include <libinputactions/handlers/MouseTriggerHandler.h>
@@ -39,11 +39,6 @@
 
 namespace InputActions
 {
-
-/**
- * Used to detect and prevent infinite compositor crash loops when loading the configuration.
- */
-const static QString CRASH_PREVENTION_FILE = QStandardPaths::writableLocation(QStandardPaths::TempLocation) + "/inputactions_init";
 
 struct Config
 {
@@ -65,50 +60,46 @@ void ConfigLoader::loadEmpty()
     activateConfig({}, false);
 }
 
-bool ConfigLoader::load(ConfigLoadSettings settings)
+bool ConfigLoader::load(const ConfigLoadSettings &settings)
 {
-    if (!QFile::exists(CRASH_PREVENTION_FILE) || !settings.preventCrashLoops) {
-        std::ignore = QFile(CRASH_PREVENTION_FILE).open(QIODevice::WriteOnly);
+    try {
+        qCDebug(INPUTACTIONS, "Reloading config");
+        const auto rawConfig = settings.config.value_or(g_configProvider->currentConfig());
 
-        try {
-            qCDebug(INPUTACTIONS, "Reloading config");
-            const auto rawConfig = settings.config.value_or(g_configProvider->currentConfig());
-
-            g_configIssueManager = std::make_shared<ConfigIssueManager>(rawConfig);
-            auto config = createConfig(rawConfig);
-            activateConfig(std::move(config), true);
-        } catch (const YAML::Exception &e) {
-            g_configIssueManager->addIssue(e.mark.line, e.mark.column, ConfigIssueSeverity::Error, QString("Syntax error: %1.").arg(e.what()));
-        } catch (const ConfigParserException &e) {
-            g_configIssueManager->addIssue(e.line(), e.column(), ConfigIssueSeverity::Error, e.what());
-        }
-    } else {
-        g_configIssueManager->addIssue(-1, -1, ConfigIssueSeverity::Error, "Configuration was not loaded automatically due to a crash.");
+        g_configIssueManager = std::make_shared<ConfigIssueManager>(rawConfig);
+        auto config = createConfig(rawConfig);
+        activateConfig(std::move(config), true);
+    } catch (const ConfigException &e) {
+        g_configIssueManager->addIssue(e);
     }
 
     const auto issues = g_configIssueManager->issues();
-    auto error = std::ranges::find_if(issues, [](const auto &issue) {
-        return issue.severity() == ConfigIssueSeverity::Error;
+    const auto error = std::ranges::find_if(issues, [](const auto *issue) {
+        return issue->severity() == ConfigIssueSeverity::Error;
     });
+
     if (error != issues.end()) {
-        if (g_globalConfig->sendNotificationOnError() && settings.sendNotificationOnError) {
-            QString pos = "";
-            if (error->line() != -1) {
-                pos = QString("%1:%2: ").arg(QString::number(error->line() + 1), QString::number(error->column() + 1));
+        if (g_globalConfig->sendNotificationOnError()) {
+            QString pos;
+
+            if ((*error)->position().line() != -1) {
+                pos = QString("%1:%2: ").arg(QString::number((*error)->position().line() + 1), QString::number((*error)->position().column() + 1));
             }
 
-            g_notificationManager->sendNotification("Failed to load configuration", pos + error->message());
+            g_notificationManager->sendNotification("Failed to load configuration", QString("%1%2 Run 'inputactions config issues' for more information.").arg(pos, (*error)->message()));
         }
+
+        return false;
     }
-    QFile::remove(CRASH_PREVENTION_FILE);
-    return error == issues.end();
+
+    return true;
 }
 
 Config ConfigLoader::createConfig(const QString &raw)
 {
-    const Node root = YAML::Load(raw.toStdString());
+    const auto root = Node::load(raw);
     if (!root.isMap()) {
-        throw ConfigParserException(&root, "Expected a map.");
+        throw InvalidNodeTypeConfigException({0, 0}, NodeType::Map, root.type());
     }
 
     Config config;
@@ -124,18 +115,23 @@ Config ConfigLoader::createConfig(const QString &raw)
     loadMember(config.pointerTriggerHandler, root.mapAt("pointer").get());
 
     if (const auto touchpadNode = root.mapAt("touchpad")) {
-        touchpadNode->disableMapAccessCheck("devices");
-
         config.touchpadTriggerHandlerFactory = [touchpadNode](auto *device) {
             return parseTouchpadTriggerHandler(touchpadNode.get(), device);
         };
         config.touchpadTriggerHandlerFactory(nullptr); // Make sure it doesn't throw
+
+        touchpadNode->unusedPropertyTracker()->setEnabled(false);
+        touchpadNode->unusedPropertyTracker()->registerPropertyAccess("devices"); // Handled when parsing device rules
+        touchpadNode->unusedPropertyTracker()->check(touchpadNode.get());
     }
     if (const auto touchscreenNode = root.mapAt("touchscreen")) {
         config.touchscreenTriggerHandlerFactory = [touchscreenNode](auto *device) {
             return parseTouchscreenTriggerHandler(touchscreenNode.get(), device);
         };
         config.touchscreenTriggerHandlerFactory(nullptr);
+
+        touchscreenNode->unusedPropertyTracker()->setEnabled(false);
+        touchscreenNode->unusedPropertyTracker()->check(touchscreenNode.get());
     }
 
     return config;

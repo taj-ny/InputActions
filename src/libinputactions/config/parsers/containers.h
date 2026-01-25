@@ -19,7 +19,7 @@
 #pragma once
 
 #include "NodeParser.h"
-#include <libinputactions/config/ConfigIssueManager.h>
+#include <libinputactions/config/ConfigIssue.h>
 #include <libinputactions/config/Node.h>
 #include <set>
 #include <vector>
@@ -32,13 +32,16 @@ struct NodeParser<std::set<T>>
 {
     static void parse(const Node *node, std::set<T> &result)
     {
-        for (auto child : node->sequenceChildren()) {
-            const auto value = node->as<T>();
+        const auto children = node->sequenceChildren();
+        for (size_t i = 0; i < children.size(); i++) {
+            const auto &child = children[i];
+
+            const auto value = children[i]->as<T>();
             if (result.contains(value)) {
-                throw ConfigParserException(node, "This list may only contain unique items.");
+                throw DuplicateSetItemConfigException(child->position(), i);
             }
 
-            result.insert(node->as<T>());
+            result.insert(value);
         }
     }
 };
@@ -48,12 +51,7 @@ struct NodeParser<std::vector<T>>
 {
     static void parse(const Node *node, std::vector<T> &result)
     {
-        if (!node->raw()->IsSequence()) {
-            result.push_back(node->as<T>());
-            return;
-        }
-
-        for (auto child : node->sequenceChildren()) {
+        for (const auto &child : node->sequenceChildren()) {
             result.push_back(child->as<T>());
         }
     }

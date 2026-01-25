@@ -21,7 +21,6 @@
 #include <QString>
 #include <QVector>
 #include <linux/input-event-codes.h>
-#include <memory>
 #include <optional>
 #include <unordered_map>
 
@@ -541,8 +540,7 @@ namespace InputActions
 class KeyboardKey
 {
 public:
-    KeyboardKey();
-    KeyboardKey(uint32_t scanCode);
+    KeyboardKey(uint32_t scanCode = 0);
 
     static std::optional<KeyboardKey> fromString(const QString &s);
 

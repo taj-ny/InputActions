@@ -20,6 +20,7 @@
 
 #include <QTimer>
 #include <linux/input-event-codes.h>
+#include <libinputactions/variables/VariableManager.h>
 #include <unordered_set>
 
 namespace InputActions
@@ -75,7 +76,7 @@ public:
      * Evaluates device rules for the specified device and returns the properties without modifying the device's properties. Use this for devices that have not
      * been added to the backend yet, otherwise use InputDevice::properties().
      */
-    InputDeviceProperties deviceProperties(const InputDevice *device) const;
+    InputDeviceProperties deviceProperties(const InputDevice *device);
 
     std::vector<InputDevice *> devices();
     /**
@@ -110,6 +111,10 @@ public:
      * Rules are evaluated in reverse order when a device is added.
      */
     void setDeviceRules(std::vector<InputDeviceRule> rules);
+    /**
+     * The variable manager used for evaluting device rule conditions.
+     */
+    const VariableManager *deviceRulesVariableManager() const { return &m_deviceRulesVariableManager; }
 
     void setKeyboardTriggerHandler(std::unique_ptr<KeyboardTriggerHandler> value);
     void setMouseTriggerHandler(std::unique_ptr<MouseTriggerHandler> value);
@@ -139,7 +144,7 @@ private slots:
     void onEmergencyCombinationTimerTimeout();
 
 private:
-    void applyDeviceProperties(const InputDevice *device, InputDeviceProperties &properties) const;
+    void applyDeviceProperties(const InputDevice *device, InputDeviceProperties &properties);
 
     std::vector<InputEventHandler *> m_eventHandlerChain;
     std::vector<InputDevice *> m_devices;
@@ -148,6 +153,10 @@ private:
     QTimer m_emergencyCombinationTimer;
 
     std::vector<InputDeviceRule> m_deviceRules;
+    VariableManager m_deviceRulesVariableManager;
+    VariableWrapper<QString> m_deviceNameVariable;
+    VariableWrapper<InputDeviceTypes> m_deviceTypesVariable;
+
     std::unique_ptr<KeyboardTriggerHandler> m_keyboardTriggerHandler;
     std::unique_ptr<MouseTriggerHandler> m_mouseTriggerHandler;
     std::unique_ptr<PointerTriggerHandler> m_pointerTriggerHandler;

@@ -25,14 +25,16 @@ if (INPUTACTIONS_BUILD_HYPRLAND OR INPUTACTIONS_BUILD_KWIN OR INPUTACTIONS_BUILD
         libinputactions/config/parsers/qt.cpp
         libinputactions/config/parsers/std.cpp
         libinputactions/config/parsers/utils.h
+        libinputactions/config/ConfigIssue.cpp
         libinputactions/config/ConfigIssueManager.cpp
         libinputactions/config/ConfigLoader.cpp
         libinputactions/config/GlobalConfig.cpp
         libinputactions/config/Node.cpp
+        libinputactions/config/TextPosition.cpp
+        libinputactions/config/UnusedNodePropertyTracker.cpp
         libinputactions/conditions/Condition.cpp
         libinputactions/conditions/ConditionGroup.cpp
         libinputactions/conditions/CustomCondition.cpp
-        libinputactions/conditions/LazyCondition.cpp
         libinputactions/conditions/VariableCondition.cpp
         libinputactions/dbus/DBusInterfaceBase.cpp
         libinputactions/dbus/IntegratedDBusInterface.cpp
@@ -53,6 +55,7 @@ if (INPUTACTIONS_BUILD_HYPRLAND OR INPUTACTIONS_BUILD_KWIN OR INPUTACTIONS_BUILD
         libinputactions/input/InputDeviceRule.cpp
         libinputactions/input/InputEventHandler.cpp
         libinputactions/input/KeyboardKey.cpp
+        libinputactions/input/MouseButton.cpp
         libinputactions/input/StrokeRecorder.cpp
         libinputactions/input/events.cpp
         libinputactions/interfaces/implementations/DBusNotificationManager.cpp

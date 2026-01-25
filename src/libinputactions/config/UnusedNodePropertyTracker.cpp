@@ -16,22 +16,30 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include "KeyboardKey.h"
+#include "UnusedNodePropertyTracker.h"
+#include "Node.h"
+#include <libinputactions/config/ConfigIssueManager.h>
+#include <yaml-cpp/yaml.h>
 
 namespace InputActions
 {
 
-KeyboardKey::KeyboardKey(uint32_t scanCode)
-    : m_scanCode(scanCode)
+void UnusedNodePropertyTracker::check(const Node *node)
 {
+    const auto &raw = node->raw();
+    for (auto it = raw.begin(); it != raw.end(); ++it) {
+        if (const auto key = QString::fromStdString(it->first.as<std::string>("")); !key.isEmpty()) {
+            if (!m_accessedProperties.contains(key)) {
+                YAML::Mark mark = it->first.Mark();
+                g_configIssueManager->addIssue(UnusedPropertyConfigIssue({mark.line, mark.column}, key));
+            }
+        }
+    }
 }
 
-std::optional<KeyboardKey> KeyboardKey::fromString(const QString &s)
+void UnusedNodePropertyTracker::registerPropertyAccess(QString property)
 {
-    if (!KEYBOARD_KEYS.contains(s)) {
-        return {};
-    }
-    return KEYBOARD_KEYS.at(s);
+    m_accessedProperties.insert(std::move(property));
 }
 
 }

@@ -1,6 +1,6 @@
 /*
     Input Actions - Input handler that executes user-defined actions
-    Copyright (C) 2024-2025 Marcin Woźniak
+    Copyright (C) 2024-2026 Marcin Woźniak
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -18,32 +18,38 @@
 
 #pragma once
 
-#include "Condition.h"
+#include <cstdint>
 #include <QString>
 
 namespace InputActions
 {
 
-/**
- * A condition that is constructed right before evaluation. If the construction fails, the condition fails to evaluate and construction will be attempted again
- * on further evaluations.
- */
-class LazyCondition : public Condition
+class TextPosition
 {
 public:
+    TextPosition();
+    TextPosition(int32_t line, int32_t column);
+
+    int32_t line() const { return m_line; }
+    void setLine(int32_t value) { m_line = value; }
+
+    int32_t column() const { return m_column; }
+    void setColumn(int32_t value) { m_column = value; }
+
+    bool isValid() const;
+
     /**
-     * @param constructor Can return nullptr or throw an exception if construction fails.
+     * "[line + 1]:[column + 1]: " if valid, empty string otherwise.
      */
-    LazyCondition(std::function<std::shared_ptr<Condition>(const ConditionEvaluationArguments &arguments)> constructor);
+    QString toString() const;
 
-    const Condition *condition() const { return m_condition.get(); }
+    bool operator==(const TextPosition &) const = default;
 
-protected:
-    bool evaluateImpl(const ConditionEvaluationArguments &arguments) override;
+    operator bool() const;
 
 private:
-    std::function<std::shared_ptr<Condition>(const ConditionEvaluationArguments &arguments)> m_constructor;
-    std::shared_ptr<Condition> m_condition;
+    int32_t m_line;
+    int32_t m_column;
 };
 
 }
