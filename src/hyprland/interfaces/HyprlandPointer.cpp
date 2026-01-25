@@ -28,10 +28,8 @@
 namespace InputActions
 {
 
-typedef void (*setCursorFromName)(void *thisPtr, const std::string &name);
-
 HyprlandPointer::HyprlandPointer(void *handle)
-    : m_setCursorFromNameHook(handle, "setCursorFromName", (void *)&setCursorFromNameHook)
+    : m_setCursorFromNameHook(handle, "setCursorFromName")
 {
 }
 
@@ -67,7 +65,7 @@ void HyprlandPointer::setGlobalPointerPosition(const QPointF &value)
 void HyprlandPointer::setCursorFromNameHook(void *thisPtr, const std::string &name)
 {
     auto *self = dynamic_cast<HyprlandPointer *>(g_cursorShapeProvider.get());
-    (*(setCursorFromName)self->m_setCursorFromNameHook->m_original)(thisPtr, name);
+    self->m_setCursorFromNameHook(thisPtr, name);
     self->m_currentCursorShape = QString::fromStdString(name).replace('-', '_');
 }
 

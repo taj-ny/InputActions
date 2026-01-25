@@ -38,7 +38,11 @@ struct HyprlandInputDevice
 };
 
 /**
- * Hold and pinch touchpad gestures require hooking, and therefore only work on x86_64.
+ * Uses three different methods for getting events, because Hyprland does not always provide senders.
+ *   1. Hyprland events (HyprlandAPI::registerCallbackDynamic) for keyboard key press events. The sender is provided in the event itself.
+ *   2. Function hooks for pointer axis and pointer button events. The sender is provided as an argument alongside the event.
+ *   3. Function hooks + signals for all other events. The sender is not provided at all. To get the device, the backend blocks the call by default, then,
+ *      once it gets the event and sender from the signal, it re-emits the signal.
  */
 class HyprlandInputBackend : public LibinputInputBackend
 {
@@ -57,22 +61,40 @@ private:
     void checkDeviceChanges();
     void deviceRemoved(const HyprlandInputDevice &device);
 
+    // Method 1
     void keyboardKey(SCallbackInfo &info, const std::any &data);
 
+    // Method 2
+    static void pointerAxisHook(void *thisPtr, IPointer::SAxisEvent event, SP<IPointer> sender);
+    static void pointerMotionHook(void *thisPtr, IPointer::SMotionEvent event);
+
+    // Method 3
+    void onHoldBeginSignal(IPointer *sender, const IPointer::SHoldBeginEvent &event);
     static void holdBeginHook(void *thisPtr, uint32_t timeMs, uint32_t fingers);
+
+    void onHoldEndSignal(IPointer *sender, const IPointer::SHoldEndEvent &event);
     static void holdEndHook(void *thisPtr, uint32_t timeMs, bool cancelled);
 
+    void onPinchBeginSignal(IPointer *sender, const IPointer::SPinchBeginEvent &event);
     static void pinchBeginHook(void *thisPtr, uint32_t timeMs, uint32_t fingers);
+
+    void onPinchUpdateSignal(IPointer *sender, const IPointer::SPinchUpdateEvent &event);
     static void pinchUpdateHook(void *thisPtr, uint32_t timeMs, const Vector2D &delta, double scale, double rotation);
+
+    void onPinchEndSignal(IPointer *sender, const IPointer::SPinchEndEvent &event);
     static void pinchEndHook(void *thisPtr, uint32_t timeMs, bool cancelled);
 
-    void touchpadSwipeBegin(SCallbackInfo &info, const std::any &data);
-    void touchpadSwipeUpdate(SCallbackInfo &info, const std::any &data);
-    void touchpadSwipeEnd(SCallbackInfo &info, const std::any &data);
+    void onPointerButtonSignal(IPointer *sender, const IPointer::SButtonEvent &event);
+    static void pointerButtonHook(void *thisPtr, IPointer::SButtonEvent event);
 
-    void pointerAxis(SCallbackInfo &info, const std::any &data);
-    void pointerButton(SCallbackInfo &info, const std::any &data);
-    void pointerMotion(SCallbackInfo &info, const std::any &data);
+    void onSwipeBeginSignal(IPointer *sender, const IPointer::SSwipeBeginEvent &event);
+    static void swipeBeginHook(void *thisPtr, uint32_t timeMs, uint32_t fingers);
+
+    void onSwipeUpdateSignal(IPointer *sender, const IPointer::SSwipeUpdateEvent &event);
+    static void swipeUpdateHook(void *thisPtr, uint32_t timeMs, const Vector2D &delta);
+
+    void onSwipeEndSignal(IPointer *sender, const IPointer::SSwipeEndEvent &event);
+    static void swipeEndHook(void *thisPtr, uint32_t timeMs, bool cancelled);
 
     HyprlandInputDevice *findDevice(IHID *hyprlandDevice);
     InputDevice *findInputActionsDevice(IHID *hyprlandDevice);
@@ -86,19 +108,18 @@ private:
     std::vector<HyprlandInputDevice> m_devices;
     QTimer m_deviceChangeTimer;
 
-    /**
-     * Mouse or touchpad.
-     */
-    InputDevice *m_currentPointingDevice{};
-    InputDevice *m_currentTouchpad{};
-
-    Vector2D m_previousPointerPosition;
-
-    HyprlandFunctionHook m_holdBeginHook;
-    HyprlandFunctionHook m_holdEndHook;
-    HyprlandFunctionHook m_pinchBeginHook;
-    HyprlandFunctionHook m_pinchUpdateHook;
-    HyprlandFunctionHook m_pinchEndHook;
+    bool m_blockHookCalls{};
+    HyprlandFunctionHook<&holdBeginHook> m_holdBeginHook;
+    HyprlandFunctionHook<&holdEndHook> m_holdEndHook;
+    HyprlandFunctionHook<&pinchBeginHook> m_pinchBeginHook;
+    HyprlandFunctionHook<&pinchUpdateHook> m_pinchUpdateHook;
+    HyprlandFunctionHook<&pinchEndHook> m_pinchEndHook;
+    HyprlandFunctionHook<&pointerAxisHook> m_pointerAxisHook;
+    HyprlandFunctionHook<&pointerButtonHook> m_pointerButtonHook;
+    HyprlandFunctionHook<&pointerMotionHook> m_pointerMotionHook;
+    HyprlandFunctionHook<&swipeBeginHook> m_swipeBeginHook;
+    HyprlandFunctionHook<&swipeUpdateHook> m_swipeUpdateHook;
+    HyprlandFunctionHook<&swipeEndHook> m_swipeEndHook;
 };
 
 }
