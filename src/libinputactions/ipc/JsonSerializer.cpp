@@ -67,6 +67,12 @@ std::shared_ptr<Message> JsonSerializer::deserializeMessage(const QString &json)
         case MessageType::BeginSessionResponse:
             message = std::make_shared<BeginSessionResponseMessage>();
             break;
+        case MessageType::ConfigIssuesRequest:
+            message = std::make_shared<ConfigIssuesRequestMessage>();
+            break;
+        case MessageType::ConfigIssuesResponse:
+            message = std::make_shared<ConfigIssuesResponseMessage>();
+            break;
         case MessageType::EnvironmentState:
             message = std::make_shared<EnvironmentStateMessage>();
             break;

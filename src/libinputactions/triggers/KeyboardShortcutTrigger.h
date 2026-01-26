@@ -19,6 +19,7 @@
 #pragma once
 
 #include "Trigger.h"
+#include <libinputactions/input/KeyboardKey.h>
 
 namespace InputActions
 {
@@ -28,7 +29,7 @@ struct KeyboardShortcut
     /**
      * Keys that must be pressed, modifier keys are allowed. Only 1 non-modifier key is allowed.
      */
-    std::set<uint32_t> keys;
+    std::set<KeyboardKey> keys;
 };
 
 class KeyboardShortcutTrigger : public Trigger

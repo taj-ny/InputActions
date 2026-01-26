@@ -26,7 +26,7 @@
 #include <hyprland/src/Compositor.hpp>
 #include <hyprland/src/helpers/Monitor.hpp>
 #include <hyprland/src/managers/eventLoop/EventLoopManager.hpp>
-#include <libinputactions/config/Config.h>
+#include <libinputactions/config/ConfigLoader.h>
 #include <libinputactions/variables/VariableManager.h>
 #undef HANDLE
 
@@ -60,7 +60,7 @@ Plugin::Plugin(void *handle)
 
     setMissingImplementations();
     initialize();
-    g_config->load(true);
+    g_configLoader->load();
 }
 
 void Plugin::registerGlobalVariables(VariableManager *variableManager, std::shared_ptr<PointerPositionGetter> pointerPositionGetter,

@@ -28,6 +28,9 @@ void MessageHandler::handleMessage(std::shared_ptr<const Message> message)
         case MessageType::BeginSessionRequest:
             beginSessionRequestMessage(std::dynamic_pointer_cast<const BeginSessionRequestMessage>(message));
             break;
+        case MessageType::ConfigIssuesRequest:
+            configIssuesRequestMessage(std::dynamic_pointer_cast<const ConfigIssuesRequestMessage>(message));
+            break;
         case MessageType::EnvironmentState:
             environmentStateMessage(std::dynamic_pointer_cast<const EnvironmentStateMessage>(message));
             break;

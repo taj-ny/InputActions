@@ -26,10 +26,12 @@ namespace InputActions
 
 void IPCNotificationManager::sendNotification(const QString &title, const QString &content)
 {
-    SendNotificationMessage message;
-    message.setTitle(title);
-    message.setContent(content);
-    g_sessionManager->currentSession().client()->sendMessage(message);
+    if (auto *client = g_sessionManager->currentSession().client()) {
+        SendNotificationMessage message;
+        message.setTitle(title);
+        message.setContent(content);
+        client->sendMessage(message);
+    }
 }
 
 }

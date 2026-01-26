@@ -38,6 +38,8 @@ enum class MessageType : int
 
     BeginSessionRequest,
     BeginSessionResponse,
+    ConfigIssuesRequest,
+    ConfigIssuesResponse,
     EnvironmentState,
     InvokePlasmaGlobalShortcutRequest,
     LoadConfigRequest,
@@ -177,6 +179,35 @@ public:
     }
 };
 
+class ConfigIssuesRequestMessage : public RequestMessage
+{
+    Q_OBJECT
+
+public:
+    ConfigIssuesRequestMessage()
+        : RequestMessage(MessageType::ConfigIssuesRequest)
+    {
+    }
+};
+
+class ConfigIssuesResponseMessage : public ResponseMessage
+{
+    Q_OBJECT
+    Q_PROPERTY(QString issues MEMBER m_issues)
+
+public:
+    ConfigIssuesResponseMessage()
+        : ResponseMessage(MessageType::ConfigIssuesResponse)
+    {
+    }
+
+    const QString &issues() const { return m_issues; }
+    void setIssues(const QString &value) { m_issues = value; }
+
+private:
+    QString m_issues;
+};
+
 class HandshakeRequestMessage : public RequestMessage
 {
     Q_OBJECT
@@ -267,12 +298,19 @@ private:
 class LoadConfigResponseMessage : public ResponseMessage
 {
     Q_OBJECT
+    Q_PROPERTY(QString issues MEMBER m_issues)
 
 public:
     LoadConfigResponseMessage()
         : ResponseMessage(MessageType::LoadConfigResponse)
     {
     }
+
+    const QString &issues() const { return m_issues; }
+    void setIssues(const QString &value) { m_issues = value; }
+
+private:
+    QString m_issues;
 };
 
 class RecordStrokeRequestMessage : public RequestMessage

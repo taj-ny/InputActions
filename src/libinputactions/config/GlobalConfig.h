@@ -1,6 +1,6 @@
 /*
     Input Actions - Input handler that executes user-defined actions
-    Copyright (C) 2024-2025 Marcin Woźniak
+    Copyright (C) 2024-2026 Marcin Woźniak
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -18,24 +18,14 @@
 
 #pragma once
 
-#include <QString>
 #include <memory>
 
 namespace InputActions
 {
 
-class Config
+class GlobalConfig
 {
 public:
-    /**
-     * @return Error message or std::nullopt on success.
-     */
-    std::optional<QString> load(const QString &config, bool preventCrashLoops = false);
-    /**
-     * @return Error message or std::nullopt on success.
-     */
-    std::optional<QString> load(bool preventCrashLoops = false);
-
     bool autoReload() const { return m_autoReload; }
     void setAutoReload(bool value) { m_autoReload = value; }
 
@@ -43,10 +33,11 @@ public:
     void setSendNotificationOnError(bool value) { m_sendNotificationOnError = value; }
 
 private:
-    bool m_autoReload = true;
-    bool m_sendNotificationOnError = true;
+    // Default values defined in Config
+    bool m_autoReload{};
+    bool m_sendNotificationOnError{};
 };
 
-inline std::shared_ptr<Config> g_config;
+inline std::shared_ptr<GlobalConfig> g_globalConfig;
 
 }

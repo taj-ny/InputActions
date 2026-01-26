@@ -26,7 +26,7 @@
 #include "interfaces/KWinWindowProvider.h"
 #include "workspace.h"
 #include <QDir>
-#include <libinputactions/config/Config.h>
+#include <libinputactions/config/ConfigLoader.h>
 #include <libinputactions/variables/VariableManager.h>
 
 namespace InputActions
@@ -47,12 +47,12 @@ Effect::Effect()
 
     setMissingImplementations();
     initialize();
-    g_config->load(true);
+    g_configLoader->load();
 }
 
 void Effect::reconfigure(ReconfigureFlags flags)
 {
-    g_config->load();
+    g_configLoader->load();
 }
 
 void Effect::registerGlobalVariables(VariableManager *variableManager, std::shared_ptr<PointerPositionGetter> pointerPositionGetter,

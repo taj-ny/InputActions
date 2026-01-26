@@ -1,6 +1,6 @@
 /*
     Input Actions - Input handler that executes user-defined actions
-    Copyright (C) 2024-2025 Marcin Woźniak
+    Copyright (C) 2024-2026 Marcin Woźniak
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -16,28 +16,30 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include "LazyCondition.h"
-#include <libinputactions/globals.h>
+#pragma once
+
+#include <QString>
+#include <yaml-cpp/yaml.h>
 
 namespace InputActions
 {
 
-LazyCondition::LazyCondition(std::function<std::shared_ptr<Condition>(const ConditionEvaluationArguments &arguments)> constructor)
-    : m_constructor(std::move(constructor))
-{
-}
+class Node;
 
-bool LazyCondition::evaluateImpl(const ConditionEvaluationArguments &arguments)
+class UnusedNodePropertyTracker
 {
-    if (m_constructor) {
-        m_condition = m_constructor(arguments);
-    }
-    if (!m_condition) {
-        throw std::runtime_error("Failed to construct condition (unknown error)");
-    }
+public:
+    UnusedNodePropertyTracker() = default;
 
-    m_constructor = {};
-    return m_condition->evaluate(arguments);
-}
+    bool enabled() const { return m_enabled; }
+    void setEnabled(bool value) { m_enabled = value; }
+
+    void registerPropertyAccess(QString property);
+    void check(const Node *node);
+
+private:
+    std::set<QString> m_accessedProperties;
+    bool m_enabled = true;
+};
 
 }

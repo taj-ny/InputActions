@@ -67,6 +67,7 @@ public:
 
 protected:
     void beginSessionRequestMessage(const std::shared_ptr<const BeginSessionRequestMessage> &message) override;
+    void configIssuesRequestMessage(const std::shared_ptr<const ConfigIssuesRequestMessage> &message) override;
     void environmentStateMessage(const std::shared_ptr<const EnvironmentStateMessage> &message) override;
     void handshakeRequestMessage(const std::shared_ptr<const HandshakeRequestMessage> &message) override;
     void loadConfigRequestMessage(const std::shared_ptr<const LoadConfigRequestMessage> &message) override;
@@ -78,7 +79,7 @@ private slots:
     void onSessionChangeDetectionTimerTick();
 
 private:
-    void activateSession(const Session &session, bool loadConfig = true);
+    void activateSession(Session &session, bool loadConfig = true);
 
     DBusInterfaceBase m_dbusInterfaceBase;
     QDBusInterface m_freedesktopLoginDbusInterface;
@@ -87,6 +88,7 @@ private:
 
     QTimer m_sessionChangeDetectionTimer;
     QString m_currentTty;
+    Session *m_currentSession{};
     std::map<QString, Session> m_sessions;
 };
 

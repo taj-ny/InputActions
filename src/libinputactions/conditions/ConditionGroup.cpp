@@ -66,9 +66,14 @@ bool ConditionGroup::evaluateImpl(const ConditionEvaluationArguments &arguments)
     return result;
 }
 
-void ConditionGroup::add(const std::shared_ptr<Condition> &condition)
+void ConditionGroup::append(const std::shared_ptr<Condition> &condition)
 {
     m_conditions.push_back(condition);
+}
+
+void ConditionGroup::prepend(const std::shared_ptr<Condition> &condition)
+{
+    m_conditions.insert(m_conditions.begin(), condition);
 }
 
 }

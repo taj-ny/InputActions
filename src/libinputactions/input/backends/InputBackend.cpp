@@ -41,6 +41,8 @@ namespace InputActions
 static const std::chrono::milliseconds EMERGENCY_COMBINATION_HOLD_DURATION{2000L};
 
 InputBackend::InputBackend()
+    : m_deviceNameVariable(m_deviceRulesVariableManager.registerLocalVariable<QString>("name"))
+    , m_deviceTypesVariable(m_deviceRulesVariableManager.registerLocalVariable<InputDeviceTypes>("types"))
 {
     m_emergencyCombinationTimer.setSingleShot(true);
     connect(&m_emergencyCombinationTimer, &QTimer::timeout, this, &InputBackend::onEmergencyCombinationTimerTimeout);
@@ -53,7 +55,7 @@ void InputBackend::setIgnoreEvents(bool value)
     m_ignoreEvents = value;
 }
 
-InputDeviceProperties InputBackend::deviceProperties(const InputDevice *device) const
+InputDeviceProperties InputBackend::deviceProperties(const InputDevice *device)
 {
     InputDeviceProperties properties;
     applyDeviceProperties(device, properties);
@@ -94,7 +96,7 @@ Qt::KeyboardModifiers InputBackend::keyboardModifiers() const
     return modifiers;
 }
 
-void InputBackend::applyDeviceProperties(const InputDevice *device, InputDeviceProperties &properties) const
+void InputBackend::applyDeviceProperties(const InputDevice *device, InputDeviceProperties &properties)
 {
     for (const auto &rule : m_deviceRules | std::ranges::views::reverse) {
         if (!rule.condition()) {
@@ -102,12 +104,11 @@ void InputBackend::applyDeviceProperties(const InputDevice *device, InputDeviceP
             continue;
         }
 
-        VariableManager manager;
-        manager.registerLocalVariable<QString>("name").set(device->name());
-        manager.registerLocalVariable<InputDeviceTypes>("types").set(device->type());
+        m_deviceNameVariable.set(device->name());
+        m_deviceTypesVariable.set(device->type());
 
         ConditionEvaluationArguments arguments;
-        arguments.variableManager = &manager;
+        arguments.variableManager = &m_deviceRulesVariableManager;
         if (rule.condition()->satisfied(arguments)) {
             properties.apply(rule.properties());
         }
