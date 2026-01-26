@@ -33,7 +33,7 @@ class InputDevice;
 
 /**
  * Uses three different methods for getting events, because Hyprland does not always provide senders.
- *   1. Hyprland events (HyprlandAPI::registerCallbackDynamic) for keyboard key press events. The sender is provided in the event itself.
+ *   1. Hyprland events (HyprlandAPI::registerCallbackDynamic) for keyboard key press and touch down events. The sender is provided in the event itself.
  *   2. Function hooks for pointer axis and pointer button events. The sender is provided as an argument alongside the event.
  *   3. Function hooks + signals for all other events. The sender is not provided at all. To get the device, the backend blocks the call by default, then,
  *      once it gets the event and sender from the signal, it re-emits the signal.
@@ -56,6 +56,10 @@ public:
     void onSwipeBeginSignal(InputDevice *sender, IPointer *hyprlandDevice, const IPointer::SSwipeBeginEvent &event);
     void onSwipeUpdateSignal(InputDevice *sender, IPointer *hyprlandDevice, const IPointer::SSwipeUpdateEvent &event);
     void onSwipeEndSignal(InputDevice *sender, IPointer *hyprlandDevice, const IPointer::SSwipeEndEvent &event);
+    void onTouchCancelSignal(InputDevice *sender, ITouch *hyprlandDevice, const ITouch::SCancelEvent &event);
+    void onTouchFrameSignal(InputDevice *sender, ITouch *hyprlandDevice);
+    void onTouchMotionSignal(InputDevice *sender, ITouch *hyprlandDevice, const ITouch::SMotionEvent &event);
+    void onTouchUpSignal(InputDevice *sender, ITouch *hyprlandDevice, const ITouch::SUpEvent &event);
 
 protected:
     void touchpadPinchBlockingStopped(uint32_t fingers) override;
@@ -67,6 +71,7 @@ private:
 
     // Method 1
     void keyboardKey(SCallbackInfo &info, const std::any &data);
+    void touchDown(SCallbackInfo &info, const std::any &data);
 
     // Method 2
     static void pointerAxisHook(void *thisPtr, IPointer::SAxisEvent event, SP<IPointer> sender);
@@ -82,6 +87,8 @@ private:
     static void swipeBeginHook(void *thisPtr, uint32_t timeMs, uint32_t fingers);
     static void swipeUpdateHook(void *thisPtr, uint32_t timeMs, const Vector2D &delta);
     static void swipeEndHook(void *thisPtr, uint32_t timeMs, bool cancelled);
+    static void touchMotionHook(void *thisPtr, ITouch::SMotionEvent event);
+    static void touchUpHook(void *thisPtr, ITouch::SUpEvent event);
 
     InputDevice *findInputActionsDevice(IHID *hyprlandDevice);
 
@@ -92,7 +99,7 @@ private:
     std::vector<std::unique_ptr<HyprlandInputDevice>> m_devices;
     QTimer m_deviceChangeTimer;
 
-    SP<HOOK_CALLBACK_FN> m_keyboardKeyListener;
+    std::vector<SP<HOOK_CALLBACK_FN>> m_eventListeners;
 
     bool m_blockHookCalls{};
     HyprlandFunctionHook<&holdBeginHook> m_holdBeginHook;
@@ -106,6 +113,8 @@ private:
     HyprlandFunctionHook<&swipeBeginHook> m_swipeBeginHook;
     HyprlandFunctionHook<&swipeUpdateHook> m_swipeUpdateHook;
     HyprlandFunctionHook<&swipeEndHook> m_swipeEndHook;
+    HyprlandFunctionHook<&touchMotionHook> m_touchMotionHook;
+    HyprlandFunctionHook<&touchUpHook> m_touchUpHook;
 };
 
 }
