@@ -18,6 +18,7 @@
 
 #pragma once
 
+#include "HyprlandInputDevice.h"
 #include "utils/HyprlandFunctionHook.h"
 #include <hyprland/src/SharedDefs.hpp>
 #include <hyprland/src/devices/IPointer.hpp>
@@ -29,13 +30,6 @@ namespace InputActions
 {
 
 class InputDevice;
-
-struct HyprlandInputDevice
-{
-    IHID *hyprlandDevice;
-    std::unique_ptr<InputDevice> libinputactionsDevice;
-    std::vector<CHyprSignalListener> listeners;
-};
 
 /**
  * Uses three different methods for getting events, because Hyprland does not always provide senders.
@@ -53,13 +47,23 @@ public:
     void initialize() override;
     void reset() override;
 
+    void onHoldBeginSignal(InputDevice *sender, IPointer *hyprlandDevice, const IPointer::SHoldBeginEvent &event);
+    void onHoldEndSignal(InputDevice *sender, IPointer *hyprlandDevice, const IPointer::SHoldEndEvent &event);
+    void onPinchBeginSignal(InputDevice *sender, IPointer *hyprlandDevice, const IPointer::SPinchBeginEvent &event);
+    void onPinchUpdateSignal(InputDevice *sender, IPointer *hyprlandDevice, const IPointer::SPinchUpdateEvent &event);
+    void onPinchEndSignal(InputDevice *sender, IPointer *hyprlandDevice, const IPointer::SPinchEndEvent &event);
+    void onPointerButtonSignal(InputDevice *sender, IPointer *hyprlandDevice, const IPointer::SButtonEvent &event);
+    void onSwipeBeginSignal(InputDevice *sender, IPointer *hyprlandDevice, const IPointer::SSwipeBeginEvent &event);
+    void onSwipeUpdateSignal(InputDevice *sender, IPointer *hyprlandDevice, const IPointer::SSwipeUpdateEvent &event);
+    void onSwipeEndSignal(InputDevice *sender, IPointer *hyprlandDevice, const IPointer::SSwipeEndEvent &event);
+
 protected:
     void touchpadPinchBlockingStopped(uint32_t fingers) override;
     void touchpadSwipeBlockingStopped(uint32_t fingers) override;
 
 private:
     void checkDeviceChanges();
-    void deviceRemoved(const HyprlandInputDevice &device);
+    void deviceRemoved(const HyprlandInputDevice *device);
 
     // Method 1
     void keyboardKey(SCallbackInfo &info, const std::any &data);
@@ -69,44 +73,26 @@ private:
     static void pointerMotionHook(void *thisPtr, IPointer::SMotionEvent event);
 
     // Method 3
-    void onHoldBeginSignal(IPointer *sender, const IPointer::SHoldBeginEvent &event);
     static void holdBeginHook(void *thisPtr, uint32_t timeMs, uint32_t fingers);
-
-    void onHoldEndSignal(IPointer *sender, const IPointer::SHoldEndEvent &event);
     static void holdEndHook(void *thisPtr, uint32_t timeMs, bool cancelled);
-
-    void onPinchBeginSignal(IPointer *sender, const IPointer::SPinchBeginEvent &event);
     static void pinchBeginHook(void *thisPtr, uint32_t timeMs, uint32_t fingers);
-
-    void onPinchUpdateSignal(IPointer *sender, const IPointer::SPinchUpdateEvent &event);
     static void pinchUpdateHook(void *thisPtr, uint32_t timeMs, const Vector2D &delta, double scale, double rotation);
-
-    void onPinchEndSignal(IPointer *sender, const IPointer::SPinchEndEvent &event);
     static void pinchEndHook(void *thisPtr, uint32_t timeMs, bool cancelled);
-
-    void onPointerButtonSignal(IPointer *sender, const IPointer::SButtonEvent &event);
     static void pointerButtonHook(void *thisPtr, IPointer::SButtonEvent event);
-
-    void onSwipeBeginSignal(IPointer *sender, const IPointer::SSwipeBeginEvent &event);
     static void swipeBeginHook(void *thisPtr, uint32_t timeMs, uint32_t fingers);
-
-    void onSwipeUpdateSignal(IPointer *sender, const IPointer::SSwipeUpdateEvent &event);
     static void swipeUpdateHook(void *thisPtr, uint32_t timeMs, const Vector2D &delta);
-
-    void onSwipeEndSignal(IPointer *sender, const IPointer::SSwipeEndEvent &event);
     static void swipeEndHook(void *thisPtr, uint32_t timeMs, bool cancelled);
 
-    HyprlandInputDevice *findDevice(IHID *hyprlandDevice);
     InputDevice *findInputActionsDevice(IHID *hyprlandDevice);
-
-    std::vector<SP<HOOK_CALLBACK_FN>> m_events;
 
     /**
      * Used to detect device changes.
      */
     std::vector<WP<IHID>> m_previousHids;
-    std::vector<HyprlandInputDevice> m_devices;
+    std::vector<std::unique_ptr<HyprlandInputDevice>> m_devices;
     QTimer m_deviceChangeTimer;
+
+    SP<HOOK_CALLBACK_FN> m_keyboardKeyListener;
 
     bool m_blockHookCalls{};
     HyprlandFunctionHook<&holdBeginHook> m_holdBeginHook;
