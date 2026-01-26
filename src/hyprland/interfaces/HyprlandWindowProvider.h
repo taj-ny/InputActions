@@ -27,6 +27,7 @@ class HyprlandWindowProvider : public WindowProvider
 {
 public:
     std::shared_ptr<Window> activeWindow() override;
+    std::shared_ptr<Window> windowUnderFingers() override;
     std::shared_ptr<Window> windowUnderPointer() override;
 };
 

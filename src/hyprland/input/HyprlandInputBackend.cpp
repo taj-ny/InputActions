@@ -42,10 +42,15 @@ HyprlandInputBackend::HyprlandInputBackend(void *handle)
     , m_swipeBeginHook(handle, "swipeBegin")
     , m_swipeUpdateHook(handle, "swipeUpdate")
     , m_swipeEndHook(handle, "swipeEnd")
+    , m_touchMotionHook(handle, "onTouchMove")
+    , m_touchUpHook(handle, "onTouchUp")
 {
-    m_keyboardKeyListener = HyprlandAPI::registerCallbackDynamic(handle, "keyPress", [this](void *, SCallbackInfo &info, std::any data) {
+    m_eventListeners.push_back(HyprlandAPI::registerCallbackDynamic(handle, "keyPress", [this](void *, SCallbackInfo &info, std::any data) {
         keyboardKey(info, data);
-    });
+    }));
+    m_eventListeners.push_back(HyprlandAPI::registerCallbackDynamic(handle, "touchDown", [this](void *, SCallbackInfo &info, std::any data) {
+        touchDown(info, data);
+    }));
 
     connect(&m_deviceChangeTimer, &QTimer::timeout, this, &HyprlandInputBackend::checkDeviceChanges);
     m_deviceChangeTimer.setInterval(1000);
@@ -103,7 +108,7 @@ void HyprlandInputBackend::checkDeviceChanges()
             continue;
         }
 
-        auto inputActionsDevice = HyprlandInputDevice::tryCreate(this, device.get());
+        auto inputActionsDevice = HyprlandInputDevice::tryCreate(this, device.lock());
         // Ignored devices must be added, otherwise hooks will block the events
         if (!inputActionsDevice) {
             continue;
@@ -148,6 +153,22 @@ void HyprlandInputBackend::keyboardKey(SCallbackInfo &info, const std::any &data
         device->setKeyState(event.keycode, state);
     }
     info.cancelled = LibinputInputBackend::keyboardKey(device, event.keycode, state);
+}
+
+void HyprlandInputBackend::touchDown(SCallbackInfo &info, const std::any &data)
+{
+    if (m_ignoreEvents) {
+        return;
+    }
+
+    const auto event = std::any_cast<ITouch::SDownEvent>(data);
+    auto *device = findInputActionsDevice(event.device.get());
+    if (!device) {
+        return;
+    }
+
+    const QPointF position(event.pos.x * device->properties().size().width(), event.pos.y * device->properties().size().height());
+    info.cancelled = touchscreenTouchDown(device, event.touchID, position, {event.pos.x, event.pos.y});
 }
 
 void HyprlandInputBackend::pointerAxisHook(void *thisPtr, IPointer::SAxisEvent event, SP<IPointer> sender)
@@ -367,6 +388,75 @@ void HyprlandInputBackend::swipeEndHook(void *thisPtr, uint32_t timeMs, bool can
     auto *self = dynamic_cast<HyprlandInputBackend *>(g_inputBackend.get());
     if (self->m_ignoreEvents || !self->m_blockHookCalls) {
         self->m_swipeEndHook(thisPtr, timeMs, cancelled);
+    }
+}
+
+void HyprlandInputBackend::onTouchCancelSignal(InputDevice *sender, ITouch *hyprlandDevice, const ITouch::SCancelEvent &event)
+{
+    if (m_ignoreEvents) {
+        return;
+    }
+
+    if (!touchscreenTouchCancel(sender)) {
+        m_ignoreEvents = true;
+        hyprlandDevice->m_touchEvents.cancel.emit(event);
+        m_ignoreEvents = false;
+    }
+}
+
+void HyprlandInputBackend::onTouchFrameSignal(InputDevice *sender, ITouch *hyprlandDevice)
+{
+    if (m_ignoreEvents) {
+        return;
+    }
+
+    if (!touchscreenTouchFrame(sender)) {
+        m_ignoreEvents = true;
+        hyprlandDevice->m_touchEvents.frame.emit();
+        m_ignoreEvents = false;
+    }
+}
+
+void HyprlandInputBackend::onTouchMotionSignal(InputDevice *sender, ITouch *hyprlandDevice, const ITouch::SMotionEvent &event)
+{
+    if (m_ignoreEvents) {
+        return;
+    }
+
+    const QPointF position(event.pos.x * sender->properties().size().width(), event.pos.y * sender->properties().size().height());
+    if (!touchscreenTouchMotion(sender, event.touchID, position, {event.pos.x, event.pos.y})) {
+        m_ignoreEvents = true;
+        hyprlandDevice->m_touchEvents.motion.emit(event);
+        m_ignoreEvents = false;
+    }
+}
+
+void HyprlandInputBackend::touchMotionHook(void *thisPtr, ITouch::SMotionEvent event)
+{
+    auto *self = dynamic_cast<HyprlandInputBackend *>(g_inputBackend.get());
+    if (self->m_ignoreEvents || !self->m_blockHookCalls) {
+        self->m_touchMotionHook(thisPtr, event);
+    }
+}
+
+void HyprlandInputBackend::onTouchUpSignal(InputDevice *sender, ITouch *hyprlandDevice, const ITouch::SUpEvent &event)
+{
+    if (m_ignoreEvents) {
+        return;
+    }
+
+    if (!touchscreenTouchUp(sender, event.touchID)) {
+        m_ignoreEvents = true;
+        hyprlandDevice->m_touchEvents.up.emit(event);
+        m_ignoreEvents = false;
+    }
+}
+
+void HyprlandInputBackend::touchUpHook(void *thisPtr, ITouch::SUpEvent event)
+{
+    auto *self = dynamic_cast<HyprlandInputBackend *>(g_inputBackend.get());
+    if (self->m_ignoreEvents || !self->m_blockHookCalls) {
+        self->m_touchUpHook(thisPtr, event);
     }
 }
 
