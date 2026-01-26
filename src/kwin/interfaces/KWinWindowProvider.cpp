@@ -22,6 +22,7 @@
 #include "workspace.h"
 #include <libinputactions/input/InputDevice.h>
 #include <libinputactions/input/backends/InputBackend.h>
+#include <ranges>
 #include <window.h>
 
 namespace InputActions
@@ -42,19 +43,19 @@ std::shared_ptr<Window> KWinWindowProvider::windowUnderFingers()
         return {};
     }
 
-    QPointF center;
     const auto validTouchPoints = device->validTouchPoints();
-    for (const auto &touchPoint : device->validTouchPoints()) {
-        center += touchPoint->rawPosition;
-    }
-    center /= validTouchPoints.size();
-    if (center.isNull()) {
+    if (validTouchPoints.empty()) {
         return {};
     }
 
-    const auto windows = KWin::workspace()->stackingOrder();
-    for (auto it = windows.rbegin(); it != windows.rend(); ++it) {
-        auto *window = *it;
+    QPointF center;
+    for (const auto &touchPoint : validTouchPoints) {
+        center += touchPoint->rawPosition;
+    }
+    center /= validTouchPoints.size();
+
+    const auto &windows = KWin::workspace()->stackingOrder();
+    for (auto *window : std::ranges::reverse_view(windows)) {
         if (window->frameGeometry().contains(center)) {
             return std::make_shared<KWinWindow>(window);
         }
