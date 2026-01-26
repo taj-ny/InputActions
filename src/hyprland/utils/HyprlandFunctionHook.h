@@ -18,24 +18,41 @@
 
 #pragma once
 
+#include <cassert>
+#include <hyprland/src/plugins/HookSystem.hpp>
+#include <hyprland/src/plugins/PluginAPI.hpp>
 #include <string>
-
-class CFunctionHook;
+#undef HANDLE
 
 namespace InputActions
 {
 
+template<auto T>
 class HyprlandFunctionHook
 {
 public:
-    HyprlandFunctionHook(CFunctionHook *hook = nullptr);
-    HyprlandFunctionHook(void *handle, const std::string &sourceName, void *destination, size_t sourceIndex = 0);
-    ~HyprlandFunctionHook();
+    HyprlandFunctionHook(void *handle, const std::string &sourceName, size_t sourceIndex = 0)
+        : m_handle(handle)
+    {
+        const auto functions = HyprlandAPI::findFunctionsByName(handle, sourceName);
+        assert(functions.size() - 1 >= sourceIndex);
+        m_hook = HyprlandAPI::createFunctionHook(handle, functions[sourceIndex].address, (void *)T);
+        m_hook->hook();
+    }
 
-    CFunctionHook *operator->();
+    ~HyprlandFunctionHook() { HyprlandAPI::removeFunctionHook(m_handle, m_hook); }
+
+    template<typename... Args>
+    void operator()(Args &&...args) const
+    {
+        if (m_hook) {
+            ((decltype(T))m_hook->m_original)(std::forward<Args>(args)...);
+        }
+    }
 
 private:
     CFunctionHook *m_hook;
+    void *m_handle;
 };
 
 }

@@ -44,7 +44,7 @@ public:
 private:
     static void setCursorFromNameHook(void *thisPtr, const std::string &name);
 
-    HyprlandFunctionHook m_setCursorFromNameHook;
+    HyprlandFunctionHook<&setCursorFromNameHook> m_setCursorFromNameHook;
     QString m_currentCursorShape;
 };
 
