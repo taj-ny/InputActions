@@ -33,9 +33,10 @@ namespace InputActions
 
 HyprlandInputEmitter::HyprlandInputEmitter()
     : m_keyboard(makeShared<VirtualKeyboard>())
-    , m_pointer(makeShared<VirtualPointer>())
+    , m_mouse(makeShared<VirtualMouse>())
 {
     g_pInputManager->newKeyboard(m_keyboard);
+    g_pInputManager->newMouse(m_mouse);
 
     // FIXME: Text input list is private, inputs added before the plugin is loaded will not work
     m_listeners.push_back(PROTO::textInputV3->m_events.newTextInput.listen(std::bind(&HyprlandInputEmitter::onNewTextInputV3, this, std::placeholders::_1)));
@@ -44,6 +45,7 @@ HyprlandInputEmitter::HyprlandInputEmitter()
 HyprlandInputEmitter::~HyprlandInputEmitter()
 {
     m_keyboard->events.destroy.emit();
+    g_pInputManager->destroyPointer(m_mouse);
 }
 
 void HyprlandInputEmitter::keyboardClearModifiers()
@@ -110,22 +112,29 @@ void HyprlandInputEmitter::keyboardText(const QString &text)
 void HyprlandInputEmitter::mouseButton(uint32_t button, bool state, InputDevice *device)
 {
     g_inputBackend->setIgnoreEvents(true);
-    g_pInputManager->onMouseButton(IPointer::SButtonEvent{
+
+    m_mouse->m_pointerEvents.button.emit(IPointer::SButtonEvent{
         .button = button,
         .state = state ? WL_POINTER_BUTTON_STATE_PRESSED : WL_POINTER_BUTTON_STATE_RELEASED,
+        .mouse = true,
     });
+    m_mouse->m_pointerEvents.frame.emit();
+
     g_inputBackend->setIgnoreEvents(false);
 }
 
 void HyprlandInputEmitter::mouseMoveRelative(const QPointF &pos)
 {
     g_inputBackend->setIgnoreEvents(true);
+
     const Vector2D delta(pos.x(), pos.y());
-    g_pInputManager->onMouseMoved(IPointer::SMotionEvent{
+    m_mouse->m_pointerEvents.motion.emit(IPointer::SMotionEvent{
         .delta = delta,
         .unaccel = delta,
-        .device = m_pointer,
+        .device = m_mouse,
     });
+    m_mouse->m_pointerEvents.frame.emit();
+
     g_inputBackend->setIgnoreEvents(false);
 }
 
@@ -144,14 +153,9 @@ const std::string &VirtualKeyboard::getName()
     return name;
 }
 
-bool VirtualPointer::isVirtual()
+VirtualMouse::VirtualMouse()
 {
-    return false;
-}
-
-SP<Aquamarine::IPointer> VirtualPointer::aq()
-{
-    return nullptr;
+    m_deviceName = "inputactions_mouse";
 }
 
 }
