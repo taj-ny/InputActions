@@ -35,13 +35,13 @@ public:
     const std::string &getName() override;
 };
 
-class VirtualPointer : public IPointer
+class VirtualMouse : public IPointer
 {
 public:
-    VirtualPointer() = default;
+    VirtualMouse();
 
-    bool isVirtual() override;
-    SP<Aquamarine::IPointer> aq() override;
+    bool isVirtual() override { return false; }
+    SP<Aquamarine::IPointer> aq() { return {}; }
 };
 
 class HyprlandInputEmitter : public InputEmitter
@@ -64,7 +64,7 @@ private:
 
     uint32_t m_modifiers{};
     SP<Aquamarine::IKeyboard> m_keyboard;
-    SP<IPointer> m_pointer;
+    SP<IPointer> m_mouse;
 
     std::vector<std::pair<WP<CTextInputV3>, CHyprSignalListener>> m_v3TextInputs;
     std::vector<CHyprSignalListener> m_listeners;
