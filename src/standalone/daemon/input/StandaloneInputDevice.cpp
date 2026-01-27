@@ -51,13 +51,13 @@ std::unique_ptr<StandaloneInputDevice> StandaloneInputDevice::tryCreate(const QS
     InputDeviceType type{};
 
     const auto udevDevice = libinputDevice->udevDevice();
-    if (udevDevice->propertyValue("ID_INPUT_MOUSE")) {
+    if (udevDevice.propertyValue("ID_INPUT_MOUSE")) {
         type = InputDeviceType::Mouse;
-    } else if (udevDevice->propertyValue("ID_INPUT_KEYBOARD")) {
+    } else if (udevDevice.propertyValue("ID_INPUT_KEYBOARD")) {
         type = InputDeviceType::Keyboard;
-    } else if (udevDevice->propertyValue("ID_INPUT_TOUCHPAD")) {
+    } else if (udevDevice.propertyValue("ID_INPUT_TOUCHPAD")) {
         type = InputDeviceType::Touchpad;
-    } else if (udevDevice->propertyValue("ID_INPUT_TOUCHSCREEN")) {
+    } else if (udevDevice.propertyValue("ID_INPUT_TOUCHSCREEN")) {
         type = InputDeviceType::Touchscreen;
     } else {
         return {};

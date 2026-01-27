@@ -63,7 +63,7 @@ private:
     bool tryAddEvdevDevice(const QString &path);
     void evdevDeviceRemoved(const QString &path);
 
-    bool handleEvent(StandaloneInputDevice *sender, const LibinputEvent *event);
+    bool handleEvent(StandaloneInputDevice *sender, const LibinputEvent &event);
     LibinputEventsProcessingResult handleLibinputEvents(StandaloneInputDevice *device, LibinputPathContext *libinput);
 
     int m_inotifyFd;
