@@ -36,7 +36,9 @@ void EvdevInputEmitter::initialize()
         keyboard.enableEventCode(EV_KEY, key, nullptr);
     }
 
-    m_keyboard = LibevdevUinputDevice::createManaged(&keyboard, "InputActions Virtual Keyboard");
+    if (auto result = LibevdevUinputDevice::createManaged(&keyboard, "InputActions Virtual Keyboard")) {
+        m_keyboard = std::move(result.value());
+    }
 
     LibevdevDevice mouse;
     mouse.enableEventType(EV_KEY);
@@ -50,7 +52,9 @@ void EvdevInputEmitter::initialize()
     mouse.enableEventCode(EV_REL, REL_WHEEL_HI_RES, nullptr);
     mouse.enableEventCode(EV_REL, REL_HWHEEL_HI_RES, nullptr);
 
-    m_mouse = LibevdevUinputDevice::createManaged(&mouse, "InputActions Virtual Mouse");
+    if (auto result = LibevdevUinputDevice::createManaged(&mouse, "InputActions Virtual Mouse")) {
+        m_mouse = std::move(result.value());
+    }
 }
 
 void EvdevInputEmitter::reset()

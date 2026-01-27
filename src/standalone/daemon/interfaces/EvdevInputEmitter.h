@@ -18,6 +18,7 @@
 
 #pragma once
 
+#include <libevdev-cpp/LibevdevUinputDevice.h>
 #include <libinputactions/interfaces/InputEmitter.h>
 
 namespace InputActions
@@ -54,8 +55,8 @@ public:
     QString mousePath() const;
 
 private:
-    std::unique_ptr<LibevdevUinputDevice> m_keyboard;
-    std::unique_ptr<LibevdevUinputDevice> m_mouse;
+    std::optional<LibevdevUinputDevice> m_keyboard;
+    std::optional<LibevdevUinputDevice> m_mouse;
 
     QPointF m_mouseAxisDelta;
     QPointF m_mouseMotionDelta;

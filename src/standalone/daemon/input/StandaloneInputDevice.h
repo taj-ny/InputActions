@@ -19,8 +19,10 @@
 #pragma once
 
 #include <QTimer>
+#include <libevdev-cpp/LibevdevUinputDevice.h>
 #include <libinput-cpp/LibinputPathContext.h>
 #include <libinputactions/input/InputDevice.h>
+#include <optional>
 
 namespace InputActions
 {
@@ -54,12 +56,12 @@ public:
     /**
      * The virtual device for injecting evdev events into libinput, as there is no API for that. Grabbed by libinput. Nullptr if the device is not grabbed.
      */
-    LibevdevUinputDevice *libinputEventInjectionDevice() { return m_libinputEventInjectionDevice.get(); }
+    LibevdevUinputDevice *libinputEventInjectionDevice() { return m_libinputEventInjectionDevice ? &m_libinputEventInjectionDevice.value() : nullptr; }
 
     /**
      * The virtual device where non-filtered and simulated events are written to be later processed by the compositor. Nullptr if the device is not grabbed.
      */
-    LibevdevUinputDevice *outputDevice() { return m_outputDevice.get(); }
+    LibevdevUinputDevice *outputDevice() { return m_outputDevice ? &m_outputDevice.value() : nullptr; }
 
     bool isTouchpadBlocked() const { return m_touchpadBlocked; }
     void setTouchpadBlocked(bool value) { m_touchpadBlocked = value; }
@@ -106,10 +108,10 @@ private:
     std::unique_ptr<LibinputPathContext> m_libinput;
     LibinputDevice *m_libinputDevice{};
 
-    std::unique_ptr<LibevdevUinputDevice> m_libinputEventInjectionDevice;
+    std::optional<LibevdevUinputDevice> m_libinputEventInjectionDevice;
     uint32_t m_libinputEventInjectionDeviceInitializationAttempts{};
 
-    std::unique_ptr<LibevdevUinputDevice> m_outputDevice;
+    std::optional<LibevdevUinputDevice> m_outputDevice;
 
     bool m_touchpadBlocked{};
     bool m_touchpadNeutral{};

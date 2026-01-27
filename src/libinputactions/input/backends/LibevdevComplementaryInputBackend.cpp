@@ -33,14 +33,14 @@ void LibevdevComplementaryInputBackend::addDevice(InputDevice *device)
         return;
     }
 
-    std::shared_ptr<LibevdevDevice> libevdevDevice;
+    std::expected<std::unique_ptr<LibevdevDevice>, int> libevdevDevice;
     if (!device->sysName().isEmpty()) {
         libevdevDevice = LibevdevDevice::createFromPath("/dev/input/" + device->sysName());
     } else {
         // If sysName is not available, go through all devices and find one with the same name
         for (const auto &entry : QDir("/dev/input").entryInfoList(QDir::Files | QDir::NoSymLinks | QDir::System)) {
             auto candidate = LibevdevDevice::createFromPath(entry.filePath());
-            if (!candidate || candidate->name() != device->name()) {
+            if (!candidate || candidate.value()->name() != device->name()) {
                 continue;
             }
 
@@ -52,7 +52,7 @@ void LibevdevComplementaryInputBackend::addDevice(InputDevice *device)
         return;
     }
 
-    addDevice(device, std::move(libevdevDevice), true);
+    addDevice(device, std::move(libevdevDevice.value()), true);
 }
 
 void LibevdevComplementaryInputBackend::addDevice(InputDevice *device, std::shared_ptr<LibevdevDevice> libevdevDevice)
