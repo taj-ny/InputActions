@@ -194,9 +194,9 @@ void StandaloneInputBackend::deviceInitializationRetryTimerTick()
     }
 }
 
-bool StandaloneInputBackend::handleEvent(StandaloneInputDevice *sender, const LibinputEvent *event)
+bool StandaloneInputBackend::handleEvent(StandaloneInputDevice *sender, const LibinputEvent &event)
 {
-    const auto type = event->type();
+    const auto type = event.type();
     switch (type) {
         case LIBINPUT_EVENT_GESTURE_HOLD_BEGIN:
         case LIBINPUT_EVENT_GESTURE_HOLD_END:
@@ -206,7 +206,7 @@ bool StandaloneInputBackend::handleEvent(StandaloneInputDevice *sender, const Li
         case LIBINPUT_EVENT_GESTURE_SWIPE_BEGIN:
         case LIBINPUT_EVENT_GESTURE_SWIPE_END:
         case LIBINPUT_EVENT_GESTURE_SWIPE_UPDATE: {
-            const auto gestureEvent = event->gestureEvent();
+            const auto gestureEvent = event.gestureEvent();
             const auto fingers = gestureEvent->fingerCount();
 
             auto cancelled = false;
@@ -245,7 +245,7 @@ bool StandaloneInputBackend::handleEvent(StandaloneInputDevice *sender, const Li
             break;
         }
         case LIBINPUT_EVENT_KEYBOARD_KEY: {
-            const auto keyboardEvent = event->keyboardEvent();
+            const auto keyboardEvent = event.keyboardEvent();
 
             sender->setKeyState(keyboardEvent->key(), keyboardEvent->state());
             return keyboardKey(sender, keyboardEvent->key(), keyboardEvent->state());
@@ -253,7 +253,7 @@ bool StandaloneInputBackend::handleEvent(StandaloneInputDevice *sender, const Li
         case LIBINPUT_EVENT_POINTER_AXIS:
         case LIBINPUT_EVENT_POINTER_BUTTON:
         case LIBINPUT_EVENT_POINTER_MOTION: {
-            const auto pointerEvent = event->pointerEvent();
+            const auto pointerEvent = event.pointerEvent();
             switch (type) {
                 case LIBINPUT_EVENT_POINTER_AXIS: {
                     static const auto axis = [](const auto &pointerEvent, const auto axis) {
@@ -277,7 +277,7 @@ bool StandaloneInputBackend::handleEvent(StandaloneInputDevice *sender, const Li
         case LIBINPUT_EVENT_TOUCH_DOWN:
         case LIBINPUT_EVENT_TOUCH_MOTION:
         case LIBINPUT_EVENT_TOUCH_UP: {
-            const auto touchEvent = event->touchEvent();
+            const auto touchEvent = event.touchEvent();
             switch (type) {
                 case LIBINPUT_EVENT_TOUCH_DOWN: {
                     const auto slot = touchEvent->slot();
@@ -311,7 +311,7 @@ LibinputEventsProcessingResult StandaloneInputBackend::handleLibinputEvents(Stan
     // FIXME: One evdev frame can result in multiple libinput events, but one blocked libinput event will block the entire evdev frame.
     LibinputEventsProcessingResult result;
     while (const auto event = libinput->getEvent()) {
-        result.block = handleEvent(device, event.get()) || result.block;
+        result.block = handleEvent(device, event.value()) || result.block;
         result.eventCount++;
     }
     return result;
