@@ -3,10 +3,8 @@
 #include "config/Config.h"
 #include "input/StrokeRecorder.h"
 #include "input/backends/InputBackend.h"
-#include "input/backends/LibevdevComplementaryInputBackend.h"
 #include "interfaces/ConfigProvider.h"
 #include "interfaces/CursorShapeProvider.h"
-#include "interfaces/InputEmitter.h"
 #include "interfaces/NotificationManager.h"
 #include "interfaces/OnScreenMessageManager.h"
 #include "interfaces/PointerPositionGetter.h"
@@ -35,7 +33,6 @@ InputActionsMain::~InputActionsMain()
 {
     // Release as many resources as possible when the compositor plugin is disabled (KWin doesn't unload plugins from the address space)
     g_cursorShapeProvider.reset();
-    g_inputEmitter.reset();
     g_notificationManager.reset();
     g_onScreenMessageManager.reset();
     g_pointerPositionGetter.reset();
@@ -55,7 +52,6 @@ InputActionsMain::~InputActionsMain()
 void InputActionsMain::suspend()
 {
     g_inputBackend->reset();
-    g_inputEmitter->reset();
 }
 
 void InputActionsMain::initialize()
@@ -75,7 +71,6 @@ void InputActionsMain::setMissingImplementations()
 {
     setMissingImplementation<ConfigProvider, FileConfigProvider>(g_configProvider);
     setMissingImplementation(g_cursorShapeProvider);
-    setMissingImplementation(g_inputEmitter);
     setMissingImplementation<NotificationManager, DBusNotificationManager>(g_notificationManager);
     setMissingImplementation(g_onScreenMessageManager);
     setMissingImplementation(g_pointerPositionGetter);

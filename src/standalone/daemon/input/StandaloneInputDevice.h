@@ -21,7 +21,7 @@
 #include <QTimer>
 #include <libevdev-cpp/LibevdevUinputDevice.h>
 #include <libinput-cpp/LibinputPathContext.h>
-#include <libinputactions/input/InputDevice.h>
+#include <libinputactions/input/devices/InputDevice.h>
 #include <optional>
 
 namespace InputActions
@@ -82,12 +82,15 @@ public:
      */
     bool isDeviceOwnedByThisDevice(const QString &path) const;
 
+    void mouseButton(uint32_t button, bool state) override;
+    void keyboardKey(uint32_t key, bool state) override;
+
     void resetVirtualDeviceState() override;
     void restoreVirtualDeviceState() override;
 
 protected:
-    void simulateTouchscreenTapDown(const std::vector<QPointF> &points) override;
-    void simulateTouchscreenTapUp(const std::vector<QPointF> &points) override;
+    void touchscreenTapDown(const std::vector<QPointF> &points) override;
+    void touchscreenTapUp(const std::vector<QPointF> &points) override;
 
 private:
     StandaloneInputDevice(InputDeviceType type, QString name, QString sysName, QString path, std::unique_ptr<LibinputPathContext> libinput,

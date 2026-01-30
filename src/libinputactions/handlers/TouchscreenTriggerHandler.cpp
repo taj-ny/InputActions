@@ -48,7 +48,8 @@
  */
 
 #include "TouchscreenTriggerHandler.h"
-#include "interfaces/InputEmitter.h"
+#include <libinputactions/input/devices/InputDevice.h>
+#include <libinputactions/input/devices/InputDeviceState.h>
 #include <libinputactions/input/events.h>
 
 namespace InputActions
@@ -103,13 +104,7 @@ bool TouchscreenTriggerHandler::touchCancel(const TouchCancelEvent &event)
     return block;
 }
 
-bool TouchscreenTriggerHandler::touchChanged(const TouchChangedEvent &event)
-{
-    m_touchModifiedInCurrentFrame = true;
-    return m_block;
-}
-
-bool TouchscreenTriggerHandler::touchDown(const TouchEvent &event)
+bool TouchscreenTriggerHandler::touchDown(const TouchDownEvent &event)
 {
     switch (m_state) {
         case State::WaitingForTouchDowns:
@@ -124,11 +119,17 @@ bool TouchscreenTriggerHandler::touchDown(const TouchEvent &event)
     updateVariables(m_device);
 
     m_preTouchUpPoints.clear();
-    for (const auto *point : event.sender()->validTouchPoints()) {
+    for (const auto *point : event.sender()->physicalState().validTouchPoints()) {
         m_preTouchUpPoints.push_back(*point);
     }
 
     return true;
+}
+
+bool TouchscreenTriggerHandler::touchMotion(const TouchMotionEvent &event)
+{
+    m_touchModifiedInCurrentFrame = true;
+    return m_block;
 }
 
 bool TouchscreenTriggerHandler::touchFrame(const TouchFrameEvent &event)
@@ -140,7 +141,7 @@ bool TouchscreenTriggerHandler::touchFrame(const TouchFrameEvent &event)
     }
     m_touchModifiedInCurrentFrame = false;
 
-    const auto &points = event.sender()->validTouchPoints();
+    const auto &points = event.sender()->physicalState().validTouchPoints();
     for (const auto *point : points) {
         for (auto &preTouchUpPoint : m_preTouchUpPoints) {
             if (point->id == preTouchUpPoint.id) {
@@ -236,17 +237,17 @@ bool TouchscreenTriggerHandler::touchFrame(const TouchFrameEvent &event)
     return block;
 }
 
-bool TouchscreenTriggerHandler::touchUp(const TouchEvent &event)
+bool TouchscreenTriggerHandler::touchUp(const TouchUpEvent &event)
 {
     switch (m_state) {
         case State::WaitingForTouchUps:
-            if (m_device->validTouchPoints().empty()) {
+            if (m_device->physicalState().validTouchPoints().empty()) {
                 m_blockNextFrame = m_block;
                 handleTouchUp();
             }
             break;
         default:
-            if (m_device->validTouchPoints().empty()) {
+            if (m_device->physicalState().validTouchPoints().empty()) {
                 m_blockNextFrame = m_block;
                 handleTouchUp();
                 break;
@@ -278,7 +279,7 @@ void TouchscreenTriggerHandler::onTouchDownTimerTimeout()
 
 void TouchscreenTriggerHandler::handleTouchUp()
 {
-    if (!m_device->validTouchPoints().empty()) {
+    if (!m_device->physicalState().validTouchPoints().empty()) {
         cancelTriggers(TriggerType::All);
         beginGestureRecognition();
         updateVariables(m_device);
@@ -317,7 +318,7 @@ void TouchscreenTriggerHandler::handleTap()
         for (const auto &point : m_preTouchUpPoints) {
             points.push_back(point.rawPosition);
         }
-        m_device->simulateTouchscreenTap(points);
+        m_device->touchscreenTap(points);
     }
 }
 
@@ -390,7 +391,7 @@ void TouchscreenTriggerHandler::setState(State state)
 
 void TouchscreenTriggerHandler::beginGestureRecognition()
 {
-    const auto points = m_device->validTouchPoints();
+    const auto points = m_device->physicalState().validTouchPoints();
     m_initialDistance = {};
     m_previousAngle = {};
 
@@ -414,7 +415,7 @@ void TouchscreenTriggerHandler::setBlockAndUpdateVirtualDeviceState(bool value)
 
 PinchInfo TouchscreenTriggerHandler::pinchInfo() const
 {
-    const auto points = m_device->validTouchPoints();
+    const auto points = m_device->physicalState().validTouchPoints();
 
     const auto &first = points[0];
     const auto &second = points[1];
@@ -429,8 +430,8 @@ PinchInfo TouchscreenTriggerHandler::pinchInfo() const
 QPointF TouchscreenTriggerHandler::touchCenter() const
 {
     QPointF center;
-    const auto points = m_device->validTouchPoints();
-    for (const auto *point : m_device->validTouchPoints()) {
+    const auto points = m_device->physicalState().validTouchPoints();
+    for (const auto *point : m_device->physicalState().validTouchPoints()) {
         center += point->position;
     }
     center /= points.size();

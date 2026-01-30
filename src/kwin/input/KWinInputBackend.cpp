@@ -20,11 +20,9 @@
 #include "KWinInputDevice.h"
 #include "core/output.h"
 #include "input_event.h"
-#include "interfaces/KWinInputEmitter.h"
 #include "utils.h"
 #include "workspace.h"
 #include <libinputactions/input/events.h>
-#include <libinputactions/interfaces/InputEmitter.h>
 #include <libinputactions/triggers/StrokeTrigger.h>
 
 namespace InputActions
@@ -50,6 +48,9 @@ void KWinInputBackend::initialize()
 {
     LibinputInputBackend::initialize();
 
+    m_virtualKeyboard.emplace();
+    m_virtualMouse.emplace();
+
     connect(m_input, &KWin::InputRedirection::deviceAdded, this, &KWinInputBackend::kwinDeviceAdded);
     connect(m_input, &KWin::InputRedirection::deviceRemoved, this, &KWinInputBackend::kwinDeviceRemoved);
     for (auto *device : KWin::input()->devices()) {
@@ -59,12 +60,30 @@ void KWinInputBackend::initialize()
 
 void KWinInputBackend::reset()
 {
+    m_virtualKeyboard.reset();
+    m_virtualMouse.reset();
+
     disconnect(m_input, nullptr, this, nullptr);
     for (auto &device : m_devices) {
         removeDevice(device.get());
     }
     m_devices.clear();
     LibinputInputBackend::reset();
+}
+
+void KWinInputBackend::clearKeyboardModifiers()
+{
+    // Prevent modifier-only global shortcuts from being triggered. Clients will still see the event and may perform actions.
+    const auto globalShortcutsDisabled = KWin::workspace()->globalShortcutsDisabled();
+    if (!globalShortcutsDisabled) {
+        KWin::workspace()->disableGlobalShortcutsForClient(true);
+    }
+
+    LibinputInputBackend::clearKeyboardModifiers();
+
+    if (!globalShortcutsDisabled) {
+        KWin::workspace()->disableGlobalShortcutsForClient(false);
+    }
 }
 
 #ifdef KWIN_6_5_OR_GREATER
@@ -293,7 +312,7 @@ void KWinInputBackend::touchpadSwipeBlockingStopped(uint32_t fingers)
 
 void KWinInputBackend::kwinDeviceAdded(KWin::InputDevice *kwinDevice)
 {
-    if (kwinDevice == std::dynamic_pointer_cast<KWinInputEmitter>(g_inputEmitter)->device()) {
+    if (kwinDevice == m_virtualKeyboard->kwinDevice() || kwinDevice == m_virtualMouse->kwinDevice()) {
         return;
     }
 
@@ -329,6 +348,21 @@ KWinInputDevice *KWinInputBackend::findDevice(KWin::InputDevice *kwinDevice)
     return {};
 }
 
+VirtualKeyboard *KWinInputBackend::virtualKeyboard()
+{
+    return m_virtualKeyboard ? &m_virtualKeyboard.value() : nullptr;
+}
+
+VirtualMouse *KWinInputBackend::virtualMouse()
+{
+    return kwinVirtualMouse();
+}
+
+KWinVirtualMouse *KWinInputBackend::kwinVirtualMouse()
+{
+    return m_virtualMouse ? &m_virtualMouse.value() : nullptr;
+}
+
 void KWinInputBackend::KeyboardModifierSpy::keyboardKey(KWin::KeyboardKeyEvent *event)
 {
     auto *backend = dynamic_cast<KWinInputBackend *>(g_inputBackend.get());
@@ -337,7 +371,7 @@ void KWinInputBackend::KeyboardModifierSpy::keyboardKey(KWin::KeyboardKeyEvent *
     }
 
     if (auto *device = backend->findDevice(event->device)) {
-        device->setKeyState(event->nativeScanCode, event->state == KWin::KeyboardKeyState::Pressed);
+        device->physicalState().setKeyState(event->nativeScanCode, event->state == KWin::KeyboardKeyState::Pressed);
     }
 }
 

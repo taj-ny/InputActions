@@ -39,16 +39,18 @@ bool InputEventHandler::handleEvent(const InputEvent &event)
             return pointerButton(dynamic_cast<const PointerButtonEvent &>(event));
         case InputEventType::PointerMotion:
             return pointerMotion(dynamic_cast<const MotionEvent &>(event));
-        case InputEventType::TouchChanged:
-            return touchChanged(dynamic_cast<const TouchChangedEvent &>(event));
         case InputEventType::TouchCancel:
             return touchCancel(dynamic_cast<const TouchCancelEvent &>(event));
         case InputEventType::TouchDown:
-            return touchDown(dynamic_cast<const TouchEvent &>(event));
+            return touchDown(dynamic_cast<const TouchDownEvent &>(event));
         case InputEventType::TouchFrame:
             return touchFrame(dynamic_cast<const TouchFrameEvent &>(event));
+        case InputEventType::TouchMotion:
+            return touchMotion(dynamic_cast<const TouchMotionEvent &>(event));
+        case InputEventType::TouchPressureChange:
+            return touchPressureChange(dynamic_cast<const TouchPressureChangeEvent &>(event));
         case InputEventType::TouchUp:
-            return touchUp(dynamic_cast<const TouchEvent &>(event));
+            return touchUp(dynamic_cast<const TouchUpEvent &>(event));
         case InputEventType::TouchpadClick:
             return touchpadClick(dynamic_cast<const TouchpadClickEvent &>(event));
         case InputEventType::TouchpadGestureLifecyclePhase:

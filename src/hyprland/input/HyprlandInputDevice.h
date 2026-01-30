@@ -24,7 +24,7 @@
 #include <hyprland/src/devices/ITouch.hpp>
 #include <hyprland/src/plugins/HookSystem.hpp>
 #undef HANDLE
-#include <libinputactions/input/InputDevice.h>
+#include <libinputactions/input/devices/InputDevice.h>
 
 namespace InputActions
 {
@@ -36,21 +36,24 @@ class HyprlandInputDevice : public InputDevice
 public:
     static std::unique_ptr<HyprlandInputDevice> tryCreate(HyprlandInputBackend *backend, SP<IHID> device);
 
-    IHID *hyprlandDevice() const { return m_hyprlandDevice.get(); }
+    IHID *hyprlandDevice() const { return m_device.get(); }
+
+    void keyboardKey(uint32_t key, bool state) override;
+    void mouseButton(uint32_t button, bool state) override;
 
     void resetVirtualDeviceState() override;
     void restoreVirtualDeviceState() override;
 
 protected:
-    void simulateTouchscreenTapDown(const std::vector<QPointF> &points) override;
-    void simulateTouchscreenTapUp(const std::vector<QPointF> &points) override;
+    void touchscreenTapDown(const std::vector<QPointF> &points) override;
+    void touchscreenTapUp(const std::vector<QPointF> &points) override;
 
 private:
     HyprlandInputDevice(SP<IHID> device, InputDeviceType type, const std::string &name, HyprlandInputBackend *backend);
     HyprlandInputDevice(SP<ITouch> device, InputDeviceType type, const std::string &name, HyprlandInputBackend *backend);
     HyprlandInputDevice(SP<IPointer> device, InputDeviceType type, const std::string &name, HyprlandInputBackend *backend);
 
-    SP<IHID> m_hyprlandDevice;
+    SP<IHID> m_device;
     std::vector<CHyprSignalListener> m_listeners;
     HyprlandInputBackend *m_backend;
 };

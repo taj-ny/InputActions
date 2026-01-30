@@ -50,10 +50,10 @@ protected:
     bool pointerMotion(const MotionEvent &event) override;
 
     bool touchCancel(const TouchCancelEvent &event) override;
-    bool touchChanged(const TouchChangedEvent &event) override;
-    bool touchDown(const TouchEvent &event) override;
+    bool touchDown(const TouchDownEvent &event) override;
     bool touchFrame(const TouchFrameEvent &event) override;
-    bool touchUp(const TouchEvent &event) override;
+    bool touchMotion(const TouchMotionEvent &event) override;
+    bool touchUp(const TouchUpEvent &event) override;
 
     bool touchpadGestureLifecyclePhase(const TouchpadGestureLifecyclePhaseEvent &event) override;
     bool touchpadPinch(const TouchpadPinchEvent &event) override;

@@ -17,9 +17,10 @@
 */
 
 #include "InputAction.h"
-#include "InputActionsMain.h"
 #include <QThread>
-#include <libinputactions/interfaces/InputEmitter.h>
+#include <libinputactions/input/backends/InputBackend.h>
+#include <libinputactions/input/devices/VirtualKeyboard.h>
+#include <libinputactions/input/devices/VirtualMouse.h>
 #include <libinputactions/interfaces/PointerPositionSetter.h>
 #include <libinputactions/utils/ThreadUtils.h>
 
@@ -31,10 +32,10 @@ InputAction::InputAction(std::vector<Item> sequence)
 {
     for (const auto &item : m_sequence) {
         if (item.keyboardPress) {
-            g_inputEmitter->keyboardAddRequiredKey(item.keyboardPress);
+            g_inputBackend->addVirtualKeyboardKey(item.keyboardPress);
         }
         if (item.keyboardRelease) {
-            g_inputEmitter->keyboardAddRequiredKey(item.keyboardRelease);
+            g_inputBackend->addVirtualKeyboardKey(item.keyboardRelease);
         }
     }
 }
@@ -45,23 +46,23 @@ void InputAction::executeImpl(uint32_t executions)
         const auto keyboardText = item.keyboardText.get();
         ThreadUtils::runOnThread(ThreadUtils::mainThread(), [this, executions, item, keyboardText]() {
             if (item.keyboardPress) {
-                g_inputEmitter->keyboardKey(item.keyboardPress, true);
+                g_inputBackend->virtualKeyboard()->keyboardKey(item.keyboardPress, true);
             } else if (item.keyboardRelease) {
-                g_inputEmitter->keyboardKey(item.keyboardRelease, false);
+                g_inputBackend->virtualKeyboard()->keyboardKey(item.keyboardRelease, false);
             } else if (keyboardText) {
-                g_inputEmitter->keyboardText(keyboardText.value());
+                g_inputBackend->virtualKeyboard()->keyboardText(keyboardText.value());
             } else if (item.mousePress) {
-                g_inputEmitter->mouseButton(item.mousePress, true);
+                g_inputBackend->virtualMouse()->mouseButton(item.mousePress, true);
             } else if (item.mouseRelease) {
-                g_inputEmitter->mouseButton(item.mouseRelease, false);
+                g_inputBackend->virtualMouse()->mouseButton(item.mouseRelease, false);
             } else if (!item.mouseAxis.isNull()) {
-                g_inputEmitter->mouseAxis(item.mouseAxis * executions);
+                g_inputBackend->virtualMouse()->mouseWheel(item.mouseAxis * executions);
             } else if (!item.mouseMoveAbsolute.isNull()) {
                 g_pointerPositionSetter->setGlobalPointerPosition(item.mouseMoveAbsolute);
             } else if (!item.mouseMoveRelative.isNull()) {
-                g_inputEmitter->mouseMoveRelative(item.mouseMoveRelative);
+                g_inputBackend->virtualMouse()->mouseMotion(item.mouseMoveRelative);
             } else if (item.mouseMoveRelativeByDelta) {
-                g_inputEmitter->mouseMoveRelative(m_deltaMultiplied);
+                g_inputBackend->virtualMouse()->mouseMotion(m_deltaMultiplied);
             }
         });
 

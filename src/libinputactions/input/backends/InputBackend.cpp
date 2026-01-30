@@ -19,15 +19,18 @@
 #include "InputBackend.h"
 #include <QObject>
 #include <libinputactions/InputActionsMain.h>
+#include <libinputactions/globals.h>
 #include <libinputactions/handlers/KeyboardTriggerHandler.h>
 #include <libinputactions/handlers/MotionTriggerHandler.h>
 #include <libinputactions/handlers/MouseTriggerHandler.h>
 #include <libinputactions/handlers/PointerTriggerHandler.h>
 #include <libinputactions/handlers/TouchpadTriggerHandler.h>
 #include <libinputactions/handlers/TouchscreenTriggerHandler.h>
-#include <libinputactions/input/InputDeviceRule.h>
 #include <libinputactions/input/InputEventHandler.h>
 #include <libinputactions/input/StrokeRecorder.h>
+#include <libinputactions/input/devices/InputDeviceRule.h>
+#include <libinputactions/input/devices/VirtualKeyboard.h>
+#include <libinputactions/input/devices/VirtualMouse.h>
 #include <libinputactions/input/events.h>
 #include <libinputactions/interfaces/NotificationManager.h>
 #include <libinputactions/interfaces/SessionLock.h>
@@ -42,6 +45,10 @@ static const std::chrono::milliseconds EMERGENCY_COMBINATION_HOLD_DURATION{2000L
 
 InputBackend::InputBackend()
 {
+    for (const auto &[key, _] : KEYBOARD_MODIFIERS) {
+        addVirtualKeyboardKey(key);
+    }
+
     m_emergencyCombinationTimer.setSingleShot(true);
     connect(&m_emergencyCombinationTimer, &QTimer::timeout, this, &InputBackend::onEmergencyCombinationTimerTimeout);
 }
@@ -89,9 +96,26 @@ Qt::KeyboardModifiers InputBackend::keyboardModifiers() const
 {
     Qt::KeyboardModifiers modifiers;
     for (const auto *device : m_devices) {
-        modifiers |= device->modifiers();
+        modifiers |= device->physicalState().activeKeyboardModifiers();
     }
     return modifiers;
+}
+
+void InputBackend::clearKeyboardModifiers()
+{
+    for (const auto &device : m_devices) {
+        const auto modifiers = device->virtualState().activeKeyboardModifiers();
+        for (const auto &[key, modifier] : KEYBOARD_MODIFIERS) {
+            if ((modifiers & modifier) && device->virtualState().isKeyPressed(key)) {
+                device->keyboardKey(key, false);
+            }
+        }
+    }
+}
+
+void InputBackend::addVirtualKeyboardKey(uint32_t key)
+{
+    m_virtualKeyboardKeys.insert(key);
 }
 
 void InputBackend::applyDeviceProperties(const InputDevice *device, InputDeviceProperties &properties) const
@@ -178,15 +202,16 @@ bool InputBackend::handleEvent(const InputEvent &event)
         return false;
     }
 
-    if (event.type() == InputEventType::KeyboardKey && !m_emergencyCombination.empty()) {
-        m_emergencyCombinationTimer.stop();
-        if (event.sender()->keys() == m_emergencyCombination) {
-            m_emergencyCombinationTimer.start(EMERGENCY_COMBINATION_HOLD_DURATION);
-        }
-    }
-
     if (event.sender()->type() == InputDeviceType::Touchscreen) {
         m_currentTouchscreen = event.sender();
+    }
+
+    event.sender()->handleEvent(event);
+    if (event.type() == InputEventType::KeyboardKey && !m_emergencyCombination.empty()) {
+        m_emergencyCombinationTimer.stop();
+        if (event.sender()->physicalState().pressedKeys() == m_emergencyCombination) {
+            m_emergencyCombinationTimer.start(EMERGENCY_COMBINATION_HOLD_DURATION);
+        }
     }
 
     if (g_sessionLock->sessionLocked()) {
@@ -202,6 +227,8 @@ bool InputBackend::handleEvent(const InputEvent &event)
             return true;
         }
     }
+
+    event.sender()->handleNotBlockedEvent(event);
     return false;
 }
 

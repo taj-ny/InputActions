@@ -37,9 +37,13 @@ if (INPUTACTIONS_BUILD_HYPRLAND OR INPUTACTIONS_BUILD_KWIN OR INPUTACTIONS_BUILD
         libinputactions/input/backends/InputBackend.cpp
         libinputactions/input/backends/LibevdevComplementaryInputBackend.cpp
         libinputactions/input/backends/LibinputInputBackend.cpp
+        libinputactions/input/devices/InputDevice.cpp
+        libinputactions/input/devices/InputDeviceProperties.cpp
+        libinputactions/input/devices/InputDeviceRule.cpp
+        libinputactions/input/devices/InputDeviceState.cpp
+        libinputactions/input/devices/VirtualKeyboard.cpp
+        libinputactions/input/devices/VirtualMouse.cpp
         libinputactions/input/Delta.cpp
-        libinputactions/input/InputDevice.cpp
-        libinputactions/input/InputDeviceRule.cpp
         libinputactions/input/InputEventHandler.cpp
         libinputactions/input/StrokeRecorder.cpp
         libinputactions/input/events.cpp
@@ -49,7 +53,6 @@ if (INPUTACTIONS_BUILD_HYPRLAND OR INPUTACTIONS_BUILD_KWIN OR INPUTACTIONS_BUILD
         libinputactions/interfaces/implementations/ProcessRunnerImpl.cpp
         libinputactions/interfaces/ConfigProvider.cpp
         libinputactions/interfaces/CursorShapeProvider.h
-        libinputactions/interfaces/InputEmitter.cpp
         libinputactions/interfaces/NotificationManager.h
         libinputactions/interfaces/OnScreenMessageManager.h
         libinputactions/interfaces/PlasmaGlobalShortcutInvoker.h

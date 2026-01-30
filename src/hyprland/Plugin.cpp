@@ -18,7 +18,6 @@
 
 #include "Plugin.h"
 #include "input/HyprlandInputBackend.h"
-#include "interfaces/HyprlandInputEmitter.h"
 #include "interfaces/HyprlandOnScreenMessageManager.h"
 #include "interfaces/HyprlandPointer.h"
 #include "interfaces/HyprlandSessionLock.h"
@@ -43,7 +42,6 @@ Plugin::Plugin(void *handle)
 
     auto pointer = std::make_shared<HyprlandPointer>(handle);
     g_cursorShapeProvider = pointer;
-    g_inputEmitter = std::make_shared<HyprlandInputEmitter>();
     g_onScreenMessageManager = std::make_shared<HyprlandOnScreenMessageManager>();
     g_pointerPositionGetter = pointer;
     g_pointerPositionSetter = pointer;

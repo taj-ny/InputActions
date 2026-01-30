@@ -18,8 +18,8 @@
 
 #include "MouseTriggerHandler.h"
 #include <libinputactions/input/backends/InputBackend.h>
+#include <libinputactions/input/devices/InputDevice.h>
 #include <libinputactions/input/events.h>
-#include <libinputactions/interfaces/InputEmitter.h>
 #include <libinputactions/triggers/PressTrigger.h>
 #include <libinputactions/triggers/WheelTrigger.h>
 #include <ranges>
@@ -176,8 +176,8 @@ bool MouseTriggerHandler::pointerButton(const PointerButtonEvent &event)
         const auto block = m_blockedMouseButtons.contains(nativeButton);
         if (m_blockedMouseButtons.removeAll(nativeButton) && !m_hadTriggerSincePress) {
             qCDebug(INPUTACTIONS_HANDLER_MOUSE).nospace() << "Mouse button pressed and released (button: " << nativeButton << ")";
-            g_inputEmitter->mouseButton(nativeButton, true, event.sender());
-            g_inputEmitter->mouseButton(nativeButton, false, event.sender());
+            event.sender()->mouseButton(nativeButton, true);
+            event.sender()->mouseButton(nativeButton, false);
         }
         if (m_blockedMouseButtons.empty()) {
             m_hadTriggerSincePress = false;
@@ -263,7 +263,7 @@ bool MouseTriggerHandler::shouldBlockMouseButton(Qt::MouseButton button)
 void MouseTriggerHandler::pressBlockedMouseButtons(InputDevice *target)
 {
     for (const auto &button : m_blockedMouseButtons) {
-        g_inputEmitter->mouseButton(button, true, target);
+        target->mouseButton(button, true);
         qCDebug(INPUTACTIONS_HANDLER_MOUSE).nospace() << "Mouse button unblocked (button: " << button << ")";
     }
     m_blockedMouseButtons.clear();

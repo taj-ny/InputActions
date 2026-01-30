@@ -17,7 +17,7 @@
 */
 
 #include "KeyboardTriggerHandler.h"
-#include <libinputactions/input/InputDevice.h>
+#include <libinputactions/input/devices/InputDevice.h>
 #include <libinputactions/input/events.h>
 
 namespace InputActions

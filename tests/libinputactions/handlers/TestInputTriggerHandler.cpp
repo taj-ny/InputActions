@@ -1,6 +1,7 @@
 #include "TestInputTriggerHandler.h"
 #include <QSignalSpy>
 #include <libinputactions/handlers/InputTriggerHandler.h>
+#include <libinputactions/input/devices/InputDevice.h>
 #include <libinputactions/input/events.h>
 #include <libinputactions/triggers/Trigger.h>
 #include <linux/input-event-codes.h>

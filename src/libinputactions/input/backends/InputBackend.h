@@ -20,7 +20,7 @@
 
 #include <QTimer>
 #include <linux/input-event-codes.h>
-#include <unordered_set>
+#include <set>
 
 namespace InputActions
 {
@@ -35,6 +35,8 @@ class MouseTriggerHandler;
 class PointerTriggerHandler;
 class TouchpadTriggerHandler;
 class TouchscreenTriggerHandler;
+class VirtualKeyboard;
+class VirtualMouse;
 
 /**
  * Collects input events and forwards them to event handlers. Handlers can only be set before initialization.
@@ -69,7 +71,7 @@ public:
     /**
      * Detects and adds devices.
      */
-    virtual void initialize() {};
+    virtual void initialize() {}
 
     /**
      * Evaluates device rules for the specified device and returns the properties without modifying the device's properties. Use this for devices that have not
@@ -94,17 +96,42 @@ public:
     InputDevice *currentTouchscreen() const { return m_currentTouchscreen; }
 
     /**
+     * Virtual device for generating anonymous keyboard events. If the creation of the device fails, a valid object of which methods can be safely called must
+     * be returned.
+     * @return Nullptr if called before initialization or in a testing environment.
+     */
+    virtual VirtualKeyboard *virtualKeyboard() { return {}; }
+    void addVirtualKeyboardKey(uint32_t key);
+    const std::set<uint32_t> &virtualKeyboardKeys() const { return m_virtualKeyboardKeys; }
+
+    /**
+     * Virtual device for generating anonymous mouse events. If the creation of the device fails, a valid object of which methods can be safely called must be
+     * returned.
+     * @return Nullptr if called before initialization or in a testing environment.
+     */
+    virtual VirtualMouse *virtualMouse() { return {}; }
+
+    /**
      * @return Currently pressed keyboard modifiers, accumulated from all devices.
      * @remark Key events that have been ignored by the input backend will not be used to update the modifier state. For example, clearing modifiers will not
      * update the modifier state to none. This allows gestures with keyboard modifier conditions to be used again.
      */
     Qt::KeyboardModifiers keyboardModifiers() const;
+    virtual void clearKeyboardModifiers();
 
     /**
      * Removes all event handlers, devices and custom properties. Backend must be initialized in order to be used again.
      * @see initialize
      */
     virtual void reset();
+
+    void addDevice(InputDevice *device);
+
+    /**
+     * Events with a nullptr sender will be ignored.
+     * @returns Whether the event should be blocked.
+     */
+    bool handleEvent(const InputEvent &event);
 
     /**
      * Rules are evaluated in reverse order when a device is added.
@@ -120,18 +147,11 @@ public:
     /**
      * A combination of keyboard keys, that when held for a specific amount of time, will cause InputActions to enter a suspended state.
      */
-    void setEmergencyCombination(std::unordered_set<uint32_t> value) { m_emergencyCombination = value; }
+    void setEmergencyCombination(std::set<uint32_t> value) { m_emergencyCombination = value; }
 
 protected:
-    void addDevice(InputDevice *device);
     virtual void removeDevice(const InputDevice *device);
     void createEventHandlerChain();
-
-    /**
-     * Events with a nullptr sender will be ignored.
-     * @returns Whether the event should be blocked.
-     */
-    bool handleEvent(const InputEvent &event);
 
     bool m_ignoreEvents = false;
 
@@ -145,6 +165,8 @@ private:
     std::vector<InputDevice *> m_devices;
     InputDevice *m_currentTouchscreen{};
 
+    std::set<uint32_t> m_virtualKeyboardKeys;
+
     QTimer m_emergencyCombinationTimer;
 
     std::vector<InputDeviceRule> m_deviceRules;
@@ -154,7 +176,7 @@ private:
     std::function<std::unique_ptr<TouchpadTriggerHandler>(InputDevice *device)> m_touchpadTriggerHandlerFactory;
     std::function<std::unique_ptr<TouchscreenTriggerHandler>(InputDevice *device)> m_touchscreenTriggerHandlerFactory;
 
-    std::unordered_set<uint32_t> m_emergencyCombination = {KEY_BACKSPACE, KEY_SPACE, KEY_ENTER};
+    std::set<uint32_t> m_emergencyCombination = {KEY_BACKSPACE, KEY_SPACE, KEY_ENTER};
 };
 
 inline std::unique_ptr<InputBackend> g_inputBackend;

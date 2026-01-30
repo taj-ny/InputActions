@@ -27,9 +27,11 @@ class InputEvent;
 class MotionEvent;
 class PointerButtonEvent;
 class TouchCancelEvent;
-class TouchChangedEvent;
-class TouchEvent;
+class TouchDownEvent;
 class TouchFrameEvent;
+class TouchMotionEvent;
+class TouchPressureChangeEvent;
+class TouchUpEvent;
 class TouchpadClickEvent;
 class TouchpadGestureLifecyclePhaseEvent;
 class TouchpadPinchEvent;
@@ -61,10 +63,11 @@ protected:
     virtual bool pointerMotion(const MotionEvent &event) { return false; }
 
     virtual bool touchCancel(const TouchCancelEvent &event) { return false; }
-    virtual bool touchChanged(const TouchChangedEvent &event) { return false; }
-    virtual bool touchDown(const TouchEvent &event) { return false; }
+    virtual bool touchDown(const TouchDownEvent &event) { return false; }
     virtual bool touchFrame(const TouchFrameEvent &event) { return false; }
-    virtual bool touchUp(const TouchEvent &event) { return false; }
+    virtual bool touchMotion(const TouchMotionEvent &event) { return false; }
+    virtual bool touchPressureChange(const TouchPressureChangeEvent &event) { return false; }
+    virtual bool touchUp(const TouchUpEvent &event) { return false; }
 
     virtual bool touchpadClick(const TouchpadClickEvent &event) { return false; }
     virtual bool touchpadGestureLifecyclePhase(const TouchpadGestureLifecyclePhaseEvent &event) { return false; }

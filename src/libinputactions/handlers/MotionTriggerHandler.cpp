@@ -25,7 +25,7 @@
 
 #include "MotionTriggerHandler.h"
 #include <libinputactions/input/Delta.h>
-#include <libinputactions/input/InputDevice.h>
+#include <libinputactions/input/devices/InputDevice.h>
 #include <libinputactions/triggers/StrokeTrigger.h>
 
 Q_LOGGING_CATEGORY(INPUTACTIONS_HANDLER_MOTION, "inputactions.handler.motion", QtWarningMsg)

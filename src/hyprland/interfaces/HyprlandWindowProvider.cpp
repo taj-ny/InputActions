@@ -24,8 +24,9 @@
 #include <hyprland/src/helpers/Monitor.hpp>
 #include <hyprland/src/managers/PointerManager.hpp>
 #undef HANDLE
-#include <libinputactions/input/InputDevice.h>
 #include <libinputactions/input/backends/InputBackend.h>
+#include <libinputactions/input/devices/InputDevice.h>
+#include <libinputactions/input/devices/InputDeviceState.h>
 
 namespace InputActions
 {
@@ -46,7 +47,7 @@ std::shared_ptr<Window> HyprlandWindowProvider::windowUnderFingers()
     }
     const auto *hyprlandDevice = dynamic_cast<const ITouch *>(dynamic_cast<const HyprlandInputDevice *>(device)->hyprlandDevice());
 
-    const auto validTouchPoints = device->validTouchPoints();
+    const auto validTouchPoints = device->physicalState().validTouchPoints();
     if (validTouchPoints.empty()) {
         return {};
     }

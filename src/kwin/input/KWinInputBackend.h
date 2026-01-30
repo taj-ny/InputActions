@@ -18,6 +18,8 @@
 
 #pragma once
 
+#include "KWinVirtualKeyboard.h"
+#include "KWinVirtualMouse.h"
 #include "input.h"
 #include "input_event_spy.h"
 #include <libinputactions/input/backends/LibinputInputBackend.h>
@@ -40,8 +42,17 @@ public:
     KWinInputBackend();
     ~KWinInputBackend() override;
 
+    VirtualKeyboard *virtualKeyboard() override;
+    VirtualMouse *virtualMouse() override;
+    /**
+     * @see virtualMouse()
+     */
+    KWinVirtualMouse *kwinVirtualMouse();
+
     void initialize() override;
     void reset() final;
+
+    void clearKeyboardModifiers() override;
 
 #ifdef KWIN_6_5_OR_GREATER
     bool holdGestureBegin(KWin::PointerHoldGestureBeginEvent *event) override;
@@ -95,6 +106,8 @@ private:
 
     KWin::InputRedirection *m_input;
     std::vector<std::unique_ptr<KWinInputDevice>> m_devices;
+    std::optional<KWinVirtualKeyboard> m_virtualKeyboard;
+    std::optional<KWinVirtualMouse> m_virtualMouse;
 
     class KeyboardModifierSpy : public KWin::InputEventSpy
     {

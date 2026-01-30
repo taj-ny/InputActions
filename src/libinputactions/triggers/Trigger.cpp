@@ -18,7 +18,7 @@
 
 #include "Trigger.h"
 #include <libinputactions/actions/InputAction.h>
-#include <libinputactions/interfaces/InputEmitter.h>
+#include <libinputactions/input/backends/InputBackend.h>
 #include <libinputactions/variables/VariableManager.h>
 
 Q_LOGGING_CATEGORY(INPUTACTIONS_TRIGGER, "inputactions.trigger", QtWarningMsg)
@@ -93,7 +93,7 @@ void Trigger::update(const TriggerUpdateEvent &event)
 
         if (m_clearModifiers && *m_clearModifiers) {
             qCDebug(INPUTACTIONS_TRIGGER).noquote() << QString("Clearing keyboard modifiers (trigger: %1)").arg(m_id);
-            g_inputEmitter->keyboardClearModifiers();
+            g_inputBackend->clearKeyboardModifiers();
         }
 
         for (const auto &action : m_actions) {

@@ -1,6 +1,6 @@
 /*
     Input Actions - Input handler that executes user-defined actions
-    Copyright (C) 2024-2025 Marcin Woźniak
+    Copyright (C) 2024-2026 Marcin Woźniak
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -16,22 +16,37 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include "InputEmitter.h"
-#include <libinputactions/input/InputDevice.h>
+#pragma once
+
+#include <hyprland/src/devices/IPointer.hpp>
+#undef HANDLE
+#include <libinputactions/input/devices/VirtualMouse.h>
 
 namespace InputActions
 {
 
-InputEmitter::InputEmitter()
+class HyprlandVirtualMouse : public VirtualMouse
 {
-    for (const auto &[key, _] : KEYBOARD_MODIFIERS) {
-        keyboardAddRequiredKey(key);
-    }
-}
+public:
+    HyprlandVirtualMouse();
+    ~HyprlandVirtualMouse() override;
 
-void InputEmitter::keyboardAddRequiredKey(uint32_t key)
-{
-    m_keyboardRequiredKeys.insert(key);
-}
+    IPointer *hyprlandDevice() { return m_device.get(); }
+
+    void mouseButton(uint32_t button, bool state) override;
+    void mouseMotion(const QPointF &pos) override;
+    void mouseWheel(const QPointF &delta) override;
+
+private:
+    class Device : public IPointer
+    {
+    public:
+        Device();
+
+        bool isVirtual() override { return false; }
+        SP<Aquamarine::IPointer> aq() { return {}; }
+    };
+    SP<Device> m_device;
+};
 
 }

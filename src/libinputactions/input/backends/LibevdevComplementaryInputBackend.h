@@ -19,7 +19,7 @@
 #pragma once
 
 #include <libinputactions/input/backends/InputBackend.h>
-#include <libinputactions/input/events.h>
+#include <libinputactions/input/devices/InputDeviceState.h>
 #include <linux/input.h>
 #include <map>
 #include <memory>
@@ -28,6 +28,13 @@ namespace InputActions
 {
 
 class LibevdevDevice;
+
+struct SlotData
+{
+    bool active{};
+    QPointF position;
+    uint32_t pressure{};
+};
 
 /**
  * Uses libevdev to get additional touchpad data that libinput does not provide.
@@ -74,15 +81,14 @@ private:
          */
         bool owner{};
 
-        uint8_t currentSlot{};
         /**
          * Absolute minimum values of ABS_X and ABS_Y.
          */
         QPoint absMin;
-        /**
-         * Copy of touch points from the previous frame.
-         */
-        std::vector<TouchPoint> previousTouchPoints;
+
+        int32_t currentSlot{};
+        std::map<int32_t, SlotData> currentSlots;
+        std::map<int32_t, SlotData> previousSlots;
     };
     std::map<InputDevice *, std::unique_ptr<ExtraDeviceData>> m_devices;
 };

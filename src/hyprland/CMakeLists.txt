@@ -13,7 +13,8 @@ pkg_check_modules(deps REQUIRED IMPORTED_TARGET
 set(inputactions_SOURCES
     input/HyprlandInputBackend.cpp
     input/HyprlandInputDevice.cpp
-    interfaces/HyprlandInputEmitter.cpp
+    input/HyprlandVirtualKeyboard.cpp
+    input/HyprlandVirtualMouse.cpp
     interfaces/HyprlandOnScreenMessageManager.cpp
     interfaces/HyprlandPointer.cpp
     interfaces/HyprlandSessionLock.cpp

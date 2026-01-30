@@ -22,6 +22,9 @@
 #include <fcntl.h>
 #include <libevdev-cpp/LibevdevDevice.h>
 #include <libevdev/libevdev.h>
+#include <libinputactions/input/devices/InputDevice.h>
+#include <libinputactions/input/devices/InputDeviceProperties.h>
+#include <libinputactions/input/events.h>
 #include <libinputactions/variables/VariableManager.h>
 
 namespace InputActions
@@ -88,12 +91,9 @@ void LibevdevComplementaryInputBackend::addDevice(InputDevice *device, std::shar
 
     bool buttonPad = libevdevDevice->hasProperty(INPUT_PROP_BUTTONPAD);
     bool multiTouch{};
-    uint8_t slotCount = 1;
     if (libevdevDevice->hasEventCode(EV_ABS, ABS_MT_SLOT)) {
         multiTouch = true;
-        slotCount = libevdevDevice->slotCount();
     }
-    device->setTouchPoints(std::vector<TouchPoint>(slotCount));
 
     auto &properties = device->properties();
     properties.setSize(size);
@@ -117,7 +117,7 @@ void LibevdevComplementaryInputBackend::removeDevice(const InputDevice *device)
 
 void LibevdevComplementaryInputBackend::handleEvdevEvent(InputDevice *sender, const input_event &event)
 {
-    if (!m_devices.contains(sender)) {
+    if (!m_devices.contains(sender) || !sender->properties().handleLibevdevEvents()) {
         return;
     }
 
@@ -129,35 +129,25 @@ void LibevdevComplementaryInputBackend::handleEvdevEvent(InputDevice *sender, co
     switch (event.type) {
         case EV_SYN:
             if (code == SYN_REPORT) {
-                for (size_t i = 0; i < data->previousTouchPoints.size(); i++) {
-                    const auto &previous = data->previousTouchPoints[i];
-                    auto &slot = sender->touchPoints()[i];
+                for (const auto &[id, slot] : data->currentSlots) {
+                    const auto previousSlot = data->previousSlots[id];
 
-                    if (slot.pressure >= properties.palmPressure()) {
-                        slot.type = TouchPointType::Palm;
-                    } else if (slot.pressure >= properties.thumbPressure()) {
-                        slot.type = TouchPointType::Thumb;
-                    } else if (slot.pressure >= properties.fingerPressure()) {
-                        slot.type = TouchPointType::Finger;
-                    } else {
-                        slot.type = TouchPointType::None;
+                    if (previousSlot.active && !slot.active) {
+                        handleEvent(TouchUpEvent(sender, id));
+                        continue;
                     }
-                    slot.valid = slot.active && (slot.type == TouchPointType::Finger || slot.type == TouchPointType::Thumb);
-
-                    if (previous.valid != slot.valid) {
-                        if (slot.valid) {
-                            slot.downTimestamp = std::chrono::steady_clock::now();
-                            slot.initialPosition = slot.position;
-                        }
-
-                        if (properties.handleLibevdevEvents()) {
-                            handleEvent(TouchEvent(sender, slot.valid ? InputEventType::TouchDown : InputEventType::TouchUp, slot));
-                        }
-                    } else if (properties.handleLibevdevEvents() && (previous.position != slot.position || previous.pressure != slot.pressure)) {
-                        handleEvent(TouchChangedEvent(sender, slot, slot.position - previous.position));
+                    if (!previousSlot.active && slot.active) {
+                        handleEvent(TouchDownEvent(sender, id, slot.position, slot.position, slot.pressure));
+                        continue;
+                    }
+                    if (previousSlot.position != slot.position) {
+                        handleEvent(TouchMotionEvent(sender, id, slot.position, slot.position));
+                    }
+                    if (previousSlot.pressure != slot.pressure) {
+                        handleEvent(TouchPressureChangeEvent(sender, id, slot.pressure));
                     }
                 }
-                data->previousTouchPoints = sender->touchPoints();
+                data->previousSlots = data->currentSlots;
             }
             break;
         case EV_KEY:
@@ -165,42 +155,42 @@ void LibevdevComplementaryInputBackend::handleEvdevEvent(InputDevice *sender, co
                 case BTN_LEFT:
                 case BTN_MIDDLE:
                 case BTN_RIGHT:
-                    if (properties.handleLibevdevEvents() && properties.buttonPad()) {
+                    if (properties.buttonPad()) {
                         handleEvent(TouchpadClickEvent(sender, value));
                     }
                     break;
             }
             break;
         case EV_ABS:
-            auto &currentTouchPoint = sender->touchPoints()[data->currentSlot];
+            auto &slot = data->currentSlots[data->currentSlot];
             if (properties.multiTouch()) {
                 switch (code) {
                     case ABS_MT_SLOT:
                         data->currentSlot = value;
                         break;
                     case ABS_MT_TRACKING_ID:
-                        currentTouchPoint.active = value != -1;
+                        slot.active = value != -1;
                         break;
                     case ABS_MT_POSITION_X:
-                        currentTouchPoint.position.setX(value + data->absMin.x());
+                        slot.position.setX(value + data->absMin.x());
                         break;
                     case ABS_MT_POSITION_Y:
-                        currentTouchPoint.position.setY(value + data->absMin.y());
+                        slot.position.setY(value + data->absMin.y());
                         break;
                     case ABS_MT_PRESSURE:
-                        currentTouchPoint.pressure = value;
+                        slot.pressure = value;
                         break;
                 }
             } else {
                 switch (code) {
                     case ABS_X:
-                        currentTouchPoint.position.setX(value + data->absMin.x());
+                        slot.position.setX(value + data->absMin.x());
                         break;
                     case ABS_Y:
-                        currentTouchPoint.position.setY(value + data->absMin.y());
+                        slot.position.setY(value + data->absMin.y());
                         break;
                     case ABS_PRESSURE:
-                        currentTouchPoint.pressure = value;
+                        slot.pressure = value;
                         break;
                 }
             }

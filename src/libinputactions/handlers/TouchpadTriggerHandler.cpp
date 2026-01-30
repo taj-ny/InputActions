@@ -17,6 +17,8 @@
 */
 
 #include "TouchpadTriggerHandler.h"
+#include <libinputactions/input/devices/InputDevice.h>
+#include <libinputactions/input/devices/InputDeviceProperties.h>
 #include <libinputactions/input/events.h>
 #include <libinputactions/variables/VariableManager.h>
 #include <linux/input-event-codes.h>
@@ -101,7 +103,7 @@ bool TouchpadTriggerHandler::pointerButton(const PointerButtonEvent &event)
     switch (m_state) {
         case State::LibinputTapBegin:
         case State::TouchIdle:
-            if (event.state() && event.sender()->validTouchPoints().size() <= 3) {
+            if (event.state() && event.sender()->physicalState().validTouchPoints().size() <= 3) {
                 uint8_t fingers;
                 if (event.nativeButton() == BTN_LEFT) {
                     fingers = 1;
@@ -152,7 +154,7 @@ bool TouchpadTriggerHandler::pointerMotion(const MotionEvent &event)
     return false;
 }
 
-bool TouchpadTriggerHandler::touchDown(const TouchEvent &event)
+bool TouchpadTriggerHandler::touchDown(const TouchDownEvent &event)
 {
     switch (m_state) {
         case State::LibinputTapBegin:
@@ -160,7 +162,7 @@ bool TouchpadTriggerHandler::touchDown(const TouchEvent &event)
             break;
         case State::None:
             setState(State::TouchIdle);
-            m_firstTouchPoint = event.point();
+            m_firstTouchPoint = *event.sender()->physicalState().findTouchPoint(event.id());
             break;
     }
 
@@ -168,14 +170,15 @@ bool TouchpadTriggerHandler::touchDown(const TouchEvent &event)
     return false;
 }
 
-bool TouchpadTriggerHandler::touchChanged(const TouchChangedEvent &event)
+bool TouchpadTriggerHandler::touchMotion(const TouchMotionEvent &event)
 {
     switch (m_state) {
         case State::LibinputTapBegin:
             return false;
         case State::Touch:
         case State::TouchIdle:
-            const auto diff = event.point().position - event.point().initialPosition;
+            const auto *point = event.sender()->physicalState().findTouchPoint(event.id());
+            const auto diff = point->position - point->initialPosition;
             if (std::hypot(diff.x(), diff.y()) >= 4) { // not physical units, horrible
                 setState(State::Motion);
             }
@@ -186,7 +189,7 @@ bool TouchpadTriggerHandler::touchChanged(const TouchChangedEvent &event)
     return false;
 }
 
-bool TouchpadTriggerHandler::touchUp(const TouchEvent &event)
+bool TouchpadTriggerHandler::touchUp(const TouchUpEvent &event)
 {
     switch (m_state) {
         case State::TapBegin:
@@ -203,7 +206,7 @@ bool TouchpadTriggerHandler::touchUp(const TouchEvent &event)
                 if (m_state == State::TouchIdle) {
                     setState(activateTriggers(TriggerType::Tap).success ? State::TapBegin : State::Touch);
                 }
-                if (m_state == State::TapBegin && event.sender()->validTouchPoints().empty()) {
+                if (m_state == State::TapBegin && event.sender()->physicalState().validTouchPoints().empty()) {
                     updateTriggers(TriggerType::Tap);
                     endTriggers(TriggerType::Tap);
                     setState(State::None);
@@ -222,7 +225,7 @@ bool TouchpadTriggerHandler::touchUp(const TouchEvent &event)
     }
 
     updateVariables(event.sender());
-    if (event.sender()->validTouchPoints().empty()) {
+    if (event.sender()->physicalState().validTouchPoints().empty()) {
         setState(State::None);
         endTriggers(TriggerType::All);
     }
@@ -236,7 +239,7 @@ bool TouchpadTriggerHandler::touchpadClick(const TouchpadClickEvent &event)
         cancelTriggers(TriggerType::Press);
         setState(activateTriggers(TriggerType::Click).block ? State::TouchpadButtonDownBlocked : State::TouchpadButtonDown);
     } else if (m_state == State::TouchpadButtonDown || m_state == State::TouchpadButtonDownBlocked) {
-        setState(event.sender()->validTouchPoints().empty() ? State::None : State::Touch);
+        setState(event.sender()->physicalState().validTouchPoints().empty() ? State::None : State::Touch);
         endTriggers(TriggerType::Click);
     }
 

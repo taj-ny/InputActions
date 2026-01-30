@@ -1,6 +1,6 @@
 /*
     Input Actions - Input handler that executes user-defined actions
-    Copyright (C) 2024-2025 Marcin Woźniak
+    Copyright (C) 2024-2026 Marcin Woźniak
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -16,87 +16,10 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include "InputDevice.h"
-#include "backends/InputBackend.h"
-#include <libinputactions/handlers/TouchpadTriggerHandler.h>
-#include <libinputactions/handlers/TouchscreenTriggerHandler.h>
+#include "InputDeviceProperties.h"
 
 namespace InputActions
 {
-
-static const std::chrono::milliseconds TOUCHSCREEN_SIMULATED_TAP_TURATION{10L};
-
-InputDevice::InputDevice(InputDeviceType type, QString name, QString sysName)
-    : m_type(type)
-    , m_name(std::move(name))
-    , m_sysName(std::move(sysName))
-{
-    m_touchscreenTapTimer.setSingleShot(true);
-    m_touchscreenTapTimer.setTimerType(Qt::PreciseTimer);
-    connect(&m_touchscreenTapTimer, &QTimer::timeout, this, &InputDevice::onTouchscreenTapTimerTimeout);
-}
-
-InputDevice::~InputDevice() = default;
-
-void InputDevice::simulateTouchscreenTap(const std::vector<QPointF> &points)
-{
-    if (m_touchscreenTapTimer.isActive() || !validTouchPoints().empty()) {
-        return;
-    }
-
-    simulateTouchscreenTapDown(points);
-    m_touchscreenTapPoints = points;
-    m_touchscreenTapTimer.start(TOUCHSCREEN_SIMULATED_TAP_TURATION);
-}
-
-void InputDevice::onTouchscreenTapTimerTimeout()
-{
-    simulateTouchscreenTapUp(m_touchscreenTapPoints);
-}
-
-Qt::KeyboardModifiers InputDevice::modifiers() const
-{
-    Qt::KeyboardModifiers modifiers;
-    for (const auto &[key, modifier] : KEYBOARD_MODIFIERS) {
-        if (m_keys.contains(key)) {
-            modifiers |= modifier;
-        }
-    }
-    return modifiers;
-}
-
-void InputDevice::setKeyState(uint32_t key, bool state)
-{
-    if (state) {
-        m_keys.insert(key);
-    } else {
-        m_keys.erase(key);
-    }
-}
-
-std::vector<const TouchPoint *> InputDevice::validTouchPoints() const
-{
-    std::vector<const TouchPoint *> result;
-    for (auto &point : m_touchPoints) {
-        if (point.valid) {
-            result.push_back(&point);
-        }
-    }
-    std::ranges::sort(result, [](const auto *a, const auto *b) {
-        return a->downTimestamp < b->downTimestamp;
-    });
-    return result;
-}
-
-void InputDevice::setTouchpadTriggerHandler(std::unique_ptr<TouchpadTriggerHandler> value)
-{
-    m_touchpadTriggerHandler = std::move(value);
-}
-
-void InputDevice::setTouchscreenTriggerHandler(std::unique_ptr<TouchscreenTriggerHandler> value)
-{
-    m_touchscreenTriggerHandler = std::move(value);
-}
 
 void InputDeviceProperties::apply(const InputDeviceProperties &other)
 {

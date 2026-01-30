@@ -25,7 +25,7 @@
 #include <hyprland/src/plugins/PluginAPI.hpp>
 #include <hyprland/src/protocols/PointerGestures.hpp>
 #undef HANDLE
-#include <libinputactions/input/InputDevice.h>
+#include <libinputactions/input/devices/InputDevice.h>
 
 namespace InputActions
 {
@@ -65,6 +65,9 @@ void HyprlandInputBackend::initialize()
 {
     LibinputInputBackend::initialize();
 
+    m_virtualKeyboard.emplace();
+    m_virtualMouse.emplace();
+
     m_blockHookCalls = true;
     m_deviceChangeTimer.start();
     checkDeviceChanges();
@@ -72,6 +75,9 @@ void HyprlandInputBackend::initialize()
 
 void HyprlandInputBackend::reset()
 {
+    m_virtualKeyboard.reset();
+    m_virtualMouse.reset();
+
     for (const auto &device : m_devices) {
         deviceRemoved(device.get());
     }
@@ -105,6 +111,11 @@ void HyprlandInputBackend::checkDeviceChanges()
         if (std::ranges::any_of(m_previousHids, [&device](const auto &existingDevice) {
                 return existingDevice.get() == device.get();
             })) {
+            continue;
+        }
+
+        auto *keyboard = dynamic_cast<IKeyboard *>(device.get());
+        if ((keyboard && keyboard->aq().get() == m_virtualKeyboard->hyprlandDevice()) || device.get() == m_virtualMouse->hyprlandDevice()) {
             continue;
         }
 
@@ -148,11 +159,7 @@ void HyprlandInputBackend::keyboardKey(SCallbackInfo &info, const std::any &data
     const auto keyboard = std::any_cast<SP<IKeyboard>>(map.at("keyboard"));
     const auto state = event.state == WL_KEYBOARD_KEY_STATE_PRESSED;
 
-    auto *device = findInputActionsDevice(keyboard.get());
-    if (device) {
-        device->setKeyState(event.keycode, state);
-    }
-    info.cancelled = LibinputInputBackend::keyboardKey(device, event.keycode, state);
+    info.cancelled = LibinputInputBackend::keyboardKey(findInputActionsDevice(keyboard.get()), event.keycode, state);
 }
 
 void HyprlandInputBackend::touchDown(SCallbackInfo &info, const std::any &data)
@@ -468,6 +475,16 @@ InputDevice *HyprlandInputBackend::findInputActionsDevice(IHID *hyprlandDevice)
         }
     }
     return {};
+}
+
+VirtualKeyboard *HyprlandInputBackend::virtualKeyboard()
+{
+    return m_virtualKeyboard ? &m_virtualKeyboard.value() : nullptr;
+}
+
+VirtualMouse *HyprlandInputBackend::virtualMouse()
+{
+    return m_virtualMouse ? &m_virtualMouse.value() : nullptr;
 }
 
 }

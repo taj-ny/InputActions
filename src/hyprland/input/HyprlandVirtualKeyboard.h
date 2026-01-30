@@ -1,6 +1,6 @@
 /*
     Input Actions - Input handler that executes user-defined actions
-    Copyright (C) 2024-2025 Marcin Woźniak
+    Copyright (C) 2024-2026 Marcin Woźniak
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -19,55 +19,39 @@
 #pragma once
 
 #include <aquamarine/input/Input.hpp>
-#include <hyprland/src/devices/IKeyboard.hpp>
-#include <hyprland/src/devices/IPointer.hpp>
 #include <hyprland/src/protocols/TextInputV3.hpp>
-#include <libinputactions/interfaces/InputEmitter.h>
+#undef HANDLE
+#include <libinputactions/input/devices/VirtualKeyboard.h>
 
 namespace InputActions
 {
 
-class VirtualKeyboard : public Aquamarine::IKeyboard
+class HyprlandVirtualKeyboard : public VirtualKeyboard
 {
 public:
-    VirtualKeyboard() = default;
+    HyprlandVirtualKeyboard();
+    ~HyprlandVirtualKeyboard() override;
 
-    const std::string &getName() override;
-};
+    Aquamarine::IKeyboard *hyprlandDevice() { return m_device.get(); }
 
-class VirtualMouse : public IPointer
-{
-public:
-    VirtualMouse();
-
-    bool isVirtual() override { return false; }
-    SP<Aquamarine::IPointer> aq() { return {}; }
-};
-
-class HyprlandInputEmitter : public InputEmitter
-{
-public:
-    HyprlandInputEmitter();
-    ~HyprlandInputEmitter() override;
-
-    void keyboardClearModifiers() override;
-    void keyboardKey(uint32_t key, bool state, InputDevice *device = nullptr) override;
+    void keyboardKey(uint32_t key, bool state) override;
     void keyboardText(const QString &text) override;
-
-    void mouseButton(uint32_t button, bool state, InputDevice *device = nullptr) override;
-    void mouseMoveRelative(const QPointF &pos) override;
-
-    Aquamarine::IKeyboard *keyboard() const { return m_keyboard.get(); }
 
 private:
     void onNewTextInputV3(const WP<CTextInputV3> &textInput);
 
+    class Device : public Aquamarine::IKeyboard
+    {
+    public:
+        Device() = default;
+
+        const std::string &getName() override;
+    };
+    SP<Device> m_device;
     uint32_t m_modifiers{};
-    SP<Aquamarine::IKeyboard> m_keyboard;
-    SP<IPointer> m_mouse;
 
     std::vector<std::pair<WP<CTextInputV3>, CHyprSignalListener>> m_v3TextInputs;
-    std::vector<CHyprSignalListener> m_listeners;
+    CHyprSignalListener m_newTextInputV3Listener;
 };
 
 }

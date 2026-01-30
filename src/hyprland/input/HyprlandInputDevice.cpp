@@ -18,16 +18,18 @@
 
 #include "HyprlandInputDevice.h"
 #include "HyprlandInputBackend.h"
-#include "interfaces/HyprlandInputEmitter.h"
 #include <hyprland/src/config/ConfigManager.hpp>
+#include <hyprland/src/devices/IKeyboard.hpp>
+#include <hyprland/src/devices/IPointer.hpp>
 #undef HANDLE
+#include <libinputactions/input/backends/InputBackend.h>
 
 namespace InputActions
 {
 
 HyprlandInputDevice::HyprlandInputDevice(SP<IHID> device, InputDeviceType type, const std::string &name, HyprlandInputBackend *backend)
     : InputDevice(type, QString::fromStdString(name))
-    , m_hyprlandDevice(std::move(device))
+    , m_device(std::move(device))
     , m_backend(backend)
 {
     if (g_pConfigManager->getDeviceString(name, "tap_button_map", "input:touchpad:tap_button_map") == "lmr") {
@@ -90,10 +92,6 @@ HyprlandInputDevice::HyprlandInputDevice(SP<ITouch> device, InputDeviceType type
 std::unique_ptr<HyprlandInputDevice> HyprlandInputDevice::tryCreate(HyprlandInputBackend *backend, SP<IHID> device)
 {
     if (auto keyboard = dynamicPointerCast<IKeyboard>(device)) {
-        if (keyboard->aq().get() == std::dynamic_pointer_cast<HyprlandInputEmitter>(g_inputEmitter)->keyboard()) {
-            return {};
-        }
-
         return std::unique_ptr<HyprlandInputDevice>(new HyprlandInputDevice(device, InputDeviceType::Keyboard, keyboard->m_deviceName, backend));
     }
     if (auto pointer = dynamicPointerCast<IPointer>(device)) {
@@ -107,16 +105,73 @@ std::unique_ptr<HyprlandInputDevice> HyprlandInputDevice::tryCreate(HyprlandInpu
     return {};
 }
 
+void HyprlandInputDevice::keyboardKey(uint32_t key, bool state)
+{
+    auto *keyboard = dynamic_cast<IKeyboard *>(m_device.get());
+    if (!keyboard) {
+        return;
+    }
+
+    auto aqKeyboard = keyboard->aq();
+    if (!aqKeyboard) {
+        return;
+    }
+
+    g_inputBackend->setIgnoreEvents(true);
+    keyboard->aq()->events.key.emit(Aquamarine::IKeyboard::SKeyEvent{
+        .key = key,
+        .pressed = state,
+    });
+    InputDevice::keyboardKey(key, state);
+
+    uint32_t modifiers{};
+    for (const auto key : virtualState().pressedKeys()) {
+        if (const auto modifier = g_pKeybindManager->keycodeToModifier(key + 8)) {
+            modifiers |= modifier;
+        }
+    }
+
+    if (const auto modifier = g_pKeybindManager->keycodeToModifier(key + 8)) {
+        if (state) {
+            modifiers |= modifier;
+        } else {
+            modifiers &= ~modifier;
+        }
+        keyboard->aq()->events.modifiers.emit(Aquamarine::IKeyboard::SModifiersEvent{
+            .depressed = modifiers,
+        });
+    }
+
+    g_inputBackend->setIgnoreEvents(false);
+}
+
+void HyprlandInputDevice::mouseButton(uint32_t button, bool state)
+{
+    auto *pointer = dynamic_cast<IPointer *>(m_device.get());
+    if (!pointer) {
+        return;
+    }
+
+    g_inputBackend->setIgnoreEvents(true);
+    pointer->m_pointerEvents.button.emit(IPointer::SButtonEvent{
+        .button = button,
+        .state = state ? WL_POINTER_BUTTON_STATE_PRESSED : WL_POINTER_BUTTON_STATE_RELEASED,
+        .mouse = true,
+    });
+    pointer->m_pointerEvents.frame.emit();
+    g_inputBackend->setIgnoreEvents(false);
+}
+
 void HyprlandInputDevice::resetVirtualDeviceState()
 {
     if (type() != InputDeviceType::Touchscreen) {
         return;
     }
-    auto *touchscreen = dynamic_cast<ITouch *>(m_hyprlandDevice.get());
+    auto *touchscreen = dynamic_cast<ITouch *>(m_device.get());
 
     m_backend->setIgnoreEvents(true);
 
-    for (const auto &point : validTouchPoints()) {
+    for (const auto *point : physicalState().validTouchPoints()) {
         touchscreen->m_touchEvents.up.emit(ITouch::SUpEvent{
             .touchID = point->id,
         });
@@ -131,11 +186,11 @@ void HyprlandInputDevice::restoreVirtualDeviceState()
     if (type() != InputDeviceType::Touchscreen) {
         return;
     }
-    auto touchscreen = dynamicPointerCast<ITouch>(m_hyprlandDevice);
+    auto touchscreen = dynamicPointerCast<ITouch>(m_device);
 
     m_backend->setIgnoreEvents(true);
 
-    for (const auto &point : validTouchPoints()) {
+    for (const auto *point : physicalState().validTouchPoints()) {
         touchscreen->m_touchEvents.down.emit(ITouch::SDownEvent{
             .touchID = point->id,
             .pos = {point->rawInitialPosition.x(), point->rawInitialPosition.y()},
@@ -144,7 +199,7 @@ void HyprlandInputDevice::restoreVirtualDeviceState()
     }
     touchscreen->m_touchEvents.frame.emit();
 
-    for (const auto &point : validTouchPoints()) {
+    for (const auto *point : physicalState().validTouchPoints()) {
         touchscreen->m_touchEvents.motion.emit(ITouch::SMotionEvent{
             .touchID = point->id,
             .pos = {point->rawPosition.x(), point->rawPosition.y()},
@@ -155,9 +210,9 @@ void HyprlandInputDevice::restoreVirtualDeviceState()
     m_backend->setIgnoreEvents(false);
 }
 
-void HyprlandInputDevice::simulateTouchscreenTapDown(const std::vector<QPointF> &points)
+void HyprlandInputDevice::touchscreenTapDown(const std::vector<QPointF> &points)
 {
-    auto touchscreen = dynamicPointerCast<ITouch>(m_hyprlandDevice);
+    auto touchscreen = dynamicPointerCast<ITouch>(m_device);
 
     m_backend->setIgnoreEvents(true);
 
@@ -174,9 +229,9 @@ void HyprlandInputDevice::simulateTouchscreenTapDown(const std::vector<QPointF> 
     m_backend->setIgnoreEvents(false);
 }
 
-void HyprlandInputDevice::simulateTouchscreenTapUp(const std::vector<QPointF> &points)
+void HyprlandInputDevice::touchscreenTapUp(const std::vector<QPointF> &points)
 {
-    auto *touchscreen = dynamic_cast<ITouch *>(m_hyprlandDevice.get());
+    auto *touchscreen = dynamic_cast<ITouch *>(m_device.get());
 
     m_backend->setIgnoreEvents(true);
 

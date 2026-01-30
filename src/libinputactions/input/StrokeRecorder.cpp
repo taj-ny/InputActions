@@ -18,6 +18,7 @@
 
 #include "StrokeRecorder.h"
 #include "events.h"
+#include <libinputactions/input/devices/InputDevice.h>
 #include <libinputactions/triggers/StrokeTrigger.h>
 
 namespace InputActions
@@ -75,12 +76,7 @@ bool StrokeRecorder::touchCancel(const TouchCancelEvent &event)
     return m_isRecordingStroke || m_blockTouchscreenEventsUntilDeviceNeutral;
 }
 
-bool StrokeRecorder::touchChanged(const TouchChangedEvent &event)
-{
-    return (m_isRecordingStroke || m_blockTouchscreenEventsUntilDeviceNeutral) && event.sender()->type() == InputDeviceType::Touchscreen;
-}
-
-bool StrokeRecorder::touchDown(const TouchEvent &event)
+bool StrokeRecorder::touchDown(const TouchDownEvent &event)
 {
     m_previousTouchscreenTouchCenter = {};
     m_strokePoints.clear();
@@ -98,7 +94,7 @@ bool StrokeRecorder::touchFrame(const TouchFrameEvent &event)
     }
 
     QPointF center;
-    const auto validPoints = event.sender()->validTouchPoints();
+    const auto validPoints = event.sender()->physicalState().validTouchPoints();
     for (const auto *point : validPoints) {
         center += point->position;
     }
@@ -116,7 +112,12 @@ bool StrokeRecorder::touchFrame(const TouchFrameEvent &event)
     return true;
 }
 
-bool StrokeRecorder::touchUp(const TouchEvent &event)
+bool StrokeRecorder::touchMotion(const TouchMotionEvent &event)
+{
+    return (m_isRecordingStroke || m_blockTouchscreenEventsUntilDeviceNeutral) && event.sender()->type() == InputDeviceType::Touchscreen;
+}
+
+bool StrokeRecorder::touchUp(const TouchUpEvent &event)
 {
     if (event.sender()->type() != InputDeviceType::Touchscreen) {
         return false;
@@ -124,14 +125,14 @@ bool StrokeRecorder::touchUp(const TouchEvent &event)
 
     if (m_isRecordingStroke) {
         finishStrokeRecording();
-        if (!event.sender()->validTouchPoints().empty()) {
+        if (!event.sender()->physicalState().validTouchPoints().empty()) {
             m_blockTouchscreenEventsUntilDeviceNeutral = true;
         }
         return true;
     }
 
     const auto block = m_blockTouchscreenEventsUntilDeviceNeutral;
-    if (event.sender()->validTouchPoints().empty()) {
+    if (event.sender()->physicalState().validTouchPoints().empty()) {
         m_blockTouchscreenEventsUntilDeviceNeutral = false;
     }
     return block;

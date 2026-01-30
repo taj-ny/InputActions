@@ -23,7 +23,6 @@
 #include <libinputactions/globals.h>
 #include <libinputactions/input/backends/LibevdevComplementaryInputBackend.h>
 #include <libinputactions/interfaces/ConfigProvider.h>
-#include <libinputactions/interfaces/InputEmitter.h>
 #include <libinputactions/interfaces/NotificationManager.h>
 
 namespace InputActions
@@ -77,8 +76,7 @@ std::optional<QString> Config::load(const QString &config, bool preventCrashLoop
                 YAML::loadSetter(libevdev, &LibevdevComplementaryInputBackend::setEnabled, root["__libevdev_enabled"]);
             }
 
-            g_inputBackend->reset();
-            g_inputEmitter->reset(); // Okay because required keys are not cleared
+            g_inputBackend->reset(); // Okay because required keys are not cleared
 
             g_inputBackend->setKeyboardTriggerHandler(std::move(keyboardTriggerHandler));
             g_inputBackend->setMouseTriggerHandler(std::move(mouseTriggerHandler));
@@ -87,7 +85,6 @@ std::optional<QString> Config::load(const QString &config, bool preventCrashLoop
             g_inputBackend->setTouchscreenTriggerHandlerFactory(touchscreenTriggerHandlerFactory);
             g_inputBackend->setDeviceRules(deviceRules);
 
-            g_inputEmitter->initialize();
             g_inputBackend->initialize();
         } catch (const std::exception &e) {
             error = QString("Failed to load configuration: %1").arg(QString::fromStdString(e.what()));
