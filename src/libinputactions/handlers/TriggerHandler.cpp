@@ -17,7 +17,6 @@
 */
 
 #include "TriggerHandler.h"
-#include <libinputactions/interfaces/InputEmitter.h>
 
 Q_LOGGING_CATEGORY(INPUTACTIONS_HANDLER_TRIGGER, "inputactions.handler.trigger", QtWarningMsg)
 

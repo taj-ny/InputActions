@@ -19,7 +19,6 @@
 #include "Server.h"
 #include "SessionManager.h"
 #include "input/StandaloneInputBackend.h"
-#include "interfaces/EvdevInputEmitter.h"
 #include "interfaces/IPCNotificationManager.h"
 #include "interfaces/IPCPlasmaGlobalShortcutInvoker.h"
 #include "interfaces/IPCProcessRunner.h"
@@ -28,6 +27,7 @@
 #include <QThread>
 #include <csignal>
 #include <libinputactions/InputActionsMain.h>
+#include <libinputactions/globals.h>
 #include <libinputactions/interfaces/ConfigProvider.h>
 #include <libinputactions/interfaces/NotificationManager.h>
 #include <sys/file.h>
@@ -79,7 +79,6 @@ int main()
 
     InputActionsMain inputActions;
     g_inputBackend = std::make_unique<StandaloneInputBackend>();
-    g_inputEmitter = std::make_shared<EvdevInputEmitter>();
     g_notificationManager = std::make_shared<IPCNotificationManager>();
     g_plasmaGlobalShortcutInvoker = std::make_shared<IPCPlasmaGlobalShortcutInvoker>();
     g_processRunner = std::make_shared<IPCProcessRunner>();

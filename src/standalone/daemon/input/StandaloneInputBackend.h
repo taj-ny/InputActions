@@ -18,6 +18,8 @@
 
 #pragma once
 
+#include "EvdevVirtualKeyboard.h"
+#include "EvdevVirtualMouse.h"
 #include <libinput-cpp/LibinputPathContext.h>
 #include <libinput.h>
 #include <libinputactions/input/backends/LibevdevComplementaryInputBackend.h>
@@ -44,6 +46,9 @@ class StandaloneInputBackend : public LibinputInputBackend
 public:
     StandaloneInputBackend();
     ~StandaloneInputBackend() override;
+
+    VirtualKeyboard *virtualKeyboard() override;
+    VirtualMouse *virtualMouse() override;
 
     void initialize() override;
     void reset() final;
@@ -77,6 +82,8 @@ private:
     QTimer m_deviceInitializationRetryTimer;
 
     std::vector<std::unique_ptr<StandaloneInputDevice>> m_devices;
+    std::optional<EvdevVirtualKeyboard> m_virtualKeyboard;
+    std::optional<EvdevVirtualMouse> m_virtualMouse;
 };
 
 }

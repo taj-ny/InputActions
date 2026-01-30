@@ -4,7 +4,8 @@ pkg_search_module(LIBUDEV REQUIRED libudev)
 add_executable(inputactionsd
     input/StandaloneInputBackend.cpp
     input/StandaloneInputDevice.cpp
-    interfaces/EvdevInputEmitter.cpp
+    input/EvdevVirtualKeyboard.cpp
+    input/EvdevVirtualMouse.cpp
     interfaces/IPCEnvironmentInterfaces.cpp
     interfaces/IPCNotificationManager.cpp
     interfaces/IPCPlasmaGlobalShortcutInvoker.cpp

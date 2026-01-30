@@ -19,7 +19,6 @@
 #include "Effect.h"
 #include "effect/effecthandler.h"
 #include "input/KWinInputBackend.h"
-#include "interfaces/KWinInputEmitter.h"
 #include "interfaces/KWinOnScreenMessageManager.h"
 #include "interfaces/KWinPointer.h"
 #include "interfaces/KWinSessionLock.h"
@@ -38,7 +37,6 @@ Effect::Effect()
 
     auto pointer = std::make_shared<KWinPointer>();
     g_cursorShapeProvider = pointer;
-    g_inputEmitter = std::make_shared<KWinInputEmitter>();
     g_onScreenMessageManager = std::make_shared<KWinOnScreenMessageManager>();
     g_pointerPositionGetter = pointer;
     g_pointerPositionSetter = pointer;

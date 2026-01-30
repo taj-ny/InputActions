@@ -19,7 +19,7 @@
 #pragma once
 
 #include "input.h"
-#include <libinputactions/input/InputDevice.h>
+#include <libinputactions/input/devices/InputDevice.h>
 
 namespace InputActions
 {
@@ -33,13 +33,16 @@ public:
 
     KWin::InputDevice *kwinDevice() const { return m_kwinDevice; }
 
+    void keyboardKey(uint32_t key, bool state) override;
+    void mouseButton(uint32_t button, bool state) override;
+
 #ifdef KWIN_6_5_OR_GREATER
     void resetVirtualDeviceState() override;
     void restoreVirtualDeviceState() override;
 
 protected:
-    void simulateTouchscreenTapDown(const std::vector<QPointF> &points) override;
-    void simulateTouchscreenTapUp(const std::vector<QPointF> &points) override;
+    void touchscreenTapDown(const std::vector<QPointF> &points) override;
+    void touchscreenTapUp(const std::vector<QPointF> &points) override;
 #endif
 
 private:

@@ -19,6 +19,8 @@
 #pragma once
 
 #include "HyprlandInputDevice.h"
+#include "HyprlandVirtualKeyboard.h"
+#include "HyprlandVirtualMouse.h"
 #include "utils/HyprlandFunctionHook.h"
 #include <hyprland/src/SharedDefs.hpp>
 #include <hyprland/src/devices/IPointer.hpp>
@@ -43,6 +45,9 @@ class HyprlandInputBackend : public LibinputInputBackend
 public:
     HyprlandInputBackend(void *handle);
     ~HyprlandInputBackend() override;
+
+    VirtualKeyboard *virtualKeyboard() override;
+    VirtualMouse *virtualMouse() override;
 
     void initialize() override;
     void reset() override;
@@ -98,6 +103,9 @@ private:
     std::vector<WP<IHID>> m_previousHids;
     std::vector<std::unique_ptr<HyprlandInputDevice>> m_devices;
     QTimer m_deviceChangeTimer;
+
+    std::optional<HyprlandVirtualKeyboard> m_virtualKeyboard;
+    std::optional<HyprlandVirtualMouse> m_virtualMouse;
 
     std::vector<SP<HOOK_CALLBACK_FN>> m_eventListeners;
 

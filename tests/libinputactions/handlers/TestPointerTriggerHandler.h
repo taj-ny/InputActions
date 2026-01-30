@@ -2,7 +2,7 @@
 
 #include "Test.h"
 #include <libinputactions/handlers/PointerTriggerHandler.h>
-#include <libinputactions/input/InputDevice.h>
+#include <libinputactions/input/devices/InputDevice.h>
 
 namespace InputActions
 {

@@ -17,6 +17,8 @@
 */
 
 #include "MultiTouchMotionTriggerHandler.h"
+#include <libinputactions/input/devices/InputDevice.h>
+#include <libinputactions/input/devices/InputDeviceProperties.h>
 #include <libinputactions/input/events.h>
 #include <libinputactions/variables/VariableManager.h>
 
@@ -102,7 +104,7 @@ void MultiTouchMotionTriggerHandler::updateVariables(const InputDevice *sender)
     auto thumbPresent = g_variableManager->getVariable(BuiltinVariables::ThumbPresent);
     bool hasThumb{};
 
-    const auto touchPoints = sender ? sender->validTouchPoints() : std::vector<const TouchPoint *>();
+    const auto touchPoints = sender ? sender->physicalState().validTouchPoints() : std::vector<const TouchPoint *>();
     for (size_t i = 0; i < s_fingerVariableCount; i++) {
         const auto fingerVariableNumber = i + 1;
         auto initialPosition = g_variableManager->getVariable<QPointF>(QString("finger_%1_initial_position_percentage").arg(fingerVariableNumber));

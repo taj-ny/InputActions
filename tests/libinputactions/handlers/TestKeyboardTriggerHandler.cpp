@@ -2,6 +2,7 @@
 #include <QSignalSpy>
 #include <libinputactions/handlers/KeyboardTriggerHandler.h>
 #include <libinputactions/input/events.h>
+#include <libinputactions/input/devices/InputDevice.h>
 #include <libinputactions/triggers/KeyboardShortcutTrigger.h>
 #include <linux/input-event-codes.h>
 

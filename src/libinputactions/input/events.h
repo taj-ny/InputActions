@@ -19,13 +19,14 @@
 #pragma once
 
 #include "Delta.h"
-#include "InputDevice.h"
 #include <QKeyCombination>
 #include <QPointF>
 #include <libinputactions/globals.h>
 
 namespace InputActions
 {
+
+class InputDevice;
 
 enum class InputEventType
 {
@@ -38,9 +39,10 @@ enum class InputEventType
     PointerMotion,
 
     TouchCancel,
-    TouchChanged,
     TouchDown,
     TouchFrame,
+    TouchMotion,
+    TouchPressureChange,
     TouchUp,
 
     TouchpadClick,
@@ -182,26 +184,60 @@ private:
     uint8_t m_fingers;
 };
 
-class TouchEvent : public InputEvent
+class TouchDownEvent : public InputEvent
 {
 public:
-    TouchEvent(InputDevice *sender, InputEventType type, TouchPoint point);
+    TouchDownEvent(InputDevice *sender, int32_t id, QPointF position, QPointF rawPosition, uint32_t pressure = 0);
 
-    const TouchPoint &point() const { return m_point; }
+    int32_t id() const { return m_id; }
+    const QPointF &position() const { return m_position; }
+    const QPointF &rawPosition() const { return m_rawPosition; }
+    uint32_t pressure() const { return m_pressure; }
 
 private:
-    TouchPoint m_point;
+    int32_t m_id;
+    QPointF m_position;
+    QPointF m_rawPosition;
+    uint32_t m_pressure;
 };
 
-class TouchChangedEvent : public TouchEvent
+class TouchMotionEvent : public InputEvent
 {
 public:
-    TouchChangedEvent(InputDevice *sender, TouchPoint point, QPointF positionDelta);
+    TouchMotionEvent(InputDevice *sender, int32_t id, QPointF position, QPointF rawPosition);
 
-    const QPointF &positionDelta() const { return m_positionDelta; }
+    int32_t id() const { return m_id; }
+    const QPointF &position() const { return m_position; }
+    const QPointF &rawPosition() const { return m_rawPosition; }
 
 private:
-    QPointF m_positionDelta;
+    int32_t m_id;
+    QPointF m_position;
+    QPointF m_rawPosition;
+};
+
+class TouchPressureChangeEvent : public InputEvent
+{
+public:
+    TouchPressureChangeEvent(InputDevice *sender, int32_t id, uint32_t pressure);
+
+    int32_t id() const { return m_id; }
+    uint32_t pressure() const { return m_pressure; }
+
+private:
+    int32_t m_id;
+    uint32_t m_pressure;
+};
+
+class TouchUpEvent : public InputEvent
+{
+public:
+    TouchUpEvent(InputDevice *sender, int32_t id);
+
+    int32_t id() const { return m_id; }
+
+private:
+    int32_t m_id;
 };
 
 class TouchCancelEvent : public InputEvent

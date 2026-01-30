@@ -55,6 +55,25 @@ std::unique_ptr<KWinInputDevice> KWinInputDevice::tryCreate(KWinInputBackend *ba
     return std::unique_ptr<KWinInputDevice>(new KWinInputDevice(backend, device, type));
 }
 
+void KWinInputDevice::keyboardKey(uint32_t key, bool state)
+{
+    g_inputBackend->setIgnoreEvents(true);
+    Q_EMIT m_kwinDevice->keyChanged(key, state ? KWin::KeyboardKeyState::Pressed : KWin::KeyboardKeyState::Released, timestamp(), m_kwinDevice);
+    InputDevice::keyboardKey(key, state);
+    g_inputBackend->setIgnoreEvents(false);
+}
+
+void KWinInputDevice::mouseButton(uint32_t button, bool state)
+{
+    g_inputBackend->setIgnoreEvents(true);
+    Q_EMIT m_kwinDevice->pointerButtonChanged(button,
+                                              state ? KWin::PointerButtonState::Pressed : KWin::PointerButtonState::Released,
+                                              timestamp(),
+                                              m_kwinDevice);
+    Q_EMIT m_kwinDevice->pointerFrame(m_kwinDevice);
+    g_inputBackend->setIgnoreEvents(false);
+}
+
 // Events generated during resetting and restoring must not go through TouchInputRedirection, as it would interfere with the physical state.
 #ifdef KWIN_6_5_OR_GREATER
 void KWinInputDevice::resetVirtualDeviceState()
@@ -65,7 +84,7 @@ void KWinInputDevice::resetVirtualDeviceState()
 
     m_backend->setIgnoreEvents(true);
 
-    for (const auto &point : validTouchPoints()) {
+    for (const auto *point : physicalState().validTouchPoints()) {
         KWin::TouchUpEvent event{
             .id = point->id,
             .time = timestamp(),
@@ -86,7 +105,7 @@ void KWinInputDevice::restoreVirtualDeviceState()
 
     m_backend->setIgnoreEvents(true);
 
-    for (const auto &point : validTouchPoints()) {
+    for (const auto *point : physicalState().validTouchPoints()) {
         KWin::TouchDownEvent event{
             .id = point->id,
             .pos = point->rawInitialPosition,
@@ -97,7 +116,7 @@ void KWinInputDevice::restoreVirtualDeviceState()
     }
     KWin::input()->processFilters(&KWin::InputEventFilter::touchFrame);
 
-    for (const auto &point : validTouchPoints()) {
+    for (const auto *point : physicalState().validTouchPoints()) {
         KWin::TouchMotionEvent event{
             .id = point->id,
             .pos = point->rawPosition,
@@ -111,7 +130,7 @@ void KWinInputDevice::restoreVirtualDeviceState()
     m_backend->setIgnoreEvents(false);
 }
 
-void KWinInputDevice::simulateTouchscreenTapDown(const std::vector<QPointF> &points)
+void KWinInputDevice::touchscreenTapDown(const std::vector<QPointF> &points)
 {
     m_backend->setIgnoreEvents(true);
 
@@ -123,7 +142,7 @@ void KWinInputDevice::simulateTouchscreenTapDown(const std::vector<QPointF> &poi
     m_backend->setIgnoreEvents(false);
 }
 
-void KWinInputDevice::simulateTouchscreenTapUp(const std::vector<QPointF> &points)
+void KWinInputDevice::touchscreenTapUp(const std::vector<QPointF> &points)
 {
     m_backend->setIgnoreEvents(true);
 

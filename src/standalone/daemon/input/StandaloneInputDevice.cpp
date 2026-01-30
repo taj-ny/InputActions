@@ -22,6 +22,7 @@
 #include <libinput-cpp/LibinputDevice.h>
 #include <libinput-cpp/UdevDevice.h>
 #include <libinputactions/input/backends/InputBackend.h>
+#include <libinputactions/input/devices/InputDeviceState.h>
 
 namespace InputActions
 {
@@ -163,6 +164,27 @@ bool StandaloneInputDevice::isDeviceOwnedByThisDevice(const QString &path) const
     return (m_libinputEventInjectionDevice && path == m_libinputEventInjectionDevice->devNode()) || (m_outputDevice && path == m_outputDevice->devNode());
 }
 
+void StandaloneInputDevice::mouseButton(uint32_t button, bool state)
+{
+    if (!m_outputDevice) {
+        return;
+    }
+
+    m_outputDevice->writeEvent(EV_KEY, button, state);
+    m_outputDevice->writeSynReportEvent();
+}
+
+void StandaloneInputDevice::keyboardKey(uint32_t key, bool state)
+{
+    if (!m_outputDevice) {
+        return;
+    }
+
+    m_outputDevice->writeEvent(EV_KEY, key, state);
+    m_outputDevice->writeSynReportEvent();
+    InputDevice::keyboardKey(key, state);
+}
+
 void StandaloneInputDevice::resetVirtualDeviceState()
 {
     if (!properties().grab()) {
@@ -188,7 +210,7 @@ void StandaloneInputDevice::resetVirtualDeviceState()
         case InputDeviceType::Touchpad:
         case InputDeviceType::Touchscreen:
             // Reverse order so that ABS_MT_SLOT is equal to 0 after
-            for (int i = touchPoints().size() - 1; i >= 0; i--) {
+            for (int i = physicalState().touchPoints().size() - 1; i >= 0; i--) {
                 m_outputDevice->writeEvent(EV_ABS, ABS_MT_SLOT, i);
                 m_outputDevice->writeEvent(EV_ABS, ABS_MT_TRACKING_ID, -1);
             }
@@ -258,7 +280,7 @@ void StandaloneInputDevice::restoreVirtualDeviceState()
             restoreKey();
             restoreAbs();
 
-            for (const auto *point : validTouchPoints()) {
+            for (const auto *point : physicalState().validTouchPoints()) {
                 m_outputDevice->writeEvent(EV_ABS, ABS_MT_SLOT, point->id);
                 m_outputDevice->writeEvent(EV_ABS, ABS_MT_POSITION_X, point->rawInitialPosition.x());
                 m_outputDevice->writeEvent(EV_ABS, ABS_MT_POSITION_Y, point->rawInitialPosition.y());
@@ -273,7 +295,7 @@ void StandaloneInputDevice::restoreVirtualDeviceState()
             }
             m_outputDevice->writeSynReportEvent();
 
-            for (const auto *point : validTouchPoints()) {
+            for (const auto *point : physicalState().validTouchPoints()) {
                 m_outputDevice->writeEvent(EV_ABS, ABS_MT_SLOT, point->id);
                 m_outputDevice->writeEvent(EV_ABS, ABS_MT_POSITION_X, point->rawPosition.x());
                 m_outputDevice->writeEvent(EV_ABS, ABS_MT_POSITION_Y, point->rawPosition.y());
@@ -284,7 +306,7 @@ void StandaloneInputDevice::restoreVirtualDeviceState()
     }
 }
 
-void StandaloneInputDevice::simulateTouchscreenTapDown(const std::vector<QPointF> &points)
+void StandaloneInputDevice::touchscreenTapDown(const std::vector<QPointF> &points)
 {
     if (!properties().grab()) {
         return;
@@ -303,7 +325,7 @@ void StandaloneInputDevice::simulateTouchscreenTapDown(const std::vector<QPointF
     m_outputDevice->writeSynReportEvent();
 }
 
-void StandaloneInputDevice::simulateTouchscreenTapUp(const std::vector<QPointF> &points)
+void StandaloneInputDevice::touchscreenTapUp(const std::vector<QPointF> &points)
 {
     if (!properties().grab()) {
         return;

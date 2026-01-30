@@ -18,7 +18,6 @@
 
 #include "StandaloneInputBackend.h"
 #include "StandaloneInputDevice.h"
-#include "interfaces/EvdevInputEmitter.h"
 #include <QDir>
 #include <QSocketNotifier>
 #include <fcntl.h>
@@ -31,6 +30,8 @@
 #include <libinput-cpp/LibinputPointerEvent.h>
 #include <libinput-cpp/LibinputTouchEvent.h>
 #include <libinput-cpp/UdevDevice.h>
+#include <libinputactions/input/devices/InputDeviceState.h>
+#include <libinputactions/input/events.h>
 #include <linux/uinput.h>
 #include <sys/inotify.h>
 
@@ -66,6 +67,9 @@ void StandaloneInputBackend::initialize()
 {
     LibinputInputBackend::initialize();
 
+    m_virtualKeyboard.emplace(virtualKeyboardKeys());
+    m_virtualMouse.emplace();
+
     for (const auto &entry : QDir("/dev/input").entryInfoList(QDir::Files | QDir::NoSymLinks | QDir::System)) {
         evdevDeviceAdded(entry.filePath());
     }
@@ -76,6 +80,9 @@ void StandaloneInputBackend::initialize()
 
 void StandaloneInputBackend::reset()
 {
+    m_virtualKeyboard.reset();
+    m_virtualMouse.reset();
+
     for (const auto &device : m_devices) {
         if (device->properties().grab()) {
             // The compositor will take long enough to detect device removal that it will start generating key repeat events, reset the device to prevent that
@@ -102,9 +109,8 @@ void StandaloneInputBackend::evdevDeviceAdded(const QString &path)
 
 bool StandaloneInputBackend::tryAddEvdevDevice(const QString &path)
 {
-    const auto *emitter = std::dynamic_pointer_cast<EvdevInputEmitter>(g_inputEmitter).get();
     for (const auto &device : m_devices) {
-        if (path == emitter->keyboardPath() || path == emitter->mousePath() || device->isDeviceOwnedByThisDevice(path)) {
+        if (path == m_virtualKeyboard->path() || path == m_virtualMouse->path() || device->isDeviceOwnedByThisDevice(path)) {
             return true;
         }
     }
@@ -246,8 +252,6 @@ bool StandaloneInputBackend::handleEvent(StandaloneInputDevice *sender, const Li
         }
         case LIBINPUT_EVENT_KEYBOARD_KEY: {
             const auto keyboardEvent = event.keyboardEvent();
-
-            sender->setKeyState(keyboardEvent->key(), keyboardEvent->state());
             return keyboardKey(sender, keyboardEvent->key(), keyboardEvent->state());
         }
         case LIBINPUT_EVENT_POINTER_AXIS:
@@ -381,11 +385,21 @@ void StandaloneInputBackend::poll()
             frame.clear();
         }
 
-        if (device->type() == InputDeviceType::Touchpad && device->validTouchPoints().empty()) {
+        if (device->type() == InputDeviceType::Touchpad && device->physicalState().validTouchPoints().empty()) {
             device->setTouchpadNeutral(true);
             device->setTouchpadBlocked(false);
         }
     }
+}
+
+VirtualKeyboard *StandaloneInputBackend::virtualKeyboard()
+{
+    return m_virtualKeyboard ? &m_virtualKeyboard.value() : nullptr;
+}
+
+VirtualMouse *StandaloneInputBackend::virtualMouse()
+{
+    return m_virtualMouse ? &m_virtualMouse.value() : nullptr;
 }
 
 }

@@ -20,8 +20,9 @@
 #include "KWinWindow.h"
 #include "effect/effecthandler.h"
 #include "workspace.h"
-#include <libinputactions/input/InputDevice.h>
 #include <libinputactions/input/backends/InputBackend.h>
+#include <libinputactions/input/devices/InputDevice.h>
+#include <libinputactions/input/devices/InputDeviceState.h>
 #include <ranges>
 #include <window.h>
 
@@ -43,7 +44,7 @@ std::shared_ptr<Window> KWinWindowProvider::windowUnderFingers()
         return {};
     }
 
-    const auto validTouchPoints = device->validTouchPoints();
+    const auto validTouchPoints = device->physicalState().validTouchPoints();
     if (validTouchPoints.empty()) {
         return {};
     }

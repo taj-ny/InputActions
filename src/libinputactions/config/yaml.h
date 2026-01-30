@@ -36,7 +36,7 @@
 #include <libinputactions/handlers/PointerTriggerHandler.h>
 #include <libinputactions/handlers/TouchpadTriggerHandler.h>
 #include <libinputactions/handlers/TouchscreenTriggerHandler.h>
-#include <libinputactions/input/InputDeviceRule.h>
+#include <libinputactions/input/devices/InputDeviceRule.h>
 #include <libinputactions/interfaces/CursorShapeProvider.h>
 #include <libinputactions/triggers/HoverTrigger.h>
 #include <libinputactions/triggers/KeyboardShortcutTrigger.h>

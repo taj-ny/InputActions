@@ -19,12 +19,13 @@
 #pragma once
 
 #include "MotionTriggerHandler.h"
-#include <libinputactions/input/InputDevice.h>
 
 Q_DECLARE_LOGGING_CATEGORY(INPUTACTIONS_HANDLER_MULTITOUCH)
 
 namespace InputActions
 {
+
+class InputDevice;
 
 enum class PinchType
 {

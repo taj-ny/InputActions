@@ -20,6 +20,7 @@
 
 #include <chrono>
 #include <libinputactions/handlers/MultiTouchMotionTriggerHandler.h>
+#include <libinputactions/input/devices/InputDeviceState.h>
 
 namespace InputActions
 {
@@ -51,9 +52,9 @@ protected:
      */
     bool pointerMotion(const MotionEvent &event) override;
 
-    bool touchDown(const TouchEvent &event) override;
-    bool touchChanged(const TouchChangedEvent &event) override;
-    bool touchUp(const TouchEvent &event) override;
+    bool touchDown(const TouchDownEvent &event) override;
+    bool touchMotion(const TouchMotionEvent &event) override;
+    bool touchUp(const TouchUpEvent &event) override;
 
     bool touchpadClick(const TouchpadClickEvent &event) override;
     bool touchpadGestureLifecyclePhase(const TouchpadGestureLifecyclePhaseEvent &event) override;
