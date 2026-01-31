@@ -6,6 +6,7 @@ const dataAccessors = {
     active_window_id: () => workspace.activeWindow ? workspace.activeWindow.internalId : null,
     active_window_maximized: () => workspace.activeWindow ? workspace.activeWindow.maximized : false,
     active_window_name: () => workspace.activeWindow ? workspace.activeWindow.resourceName : null,
+    active_window_pid: () => workspace.activeWindow ? workspace.activeWindow.pid : null,
     active_window_title: () => workspace.activeWindow ? workspace.activeWindow.caption : null,
     pointer_position_global: () => [workspace.cursorPos.x, workspace.cursorPos.y],
     pointer_position_screen_percentage: () => {
@@ -18,6 +19,7 @@ const dataAccessors = {
     window_under_pointer_id: () => windowUnderPointer ? windowUnderPointer.internalId : null,
     window_under_pointer_maximized: () => windowUnderPointer ? windowUnderPointer.maximized : false,
     window_under_pointer_name: () => windowUnderPointer ? windowUnderPointer.resourceName : null,
+    window_under_pointer_pid: () => windowUnderPointer ? windowUnderPointer.pid : null,
     window_under_pointer_title: () => windowUnderPointer ? windowUnderPointer.caption : null
 };
 
@@ -48,6 +50,7 @@ pointerPositionTimer.timeout.connect(() => {
                 "window_under_pointer_fullscreen",
                 "window_under_pointer_id",
                 "window_under_pointer_name",
+                "window_under_pointer_pid",
                 "window_under_pointer_title"
             ];
         }
@@ -105,6 +108,7 @@ workspace.windowActivated.connect(w => {
         "active_window_id",
         "active_window_maximized",
         "active_window_name",
+        "active_window_pid",
         "active_window_title"
     ]);
 

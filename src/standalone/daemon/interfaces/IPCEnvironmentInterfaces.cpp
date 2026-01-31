@@ -51,6 +51,11 @@ void IPCEnvironmentInterfaces::updateEnvironmentState(const QString &json)
             member = jsonValue.toBool();
         }
     };
+    static const auto readInt = [](auto &member, const QJsonValue &jsonValue) {
+        if (jsonValue.isDouble()) {
+            member = jsonValue.toInteger();
+        }
+    };
     static const auto readPoint = [](auto &member, const QJsonValue &jsonValue) {
         if (jsonValue.isArray()) {
             const auto array = jsonValue.toArray();
@@ -73,7 +78,9 @@ void IPCEnvironmentInterfaces::updateEnvironmentState(const QString &json)
         }
     };
 
+
     readString(m_activeWindow->m_id, object["active_window_id"]);
+    readInt(m_activeWindow->m_pid, object["active_window_pid"]);
     readString(m_activeWindow->m_resourceClass, object["active_window_class"]);
     readBool(m_activeWindow->m_fullscreen, object["active_window_fullscreen"]);
     readBool(m_activeWindow->m_maximized, object["active_window_maximized"]);
@@ -81,6 +88,7 @@ void IPCEnvironmentInterfaces::updateEnvironmentState(const QString &json)
     readString(m_activeWindow->m_title, object["active_window_title"]);
 
     readString(m_windowUnderPointer->m_id, object["window_under_pointer_id"]);
+    readInt(m_windowUnderPointer->m_pid, object["window_under_pointer_pid"]);
     readString(m_windowUnderPointer->m_resourceClass, object["window_under_pointer_class"]);
     readBool(m_windowUnderPointer->m_fullscreen, object["window_under_pointer_fullscreen"]);
     readRect(m_windowUnderPointer->m_geometry, object["window_under_pointer_geometry"]);
@@ -95,6 +103,11 @@ void IPCEnvironmentInterfaces::updateEnvironmentState(const QString &json)
 std::optional<QString> IPCWindow::id()
 {
     return m_id;
+}
+
+std::optional<pid_t> IPCWindow::pid()
+{
+    return m_pid;
 }
 
 std::optional<QRectF> IPCWindow::geometry()

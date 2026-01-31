@@ -161,6 +161,11 @@ void InputActionsMain::registerGlobalVariables(VariableManager *variableManager,
             value = window->resourceName();
         }
     });
+    variableManager->registerRemoteVariable<qreal>("window_pid", [windowProvider](auto &value) {
+        if (const auto window = windowProvider->activeWindow()) {
+            value = window->pid();
+        }
+    });
     variableManager->registerRemoteVariable<QString>("window_title", [windowProvider](auto &value) {
         if (const auto window = windowProvider->activeWindow()) {
             value = window->title();
@@ -196,6 +201,12 @@ void InputActionsMain::registerGlobalVariables(VariableManager *variableManager,
         }
     });
     variableManager->registerVariableAlias("window_under_name", "window_under_pointer_name");
+    variableManager->registerRemoteVariable<qreal>("window_under_pointer_pid", [windowProvider](auto &value) {
+        if (const auto window = windowProvider->windowUnderPointer()) {
+            value = window->pid();
+        }
+    });
+    variableManager->registerVariableAlias("window_under_pid", "window_under_pointer_pid");
     variableManager->registerRemoteVariable<QString>("window_under_pointer_title", [windowProvider](auto &value) {
         if (const auto window = windowProvider->windowUnderPointer()) {
             value = window->title();
@@ -225,6 +236,11 @@ void InputActionsMain::registerGlobalVariables(VariableManager *variableManager,
     variableManager->registerRemoteVariable<QString>("window_under_fingers_name", [windowProvider](auto &value) {
         if (const auto window = windowProvider->windowUnderFingers()) {
             value = window->resourceName();
+        }
+    });
+    variableManager->registerRemoteVariable<qreal>("window_under_fingers_pid", [windowProvider](auto &value) {
+        if (const auto window = windowProvider->windowUnderFingers()) {
+            value = window->pid();
         }
     });
     variableManager->registerRemoteVariable<QString>("window_under_fingers_title", [windowProvider](auto &value) {

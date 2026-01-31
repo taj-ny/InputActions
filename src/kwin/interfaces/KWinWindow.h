@@ -34,6 +34,7 @@ public:
     KWinWindow(KWin::Window *window);
 
     std::optional<QString> id() override;
+    std::optional<pid_t> pid() override;
     std::optional<QRectF> geometry() override;
     std::optional<QString> title() override;
     std::optional<QString> resourceClass() override;

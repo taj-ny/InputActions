@@ -30,6 +30,7 @@ public:
     virtual ~Window() = default;
 
     virtual std::optional<QString> id() { return {}; }
+    virtual std::optional<pid_t> pid() { return {}; }
     virtual std::optional<QRectF> geometry() { return {}; }
     virtual std::optional<QString> title() { return {}; }
     virtual std::optional<QString> resourceClass() { return {}; }

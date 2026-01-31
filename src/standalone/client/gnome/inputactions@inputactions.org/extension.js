@@ -11,6 +11,7 @@ const WINDOW_KEYS = [
     "active_window_fullscreen",
     "active_window_maximized",
     "active_window_name",
+    "active_window_pid",
     "active_window_title",
     "window_under_pointer_class",
     "window_under_pointer_fullscreen",
@@ -18,6 +19,7 @@ const WINDOW_KEYS = [
     "window_under_pointer_maximized",
     "window_under_pointer_geometry",
     "window_under_pointer_name",
+    "window_under_pointer_pid",
     "window_under_pointer_title"
 ];
 
@@ -51,6 +53,7 @@ export default class MyExtension extends Extension {
             },
             active_window_fullscreen: () => this._activeWindow ? this._activeWindow.is_fullscreen() : null,
             active_window_name: () => this._activeWindow ? this._activeWindow.get_wm_class_instance() : null,
+            active_window_pid: () => this._activeWindow ? this._activeWindow.get_pid() : null,
             active_window_title: () => this._activeWindow ? this._activeWindow.get_title() : null,
             pointer_position_global: () => {
                 const pos = this._cursorTracker.get_pointer()[0];
@@ -75,6 +78,7 @@ export default class MyExtension extends Extension {
             },
             window_under_pointer_fullscreen: () => this._windowUnderPointer ? this._windowUnderPointer.is_fullscreen() : null,
             window_under_pointer_name: () => this._windowUnderPointer ? this._windowUnderPointer.get_wm_class_instance() : null,
+            window_under_pointer_pid: () => this._windowUnderPointer ? this._windowUnderPointer.get_pid() : null,
             window_under_pointer_title: () => this._windowUnderPointer ? this._windowUnderPointer.get_title() : null
         };
         this._onActiveWindowChanged();
