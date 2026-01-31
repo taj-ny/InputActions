@@ -33,6 +33,7 @@ class IPCWindow : public Window
 {
 public:
     std::optional<QString> id() override;
+    std::optional<pid_t> pid() override;
     std::optional<QRectF> geometry() override;
     std::optional<QString> title() override;
     std::optional<QString> resourceClass() override;
@@ -41,6 +42,7 @@ public:
     std::optional<bool> fullscreen() override;
 
     std::optional<QString> m_id;
+    std::optional<pid_t> m_pid;
     std::optional<QRectF> m_geometry;
     std::optional<QString> m_title;
     std::optional<QString> m_resourceClass;

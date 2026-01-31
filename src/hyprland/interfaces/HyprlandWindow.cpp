@@ -32,6 +32,11 @@ std::optional<QString> HyprlandWindow::id()
     return QString::number((uintptr_t)m_window, 16);
 }
 
+std::optional<pid_t> HyprlandWindow::pid()
+{
+    return m_window->getPID();
+}
+
 std::optional<QRectF> HyprlandWindow::geometry()
 {
     return QRectF(m_window->m_position.x, m_window->m_position.y, m_window->m_size.x, m_window->m_size.y);

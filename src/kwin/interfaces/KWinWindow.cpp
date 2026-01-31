@@ -34,6 +34,11 @@ std::optional<QString> KWinWindow::id()
     return m_window->internalId().toString();
 }
 
+std::optional<pid_t> KWinWindow::pid()
+{
+    return m_window->pid();
+}
+
 std::optional<QRectF> KWinWindow::geometry()
 {
     return m_window->frameGeometry();
