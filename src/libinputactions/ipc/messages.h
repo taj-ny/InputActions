@@ -36,6 +36,7 @@ enum class MessageType : int
     GenericResponse,
 
     BeginSessionRequest,
+    DeviceListRequest,
     EnvironmentState,
     InvokePlasmaGlobalShortcutRequest,
     LoadConfigRequest,
@@ -137,6 +138,17 @@ public:
 
 private:
     QString m_requestId = QUuid::createUuid().toString();
+};
+
+class DeviceListRequestMessage : public RequestMessage
+{
+    Q_OBJECT
+
+public:
+    DeviceListRequestMessage()
+        : RequestMessage(MessageType::DeviceListRequest)
+    {
+    }
 };
 
 class BeginSessionRequestMessage : public RequestMessage

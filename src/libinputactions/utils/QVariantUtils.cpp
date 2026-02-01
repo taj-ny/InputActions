@@ -16,45 +16,22 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#pragma once
-
-#include "DBusInterfaceBase.h"
-#include <QDBusConnection>
-#include <QDBusMessage>
-#include <QObject>
+#include "QVariantUtils.h"
+#include <QSizeF>
+#include <QStringList>
 
 namespace InputActions
 {
 
-static const QString INPUTACTIONS_DBUS_SERVICE = "org.inputactions";
-static const QString INPUTACTIONS_DBUS_PATH = "/";
-
-class IntegratedDBusInterface : public DBusInterfaceBase
+QString QVariantUtils::toString(QVariant variant)
 {
-    Q_OBJECT
-    Q_CLASSINFO("D-Bus Interface", "org.inputactions")
+    switch (variant.userType()) {
+        case QMetaType::QSizeF:
+            const auto value = variant.toSizeF();
+            return QString("%1,%2").arg(QString::number(value.width()), QString::number(value.height()));
+    }
 
-public:
-    /**
-     * Registers the interface.
-     */
-    IntegratedDBusInterface();
-
-    /**
-     * Unregisters the interface.
-     */
-    ~IntegratedDBusInterface() override;
-
-public slots:
-    QString deviceList();
-    Q_NOREPLY void recordStroke(const QDBusMessage &message);
-    QString reloadConfig();
-    QString suspend();
-    QString variables(QString filter = "");
-
-private:
-    QDBusConnection m_bus;
-    QDBusMessage m_reply;
-};
+    return variant.toString();
+}
 
 }

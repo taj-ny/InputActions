@@ -25,6 +25,7 @@ namespace InputActions
 
 class Message;
 class BeginSessionRequestMessage;
+class DeviceListRequestMessage;
 class EnvironmentStateMessage;
 class HandshakeRequestMessage;
 class InvokePlasmaGlobalShortcutRequestMessage;
@@ -45,6 +46,7 @@ public:
 
 protected:
     virtual void beginSessionRequestMessage(const std::shared_ptr<const BeginSessionRequestMessage> &message) {}
+    virtual void deviceListRequestMessage(const std::shared_ptr<const DeviceListRequestMessage> &message) {}
     virtual void environmentStateMessage(const std::shared_ptr<const EnvironmentStateMessage> &message) {}
     virtual void handshakeRequestMessage(const std::shared_ptr<const HandshakeRequestMessage> &message) {}
     virtual void invokePlasmaGlobalShortcutMessage(const std::shared_ptr<const InvokePlasmaGlobalShortcutRequestMessage> &message) {}

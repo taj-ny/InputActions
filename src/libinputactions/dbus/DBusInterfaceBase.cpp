@@ -18,11 +18,23 @@
 
 #include "DBusInterfaceBase.h"
 #include <QRegularExpression>
+#include <libinputactions/input/backends/InputBackend.h>
+#include <libinputactions/input/devices/InputDevice.h>
 #include <libinputactions/triggers/StrokeTrigger.h>
 #include <libinputactions/variables/VariableManager.h>
 
 namespace InputActions
 {
+
+QString DBusInterfaceBase::deviceList()
+{
+    QStringList result;
+    for (const auto *device : g_inputBackend->devices()) {
+        result.push_back(device->toString());
+    }
+    result.sort();
+    return result.join("\n\n");
+}
 
 QString DBusInterfaceBase::strokeToBase64(const Stroke &stroke)
 {

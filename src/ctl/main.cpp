@@ -67,6 +67,12 @@ int main(int argc, char **argv)
         printResponse(dbusInterface.asyncCall("suspend"));
     });
 
+    auto *devices = app.add_subcommand("devices", "Manage devices")->require_subcommand();
+    devices->add_subcommand("list", "List detected devices")->callback([&dbusInterface]() {
+        ensureInterfaceIsValid(dbusInterface);
+        printResponse(dbusInterface.asyncCall("deviceList"));
+    });
+
     auto *variables = app.add_subcommand("variables", "Manage variables")->require_subcommand();
 
     auto *variablesList = variables->add_subcommand("list", "List variables");

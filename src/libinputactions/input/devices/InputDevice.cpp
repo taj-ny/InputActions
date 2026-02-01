@@ -20,6 +20,7 @@
 #include <libinputactions/handlers/TouchpadTriggerHandler.h>
 #include <libinputactions/handlers/TouchscreenTriggerHandler.h>
 #include <libinputactions/input/events.h>
+#include <libinputactions/utils/StringUtils.h>
 
 namespace InputActions
 {
@@ -63,6 +64,36 @@ bool InputDevice::keyboardKey(const KeyboardKeyEvent &event)
 {
     m_physicalState.setKeyState(event.nativeKey(), event.state());
     return false;
+}
+
+QString InputDevice::toString() const
+{
+    QString type;
+    switch (m_type) {
+        case InputDeviceType::Keyboard:
+            type = "Keyboard";
+            break;
+        case InputDeviceType::Mouse:
+            type = "Mouse";
+            break;
+        case InputDeviceType::Touchpad:
+            type = "Touchpad";
+            break;
+        case InputDeviceType::Touchscreen:
+            type = "Touchscreen";
+            break;
+    }
+
+    QString path = "unknown";
+    if (!m_sysName.isEmpty()) {
+        path = QString("/dev/input/%1").arg(m_sysName);
+    }
+
+    const auto propertiesStr = StringUtils::indented(m_properties.toString(), 2);
+    auto info = QString("Path: %1\nProperties:\n%2").arg(path, propertiesStr);
+    StringUtils::indent(info, 2);
+
+    return QString("[%1] %2\n%3").arg(type, m_name, info);
 }
 
 void InputDevice::handleNotBlockedEvent(const InputEvent &event)

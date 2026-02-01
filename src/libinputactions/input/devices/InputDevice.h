@@ -90,6 +90,8 @@ public:
      */
     const InputDeviceState &virtualState() const { return m_virtualState; }
 
+    QString toString() const;
+
     /**
      * Simulates a keyboard key press event and modifiers the virtual state. Must be called by the overriding method.
      */

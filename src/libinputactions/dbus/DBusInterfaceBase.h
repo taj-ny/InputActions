@@ -29,6 +29,7 @@ class VariableManager;
 class DBusInterfaceBase : public QObject
 {
 public:
+    QString deviceList();
     QString strokeToBase64(const Stroke &stroke);
     QString variableList(const VariableManager *variableManager, const QString &filter);
 };

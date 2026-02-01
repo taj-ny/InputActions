@@ -18,43 +18,15 @@
 
 #pragma once
 
-#include "DBusInterfaceBase.h"
-#include <QDBusConnection>
-#include <QDBusMessage>
-#include <QObject>
+#include <QVariant>
 
 namespace InputActions
 {
 
-static const QString INPUTACTIONS_DBUS_SERVICE = "org.inputactions";
-static const QString INPUTACTIONS_DBUS_PATH = "/";
-
-class IntegratedDBusInterface : public DBusInterfaceBase
+class QVariantUtils
 {
-    Q_OBJECT
-    Q_CLASSINFO("D-Bus Interface", "org.inputactions")
-
 public:
-    /**
-     * Registers the interface.
-     */
-    IntegratedDBusInterface();
-
-    /**
-     * Unregisters the interface.
-     */
-    ~IntegratedDBusInterface() override;
-
-public slots:
-    QString deviceList();
-    Q_NOREPLY void recordStroke(const QDBusMessage &message);
-    QString reloadConfig();
-    QString suspend();
-    QString variables(QString filter = "");
-
-private:
-    QDBusConnection m_bus;
-    QDBusMessage m_reply;
+    static QString toString(QVariant variant);
 };
 
 }

@@ -49,6 +49,7 @@ signals:
 public slots:
     void environmentState(QString state);
 
+    QString deviceList();
     QString recordStroke();
     QString reloadConfig();
     QString suspend();

@@ -17,6 +17,9 @@
 */
 
 #include "InputDeviceProperties.h"
+#include <QMetaProperty>
+#include <QStringList>
+#include <libinputactions/utils/QVariantUtils.h>
 
 namespace InputActions
 {
@@ -39,6 +42,18 @@ void InputDeviceProperties::apply(const InputDeviceProperties &other)
     apply(m_thumbPressure, other.m_thumbPressure);
     apply(m_palmPressure, other.m_palmPressure);
     apply(m_lmrTapButtonMap, other.m_lmrTapButtonMap);
+}
+
+QString InputDeviceProperties::toString() const
+{
+    QStringList result;
+
+    for (auto i = 0; i < staticMetaObject.propertyCount(); ++i) {
+        const auto property = staticMetaObject.property(i);
+        result += QString("%1: %2").arg(property.name(), QVariantUtils::toString(property.readOnGadget(this)));
+    }
+
+    return result.join('\n');
 }
 
 bool InputDeviceProperties::grab() const
