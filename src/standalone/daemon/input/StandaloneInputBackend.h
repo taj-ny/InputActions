@@ -20,7 +20,7 @@
 
 #include "EvdevVirtualKeyboard.h"
 #include "EvdevVirtualMouse.h"
-#include <libinput-cpp/LibinputPathContext.h>
+#include <libinput-cpp/PathContext.h>
 #include <libinput.h>
 #include <libinputactions/input/backends/LibevdevComplementaryInputBackend.h>
 #include <libinputactions/input/backends/LibinputInputBackend.h>
@@ -29,8 +29,6 @@
 namespace InputActions
 {
 
-class LibinputDevice;
-class LibevdevUinputDevice;
 class StandaloneInputDevice;
 
 struct LibinputEventsProcessingResult
@@ -68,8 +66,8 @@ private:
     bool tryAddEvdevDevice(const QString &path);
     void evdevDeviceRemoved(const QString &path);
 
-    bool handleEvent(StandaloneInputDevice *sender, const LibinputEvent &event);
-    LibinputEventsProcessingResult handleLibinputEvents(StandaloneInputDevice *device, LibinputPathContext *libinput);
+    bool handleEvent(StandaloneInputDevice *sender, const libinput::Event &event);
+    LibinputEventsProcessingResult handleLibinputEvents(StandaloneInputDevice *device, libinput::PathContext *libinputContext);
 
     int m_inotifyFd;
     std::unique_ptr<QSocketNotifier> m_inotifyNotifier;

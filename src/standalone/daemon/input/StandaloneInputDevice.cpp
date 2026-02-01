@@ -17,9 +17,8 @@
 */
 
 #include "StandaloneInputDevice.h"
-#include <libevdev-cpp/LibevdevDevice.h>
-#include <libevdev-cpp/LibevdevUinputDevice.h>
-#include <libinput-cpp/LibinputDevice.h>
+#include <libevdev-cpp/Device.h>
+#include <libinput-cpp/Device.h>
 #include <libinput-cpp/UdevDevice.h>
 #include <libinputactions/input/backends/InputBackend.h>
 #include <libinputactions/input/devices/InputDeviceState.h>
@@ -27,8 +26,8 @@
 namespace InputActions
 {
 
-StandaloneInputDevice::StandaloneInputDevice(InputDeviceType type, QString name, QString sysName, QString path, std::unique_ptr<LibinputPathContext> libinput,
-                                             LibinputDevice *libinputDevice)
+StandaloneInputDevice::StandaloneInputDevice(InputDeviceType type, QString name, QString sysName, QString path, std::unique_ptr<libinput::PathContext> libinput,
+                                             libinput::Device *libinputDevice)
     : InputDevice(type, std::move(name), std::move(sysName))
     , m_path(std::move(path))
     , m_libinput(std::move(libinput))
@@ -38,7 +37,7 @@ StandaloneInputDevice::StandaloneInputDevice(InputDeviceType type, QString name,
 
 std::unique_ptr<StandaloneInputDevice> StandaloneInputDevice::tryCreate(const QString &path, bool &retry)
 {
-    auto libinput = std::make_unique<LibinputPathContext>();
+    auto libinput = std::make_unique<libinput::PathContext>();
     auto *libinputDevice = libinput->addDevice(path);
 
     if (!libinputDevice) {
@@ -84,7 +83,7 @@ bool StandaloneInputDevice::finalize(const QString &name, const InputDevicePrope
     }
 
     if (properties.grab()) {
-        if (auto result = LibevdevDevice::createFromPath(m_path)) {
+        if (auto result = libevdev::Device::createFromPath(m_path)) {
             m_libevdev = std::move(result.value());
         } else {
             retry = true;
@@ -98,7 +97,7 @@ bool StandaloneInputDevice::finalize(const QString &name, const InputDevicePrope
         }
         m_libevdev->grab();
 
-        if (auto result = LibevdevUinputDevice::createManaged(m_libevdev.get(), name + " (InputActions internal)")) {
+        if (auto result = libevdev::UInputDevice::createManaged(m_libevdev.get(), name + " (InputActions internal)")) {
             m_libinputEventInjectionDevice = std::move(result.value());
         } else {
             retry = true;
@@ -110,7 +109,7 @@ bool StandaloneInputDevice::finalize(const QString &name, const InputDevicePrope
         tryInitializeLibinputEventInjectionDevice();
         // If libinputDevice is nullptr, initialization will be reattempted later.
 
-        if (auto output = LibevdevUinputDevice::createManaged(m_libevdev.get(), name + " (InputActions output)")) {
+        if (auto output = libevdev::UInputDevice::createManaged(m_libevdev.get(), name + " (InputActions output)")) {
             m_outputDevice = std::move(output.value());
         } else {
             retry = true;

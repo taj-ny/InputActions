@@ -27,7 +27,10 @@
 namespace InputActions
 {
 
-class LibevdevDevice;
+namespace libevdev
+{
+class Device;
+}
 
 struct SlotData
 {
@@ -60,13 +63,13 @@ protected:
      * Adds a device whose libevdev instance is managed by a primary input backend. This backend will not poll the device, the primary backend must call
      * handleEvdevEvent.
      */
-    void addDevice(InputDevice *device, std::shared_ptr<LibevdevDevice> libevdevDevice);
+    void addDevice(InputDevice *device, std::shared_ptr<libevdev::Device> libevdevDevice);
     void removeDevice(const InputDevice *device) override;
 
     void handleEvdevEvent(InputDevice *sender, const input_event &event);
 
 private:
-    void addDevice(InputDevice *device, std::shared_ptr<LibevdevDevice> libevdevDevice, bool owner);
+    void addDevice(InputDevice *device, std::shared_ptr<libevdev::Device> libevdevDevice, bool owner);
 
     bool m_enabled = true;
 
@@ -75,7 +78,7 @@ private:
         ExtraDeviceData();
         ~ExtraDeviceData();
 
-        std::shared_ptr<LibevdevDevice> device;
+        std::shared_ptr<libevdev::Device> device;
         /**
          * Whether the device is owned by this input backend.
          */

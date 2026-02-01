@@ -17,14 +17,14 @@
 */
 
 #include "EvdevVirtualMouse.h"
-#include <libevdev-cpp/LibevdevDevice.h>
+#include <libevdev-cpp/Device.h>
 
 namespace InputActions
 {
 
 EvdevVirtualMouse::EvdevVirtualMouse()
 {
-    LibevdevDevice device;
+    libevdev::Device device;
     device.enableEventType(EV_KEY);
     for (uint32_t button = BTN_LEFT; button < BTN_JOYSTICK; button++) {
         device.enableEventCode(EV_KEY, button, nullptr);
@@ -36,7 +36,7 @@ EvdevVirtualMouse::EvdevVirtualMouse()
     device.enableEventCode(EV_REL, REL_WHEEL_HI_RES, nullptr);
     device.enableEventCode(EV_REL, REL_HWHEEL_HI_RES, nullptr);
 
-    if (auto result = LibevdevUinputDevice::createManaged(&device, "InputActions Virtual Mouse")) {
+    if (auto result = libevdev::UInputDevice::createManaged(&device, "InputActions Virtual Mouse")) {
         m_device = std::move(result.value());
     }
 }
