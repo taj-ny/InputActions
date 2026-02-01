@@ -43,9 +43,9 @@ void ClientMessageHandler::sendNotificationMessage(const std::shared_ptr<const S
 
 void ClientMessageHandler::startProcessRequestMessage(const std::shared_ptr<const StartProcessRequestMessage> &message)
 {
-    StartProcessResponseMessage response;
+    ResponseMessage response;
     if (message->output()) {
-        response.setOutput(m_processRunner.startProcessReadOutput(message->program(), message->arguments(), message->environment()));
+        response.setResult(m_processRunner.startProcessReadOutput(message->program(), message->arguments(), message->environment()));
     } else {
         m_processRunner.startProcess(message->program(), message->arguments(), message->environment(), message->wait());
     }
