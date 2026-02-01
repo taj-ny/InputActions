@@ -18,6 +18,7 @@
 
 #include "EvdevVirtualKeyboard.h"
 #include <libevdev-cpp/Device.h>
+#include <libevdev-cpp/exceptions.h>
 
 namespace InputActions
 {
@@ -30,8 +31,9 @@ EvdevVirtualKeyboard::EvdevVirtualKeyboard(const std::set<uint32_t> &keys)
         device.enableEventCode(EV_KEY, key, nullptr);
     }
 
-    if (auto result = libevdev::UInputDevice::createManaged(&device, "InputActions Virtual Keyboard")) {
-        m_device = std::move(result.value());
+    try {
+        m_device = libevdev::UInputDevice::createManaged(&device, "InputActions Virtual Keyboard");
+    } catch (const libevdev::Exception &) {
     }
 }
 

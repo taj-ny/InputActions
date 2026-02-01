@@ -78,7 +78,6 @@ void IPCEnvironmentInterfaces::updateEnvironmentState(const QString &json)
         }
     };
 
-
     readString(m_activeWindow->m_id, object["active_window_id"]);
     readInt(m_activeWindow->m_pid, object["active_window_pid"]);
     readString(m_activeWindow->m_resourceClass, object["active_window_class"]);

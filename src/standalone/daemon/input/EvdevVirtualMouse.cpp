@@ -18,6 +18,7 @@
 
 #include "EvdevVirtualMouse.h"
 #include <libevdev-cpp/Device.h>
+#include <libevdev-cpp/exceptions.h>
 
 namespace InputActions
 {
@@ -36,8 +37,9 @@ EvdevVirtualMouse::EvdevVirtualMouse()
     device.enableEventCode(EV_REL, REL_WHEEL_HI_RES, nullptr);
     device.enableEventCode(EV_REL, REL_HWHEEL_HI_RES, nullptr);
 
-    if (auto result = libevdev::UInputDevice::createManaged(&device, "InputActions Virtual Mouse")) {
-        m_device = std::move(result.value());
+    try {
+        m_device = libevdev::UInputDevice::createManaged(&device, "InputActions Virtual Mouse");
+    } catch (const libevdev::Exception &) {
     }
 }
 
