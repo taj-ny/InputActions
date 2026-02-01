@@ -18,6 +18,7 @@
 
 #pragma once
 
+#include <QSize>
 #include <libinputactions/input/backends/InputBackend.h>
 #include <libinputactions/input/devices/InputDeviceState.h>
 #include <linux/input.h>
@@ -88,6 +89,7 @@ private:
          * Absolute minimum values of ABS_X and ABS_Y.
          */
         QPoint absMin;
+        QSize virtualSize;
 
         int32_t currentSlot{};
         std::map<int32_t, SlotData> currentSlots;
