@@ -21,6 +21,7 @@
 #include <QObject>
 #include <fcntl.h>
 #include <libevdev-cpp/Device.h>
+#include <libevdev-cpp/exceptions.h>
 #include <libevdev/libevdev.h>
 #include <libinputactions/input/devices/InputDevice.h>
 #include <libinputactions/input/devices/InputDeviceProperties.h>
@@ -36,26 +37,27 @@ void LibevdevComplementaryInputBackend::addDevice(InputDevice *device)
         return;
     }
 
-    std::expected<std::unique_ptr<libevdev::Device>, int> libevdevDevice;
     if (!device->sysName().isEmpty()) {
-        libevdevDevice = libevdev::Device::createFromPath("/dev/input/" + device->sysName());
-    } else {
-        // If sysName is not available, go through all devices and find one with the same name
-        for (const auto &entry : QDir("/dev/input").entryInfoList(QDir::Files | QDir::NoSymLinks | QDir::System)) {
-            auto candidate = libevdev::Device::createFromPath(entry.filePath());
-            if (!candidate || candidate.value()->name() != device->name()) {
-                continue;
-            }
-
-            libevdevDevice = std::move(candidate);
-            break;
+        try {
+            addDevice(device, libevdev::Device::createFromPath("/dev/input/" + device->sysName()), true);
+        } catch (const libevdev::Exception &) {
         }
-    }
-    if (!libevdevDevice) {
         return;
     }
 
-    addDevice(device, std::move(libevdevDevice.value()), true);
+    // If sysName is not available, go through all devices and find one with the same name
+    for (const auto &entry : QDir("/dev/input").entryInfoList(QDir::Files | QDir::NoSymLinks | QDir::System)) {
+        try {
+            auto candidate = libevdev::Device::createFromPath(entry.filePath());
+            if (candidate->name() != device->name()) {
+                continue;
+            }
+
+            addDevice(device, std::move(candidate), true);
+            break;
+        } catch (const libevdev::Exception &) {
+        }
+    }
 }
 
 void LibevdevComplementaryInputBackend::addDevice(InputDevice *device, std::shared_ptr<libevdev::Device> libevdevDevice)
