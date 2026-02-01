@@ -63,17 +63,17 @@ void Client::onConnected()
     Q_EMIT connected();
     ThreadUtils::runOnThread(ThreadUtils::mainThread(), [this]() {
         HandshakeRequestMessage handshakeRequest;
-        if (const auto response = m_connection->sendMessageAndWaitForResponse<HandshakeResponseMessage>(handshakeRequest); !response->success()) {
-            qCritical().noquote().nospace() << "Handshake failed: " << response->error();
+        if (const auto response = m_connection->sendMessageAndWaitForResponse<ResponseMessage>(handshakeRequest); !response->success()) {
+            qCritical().noquote().nospace() << "Handshake failed: " << response->result();
             QCoreApplication::exit(-1);
             return;
         }
 
         BeginSessionRequestMessage beginSessionRequest;
         beginSessionRequest.setTty(m_currentTty);
-        if (const auto response = m_connection->sendMessageAndWaitForResponse<BeginSessionResponseMessage>(beginSessionRequest)) {
+        if (const auto response = m_connection->sendMessageAndWaitForResponse<ResponseMessage>(beginSessionRequest)) {
             if (!response->success()) {
-                qCritical().noquote().nospace() << "Daemon rejected request to begin session: " << response->error();
+                qCritical().noquote().nospace() << "Daemon rejected request to begin session: " << response->result();
                 QCoreApplication::exit(-1);
                 return;
             }
@@ -85,7 +85,7 @@ void Client::onConnected()
 
         LoadConfigRequestMessage configRequest;
         configRequest.setConfig(configProvider.currentConfig());
-        m_connection->sendMessageAndWaitForResponse<LoadConfigResponseMessage>(configRequest);
+        m_connection->sendMessageAndWaitForResponse<ResponseMessage>(configRequest);
     });
 }
 

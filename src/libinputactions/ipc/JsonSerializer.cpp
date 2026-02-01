@@ -64,9 +64,6 @@ std::shared_ptr<Message> JsonSerializer::deserializeMessage(const QString &json)
         case MessageType::BeginSessionRequest:
             message = std::make_shared<BeginSessionRequestMessage>();
             break;
-        case MessageType::BeginSessionResponse:
-            message = std::make_shared<BeginSessionResponseMessage>();
-            break;
         case MessageType::EnvironmentState:
             message = std::make_shared<EnvironmentStateMessage>();
             break;
@@ -76,41 +73,26 @@ std::shared_ptr<Message> JsonSerializer::deserializeMessage(const QString &json)
         case MessageType::HandshakeRequest:
             message = std::make_shared<HandshakeRequestMessage>();
             break;
-        case MessageType::HandshakeResponse:
-            message = std::make_shared<HandshakeResponseMessage>();
-            break;
         case MessageType::InvokePlasmaGlobalShortcutRequest:
             message = std::make_shared<InvokePlasmaGlobalShortcutRequestMessage>();
             break;
         case MessageType::LoadConfigRequest:
             message = std::make_shared<LoadConfigRequestMessage>();
             break;
-        case MessageType::LoadConfigResponse:
-            message = std::make_shared<LoadConfigResponseMessage>();
-            break;
         case MessageType::RecordStrokeRequest:
             message = std::make_shared<RecordStrokeRequestMessage>();
-            break;
-        case MessageType::RecordStrokeResponse:
-            message = std::make_shared<RecordStrokeResponseMessage>();
             break;
         case MessageType::SendNotification:
             message = std::make_shared<SendNotificationMessage>();
             break;
-        case MessageType::StartProcessRequestMessage:
+        case MessageType::StartProcessRequest:
             message = std::make_shared<StartProcessRequestMessage>();
-            break;
-        case MessageType::StartProcessResponseMessage:
-            message = std::make_shared<StartProcessResponseMessage>();
             break;
         case MessageType::SuspendRequest:
             message = std::make_shared<SuspendRequestMessage>();
             break;
         case MessageType::VariableListRequest:
             message = std::make_shared<VariableListRequestMessage>();
-            break;
-        case MessageType::VariableListResponse:
-            message = std::make_shared<VariableListResponseMessage>();
             break;
     }
     Q_ASSERT(message);

@@ -33,7 +33,7 @@ void IPCProcessRunner::startProcess(const QString &program, const QStringList &a
     message.setWait(wait);
 
     if (wait) {
-        g_sessionManager->currentSession().client()->sendMessageAndWaitForResponse<StartProcessResponseMessage>(message);
+        g_sessionManager->currentSession().client()->sendMessageAndWaitForResponse<ResponseMessage>(message);
     } else {
         g_sessionManager->currentSession().client()->sendMessage(message);
     }
@@ -47,8 +47,8 @@ QString IPCProcessRunner::startProcessReadOutput(const QString &program, const Q
     message.setEnvironment(extraEnvironment);
     message.setOutput(true);
 
-    if (const auto reply = g_sessionManager->currentSession().client()->sendMessageAndWaitForResponse<StartProcessResponseMessage>(message)) {
-        return reply->output();
+    if (const auto reply = g_sessionManager->currentSession().client()->sendMessageAndWaitForResponse<ResponseMessage>(message)) {
+        return reply->result();
     }
     return {};
 }

@@ -46,7 +46,7 @@ void MessageHandler::handleMessage(std::shared_ptr<const Message> message)
         case MessageType::SendNotification:
             sendNotificationMessage(std::dynamic_pointer_cast<const SendNotificationMessage>(message));
             break;
-        case MessageType::StartProcessRequestMessage:
+        case MessageType::StartProcessRequest:
             startProcessRequestMessage(std::dynamic_pointer_cast<const StartProcessRequestMessage>(message));
             break;
         case MessageType::SuspendRequest:

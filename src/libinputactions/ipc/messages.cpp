@@ -34,10 +34,10 @@ void RequestMessage::reply(ResponseMessage &message) const
     m_sender->sendMessage(message);
 }
 
-void ResponseMessage::setError(const QString &error)
+void ResponseMessage::setResult(QString result, bool success)
 {
-    m_error = error;
-    m_success = false;
+    m_result = std::move(result);
+    m_success = success;
 }
 
 }

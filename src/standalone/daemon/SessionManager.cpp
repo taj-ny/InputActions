@@ -74,13 +74,13 @@ Session *SessionManager::sessionForClient(MessageSocketConnection *client)
 
 void SessionManager::beginSessionRequestMessage(const std::shared_ptr<const BeginSessionRequestMessage> &message)
 {
-    BeginSessionResponseMessage response;
+    ResponseMessage response;
 
     ucred cred;
     socklen_t len = sizeof(struct ucred);
 
     if (getsockopt(message->sender()->socket()->socketDescriptor(), SOL_SOCKET, SO_PEERCRED, &cred, &len) == -1) {
-        response.setError("Authentication failed: could not get uid from connection");
+        response.setResult("Authentication failed: could not get uid from connection", false);
         message->reply(response);
         return;
     }
@@ -88,13 +88,13 @@ void SessionManager::beginSessionRequestMessage(const std::shared_ptr<const Begi
     if (m_freedesktopLoginDbusInterface.isValid()) {
         const auto reply = m_freedesktopLoginDbusInterface.call("ListSessionsEx");
         if (reply.type() == QDBusMessage::MessageType::ErrorMessage) {
-            response.setError(QString("Authentication failed: ListSessionsEx call failed: %1").arg(reply.errorMessage()));
+            response.setResult(QString("Authentication failed: ListSessionsEx call failed: %1").arg(reply.errorMessage()), false);
             message->reply(response);
             return;
         }
 
         if (reply.arguments().count() == 0) {
-            response.setError("Authentication failed: ListSessionEx returned no sessions");
+            response.setResult("Authentication failed: ListSessionEx returned no sessions", false);
             message->reply(response);
             return;
         }
@@ -124,7 +124,7 @@ void SessionManager::beginSessionRequestMessage(const std::shared_ptr<const Begi
         sessionData.endArray();
 
         if (!success) {
-            response.setError("Permission denied: cannot begin session for another user");
+            response.setResult("Permission denied: cannot begin session for another user", false);
             message->reply(response);
             return;
         }
@@ -141,20 +141,20 @@ void SessionManager::beginSessionRequestMessage(const std::shared_ptr<const Begi
         endutent();
 
         if (ttyUser.isEmpty()) {
-            response.setError("Authentication failed: could not get username of tty owner");
+            response.setResult("Authentication failed: could not get username of tty owner", false);
             message->reply(response);
             return;
         }
 
         passwd *pwd = getpwnam(ttyUser.toStdString().c_str());
         if (!pwd) {
-            response.setError("Authentication failed: could not get pid from username");
+            response.setResult("Authentication failed: could not get pid from username", false);
             message->reply(response);
             return;
         }
 
         if (cred.uid != pwd->pw_uid) {
-            response.setError("Permission denied: cannot begin session for another user");
+            response.setResult("Permission denied: cannot begin session for another user", false);
             message->reply(response);
             return;
         }
@@ -162,7 +162,7 @@ void SessionManager::beginSessionRequestMessage(const std::shared_ptr<const Begi
 
     auto &session = m_sessions[message->tty()];
     if (session.m_client) {
-        response.setError("This TTY already has an initialized session");
+        response.setResult("This TTY already has an initialized session", false);
     } else {
         session.m_client = message->sender();
         session.m_ipcEnvironmentInterfaces = std::make_shared<IPCEnvironmentInterfaces>();
@@ -197,17 +197,17 @@ void SessionManager::environmentStateMessage(const std::shared_ptr<const Environ
 
 void SessionManager::handshakeRequestMessage(const std::shared_ptr<const HandshakeRequestMessage> &message)
 {
-    HandshakeResponseMessage response;
+    ResponseMessage response;
     if (message->protocolVersion() != INPUTACTIONS_IPC_PROTOCOL_VERSION) {
-        response.setError(QString("Protocol version mismatch (daemon: %1, client: %2)")
-                              .arg(QString::number(INPUTACTIONS_IPC_PROTOCOL_VERSION), QString::number(message->protocolVersion())));
+        response.setResult(QString("Protocol version mismatch (daemon: %1, client: %2)")
+                              .arg(QString::number(INPUTACTIONS_IPC_PROTOCOL_VERSION), QString::number(message->protocolVersion())), false);
     }
     message->reply(response);
 }
 
 void SessionManager::loadConfigRequestMessage(const std::shared_ptr<const LoadConfigRequestMessage> &message)
 {
-    LoadConfigResponseMessage response;
+    ResponseMessage response;
     if (auto *session = sessionForClient(message->sender())) {
         session->m_suspended = false;
         auto config = message->config();
@@ -219,7 +219,7 @@ void SessionManager::loadConfigRequestMessage(const std::shared_ptr<const LoadCo
         session->m_config = config;
         if (&currentSession() == session) {
             if (const auto error = g_config->load(config)) {
-                response.setError(error.value());
+                response.setResult(error.value(), false);
             }
         }
     }
@@ -231,15 +231,15 @@ void SessionManager::recordStrokeRequestMessage(const std::shared_ptr<const Reco
 {
     if (const auto *session = sessionForClient(message->sender())) {
         if (&currentSession() != session) {
-            RecordStrokeResponseMessage response;
-            response.setError(ERROR_SESSION_INACTIVE);
+            ResponseMessage response;
+            response.setResult(ERROR_SESSION_INACTIVE, false);
             message->reply(response);
             return;
         }
 
         g_strokeRecorder->recordStroke([this, message](const auto &stroke) {
-            RecordStrokeResponseMessage response;
-            response.setStroke(m_dbusInterfaceBase.strokeToBase64(stroke));
+            ResponseMessage response;
+            response.setResult(m_dbusInterfaceBase.strokeToBase64(stroke));
             message->reply(response);
         });
     }
@@ -261,8 +261,8 @@ void SessionManager::suspendRequestMessage(const std::shared_ptr<const SuspendRe
 void SessionManager::variableListRequestMessage(const std::shared_ptr<const VariableListRequestMessage> &message)
 {
     if (auto *session = sessionForClient(message->sender())) {
-        VariableListResponseMessage response;
-        response.setVariables(m_dbusInterfaceBase.variableList(session->m_variableManager.get(), message->filter()));
+        ResponseMessage response;
+        response.setResult(m_dbusInterfaceBase.variableList(session->m_variableManager.get(), message->filter()));
         message->reply(response);
     }
 }

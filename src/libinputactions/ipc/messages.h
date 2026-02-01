@@ -25,31 +25,25 @@
 namespace InputActions
 {
 
-static const int INPUTACTIONS_IPC_PROTOCOL_VERSION = 1;
+static const int INPUTACTIONS_IPC_PROTOCOL_VERSION = 2;
 
 class MessageSocketConnection;
 
 enum class MessageType : int
 {
     HandshakeRequest,
-    HandshakeResponse,
 
     GenericResponse,
 
     BeginSessionRequest,
-    BeginSessionResponse,
     EnvironmentState,
     InvokePlasmaGlobalShortcutRequest,
     LoadConfigRequest,
-    LoadConfigResponse,
     RecordStrokeRequest,
-    RecordStrokeResponse,
     SendNotification,
-    StartProcessRequestMessage,
-    StartProcessResponseMessage,
+    StartProcessRequest,
     SuspendRequest,
     VariableListRequest,
-    VariableListResponse,
 };
 
 template<typename T>
@@ -102,7 +96,7 @@ class ResponseMessage : public Message
     Q_OBJECT
     Q_PROPERTY(QString requestId MEMBER m_requestId)
     Q_PROPERTY(bool success MEMBER m_success)
-    Q_PROPERTY(QString error MEMBER m_error)
+    Q_PROPERTY(QString result MEMBER m_result)
 
 public:
     ResponseMessage(MessageType type = MessageType::GenericResponse)
@@ -115,17 +109,14 @@ public:
 
     bool success() const { return m_success; }
 
-    const QString &error() const { return m_error; }
-    /**
-     * Also sets success to false.
-     */
-    void setError(const QString &error);
+    const QString &result() const { return m_result; }
+    void setResult(QString result, bool success = true);
 
 private:
     QString m_requestId;
 
     bool m_success = true;
-    QString m_error;
+    QString m_result;
 };
 
 class RequestMessage : public Message
@@ -166,17 +157,6 @@ private:
     QString m_tty;
 };
 
-class BeginSessionResponseMessage : public ResponseMessage
-{
-    Q_OBJECT
-
-public:
-    BeginSessionResponseMessage()
-        : ResponseMessage(MessageType::BeginSessionResponse)
-    {
-    }
-};
-
 class HandshakeRequestMessage : public RequestMessage
 {
     Q_OBJECT
@@ -192,17 +172,6 @@ public:
 
 private:
     int m_protocolVersion = INPUTACTIONS_IPC_PROTOCOL_VERSION;
-};
-
-class HandshakeResponseMessage : public ResponseMessage
-{
-    Q_OBJECT
-
-public:
-    HandshakeResponseMessage()
-        : ResponseMessage(MessageType::HandshakeResponse)
-    {
-    }
 };
 
 class EnvironmentStateMessage : public Message
@@ -264,17 +233,9 @@ private:
     QString m_config;
 };
 
-class LoadConfigResponseMessage : public ResponseMessage
-{
-    Q_OBJECT
-
-public:
-    LoadConfigResponseMessage()
-        : ResponseMessage(MessageType::LoadConfigResponse)
-    {
-    }
-};
-
+/**
+ * Stroke provided in ResponseMessage::result().
+ */
 class RecordStrokeRequestMessage : public RequestMessage
 {
     Q_OBJECT
@@ -284,24 +245,6 @@ public:
         : RequestMessage(MessageType::RecordStrokeRequest)
     {
     }
-};
-
-class RecordStrokeResponseMessage : public ResponseMessage
-{
-    Q_OBJECT
-    Q_PROPERTY(QString stroke MEMBER m_stroke)
-
-public:
-    RecordStrokeResponseMessage()
-        : ResponseMessage(MessageType::RecordStrokeResponse)
-    {
-    }
-
-    const QString &stroke() const { return m_stroke; }
-    void setStroke(const QString &value) { m_stroke = value; }
-
-private:
-    QString m_stroke;
 };
 
 class SendNotificationMessage : public Message
@@ -327,6 +270,9 @@ private:
     QString m_content;
 };
 
+/**
+ * Process output provided in ResponseMessage::result().
+ */
 class StartProcessRequestMessage : public RequestMessage
 {
     Q_OBJECT
@@ -338,7 +284,7 @@ class StartProcessRequestMessage : public RequestMessage
 
 public:
     StartProcessRequestMessage()
-        : RequestMessage(MessageType::StartProcessRequestMessage)
+        : RequestMessage(MessageType::StartProcessRequest)
     {
     }
 
@@ -382,24 +328,9 @@ public:
     }
 };
 
-class StartProcessResponseMessage : public ResponseMessage
-{
-    Q_OBJECT
-    Q_PROPERTY(QString output MEMBER m_output)
-
-public:
-    StartProcessResponseMessage()
-        : ResponseMessage(MessageType::StartProcessResponseMessage)
-    {
-    }
-
-    const QString &output() const { return m_output; }
-    void setOutput(const QString &value) { m_output = value; }
-
-private:
-    QString m_output;
-};
-
+/**
+ * Result provided in ResponseMessage::result().
+ */
 class VariableListRequestMessage : public RequestMessage
 {
     Q_OBJECT
@@ -416,24 +347,6 @@ public:
 
 private:
     QString m_filter;
-};
-
-class VariableListResponseMessage : public ResponseMessage
-{
-    Q_OBJECT
-    Q_PROPERTY(QString variables MEMBER m_variables)
-
-public:
-    VariableListResponseMessage()
-        : ResponseMessage(MessageType::VariableListResponse)
-    {
-    }
-
-    const QString &variables() const { return m_variables; }
-    void setVariables(const QString &value) { m_variables = value; }
-
-private:
-    QString m_variables;
 };
 
 }
