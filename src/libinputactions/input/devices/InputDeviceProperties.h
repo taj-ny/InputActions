@@ -18,6 +18,7 @@
 
 #pragma once
 
+#include <QMetaObject>
 #include <QSizeF>
 #include <optional>
 
@@ -26,6 +27,19 @@ namespace InputActions
 
 class InputDeviceProperties
 {
+    Q_GADGET
+
+    Q_PROPERTY(bool buttonPad READ buttonPad)
+    Q_PROPERTY(uint32_t fingerPressure READ fingerPressure)
+    Q_PROPERTY(bool grab READ grab)
+    Q_PROPERTY(bool handleLibevdevEvents READ handleLibevdevEvents)
+    Q_PROPERTY(bool ignore READ ignore)
+    Q_PROPERTY(bool lmrTapButtonMap READ lmrTapButtonMap)
+    Q_PROPERTY(bool multiTouch READ multiTouch)
+    Q_PROPERTY(uint32_t palmPressure READ palmPressure)
+    Q_PROPERTY(QSizeF size READ size)
+    Q_PROPERTY(uint32_t thumbPressure READ thumbPressure)
+
 public:
     InputDeviceProperties() = default;
 
@@ -95,6 +109,8 @@ public:
      */
     bool lmrTapButtonMap() const;
     void setLmrTapButtonMap(bool value) { m_lmrTapButtonMap = value; }
+
+    QString toString() const;
 
 private:
     std::optional<bool> m_grab;

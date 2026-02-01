@@ -188,6 +188,20 @@ void SessionManager::beginSessionRequestMessage(const std::shared_ptr<const Begi
     });
 }
 
+void SessionManager::deviceListRequestMessage(const std::shared_ptr<const DeviceListRequestMessage> &message)
+{
+    if (const auto *session = sessionForClient(message->sender())) {
+        ResponseMessage response;
+        if (&currentSession() == session) {
+            response.setResult(m_dbusInterfaceBase.deviceList());
+        } else {
+            response.setResult(ERROR_SESSION_INACTIVE, false);
+        }
+
+        message->reply(response);
+    }
+}
+
 void SessionManager::environmentStateMessage(const std::shared_ptr<const EnvironmentStateMessage> &message)
 {
     if (auto *session = sessionForClient(message->sender())) {
@@ -200,7 +214,8 @@ void SessionManager::handshakeRequestMessage(const std::shared_ptr<const Handsha
     ResponseMessage response;
     if (message->protocolVersion() != INPUTACTIONS_IPC_PROTOCOL_VERSION) {
         response.setResult(QString("Protocol version mismatch (daemon: %1, client: %2)")
-                              .arg(QString::number(INPUTACTIONS_IPC_PROTOCOL_VERSION), QString::number(message->protocolVersion())), false);
+                               .arg(QString::number(INPUTACTIONS_IPC_PROTOCOL_VERSION), QString::number(message->protocolVersion())),
+                           false);
     }
     message->reply(response);
 }

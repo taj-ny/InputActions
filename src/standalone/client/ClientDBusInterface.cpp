@@ -49,6 +49,15 @@ void ClientDBusInterface::environmentState(QString state)
     m_client->socketConnection()->sendMessage(message);
 }
 
+QString ClientDBusInterface::deviceList()
+{
+    DeviceListRequestMessage request;
+    if (const auto response = m_client->socketConnection()->sendMessageAndWaitForResponse<ResponseMessage>(request)) {
+        return response->result();
+    }
+    return ERROR_NO_REPLY;
+}
+
 QString ClientDBusInterface::recordStroke()
 {
     RecordStrokeRequestMessage request;

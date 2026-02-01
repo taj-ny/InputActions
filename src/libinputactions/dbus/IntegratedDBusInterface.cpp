@@ -41,6 +41,11 @@ IntegratedDBusInterface::~IntegratedDBusInterface()
     m_bus.unregisterObject(INPUTACTIONS_DBUS_PATH);
 }
 
+QString IntegratedDBusInterface::deviceList()
+{
+    return DBusInterfaceBase::deviceList();
+}
+
 void IntegratedDBusInterface::recordStroke(const QDBusMessage &message)
 {
     g_onScreenMessageManager->showMessage(PROJECT_NAME " is recording input. Perform a stroke gesture by moving the mouse or any amount of fingers in the one "
