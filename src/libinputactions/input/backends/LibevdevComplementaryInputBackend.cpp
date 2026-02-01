@@ -20,7 +20,7 @@
 #include <QDir>
 #include <QObject>
 #include <fcntl.h>
-#include <libevdev-cpp/LibevdevDevice.h>
+#include <libevdev-cpp/Device.h>
 #include <libevdev/libevdev.h>
 #include <libinputactions/input/devices/InputDevice.h>
 #include <libinputactions/input/devices/InputDeviceProperties.h>
@@ -36,13 +36,13 @@ void LibevdevComplementaryInputBackend::addDevice(InputDevice *device)
         return;
     }
 
-    std::expected<std::unique_ptr<LibevdevDevice>, int> libevdevDevice;
+    std::expected<std::unique_ptr<libevdev::Device>, int> libevdevDevice;
     if (!device->sysName().isEmpty()) {
-        libevdevDevice = LibevdevDevice::createFromPath("/dev/input/" + device->sysName());
+        libevdevDevice = libevdev::Device::createFromPath("/dev/input/" + device->sysName());
     } else {
         // If sysName is not available, go through all devices and find one with the same name
         for (const auto &entry : QDir("/dev/input").entryInfoList(QDir::Files | QDir::NoSymLinks | QDir::System)) {
-            auto candidate = LibevdevDevice::createFromPath(entry.filePath());
+            auto candidate = libevdev::Device::createFromPath(entry.filePath());
             if (!candidate || candidate.value()->name() != device->name()) {
                 continue;
             }
@@ -58,7 +58,7 @@ void LibevdevComplementaryInputBackend::addDevice(InputDevice *device)
     addDevice(device, std::move(libevdevDevice.value()), true);
 }
 
-void LibevdevComplementaryInputBackend::addDevice(InputDevice *device, std::shared_ptr<LibevdevDevice> libevdevDevice)
+void LibevdevComplementaryInputBackend::addDevice(InputDevice *device, std::shared_ptr<libevdev::Device> libevdevDevice)
 {
     if (!m_enabled || device->type() != InputDeviceType::Touchpad) {
         return;
@@ -67,7 +67,7 @@ void LibevdevComplementaryInputBackend::addDevice(InputDevice *device, std::shar
     addDevice(device, std::move(libevdevDevice), false);
 }
 
-void LibevdevComplementaryInputBackend::addDevice(InputDevice *device, std::shared_ptr<LibevdevDevice> libevdevDevice, bool owner)
+void LibevdevComplementaryInputBackend::addDevice(InputDevice *device, std::shared_ptr<libevdev::Device> libevdevDevice, bool owner)
 {
     auto data = std::make_unique<ExtraDeviceData>();
     data->device = libevdevDevice;
@@ -101,7 +101,7 @@ void LibevdevComplementaryInputBackend::addDevice(InputDevice *device, std::shar
     properties.setButtonPad(buttonPad);
 
     if (owner) {
-        connect(data->device.get(), &LibevdevDevice::eventsAvailable, this, [this, device] {
+        connect(data->device.get(), &libevdev::Device::eventsAvailable, this, [this, device] {
             poll(device);
         });
     }

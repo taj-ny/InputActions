@@ -18,7 +18,7 @@
 
 #pragma once
 
-#include <libevdev-cpp/LibevdevUinputDevice.h>
+#include <libevdev-cpp/UInputDevice.h>
 #include <libinputactions/input/devices/VirtualMouse.h>
 
 namespace InputActions
@@ -37,7 +37,7 @@ public:
     void mouseWheel(const QPointF &delta) override;
 
 private:
-    std::optional<LibevdevUinputDevice> m_device;
+    std::optional<libevdev::UInputDevice> m_device;
 
     QPointF m_motionDelta;
     QPointF m_wheelDelta;

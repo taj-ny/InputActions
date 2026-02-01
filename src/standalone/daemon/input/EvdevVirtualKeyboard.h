@@ -18,7 +18,7 @@
 
 #pragma once
 
-#include <libevdev-cpp/LibevdevUinputDevice.h>
+#include <libevdev-cpp/UInputDevice.h>
 #include <libinputactions/input/devices/VirtualKeyboard.h>
 
 namespace InputActions
@@ -35,7 +35,7 @@ public:
     void keyboardKey(uint32_t key, bool state) override;
 
 private:
-    std::optional<LibevdevUinputDevice> m_device;
+    std::optional<libevdev::UInputDevice> m_device;
 };
 
 }

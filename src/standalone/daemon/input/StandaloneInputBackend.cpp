@@ -21,14 +21,14 @@
 #include <QDir>
 #include <QSocketNotifier>
 #include <fcntl.h>
-#include <libevdev-cpp/LibevdevDevice.h>
-#include <libevdev-cpp/LibevdevUinputDevice.h>
-#include <libinput-cpp/LibinputDevice.h>
-#include <libinput-cpp/LibinputEvent.h>
-#include <libinput-cpp/LibinputGestureEvent.h>
-#include <libinput-cpp/LibinputKeyboardEvent.h>
-#include <libinput-cpp/LibinputPointerEvent.h>
-#include <libinput-cpp/LibinputTouchEvent.h>
+#include <libevdev-cpp/Device.h>
+#include <libevdev-cpp/UInputDevice.h>
+#include <libinput-cpp/Device.h>
+#include <libinput-cpp/Event.h>
+#include <libinput-cpp/GestureEvent.h>
+#include <libinput-cpp/KeyboardEvent.h>
+#include <libinput-cpp/PointerEvent.h>
+#include <libinput-cpp/TouchEvent.h>
 #include <libinput-cpp/UdevDevice.h>
 #include <libinputactions/input/devices/InputDeviceState.h>
 #include <libinputactions/input/events.h>
@@ -129,11 +129,11 @@ bool StandaloneInputBackend::tryAddEvdevDevice(const QString &path)
 
     if (auto *libevdev = device->libevdev().get()) {
         LibevdevComplementaryInputBackend::addDevice(device.get(), device->libevdev());
-        connect(libevdev, &LibevdevDevice::eventsAvailable, this, &StandaloneInputBackend::poll);
+        connect(libevdev, &libevdev::Device::eventsAvailable, this, &StandaloneInputBackend::poll);
     } else {
         LibevdevComplementaryInputBackend::addDevice(device.get());
     }
-    connect(device->libinput(), &LibinputPathContext::eventsAvailable, this, &StandaloneInputBackend::poll);
+    connect(device->libinput(), &libinput::PathContext::eventsAvailable, this, &StandaloneInputBackend::poll);
 
     InputBackend::addDevice(device.get());
     m_devices.push_back(std::move(device));
@@ -200,7 +200,7 @@ void StandaloneInputBackend::deviceInitializationRetryTimerTick()
     }
 }
 
-bool StandaloneInputBackend::handleEvent(StandaloneInputDevice *sender, const LibinputEvent &event)
+bool StandaloneInputBackend::handleEvent(StandaloneInputDevice *sender, const libinput::Event &event)
 {
     const auto type = event.type();
     switch (type) {
@@ -308,13 +308,13 @@ bool StandaloneInputBackend::handleEvent(StandaloneInputDevice *sender, const Li
     return false;
 }
 
-LibinputEventsProcessingResult StandaloneInputBackend::handleLibinputEvents(StandaloneInputDevice *device, LibinputPathContext *libinput)
+LibinputEventsProcessingResult StandaloneInputBackend::handleLibinputEvents(StandaloneInputDevice *device, libinput::PathContext *libinputContext)
 {
-    libinput->dispatch();
+    libinputContext->dispatch();
 
     // FIXME: One evdev frame can result in multiple libinput events, but one blocked libinput event will block the entire evdev frame.
     LibinputEventsProcessingResult result;
-    while (const auto event = libinput->getEvent()) {
+    while (const auto event = libinputContext->getEvent()) {
         result.block = handleEvent(device, event.value()) || result.block;
         result.eventCount++;
     }

@@ -19,17 +19,23 @@
 #pragma once
 
 #include <QTimer>
-#include <libevdev-cpp/LibevdevUinputDevice.h>
-#include <libinput-cpp/LibinputPathContext.h>
+#include <libevdev-cpp/UInputDevice.h>
+#include <libinput-cpp/PathContext.h>
 #include <libinputactions/input/devices/InputDevice.h>
 #include <optional>
 
 namespace InputActions
 {
 
-class LibevdevDevice;
-class LibevdevUinputDevice;
-class LibinputDevice;
+namespace libevdev
+{
+class Device;
+}
+
+namespace libinput
+{
+class Device;
+}
 
 class StandaloneInputDevice : public InputDevice
 {
@@ -43,25 +49,25 @@ public:
     /**
      * The physical device. Nullptr if the device is not grabbed.
      */
-    const std::shared_ptr<LibevdevDevice> &libevdev() { return m_libevdev; }
+    const std::shared_ptr<libevdev::Device> &libevdev() { return m_libevdev; }
 
     /**
      * Libinput context containing only libinputDevice.
      */
-    LibinputPathContext *libinput() { return m_libinput.get(); }
+    libinput::PathContext *libinput() { return m_libinput.get(); }
     /**
      * If grabbed, this is the libinput event injection device, otherwise it is the physical one.
      */
-    LibinputDevice *libinputDevice() { return m_libinputDevice; }
+    libinput::Device *libinputDevice() { return m_libinputDevice; }
     /**
      * The virtual device for injecting evdev events into libinput, as there is no API for that. Grabbed by libinput. Nullptr if the device is not grabbed.
      */
-    LibevdevUinputDevice *libinputEventInjectionDevice() { return m_libinputEventInjectionDevice ? &m_libinputEventInjectionDevice.value() : nullptr; }
+    libevdev::UInputDevice *libinputEventInjectionDevice() { return m_libinputEventInjectionDevice ? &m_libinputEventInjectionDevice.value() : nullptr; }
 
     /**
      * The virtual device where non-filtered and simulated events are written to be later processed by the compositor. Nullptr if the device is not grabbed.
      */
-    LibevdevUinputDevice *outputDevice() { return m_outputDevice ? &m_outputDevice.value() : nullptr; }
+    libevdev::UInputDevice *outputDevice() { return m_outputDevice ? &m_outputDevice.value() : nullptr; }
 
     bool isTouchpadBlocked() const { return m_touchpadBlocked; }
     void setTouchpadBlocked(bool value) { m_touchpadBlocked = value; }
@@ -93,8 +99,8 @@ protected:
     void touchscreenTapUp(const std::vector<QPointF> &points) override;
 
 private:
-    StandaloneInputDevice(InputDeviceType type, QString name, QString sysName, QString path, std::unique_ptr<LibinputPathContext> libinput,
-                          LibinputDevice *libinputDevice);
+    StandaloneInputDevice(InputDeviceType type, QString name, QString sysName, QString path, std::unique_ptr<libinput::PathContext> libinput,
+                          libinput::Device *libinputDevice);
 
     bool finalize(const QString &name, const InputDeviceProperties &properties, bool &retry);
     void finishLibinputDeviceInitialization();
@@ -106,15 +112,15 @@ private:
 
     QString m_path;
 
-    std::shared_ptr<LibevdevDevice> m_libevdev;
+    std::shared_ptr<libevdev::Device> m_libevdev;
 
-    std::unique_ptr<LibinputPathContext> m_libinput;
-    LibinputDevice *m_libinputDevice{};
+    std::unique_ptr<libinput::PathContext> m_libinput;
+    libinput::Device *m_libinputDevice{};
 
-    std::optional<LibevdevUinputDevice> m_libinputEventInjectionDevice;
+    std::optional<libevdev::UInputDevice> m_libinputEventInjectionDevice;
     uint32_t m_libinputEventInjectionDeviceInitializationAttempts{};
 
-    std::optional<LibevdevUinputDevice> m_outputDevice;
+    std::optional<libevdev::UInputDevice> m_outputDevice;
 
     bool m_touchpadBlocked{};
     bool m_touchpadNeutral{};

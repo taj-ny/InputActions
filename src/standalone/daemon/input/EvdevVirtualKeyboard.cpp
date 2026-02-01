@@ -17,20 +17,20 @@
 */
 
 #include "EvdevVirtualKeyboard.h"
-#include <libevdev-cpp/LibevdevDevice.h>
+#include <libevdev-cpp/Device.h>
 
 namespace InputActions
 {
 
 EvdevVirtualKeyboard::EvdevVirtualKeyboard(const std::set<uint32_t> &keys)
 {
-    LibevdevDevice device;
+    libevdev::Device device;
     device.enableEventType(EV_KEY);
     for (const auto key : keys) {
         device.enableEventCode(EV_KEY, key, nullptr);
     }
 
-    if (auto result = LibevdevUinputDevice::createManaged(&device, "InputActions Virtual Keyboard")) {
+    if (auto result = libevdev::UInputDevice::createManaged(&device, "InputActions Virtual Keyboard")) {
         m_device = std::move(result.value());
     }
 }
