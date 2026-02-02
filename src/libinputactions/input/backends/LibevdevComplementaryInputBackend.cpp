@@ -86,8 +86,8 @@ void LibevdevComplementaryInputBackend::addDevice(InputDevice *device, std::shar
     }
 
     data->absMin = {std::abs(x->minimum), std::abs(y->minimum)};
-    const QSize size(data->absMin.x() + x->maximum, data->absMin.y() + y->maximum);
-    if (size.width() == 0 || size.height() == 0) {
+    data->virtualSize = {data->absMin.x() + x->maximum, data->absMin.y() + y->maximum};
+    if (data->virtualSize.width() == 0 || data->virtualSize.height() == 0) {
         return;
     }
 
@@ -98,7 +98,7 @@ void LibevdevComplementaryInputBackend::addDevice(InputDevice *device, std::shar
     }
 
     auto &properties = device->properties();
-    properties.setSize(size);
+    properties.setSize({data->virtualSize.width() / static_cast<qreal>(x->resolution), data->virtualSize.height() / static_cast<qreal>(y->resolution)});
     properties.setMultiTouch(multiTouch);
     properties.setButtonPad(buttonPad);
 
@@ -139,11 +139,15 @@ void LibevdevComplementaryInputBackend::handleEvdevEvent(InputDevice *sender, co
                         continue;
                     }
                     if (!previousSlot.active && slot.active) {
-                        handleEvent(TouchDownEvent(sender, id, slot.position, slot.position, slot.pressure));
+                        const QPointF position(slot.position.x() / data->virtualSize.width() * properties.size().width(),
+                                               slot.position.y() / data->virtualSize.height() * properties.size().height());
+                        handleEvent(TouchDownEvent(sender, id, position, slot.position, slot.pressure));
                         continue;
                     }
                     if (previousSlot.position != slot.position) {
-                        handleEvent(TouchMotionEvent(sender, id, slot.position, slot.position));
+                        const QPointF position(slot.position.x() / data->virtualSize.width() * properties.size().width(),
+                                               slot.position.y() / data->virtualSize.height() * properties.size().height());
+                        handleEvent(TouchMotionEvent(sender, id, position, slot.position));
                     }
                     if (previousSlot.pressure != slot.pressure) {
                         handleEvent(TouchPressureChangeEvent(sender, id, slot.pressure));
