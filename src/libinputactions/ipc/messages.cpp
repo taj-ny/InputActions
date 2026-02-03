@@ -22,22 +22,15 @@
 namespace InputActions
 {
 
-void RequestMessage::reply() const
+void ResponseMessage::setError(QString error)
 {
-    ResponseMessage message;
-    reply(message);
+    m_error = std::move(error);
+    m_success = false;
 }
 
-void RequestMessage::reply(ResponseMessage &message) const
+void RequestMessageBase::sendResponse(const ResponseMessage &response) const
 {
-    message.setRequestId(m_requestId);
-    m_sender->sendMessage(message);
-}
-
-void ResponseMessage::setResult(QString result, bool success)
-{
-    m_result = std::move(result);
-    m_success = success;
+    m_sender->sendMessage(response);
 }
 
 }

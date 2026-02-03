@@ -88,6 +88,9 @@ std::shared_ptr<Message> JsonSerializer::deserializeMessage(const QString &json)
         case MessageType::SendNotification:
             message = std::make_shared<SendNotificationMessage>();
             break;
+        case MessageType::SimpleStringResponse:
+            message = std::make_shared<SimpleStringResponseMessage>();
+            break;
         case MessageType::StartProcessRequest:
             message = std::make_shared<StartProcessRequestMessage>();
             break;
