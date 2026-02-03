@@ -29,7 +29,7 @@ void IPCPlasmaGlobalShortcutInvoker::invoke(const QString &component, const QStr
     InvokePlasmaGlobalShortcutRequestMessage message;
     message.setComponent(component);
     message.setShortcut(shortcut);
-    g_sessionManager->currentSession().client()->sendMessageAndWaitForResponse<ResponseMessage>(message);
+    g_sessionManager->currentSession().client()->sendMessageAndWaitForResponse(message);
 }
 
 }

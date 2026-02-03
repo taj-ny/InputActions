@@ -52,8 +52,8 @@ void ClientDBusInterface::environmentState(QString state)
 QString ClientDBusInterface::deviceList()
 {
     DeviceListRequestMessage request;
-    if (const auto response = m_client->socketConnection()->sendMessageAndWaitForResponse<ResponseMessage>(request)) {
-        return response->result();
+    if (const auto response = m_client->socketConnection()->sendMessageAndWaitForResponse(request)) {
+        return response->success() ? response->result() : response->error();
     }
     return ERROR_NO_REPLY;
 }
@@ -61,8 +61,8 @@ QString ClientDBusInterface::deviceList()
 QString ClientDBusInterface::recordStroke()
 {
     RecordStrokeRequestMessage request;
-    if (const auto response = m_client->socketConnection()->sendMessageAndWaitForResponse<ResponseMessage>(request)) {
-        return response->result();
+    if (const auto response = m_client->socketConnection()->sendMessageAndWaitForResponse(request)) {
+        return response->success() ? response->result() : response->error();
     }
     return ERROR_NO_REPLY;
 }
@@ -71,8 +71,8 @@ QString ClientDBusInterface::reloadConfig()
 {
     LoadConfigRequestMessage request;
     request.setConfig(m_client->configProvider.currentConfig());
-    if (const auto response = m_client->socketConnection()->sendMessageAndWaitForResponse<ResponseMessage>(request)) {
-        return response->result();
+    if (const auto response = m_client->socketConnection()->sendMessageAndWaitForResponse(request)) {
+        return response->success() ? "success" : response->error();
     }
     return ERROR_NO_REPLY;
 }
@@ -80,8 +80,8 @@ QString ClientDBusInterface::reloadConfig()
 QString ClientDBusInterface::suspend()
 {
     SuspendRequestMessage request;
-    if (const auto response = m_client->socketConnection()->sendMessageAndWaitForResponse<ResponseMessage>(request)) {
-        return response->result();
+    if (const auto response = m_client->socketConnection()->sendMessageAndWaitForResponse(request)) {
+        return response->success() ? "success" : response->error();
     }
     return ERROR_NO_REPLY;
 }
@@ -90,8 +90,8 @@ QString ClientDBusInterface::variables(QString filter)
 {
     VariableListRequestMessage request;
     request.setFilter(filter);
-    if (const auto response = m_client->socketConnection()->sendMessageAndWaitForResponse<ResponseMessage>(request)) {
-        return response->result();
+    if (const auto response = m_client->socketConnection()->sendMessageAndWaitForResponse(request)) {
+        return response->success() ? response->result() : response->error();
     }
     return ERROR_NO_REPLY;
 }

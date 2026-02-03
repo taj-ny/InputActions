@@ -25,7 +25,7 @@
 namespace InputActions
 {
 
-static const int INPUTACTIONS_IPC_PROTOCOL_VERSION = 2;
+static const int INPUTACTIONS_IPC_PROTOCOL_VERSION = 3;
 
 class MessageSocketConnection;
 
@@ -34,6 +34,7 @@ enum class MessageType : int
     HandshakeRequest,
 
     GenericResponse,
+    SimpleStringResponse,
 
     BeginSessionRequest,
     DeviceListRequest,
@@ -97,7 +98,7 @@ class ResponseMessage : public Message
     Q_OBJECT
     Q_PROPERTY(QString requestId MEMBER m_requestId)
     Q_PROPERTY(bool success MEMBER m_success)
-    Q_PROPERTY(QString result MEMBER m_result)
+    Q_PROPERTY(QString error MEMBER m_error)
 
 public:
     ResponseMessage(MessageType type = MessageType::GenericResponse)
@@ -110,37 +111,79 @@ public:
 
     bool success() const { return m_success; }
 
-    const QString &result() const { return m_result; }
-    void setResult(QString result, bool success = true);
+    const QString &error() const { return m_error; }
+    void setError(QString error);
 
 private:
     QString m_requestId;
 
     bool m_success = true;
+    QString m_error;
+};
+
+class SimpleStringResponseMessage : public ResponseMessage
+{
+    Q_OBJECT
+    Q_PROPERTY(QString result MEMBER m_result)
+
+public:
+    SimpleStringResponseMessage()
+        : ResponseMessage(MessageType::SimpleStringResponse)
+    {
+    }
+
+    const QString &result() const { return m_result; }
+    void setResult(QString result) { m_result = std::move(result); }
+
+private:
     QString m_result;
 };
 
-class RequestMessage : public Message
+class RequestMessageBase : public Message
 {
     Q_OBJECT
     Q_PROPERTY(QString requestId MEMBER m_requestId)
 
 public:
-    RequestMessage(MessageType type)
+    RequestMessageBase(MessageType type)
         : Message(type)
     {
     }
 
-    void reply() const;
-    void reply(ResponseMessage &message) const;
-
     const QString &requestId() const { return m_requestId; }
+
+protected:
+    void sendResponse(const ResponseMessage &response) const;
 
 private:
     QString m_requestId = QUuid::createUuid().toString();
 };
 
-class DeviceListRequestMessage : public RequestMessage
+template<typename TResponse>
+class RequestMessage : public RequestMessageBase
+{
+public:
+    using RequestMessageBase::RequestMessageBase;
+
+    TResponse makeResponse() const { return {}; }
+
+    void reply() const
+    {
+        TResponse response;
+        reply(response);
+    }
+
+    void reply(TResponse &response) const
+    {
+        response.setRequestId(requestId());
+        sendResponse(response);
+    }
+};
+
+/**
+ * Response result string is the device list.
+ */
+class DeviceListRequestMessage : public RequestMessage<SimpleStringResponseMessage>
 {
     Q_OBJECT
 
@@ -151,7 +194,7 @@ public:
     }
 };
 
-class BeginSessionRequestMessage : public RequestMessage
+class BeginSessionRequestMessage : public RequestMessage<ResponseMessage>
 {
     Q_OBJECT
     Q_PROPERTY(QString tty MEMBER m_tty)
@@ -169,7 +212,7 @@ private:
     QString m_tty;
 };
 
-class HandshakeRequestMessage : public RequestMessage
+class HandshakeRequestMessage : public RequestMessage<ResponseMessage>
 {
     Q_OBJECT
     Q_PROPERTY(int protocolVersion MEMBER m_protocolVersion)
@@ -204,7 +247,7 @@ private:
     QString m_stateJson;
 };
 
-class InvokePlasmaGlobalShortcutRequestMessage : public RequestMessage
+class InvokePlasmaGlobalShortcutRequestMessage : public RequestMessage<ResponseMessage>
 {
     Q_OBJECT
     Q_PROPERTY(QString component MEMBER m_component)
@@ -227,7 +270,7 @@ private:
     QString m_shortcut;
 };
 
-class LoadConfigRequestMessage : public RequestMessage
+class LoadConfigRequestMessage : public RequestMessage<ResponseMessage>
 {
     Q_OBJECT
     Q_PROPERTY(QString config MEMBER m_config)
@@ -246,9 +289,9 @@ private:
 };
 
 /**
- * Stroke provided in ResponseMessage::result().
+ * Response result string is the stroke.
  */
-class RecordStrokeRequestMessage : public RequestMessage
+class RecordStrokeRequestMessage : public RequestMessage<SimpleStringResponseMessage>
 {
     Q_OBJECT
 
@@ -283,9 +326,9 @@ private:
 };
 
 /**
- * Process output provided in ResponseMessage::result().
+ * Response result string is the process output.
  */
-class StartProcessRequestMessage : public RequestMessage
+class StartProcessRequestMessage : public RequestMessage<SimpleStringResponseMessage>
 {
     Q_OBJECT
     Q_PROPERTY(QString program MEMBER m_program)
@@ -329,7 +372,7 @@ private:
     bool m_output{};
 };
 
-class SuspendRequestMessage : public RequestMessage
+class SuspendRequestMessage : public RequestMessage<ResponseMessage>
 {
     Q_OBJECT
 
@@ -341,9 +384,9 @@ public:
 };
 
 /**
- * Result provided in ResponseMessage::result().
+ * Response result string is the variable list.
  */
-class VariableListRequestMessage : public RequestMessage
+class VariableListRequestMessage : public RequestMessage<SimpleStringResponseMessage>
 {
     Q_OBJECT
     Q_PROPERTY(QString filter MEMBER m_filter)

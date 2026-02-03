@@ -57,8 +57,8 @@ public:
     /**
      * Thread-safe.
      */
-    template<typename T>
-    std::shared_ptr<T> sendMessageAndWaitForResponse(const RequestMessage &message)
+    template<typename TResponse>
+    std::shared_ptr<TResponse> sendMessageAndWaitForResponse(const RequestMessage<TResponse> &message)
     {
         if (!m_socket || !m_socket->isValid()) {
             return {};
@@ -73,9 +73,9 @@ public:
         write(m_serializer.serialize(message));
 
         future.futureInterface.waitForFinished();
-        std::shared_ptr<T> result;
+        std::shared_ptr<TResponse> result;
         if (future.futureInterface.resultCount() == 1) {
-            result = std::static_pointer_cast<T>(future.futureInterface.takeResult());
+            result = std::static_pointer_cast<TResponse>(future.futureInterface.takeResult());
         }
 
         m_futuresMutex.lock();
