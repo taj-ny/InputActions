@@ -39,7 +39,7 @@ protected:
     /**
      * Constructs a shared handler that handles triggers for all devices. Accepts all events.
      */
-    InputTriggerHandler() = default;
+    InputTriggerHandler();
 
     /**
      * Converts this handler into a unique one that handles triggers only for the specified device. It will only accept keyboard key events and events generated
@@ -64,6 +64,12 @@ protected:
      */
     InputDevice *m_device{};
     InputDeviceTypes m_types;
+
+private slots:
+    void onActivatingTriggers(TriggerTypes types);
+
+private:
+    Qt::KeyboardModifiers m_modifiersAtActivation;
 
     friend class TestInputTriggerHandler;
 };

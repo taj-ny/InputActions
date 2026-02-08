@@ -17,11 +17,17 @@
 */
 
 #include "InputTriggerHandler.h"
+#include <libinputactions/input/backends/InputBackend.h>
 #include <libinputactions/input/devices/InputDevice.h>
 #include <libinputactions/input/events.h>
 
 namespace InputActions
 {
+
+InputTriggerHandler::InputTriggerHandler()
+{
+    connect(this, &TriggerHandler::activatingTriggers, this, &InputTriggerHandler::onActivatingTriggers);
+}
 
 void InputTriggerHandler::setDevice(InputDevice *device)
 {
@@ -41,11 +47,17 @@ bool InputTriggerHandler::acceptsEvent(const InputEvent &event)
 
 bool InputTriggerHandler::keyboardKey(const KeyboardKeyEvent &event)
 {
-    // Lazy way of detecting modifier release during mouse gestures
-    if (!event.state()) {
+    // End triggers when a modifier that was pressed during activation is released
+    if (!event.state() && hasActiveTriggers() && (m_modifiersAtActivation & ~g_inputBackend->keyboardModifiers()) != 0) {
         endTriggers(TriggerType::All);
     }
+
     return false;
+}
+
+void InputTriggerHandler::onActivatingTriggers(TriggerTypes types)
+{
+    m_modifiersAtActivation = g_inputBackend->keyboardModifiers();
 }
 
 }
