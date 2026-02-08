@@ -59,7 +59,7 @@ SessionManager::~SessionManager() = default;
 
 Session &SessionManager::currentSession()
 {
-    return m_sessions[m_currentTty];
+    return *m_currentSession;
 }
 
 Session *SessionManager::sessionForClient(MessageSocketConnection *client)
@@ -281,11 +281,13 @@ void SessionManager::variableListRequestMessage(const std::shared_ptr<const Vari
     }
 }
 
-void SessionManager::activateSession(const Session &session, bool loadConfig)
+void SessionManager::activateSession(Session &session, bool loadConfig)
 {
     g_inputActions->suspend();
     g_actionExecutor->clearQueue();
     g_actionExecutor->waitForDone();
+
+    m_currentSession = &session;
 
     if (session.m_suspended) {
         qCDebug(INPUTACTIONS) << "Session is suspended";
@@ -310,8 +312,8 @@ void SessionManager::onSessionChangeDetectionTimerTick()
     const auto tty = SessionUtils::currentTty();
     if (m_currentTty != tty) {
         qCDebug(INPUTACTIONS).noquote().nospace() << "TTY changed to " << tty;
-        activateSession(m_sessions[tty]);
         m_currentTty = tty;
+        activateSession(m_sessions[tty]);
     }
 }
 

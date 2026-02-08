@@ -79,7 +79,7 @@ private slots:
     void onSessionChangeDetectionTimerTick();
 
 private:
-    void activateSession(const Session &session, bool loadConfig = true);
+    void activateSession(Session &session, bool loadConfig = true);
 
     DBusInterfaceBase m_dbusInterfaceBase;
     QDBusInterface m_freedesktopLoginDbusInterface;
@@ -88,6 +88,7 @@ private:
 
     QTimer m_sessionChangeDetectionTimer;
     QString m_currentTty;
+    Session *m_currentSession{};
     std::map<QString, Session> m_sessions;
 };
 
