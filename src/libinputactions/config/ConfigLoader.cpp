@@ -82,7 +82,7 @@ std::optional<QString> ConfigLoader::load(const ConfigLoadSettings &settings)
 
     if (error) {
         qCCritical(INPUTACTIONS).noquote() << error.value();
-        if (g_globalConfig->sendNotificationOnError()) {
+        if (g_globalConfig->sendNotificationOnError() && !settings.manual) {
             g_notificationManager->sendNotification("Failed to load configuration", error.value());
         }
     }

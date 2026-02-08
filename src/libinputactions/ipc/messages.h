@@ -25,7 +25,7 @@
 namespace InputActions
 {
 
-static const int INPUTACTIONS_IPC_PROTOCOL_VERSION = 3;
+static const int INPUTACTIONS_IPC_PROTOCOL_VERSION = 4;
 
 class MessageSocketConnection;
 
@@ -274,6 +274,7 @@ class LoadConfigRequestMessage : public RequestMessage<ResponseMessage>
 {
     Q_OBJECT
     Q_PROPERTY(QString config MEMBER m_config)
+    Q_PROPERTY(bool manual MEMBER m_manual)
 
 public:
     LoadConfigRequestMessage()
@@ -284,8 +285,15 @@ public:
     const QString &config() const { return m_config; }
     void setConfig(const QString &value) { m_config = value; }
 
+    /**
+     * @see ConfigLoadSettings::manual
+     */
+    bool manual() const { return m_manual; }
+    void setManual(bool value) { m_manual = value; }
+
 private:
     QString m_config;
+    bool m_manual{};
 };
 
 /**
