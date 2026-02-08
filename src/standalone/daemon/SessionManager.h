@@ -88,7 +88,7 @@ private:
 
     QTimer m_sessionChangeDetectionTimer;
     QString m_currentTty;
-    Session *m_currentSession{};
+    Session *m_currentSession;
     std::map<QString, Session> m_sessions;
 };
 

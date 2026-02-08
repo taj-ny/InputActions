@@ -40,7 +40,10 @@ static const QString ERROR_SESSION_INACTIVE = "This client's session is inactive
 
 SessionManager::SessionManager(Server *server)
     : m_freedesktopLoginDbusInterface("org.freedesktop.login1", "/org/freedesktop/login1", "org.freedesktop.login1.Manager", QDBusConnection::systemBus())
+    , m_currentTty(SessionUtils::currentTty())
 {
+    m_currentSession = &m_sessions[m_currentTty];
+
     connect(server, &Server::messageReceived, this, [this](const auto &message) {
         handleMessage(message);
     });
