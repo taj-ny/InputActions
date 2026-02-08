@@ -19,7 +19,7 @@
 #include "IntegratedDBusInterface.h"
 #include <QRegularExpression>
 #include <libinputactions/InputActionsMain.h>
-#include <libinputactions/config/Config.h>
+#include <libinputactions/config/ConfigLoader.h>
 #include <libinputactions/input/StrokeRecorder.h>
 #include <libinputactions/interfaces/OnScreenMessageManager.h>
 #include <libinputactions/triggers/StrokeTrigger.h>
@@ -63,7 +63,7 @@ void IntegratedDBusInterface::recordStroke(const QDBusMessage &message)
 
 QString IntegratedDBusInterface::reloadConfig()
 {
-    const auto error = g_config->load();
+    const auto error = g_configLoader->load();
     if (error) {
         return error.value();
     }

@@ -22,7 +22,7 @@
 #include <QDBusArgument>
 #include <libinputactions/InputActionsMain.h>
 #include <libinputactions/actions/ActionExecutor.h>
-#include <libinputactions/config/Config.h>
+#include <libinputactions/config/ConfigLoader.h>
 #include <libinputactions/globals.h>
 #include <libinputactions/input/StrokeRecorder.h>
 #include <libinputactions/interfaces/implementations/FileConfigProvider.h>
@@ -235,7 +235,9 @@ void SessionManager::loadConfigRequestMessage(const std::shared_ptr<const LoadCo
 
         session->m_config = config;
         if (&currentSession() == session) {
-            if (const auto error = g_config->load(config)) {
+            if (const auto error = g_configLoader->load({
+                    .config = config,
+                })) {
                 response.setError(error.value());
             }
         }
@@ -286,12 +288,10 @@ void SessionManager::variableListRequestMessage(const std::shared_ptr<const Vari
 
 void SessionManager::activateSession(Session &session, bool loadConfig)
 {
-    g_inputActions->suspend();
-    g_actionExecutor->clearQueue();
-    g_actionExecutor->waitForDone();
+    // Ensure the previous session's config doesn't remain active if this session's config fails to load
+    g_configLoader->loadEmpty();
 
     m_currentSession = &session;
-
     if (session.m_suspended) {
         qCDebug(INPUTACTIONS) << "Session is suspended";
         return;
@@ -301,8 +301,10 @@ void SessionManager::activateSession(Session &session, bool loadConfig)
         return;
     }
 
-    if (loadConfig && g_config->load(session.m_config)) {
-        g_config->load(QString(""));
+    if (loadConfig) {
+        g_configLoader->load({
+            .config = session.m_config,
+        });
     }
 
     g_pointerPositionGetter = session.m_ipcEnvironmentInterfaces;

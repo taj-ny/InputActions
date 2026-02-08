@@ -72,7 +72,7 @@ protected:
 private:
     void addDevice(InputDevice *device, std::shared_ptr<libevdev::Device> libevdevDevice, bool owner);
 
-    bool m_enabled = true;
+    bool m_enabled{}; // Default value defined in Config
 
     struct ExtraDeviceData
     {
