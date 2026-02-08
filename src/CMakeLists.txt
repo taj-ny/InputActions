@@ -16,7 +16,8 @@ if (INPUTACTIONS_BUILD_HYPRLAND OR INPUTACTIONS_BUILD_KWIN OR INPUTACTIONS_BUILD
         libinputactions/actions/PlasmaGlobalShortcutAction.cpp
         libinputactions/actions/SleepAction.cpp
         libinputactions/actions/TriggerAction.cpp
-        libinputactions/config/Config.cpp
+        libinputactions/config/ConfigLoader.cpp
+        libinputactions/config/GlobalConfig.cpp
         libinputactions/config/yaml.h
         libinputactions/conditions/Condition.cpp
         libinputactions/conditions/ConditionGroup.cpp

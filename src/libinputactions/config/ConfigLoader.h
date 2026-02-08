@@ -20,33 +20,40 @@
 
 #include <QString>
 #include <memory>
+#include <optional>
 
 namespace InputActions
 {
 
-class Config
+struct Config;
+
+struct ConfigLoadSettings
+{
+    /**
+     * If not set, the config returned by ConfigProvider will be used.
+     */
+    std::optional<QString> config;
+    bool preventCrashLoops{};
+};
+
+class ConfigLoader
 {
 public:
     /**
      * @return Error message or std::nullopt on success.
      */
-    std::optional<QString> load(const QString &config, bool preventCrashLoops = false);
+    std::optional<QString> load(const ConfigLoadSettings &settings = {});
+
     /**
-     * @return Error message or std::nullopt on success.
+     * Loads an empty config with default values without initializing any components.
      */
-    std::optional<QString> load(bool preventCrashLoops = false);
-
-    bool autoReload() const { return m_autoReload; }
-    void setAutoReload(bool value) { m_autoReload = value; }
-
-    bool sendNotificationOnError() const { return m_sendNotificationOnError; }
-    void setSendNotificationOnError(bool value) { m_sendNotificationOnError = value; }
+    void loadEmpty();
 
 private:
-    bool m_autoReload = true;
-    bool m_sendNotificationOnError = true;
+    Config createConfig(const QString &raw);
+    void activateConfig(Config config, bool initialize);
 };
 
-inline std::shared_ptr<Config> g_config;
+inline std::shared_ptr<ConfigLoader> g_configLoader;
 
 }
