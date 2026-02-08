@@ -71,6 +71,7 @@ QString ClientDBusInterface::reloadConfig()
 {
     LoadConfigRequestMessage request;
     request.setConfig(m_client->configProvider.currentConfig());
+    request.setManual(true);
     if (const auto response = m_client->socketConnection()->sendMessageAndWaitForResponse(request)) {
         return response->success() ? "success" : response->error();
     }

@@ -237,6 +237,7 @@ void SessionManager::loadConfigRequestMessage(const std::shared_ptr<const LoadCo
         if (&currentSession() == session) {
             if (const auto error = g_configLoader->load({
                     .config = config,
+                    .manual = message->manual(),
                 })) {
                 response.setError(error.value());
             }

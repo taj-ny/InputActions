@@ -63,7 +63,9 @@ void IntegratedDBusInterface::recordStroke(const QDBusMessage &message)
 
 QString IntegratedDBusInterface::reloadConfig()
 {
-    const auto error = g_configLoader->load();
+    const auto error = g_configLoader->load({
+        .manual = true,
+    });
     if (error) {
         return error.value();
     }
