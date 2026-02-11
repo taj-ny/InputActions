@@ -1,5 +1,5 @@
 # InputActions <a href="https://github.com/sponsors/taj-ny"><img src="https://img.shields.io/badge/Sponsor-gray?logo=githubsponsors"></a>
-Linux utility for binding input device actions to system actions, created with flexibility in mind.
+Linux utility for binding keyboard shortcuts, mouse gestures, touchpad gestures and touchscreen gestures to system actions, created with flexibility in mind.
 
 Supported environments: Plasma 6, Hyprland, GNOME, other Wayland compositors (availability of extra features depends on implemented protocols), X11 (base features only)
 
