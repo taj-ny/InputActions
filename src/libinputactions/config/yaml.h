@@ -808,7 +808,7 @@ struct convert<std::shared_ptr<Condition>>
             // Hack to load negated conditions without forcing users to quote the entire thing
             auto conditionNode = node;
             const auto tag = node.Tag();
-            if (tag != "!" && tag.starts_with('!')) {
+            if (tag != "!" && tag.starts_with('!') && !conditionNode.as<QString>().startsWith("!$")) {
                 conditionNode = QString("%1 %2").arg(QString::fromStdString(tag), node.as<QString>()).trimmed().toStdString();
             }
 
