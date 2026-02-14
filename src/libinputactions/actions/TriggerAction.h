@@ -166,6 +166,12 @@ public:
     const std::optional<Range<qreal>> &threshold() const { return m_threshold; }
     void setThreshold(Range<qreal> value) { m_threshold = std::move(value); }
 
+    /**
+     * Whether this action can activate conflict resolution.
+     */
+    bool conflicting() const { return m_conflicting; }
+    void setConflicting(bool value) { m_conflicting = value; }
+
 private:
     void update(const Delta &delta);
 
@@ -179,6 +185,7 @@ private:
     ActionInterval m_interval;
     On m_on = On::End;
     std::optional<Range<qreal>> m_threshold;
+    bool m_conflicting = true;
 
     /**
      * The sum of deltas from update events. Reset when the direction changes.
