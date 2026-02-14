@@ -1374,8 +1374,17 @@ struct convert<std::vector<InputAction::Item>>
                             });
                         }
                     } else if (action.startsWith("MOVE_BY_DELTA")) {
+                        qreal multiplier = 1;
+                        if (arguments.size() > 0) {
+                            bool ok{};
+                            multiplier = arguments.at(0).toDouble(&ok);
+                            if (!ok) {
+                                throw Exception(node.Mark(), "move_by_delta multiplier is not a number");
+                            }
+                        }
+
                         value.push_back({
-                            .mouseMoveRelativeByDelta = true,
+                            .mouseMoveRelativeByDelta = multiplier,
                         });
                     } else if (action.startsWith("MOVE_BY")) {
                         value.push_back({

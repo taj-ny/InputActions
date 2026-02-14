@@ -44,7 +44,12 @@ public:
         QPointF mouseAxis;
         QPointF mouseMoveAbsolute;
         QPointF mouseMoveRelative;
-        bool mouseMoveRelativeByDelta{};
+
+        /**
+         * 0 - unset
+         * Any other value - delta multiplier
+         */
+        qreal mouseMoveRelativeByDelta{};
     };
 
     InputAction(std::vector<Item> sequence);
