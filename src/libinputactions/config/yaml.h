@@ -1023,6 +1023,7 @@ struct convert<std::unique_ptr<TriggerAction>>
     {
         value = std::make_unique<TriggerAction>(node.as<std::shared_ptr<Action>>());
 
+        loadSetter(value, &TriggerAction::setConflicting, node["conflicting"]);
         loadSetter(value, &TriggerAction::setInterval, node["interval"]);
         loadSetter(value, &TriggerAction::setOn, node["on"]);
         loadSetter(value, &TriggerAction::setThreshold, node["threshold"]);

@@ -152,7 +152,7 @@ bool Trigger::overridesOtherTriggersOnEnd()
     }
 
     return std::ranges::any_of(m_actions, [](const auto &action) {
-        return (action->on() == On::End || action->on() == On::EndCancel) && action->canExecute();
+        return action->conflicting() && (action->on() == On::End || action->on() == On::EndCancel) && action->canExecute();
     });
 }
 
@@ -163,7 +163,7 @@ bool Trigger::overridesOtherTriggersOnUpdate()
     }
 
     return std::ranges::any_of(m_actions, [](const auto &action) {
-        return action->action()->executions() || (action->on() == On::Update && action->canExecute());
+        return action->conflicting() && (action->action()->executions() || (action->on() == On::Update && action->canExecute()));
     });
 }
 
