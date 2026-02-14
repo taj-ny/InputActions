@@ -20,13 +20,9 @@
 
 #include <QString>
 
-namespace InputActions
+namespace InputActions::SessionUtils
 {
 
-class SessionUtils
-{
-public:
-    static QString currentTty();
-};
+QString currentTty();
 
 }

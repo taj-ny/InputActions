@@ -20,13 +20,9 @@
 
 #include <QVariant>
 
-namespace InputActions
+namespace InputActions::QVariantUtils
 {
 
-class QVariantUtils
-{
-public:
-    static QString toString(const QVariant &variant);
-};
+QString toString(const QVariant &variant);
 
 }

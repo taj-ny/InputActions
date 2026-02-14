@@ -20,17 +20,13 @@
 
 #include <QThread>
 
-namespace InputActions
+namespace InputActions::ThreadUtils
 {
 
-class ThreadUtils
-{
-public:
-    static QThread *mainThread();
-    /**
-     * @param thread If same as the current thread, the function will execute immediately.
-     */
-    static void runOnThread(QThread *thread, std::function<void()> &&function, bool block = false);
-};
+QThread *mainThread();
+/**
+ * @param thread If same as the current thread, the function will execute immediately.
+ */
+void runOnThread(QThread *thread, std::function<void()> &&function, bool block = false);
 
 }

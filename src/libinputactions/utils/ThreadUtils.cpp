@@ -20,15 +20,15 @@
 #include <QAbstractEventDispatcher>
 #include <QCoreApplication>
 
-namespace InputActions
+namespace InputActions::ThreadUtils
 {
 
-QThread *ThreadUtils::mainThread()
+QThread *mainThread()
 {
     return QCoreApplication::instance()->thread();
 }
 
-void ThreadUtils::runOnThread(QThread *thread, std::function<void()> &&function, bool block)
+void runOnThread(QThread *thread, std::function<void()> &&function, bool block)
 {
     if (QThread::currentThread() == thread) {
         function();

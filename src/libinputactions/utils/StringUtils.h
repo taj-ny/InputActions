@@ -20,14 +20,10 @@
 
 #include <QString>
 
-namespace InputActions
+namespace InputActions::StringUtils
 {
 
-class StringUtils
-{
-public:
-    static void indent(QString &s, int32_t spaces);
-    static QString indented(const QString &s, int32_t spaces);
-};
+void indent(QString &s, int32_t spaces);
+QString indented(const QString &s, int32_t spaces);
 
 }

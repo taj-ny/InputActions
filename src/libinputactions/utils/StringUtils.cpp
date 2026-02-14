@@ -19,15 +19,15 @@
 #include "StringUtils.h"
 #include <QStringList>
 
-namespace InputActions
+namespace InputActions::StringUtils
 {
 
-void StringUtils::indent(QString &s, int32_t spaces)
+void indent(QString &s, int32_t spaces)
 {
     s = indented(s, spaces);
 }
 
-QString StringUtils::indented(const QString &s, int32_t spaces)
+QString indented(const QString &s, int32_t spaces)
 {
     auto lines = s.split('\n');
     for (auto &line : lines) {

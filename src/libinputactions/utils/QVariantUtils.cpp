@@ -20,10 +20,10 @@
 #include <QSizeF>
 #include <QStringList>
 
-namespace InputActions
+namespace InputActions::QVariantUtils
 {
 
-QString QVariantUtils::toString(const QVariant &variant)
+QString toString(const QVariant &variant)
 {
     const auto userType = variant.userType();
     switch (userType) {
