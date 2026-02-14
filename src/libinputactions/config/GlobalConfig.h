@@ -27,14 +27,20 @@ namespace InputActions
 class GlobalConfig
 {
 public:
+    /**
+     * Allow external programs to read InputActions variables.
+     */
+    bool allowExternalVariableAccess() const { return m_allowExternalVariableAccess; }
+    void setAllowExternalVariableAccess(bool value) { m_allowExternalVariableAccess = value; }
+
     bool autoReload() const { return m_autoReload; }
     void setAutoReload(bool value) { m_autoReload = value; }
 
     bool sendNotificationOnError() const { return m_sendNotificationOnError; }
     void setSendNotificationOnError(bool value) { m_sendNotificationOnError = value; }
-
 private:
     // Default values defined in Config
+    bool m_allowExternalVariableAccess{};
     bool m_autoReload{};
     bool m_sendNotificationOnError{};
 };

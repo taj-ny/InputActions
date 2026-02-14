@@ -18,6 +18,7 @@
 
 #include "DBusInterfaceBase.h"
 #include <QRegularExpression>
+#include <libinputactions/config/GlobalConfig.h>
 #include <libinputactions/input/backends/InputBackend.h>
 #include <libinputactions/input/devices/InputDevice.h>
 #include <libinputactions/triggers/StrokeTrigger.h>
@@ -53,6 +54,10 @@ QString DBusInterfaceBase::strokeToBase64(const Stroke &stroke)
 
 QString DBusInterfaceBase::variableList(const VariableManager *variableManager, const QString &filter)
 {
+    if (!g_globalConfig->allowExternalVariableAccess()) {
+        return "External variable access has been disabled. Set 'external_variable_access' to 'true' to enable.";
+    }
+
     QStringList result;
     const QRegularExpression filterRegex(filter);
     for (const auto &[name, variable] : variableManager->variables()) {
