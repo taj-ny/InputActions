@@ -1157,11 +1157,6 @@ struct convert<std::unique_ptr<MouseTriggerHandler>>
         auto *mouseTriggerHandler = new MouseTriggerHandler;
         handler.reset(mouseTriggerHandler);
         decodeMotionTriggerHandler(node, handler.get());
-
-        loadSetter(mouseTriggerHandler, &MouseTriggerHandler::setMotionTimeout, node["motion_timeout"]);
-        loadSetter(mouseTriggerHandler, &MouseTriggerHandler::setPressTimeout, node["press_timeout"]);
-        loadSetter(mouseTriggerHandler, &MouseTriggerHandler::setUnblockButtonsOnTimeout, node["unblock_buttons_on_timeout"]);
-
         return true;
     }
 };
@@ -1181,7 +1176,6 @@ std::unique_ptr<TouchpadTriggerHandler> asTouchpadTriggerHandler(const Node &nod
 {
     auto handler = std::make_unique<TouchpadTriggerHandler>(device);
     decodeMultiTouchMotionTriggerHandler(node, handler.get());
-    loadSetter(handler, &TouchpadTriggerHandler::setClickTimeout, node["click_timeout"]);
     loadSetter(static_cast<MotionTriggerHandler *>(handler.get()), &MotionTriggerHandler::setSwipeDeltaMultiplier, node["delta_multiplier"]);
     return handler;
 }
@@ -1456,7 +1450,23 @@ struct convert<std::vector<InputDeviceRule>>
         }
 
         // Legacy
+        if (const auto &mouseNode = node["mouse"]) {
+            InputDeviceRule rule;
+            rule.setCondition(std::make_shared<VariableCondition>("types", InputActions::Value<InputDeviceTypes>(InputDeviceType::Mouse), ComparisonOperator::Contains));
+            loadSetter(rule.properties(), &InputDeviceProperties::setMouseMotionTimeout, mouseNode["motion_timeout"]);
+            loadSetter(rule.properties(), &InputDeviceProperties::setMousePressTimeout, mouseNode["press_timeout"]);
+            loadSetter(rule.properties(), &InputDeviceProperties::setMouseUnblockButtonsOnTimeout, mouseNode["unblock_buttons_on_timeout"]);
+            value.push_back(std::move(rule));
+        }
+
         if (const auto &touchpadNode = node["touchpad"]) {
+            if (const auto &clickTimeoutNode = touchpadNode["click_timeout"]) {
+                InputDeviceRule rule;
+                rule.setCondition(std::make_shared<VariableCondition>("types", InputActions::Value<InputDeviceTypes>(InputDeviceType::Touchpad), ComparisonOperator::Contains));
+                loadSetter(rule.properties(), &InputDeviceProperties::setTouchpadClickTimeout, clickTimeoutNode);
+                value.push_back(std::move(rule));
+            }
+
             if (const auto &devicesNode = touchpadNode["devices"]) {
                 for (auto it = devicesNode.begin(); it != devicesNode.end(); ++it) {
                     InputDeviceRule rule;
@@ -1477,10 +1487,14 @@ struct convert<InputDeviceProperties>
     static bool decode(const Node &node, InputDeviceProperties &value)
     {
         loadSetter(value, &InputDeviceProperties::setMultiTouch, node["__multiTouch"]);
-        loadSetter(value, &InputDeviceProperties::setButtonPad, node["buttonpad"]);
         loadSetter(value, &InputDeviceProperties::setGrab, node["grab"]);
         loadSetter(value, &InputDeviceProperties::setHandleLibevdevEvents, node["handle_libevdev_events"]);
         loadSetter(value, &InputDeviceProperties::setIgnore, node["ignore"]);
+        loadSetter(value, &InputDeviceProperties::setMouseMotionTimeout, node["motion_timeout"]);
+        loadSetter(value, &InputDeviceProperties::setMousePressTimeout, node["press_timeout"]);
+        loadSetter(value, &InputDeviceProperties::setMouseUnblockButtonsOnTimeout, node["unblock_buttons_on_timeout"]);
+        loadSetter(value, &InputDeviceProperties::setTouchpadButtonPad, node["buttonpad"]);
+        loadSetter(value, &InputDeviceProperties::setTouchpadClickTimeout, node["click_timeout"]);
 
         if (const auto &pressureRangesNode = node["pressure_ranges"]) {
             loadSetter(value, &InputDeviceProperties::setFingerPressure, pressureRangesNode["finger"]);

@@ -20,6 +20,7 @@
 
 #include <QMetaObject>
 #include <QSizeF>
+#include <chrono>
 #include <optional>
 
 namespace InputActions
@@ -29,16 +30,22 @@ class InputDeviceProperties
 {
     Q_GADGET
 
-    Q_PROPERTY(bool buttonPad READ buttonPad)
     Q_PROPERTY(uint32_t fingerPressure READ fingerPressure)
     Q_PROPERTY(bool grab READ grab)
     Q_PROPERTY(bool handleLibevdevEvents READ handleLibevdevEvents)
     Q_PROPERTY(bool ignore READ ignore)
-    Q_PROPERTY(bool lmrTapButtonMap READ lmrTapButtonMap)
     Q_PROPERTY(bool multiTouch READ multiTouch)
     Q_PROPERTY(uint32_t palmPressure READ palmPressure)
     Q_PROPERTY(QSizeF size READ size)
     Q_PROPERTY(uint32_t thumbPressure READ thumbPressure)
+
+    Q_PROPERTY(std::chrono::milliseconds mouseMotionTimeout READ mouseMotionTimeout)
+    Q_PROPERTY(std::chrono::milliseconds mousePressTimeout READ mousePressTimeout)
+    Q_PROPERTY(bool mouseUnblockButtonsOnTimeout READ mouseUnblockButtonsOnTimeout)
+
+    Q_PROPERTY(bool touchpadButtonPad READ touchpadButtonPad)
+    Q_PROPERTY(std::chrono::milliseconds touchpadClickTimeout READ touchpadClickTimeout)
+    Q_PROPERTY(bool touchpadLmrTapButtonMap READ touchpadLmrTapButtonMap)
 
 public:
     InputDeviceProperties() = default;
@@ -79,13 +86,6 @@ public:
      * @internal
      */
     void setSize(const QSizeF &value) { m_size = value; }
-
-    /**
-     * Whether INPUT_PROP_BUTTONPAD is present.
-     */
-    bool buttonPad() const;
-    void setButtonPad(bool value) { m_buttonPad = value; }
-
     /**
      * Minimum pressure for a touch point to be considered a finger.
      */
@@ -105,10 +105,42 @@ public:
     void setPalmPressure(uint32_t value) { m_palmPressure = value; }
 
     /**
+     * The amount of time in the handler will wait for motion to be performed (wheel is considered motion as well) before attempting to activate press triggers.
+     * For pointer motion there is a small threshold to prevent accidental activations.
+     */
+    std::chrono::milliseconds mouseMotionTimeout() const;
+    void setMouseMotionTimeout(std::chrono::milliseconds value) { m_mouseMotionTimeout = value; }
+
+    /**
+     * The amount of time the handler will wait for all mouse buttons to be pressed before activating press triggers.
+     */
+    std::chrono::milliseconds mousePressTimeout() const;
+    void setMousePressTimeout(std::chrono::milliseconds value) { m_mousePressTimeout = value; }
+
+    /**
+     * Whether blocked mouse buttons should be pressed immediately on timeout. If false, they will be pressed and instantly released on button release.
+     */
+    bool mouseUnblockButtonsOnTimeout() const;
+    void setMouseUnblockButtonsOnTimeout(bool value) { m_mouseUnblockButtonsOnTimeout = value; }
+
+    /**
+     * Whether INPUT_PROP_BUTTONPAD is present.
+     */
+    bool touchpadButtonPad() const;
+    void setTouchpadButtonPad(bool value) { m_touchpadButtonPad = value; }
+
+    /**
+     * The time for the user to perform a click once a press gesture had been detected by libinput. If the click is not performed, the press trigger is
+     * activated.
+     */
+    std::chrono::milliseconds touchpadClickTimeout() const;
+    void setTouchpadClickTimeout(std::chrono::milliseconds value) { m_touchpadClickTimeout = value; }
+
+    /**
      * Whether tapping is mapped to left (1 finger), middle (2) and right (3) buttons.
      */
-    bool lmrTapButtonMap() const;
-    void setLmrTapButtonMap(bool value) { m_lmrTapButtonMap = value; }
+    bool touchpadLmrTapButtonMap() const;
+    void setTouchpadLmrTapButtonMap(bool value) { m_touchpadLmrTapButtonMap = value; }
 
     QString toString() const;
 
@@ -120,12 +152,17 @@ private:
     std::optional<bool> m_multiTouch;
     std::optional<QSizeF> m_size;
 
-    std::optional<bool> m_buttonPad;
     std::optional<uint32_t> m_fingerPressure;
     std::optional<uint32_t> m_thumbPressure;
     std::optional<uint32_t> m_palmPressure;
 
-    std::optional<bool> m_lmrTapButtonMap;
+    std::optional<std::chrono::milliseconds> m_mouseMotionTimeout;
+    std::optional<std::chrono::milliseconds> m_mousePressTimeout;
+    std::optional<bool> m_mouseUnblockButtonsOnTimeout;
+
+    std::optional<bool> m_touchpadButtonPad;
+    std::optional<std::chrono::milliseconds> m_touchpadClickTimeout;
+    std::optional<bool> m_touchpadLmrTapButtonMap;
 };
 
 }

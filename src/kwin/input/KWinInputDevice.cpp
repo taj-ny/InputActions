@@ -30,7 +30,7 @@ KWinInputDevice::KWinInputDevice(KWinInputBackend *backend, KWin::InputDevice *d
     , m_backend(backend)
 {
     if (device->property("lmrTapButtonMap").value<bool>()) {
-        properties().setLmrTapButtonMap(true);
+        properties().setTouchpadLmrTapButtonMap(true);
     }
     if (type == InputDeviceType::Touchscreen) {
         properties().setSize(device->property("size").value<QSizeF>());

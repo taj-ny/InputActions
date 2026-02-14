@@ -18,7 +18,6 @@
 
 #pragma once
 
-#include <chrono>
 #include <libinputactions/handlers/MultiTouchMotionTriggerHandler.h>
 #include <libinputactions/input/devices/InputDeviceState.h>
 
@@ -34,12 +33,6 @@ class TouchpadTriggerHandler : public MultiTouchMotionTriggerHandler
 {
 public:
     TouchpadTriggerHandler(InputDevice *device);
-
-    /**
-     * The time for the user to perform a click once a press gesture had been detected by libinput. If the click is not performed, the press trigger is
-     * activated.
-     */
-    void setClickTimeout(std::chrono::milliseconds value) { m_clickTimeout = value; }
 
 protected:
     /**
@@ -75,8 +68,6 @@ private:
 
     bool m_previousPointerAxisEventBlocked{};
     PointDelta m_pointerAxisDelta;
-
-    std::chrono::milliseconds m_clickTimeout{200L};
 
     TouchPoint m_firstTouchPoint;
 

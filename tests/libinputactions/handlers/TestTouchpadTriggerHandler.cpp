@@ -399,7 +399,7 @@ void TestTouchpadTriggerHandler::tap_fingerCount()
     auto trigger = std::make_unique<Trigger>(TriggerType::Tap);
     trigger->setActivationCondition(std::make_shared<VariableCondition>("fingers", InputActions::Value<qreal>(triggerFingers), ComparisonOperator::EqualTo));
     m_handler->addTrigger(std::move(trigger));
-    m_touchpad->properties().setLmrTapButtonMap(lmrTapButtonMap);
+    m_touchpad->properties().setTouchpadLmrTapButtonMap(lmrTapButtonMap);
 
     addPoints(fingers);
     removePoints();
