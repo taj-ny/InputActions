@@ -42,6 +42,7 @@ const static QString CRASH_PREVENTION_FILE = QStandardPaths::writableLocation(QS
 
 struct Config
 {
+    bool allowExternalVariableAccess = true;
     bool autoReload = true;
     bool libevdevEnabled = true;
     bool sendNotificationOnError = true;
@@ -96,6 +97,7 @@ Config ConfigLoader::createConfig(const QString &raw)
 
     Config config;
     YAML::loadMember(config.autoReload, root["autoreload"]);
+    YAML::loadMember(config.allowExternalVariableAccess, root["external_variable_access"]);
     if (const auto &notificationsNode = root["notifications"]) {
         YAML::loadMember(config.sendNotificationOnError, notificationsNode["config_error"]);
     }
@@ -128,6 +130,7 @@ void ConfigLoader::activateConfig(Config config, bool initialize)
     g_actionExecutor->clearQueue();
     g_actionExecutor->waitForDone();
 
+    g_globalConfig->setAllowExternalVariableAccess(config.allowExternalVariableAccess);
     g_globalConfig->setAutoReload(config.autoReload);
     g_globalConfig->setSendNotificationOnError(config.sendNotificationOnError);
 
