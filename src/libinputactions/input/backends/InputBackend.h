@@ -177,7 +177,7 @@ private:
     std::function<std::unique_ptr<TouchpadTriggerHandler>(InputDevice *device)> m_touchpadTriggerHandlerFactory;
     std::function<std::unique_ptr<TouchscreenTriggerHandler>(InputDevice *device)> m_touchscreenTriggerHandlerFactory;
 
-    std::set<KeyboardKey> m_emergencyCombination = {KEY_BACKSPACE, KEY_SPACE, KEY_ENTER};
+    std::set<KeyboardKey> m_emergencyCombination; // Default value defined in Config
 };
 
 inline std::unique_ptr<InputBackend> g_inputBackend;

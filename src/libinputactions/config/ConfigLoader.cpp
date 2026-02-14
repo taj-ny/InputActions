@@ -54,6 +54,7 @@ struct Config
     std::function<std::unique_ptr<TouchscreenTriggerHandler>(InputDevice *device)> touchscreenTriggerHandlerFactory;
 
     std::vector<InputDeviceRule> deviceRules;
+    std::set<KeyboardKey> emergencyCombination = {KEY_BACKSPACE, KEY_SPACE, KEY_ENTER};
 };
 
 void ConfigLoader::loadEmpty()
@@ -103,6 +104,7 @@ Config ConfigLoader::createConfig(const QString &raw)
     }
     YAML::loadMember(config.libevdevEnabled, root["__libevdev_enabled"]);
     YAML::loadMember(config.deviceRules, root);
+    YAML::loadMember(config.emergencyCombination, root["emergency_combination"]);
 
     YAML::loadMember(config.keyboardTriggerHandler, root["keyboard"]);
     YAML::loadMember(config.mouseTriggerHandler, root["mouse"]);
@@ -144,6 +146,7 @@ void ConfigLoader::activateConfig(Config config, bool initialize)
     g_inputBackend->setTouchpadTriggerHandlerFactory(config.touchpadTriggerHandlerFactory);
     g_inputBackend->setTouchscreenTriggerHandlerFactory(config.touchscreenTriggerHandlerFactory);
     g_inputBackend->setDeviceRules(config.deviceRules);
+    g_inputBackend->setEmergencyCombination(config.emergencyCombination);
 
     if (initialize) {
         g_inputBackend->initialize();
