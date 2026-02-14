@@ -62,7 +62,7 @@ void InputAction::executeImpl(uint32_t executions)
             } else if (!item.mouseMoveRelative.isNull()) {
                 g_inputBackend->virtualMouse()->mouseMotion(item.mouseMoveRelative);
             } else if (item.mouseMoveRelativeByDelta) {
-                g_inputBackend->virtualMouse()->mouseMotion(m_deltaMultiplied);
+                g_inputBackend->virtualMouse()->mouseMotion(m_deltaMultiplied * item.mouseMoveRelativeByDelta);
             }
         });
 
