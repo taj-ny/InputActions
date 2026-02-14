@@ -26,7 +26,7 @@ namespace InputActions
 class QVariantUtils
 {
 public:
-    static QString toString(QVariant variant);
+    static QString toString(const QVariant &variant);
 };
 
 }

@@ -41,21 +41,6 @@ class MouseTriggerHandler : public MotionTriggerHandler
 public:
     MouseTriggerHandler();
 
-    /**
-     * The amount of time in the handler will wait for motion to be performed (wheel is considered motion as well) before attempting to activate press triggers.
-     * For pointer motion there is a small threshold to prevent accidental activations.
-     */
-    void setMotionTimeout(std::chrono::milliseconds value) { m_motionTimeout = std::move(value); }
-    /**
-     * The amount of time the handler will wait for all mouse buttons to be pressed before activating press triggers.
-     */
-    void setPressTimeout(std::chrono::milliseconds value) { m_pressTimeout = std::move(value); }
-
-    /**
-     * Whether blocked mouse buttons should be pressed immediately on timeout. If false, they will be pressed and instantly released on button release.
-     */
-    void setUnblockButtonsOnTimeout(bool value) { m_unblockButtonsOnTimeout = value; }
-
 protected:
     bool keyboardKey(const KeyboardKeyEvent &event) override;
 
@@ -105,10 +90,6 @@ private:
 
     QList<uint32_t> m_blockedMouseButtons;
     std::vector<Qt::MouseButton> m_buttons;
-
-    std::chrono::milliseconds m_motionTimeout{200L};
-    std::chrono::milliseconds m_pressTimeout{50L};
-    bool m_unblockButtonsOnTimeout = true;
 };
 
 }

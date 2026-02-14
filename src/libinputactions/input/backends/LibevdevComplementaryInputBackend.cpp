@@ -100,7 +100,7 @@ void LibevdevComplementaryInputBackend::addDevice(InputDevice *device, std::shar
     auto &properties = device->properties();
     properties.setSize({data->virtualSize.width() / static_cast<qreal>(x->resolution), data->virtualSize.height() / static_cast<qreal>(y->resolution)});
     properties.setMultiTouch(multiTouch);
-    properties.setButtonPad(buttonPad);
+    properties.setTouchpadButtonPad(buttonPad);
 
     if (owner) {
         connect(data->device.get(), &libevdev::Device::eventsAvailable, this, [this, device] {
@@ -161,7 +161,7 @@ void LibevdevComplementaryInputBackend::handleEvdevEvent(InputDevice *sender, co
                 case BTN_LEFT:
                 case BTN_MIDDLE:
                 case BTN_RIGHT:
-                    if (properties.buttonPad()) {
+                    if (properties.touchpadButtonPad()) {
                         handleEvent(TouchpadClickEvent(sender, value));
                     }
                     break;

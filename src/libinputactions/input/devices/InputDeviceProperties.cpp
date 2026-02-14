@@ -37,11 +37,15 @@ void InputDeviceProperties::apply(const InputDeviceProperties &other)
     apply(m_handleLibevdevEvents, other.m_handleLibevdevEvents);
     apply(m_multiTouch, other.m_multiTouch);
     apply(m_size, other.m_size);
-    apply(m_buttonPad, other.m_buttonPad);
     apply(m_fingerPressure, other.m_fingerPressure);
     apply(m_thumbPressure, other.m_thumbPressure);
     apply(m_palmPressure, other.m_palmPressure);
-    apply(m_lmrTapButtonMap, other.m_lmrTapButtonMap);
+    apply(m_mouseMotionTimeout, other.m_mouseMotionTimeout);
+    apply(m_mousePressTimeout, other.m_mousePressTimeout);
+    apply(m_mouseUnblockButtonsOnTimeout, other.m_mouseUnblockButtonsOnTimeout);
+    apply(m_touchpadButtonPad, other.m_touchpadButtonPad);
+    apply(m_touchpadClickTimeout, other.m_touchpadClickTimeout);
+    apply(m_touchpadLmrTapButtonMap, other.m_touchpadLmrTapButtonMap);
 }
 
 QString InputDeviceProperties::toString() const
@@ -81,11 +85,6 @@ QSizeF InputDeviceProperties::size() const
     return m_size.value_or(QSizeF());
 }
 
-bool InputDeviceProperties::buttonPad() const
-{
-    return m_buttonPad.value_or(false);
-}
-
 uint32_t InputDeviceProperties::fingerPressure() const
 {
     return m_fingerPressure.value_or(0);
@@ -101,9 +100,34 @@ uint32_t InputDeviceProperties::palmPressure() const
     return m_palmPressure.value_or(UINT32_MAX);
 }
 
-bool InputDeviceProperties::lmrTapButtonMap() const
+std::chrono::milliseconds InputDeviceProperties::mouseMotionTimeout() const
 {
-    return m_lmrTapButtonMap.value_or(false);
+    return m_mouseMotionTimeout.value_or(std::chrono::milliseconds{200L});
+}
+
+std::chrono::milliseconds InputDeviceProperties::mousePressTimeout() const
+{
+    return m_mousePressTimeout.value_or(std::chrono::milliseconds{50L});
+}
+
+bool InputDeviceProperties::mouseUnblockButtonsOnTimeout() const
+{
+    return m_mouseUnblockButtonsOnTimeout.value_or(true);
+}
+
+bool InputDeviceProperties::touchpadButtonPad() const
+{
+    return m_touchpadButtonPad.value_or(false);
+}
+
+std::chrono::milliseconds InputDeviceProperties::touchpadClickTimeout() const
+{
+    return m_touchpadClickTimeout.value_or(std::chrono::milliseconds{200L});
+}
+
+bool InputDeviceProperties::touchpadLmrTapButtonMap() const
+{
+    return m_touchpadLmrTapButtonMap.value_or(false);
 }
 
 }

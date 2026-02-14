@@ -23,12 +23,20 @@
 namespace InputActions
 {
 
-QString QVariantUtils::toString(QVariant variant)
+QString QVariantUtils::toString(const QVariant &variant)
 {
-    switch (variant.userType()) {
-        case QMetaType::QSizeF:
+    const auto userType = variant.userType();
+    switch (userType) {
+        case QMetaType::QSizeF: {
             const auto value = variant.toSizeF();
             return QString("%1,%2").arg(QString::number(value.width()), QString::number(value.height()));
+        }
+        default:
+            if (userType == qMetaTypeId<std::chrono::milliseconds>()) {
+                const auto value = variant.value<std::chrono::milliseconds>();
+                return QString("%1 ms").arg(QString::number(value.count()));
+            }
+            break;
     }
 
     return variant.toString();

@@ -108,9 +108,9 @@ bool TouchpadTriggerHandler::pointerButton(const PointerButtonEvent &event)
                 if (event.nativeButton() == BTN_LEFT) {
                     fingers = 1;
                 } else if (event.nativeButton() == BTN_RIGHT) {
-                    fingers = event.sender()->properties().lmrTapButtonMap() ? 3 : 2;
+                    fingers = event.sender()->properties().touchpadLmrTapButtonMap() ? 3 : 2;
                 } else if (event.nativeButton() == BTN_MIDDLE) {
-                    fingers = event.sender()->properties().lmrTapButtonMap() ? 2 : 3;
+                    fingers = event.sender()->properties().touchpadLmrTapButtonMap() ? 2 : 3;
                 } else {
                     break;
                 }
@@ -267,7 +267,7 @@ bool TouchpadTriggerHandler::touchpadGestureLifecyclePhase(const TouchpadGesture
                     }
                     activateTriggers(triggers);
                 });
-                m_clickTimeoutTimer.start(std::max(TAP_TIMEOUT.count(), m_clickTimeout.count()));
+                m_clickTimeoutTimer.start(std::max(TAP_TIMEOUT.count(), m_device->properties().touchpadClickTimeout().count()));
                 return m_gestureBeginBlocked;
             }
 

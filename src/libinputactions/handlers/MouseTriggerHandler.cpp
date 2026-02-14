@@ -122,8 +122,11 @@ bool MouseTriggerHandler::pointerButton(const PointerButtonEvent &event)
         m_motionTimeoutTimer.stop();
         disconnect(&m_pressTimeoutTimer, nullptr, nullptr, nullptr);
         disconnect(&m_motionTimeoutTimer, nullptr, nullptr, nullptr);
-        connect(&m_pressTimeoutTimer, &QTimer::timeout, this, [this, sender = event.sender()] {
-            const auto swipeTimeout = [this, sender] {
+
+        const auto motionTimeout = event.sender()->properties().mouseMotionTimeout();
+        const auto unblockButtonsOnTimeout = event.sender()->properties().mouseUnblockButtonsOnTimeout();
+        connect(&m_pressTimeoutTimer, &QTimer::timeout, this, [this, sender = event.sender(), motionTimeout, unblockButtonsOnTimeout] {
+            const auto swipeTimeout = [this, sender, unblockButtonsOnTimeout] {
                 if (m_hadTriggerSincePress) {
                     qCDebug(INPUTACTIONS_HANDLER_MOUSE, "Mouse gesture updated before motion timeout");
                     return;
@@ -132,7 +135,7 @@ bool MouseTriggerHandler::pointerButton(const PointerButtonEvent &event)
                 qCDebug(INPUTACTIONS_HANDLER_MOUSE, "Attempting to activate mouse press gestures");
                 if (!activateTriggers(TriggerType::Press, *m_activationEvent).success) {
                     qCDebug(INPUTACTIONS_HANDLER_MOUSE, "No wheel or press mouse gestures");
-                    if (m_unblockButtonsOnTimeout) {
+                    if (unblockButtonsOnTimeout) {
                         pressBlockedMouseButtons(sender);
                     }
                 }
@@ -147,10 +150,10 @@ bool MouseTriggerHandler::pointerButton(const PointerButtonEvent &event)
                 qCDebug(INPUTACTIONS_HANDLER_MOUSE, "No mouse motion");
                 swipeTimeout();
             });
-            m_motionTimeoutTimer.start(m_motionTimeout);
+            m_motionTimeoutTimer.start(motionTimeout);
             qCDebug(INPUTACTIONS_HANDLER_MOUSE, "Waiting for mouse motion");
         });
-        m_pressTimeoutTimer.start(m_pressTimeout);
+        m_pressTimeoutTimer.start(event.sender()->properties().mousePressTimeout());
         qCDebug(INPUTACTIONS_HANDLER_MOUSE, "Waiting for all mouse buttons");
 
         if (shouldBlockMouseButton(button)) {

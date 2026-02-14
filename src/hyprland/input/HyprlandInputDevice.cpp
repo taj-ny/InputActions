@@ -33,7 +33,7 @@ HyprlandInputDevice::HyprlandInputDevice(SP<IHID> device, InputDeviceType type, 
     , m_backend(backend)
 {
     if (g_pConfigManager->getDeviceString(name, "tap_button_map", "input:touchpad:tap_button_map") == "lmr") {
-        properties().setLmrTapButtonMap(true);
+        properties().setTouchpadLmrTapButtonMap(true);
     }
 }
 
