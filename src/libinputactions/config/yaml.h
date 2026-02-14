@@ -1453,7 +1453,9 @@ struct convert<std::vector<InputDeviceRule>>
         // Legacy
         if (const auto &mouseNode = node["mouse"]) {
             InputDeviceRule rule;
-            rule.setCondition(std::make_shared<VariableCondition>("types", InputActions::Value<InputDeviceTypes>(InputDeviceType::Mouse), ComparisonOperator::Contains));
+            rule.setCondition(std::make_shared<VariableCondition>("types",
+                                                                  InputActions::Value<InputDeviceTypes>(InputDeviceType::Mouse),
+                                                                  ComparisonOperator::Contains));
             loadSetter(rule.properties(), &InputDeviceProperties::setMouseMotionTimeout, mouseNode["motion_timeout"]);
             loadSetter(rule.properties(), &InputDeviceProperties::setMousePressTimeout, mouseNode["press_timeout"]);
             loadSetter(rule.properties(), &InputDeviceProperties::setMouseUnblockButtonsOnTimeout, mouseNode["unblock_buttons_on_timeout"]);
@@ -1463,7 +1465,9 @@ struct convert<std::vector<InputDeviceRule>>
         if (const auto &touchpadNode = node["touchpad"]) {
             if (const auto &clickTimeoutNode = touchpadNode["click_timeout"]) {
                 InputDeviceRule rule;
-                rule.setCondition(std::make_shared<VariableCondition>("types", InputActions::Value<InputDeviceTypes>(InputDeviceType::Touchpad), ComparisonOperator::Contains));
+                rule.setCondition(std::make_shared<VariableCondition>("types",
+                                                                      InputActions::Value<InputDeviceTypes>(InputDeviceType::Touchpad),
+                                                                      ComparisonOperator::Contains));
                 loadSetter(rule.properties(), &InputDeviceProperties::setTouchpadClickTimeout, clickTimeoutNode);
                 value.push_back(std::move(rule));
             }

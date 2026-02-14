@@ -58,7 +58,7 @@ public:
      */
     virtual bool mergeable() const;
 
-    void reset();
+    virtual void reset();
 
     /**
      * Must be satisfied in order for the action to be executed. May be nullptr.

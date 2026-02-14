@@ -38,6 +38,7 @@ public:
 
     bool sendNotificationOnError() const { return m_sendNotificationOnError; }
     void setSendNotificationOnError(bool value) { m_sendNotificationOnError = value; }
+
 private:
     // Default values defined in Config
     bool m_allowExternalVariableAccess{};

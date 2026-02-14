@@ -33,26 +33,24 @@ ActionGroup::ActionGroup(std::vector<std::shared_ptr<Action>> actions, Execution
 
 void ActionGroup::executeImpl(uint32_t executions)
 {
-    // TODO Each action with a condition introduces latency
-    const auto evaluateCondition = [](const auto &action) {
-        auto satisfied = true;
-        if (const auto &condition = action->condition()) {
-            ThreadUtils::runOnThread(
-                ThreadUtils::mainThread(),
-                [&condition, &satisfied]() {
-                    if (!condition->satisfied()) {
-                        satisfied = false;
-                    }
-                },
-                true);
-        }
-        return satisfied;
+    // TODO Each action introduces latency
+    const auto checkCanExecute = [](const auto &action) {
+        auto result = true;
+        ThreadUtils::runOnThread(
+            ThreadUtils::mainThread(),
+            [&action, &result]() {
+                if (!action->canExecute()) {
+                    result = false;
+                }
+            },
+            true);
+        return result;
     };
 
     switch (m_mode) {
         case ExecutionMode::All:
             for (const auto &action : m_actions) {
-                if (!evaluateCondition(action)) {
+                if (!checkCanExecute(action)) {
                     continue;
                 }
                 g_actionExecutor->execute(action,
@@ -63,7 +61,7 @@ void ActionGroup::executeImpl(uint32_t executions)
             break;
         case ExecutionMode::First:
             for (const auto &action : m_actions) {
-                if (evaluateCondition(action)) {
+                if (checkCanExecute(action)) {
                     g_actionExecutor->execute(action,
                                               {
                                                   .thread = ActionThread::Current,
@@ -81,6 +79,14 @@ bool ActionGroup::async() const
     return std::ranges::any_of(m_actions, [](const auto &action) {
         return action->async();
     });
+}
+
+void ActionGroup::reset()
+{
+    Action::reset();
+    for (const auto &action : m_actions) {
+        action->reset();
+    }
 }
 
 }
