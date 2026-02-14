@@ -46,6 +46,8 @@ public:
 
     bool async() const override;
 
+    void reset() override;
+
 protected:
     void executeImpl(uint32_t executions) override;
 
