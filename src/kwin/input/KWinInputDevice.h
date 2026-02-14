@@ -33,7 +33,7 @@ public:
 
     KWin::InputDevice *kwinDevice() const { return m_kwinDevice; }
 
-    void keyboardKey(uint32_t key, bool state) override;
+    void keyboardKey(KeyboardKey key, bool state) override;
     void mouseButton(uint32_t button, bool state) override;
 
 #ifdef KWIN_6_5_OR_GREATER

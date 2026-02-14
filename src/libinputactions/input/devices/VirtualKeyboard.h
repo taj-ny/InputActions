@@ -19,6 +19,7 @@
 #pragma once
 
 #include <QString>
+#include <libinputactions/input/KeyboardKey.h>
 #include <set>
 
 namespace InputActions
@@ -38,7 +39,7 @@ public:
     /**
      * Must be called by the overriding method in order to track pressed keys.
      */
-    virtual void keyboardKey(uint32_t key, bool state);
+    virtual void keyboardKey(KeyboardKey key, bool state);
     virtual void keyboardText(const QString &text) {}
 
 protected:
@@ -48,7 +49,7 @@ protected:
     void reset();
 
 private:
-    std::set<uint32_t> m_pressedKeys;
+    std::set<KeyboardKey> m_pressedKeys;
 };
 
 }

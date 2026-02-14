@@ -37,7 +37,7 @@ protected:
      * @param sender The event will be ignored if nullptr.
      * @returns Whether to block the event.
      */
-    bool keyboardKey(InputDevice *sender, uint32_t key, bool state);
+    bool keyboardKey(InputDevice *sender, KeyboardKey key, bool state);
 
     /**
      * Handles mouse wheel and touchpad scroll.

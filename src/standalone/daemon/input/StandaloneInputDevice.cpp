@@ -174,13 +174,13 @@ void StandaloneInputDevice::mouseButton(uint32_t button, bool state)
     m_outputDevice->writeSynReportEvent();
 }
 
-void StandaloneInputDevice::keyboardKey(uint32_t key, bool state)
+void StandaloneInputDevice::keyboardKey(KeyboardKey key, bool state)
 {
     if (!m_outputDevice) {
         return;
     }
 
-    m_outputDevice->writeEvent(EV_KEY, key, state);
+    m_outputDevice->writeEvent(EV_KEY, key.scanCode(), state);
     m_outputDevice->writeSynReportEvent();
     InputDevice::keyboardKey(key, state);
 }

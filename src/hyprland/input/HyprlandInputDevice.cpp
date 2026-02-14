@@ -105,7 +105,7 @@ std::unique_ptr<HyprlandInputDevice> HyprlandInputDevice::tryCreate(HyprlandInpu
     return {};
 }
 
-void HyprlandInputDevice::keyboardKey(uint32_t key, bool state)
+void HyprlandInputDevice::keyboardKey(KeyboardKey key, bool state)
 {
     auto *keyboard = dynamic_cast<IKeyboard *>(m_device.get());
     if (!keyboard) {
@@ -119,19 +119,19 @@ void HyprlandInputDevice::keyboardKey(uint32_t key, bool state)
 
     g_inputBackend->setIgnoreEvents(true);
     keyboard->aq()->events.key.emit(Aquamarine::IKeyboard::SKeyEvent{
-        .key = key,
+        .key = key.scanCode(),
         .pressed = state,
     });
     InputDevice::keyboardKey(key, state);
 
     uint32_t modifiers{};
     for (const auto key : virtualState().pressedKeys()) {
-        if (const auto modifier = g_pKeybindManager->keycodeToModifier(key + 8)) {
+        if (const auto modifier = g_pKeybindManager->keycodeToModifier(key.scanCode() + 8)) {
             modifiers |= modifier;
         }
     }
 
-    if (const auto modifier = g_pKeybindManager->keycodeToModifier(key + 8)) {
+    if (const auto modifier = g_pKeybindManager->keycodeToModifier(key.scanCode() + 8)) {
         if (state) {
             modifiers |= modifier;
         } else {

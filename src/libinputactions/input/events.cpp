@@ -55,9 +55,9 @@ PointerButtonEvent::PointerButtonEvent(InputDevice *sender, Qt::MouseButton butt
 {
 }
 
-KeyboardKeyEvent::KeyboardKeyEvent(InputDevice *sender, uint32_t nativeKey, bool state)
+KeyboardKeyEvent::KeyboardKeyEvent(InputDevice *sender, KeyboardKey key, bool state)
     : InputEvent(InputEventType::KeyboardKey, sender)
-    , m_nativeKey(nativeKey)
+    , m_key(key)
     , m_state(state)
 {
 }

@@ -22,6 +22,7 @@
 #include <QPointF>
 #include <chrono>
 #include <libinputactions/Value.h>
+#include <libinputactions/input/KeyboardKey.h>
 
 namespace InputActions
 {
@@ -34,8 +35,8 @@ public:
      */
     struct Item
     {
-        uint32_t keyboardPress{};
-        uint32_t keyboardRelease{};
+        KeyboardKey keyboardPress;
+        KeyboardKey keyboardRelease;
         Value<QString> keyboardText;
 
         uint32_t mousePress{};

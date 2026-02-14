@@ -17,11 +17,12 @@
 */
 
 #include "VirtualKeyboard.h"
+#include <libinputactions/input/KeyboardKey.h>
 
 namespace InputActions
 {
 
-void VirtualKeyboard::keyboardKey(uint32_t key, bool state)
+void VirtualKeyboard::keyboardKey(KeyboardKey key, bool state)
 {
     if (state) {
         m_pressedKeys.insert(key);

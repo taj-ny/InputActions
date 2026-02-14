@@ -39,7 +39,7 @@ InputDevice::InputDevice(InputDeviceType type, QString name, QString sysName)
 
 InputDevice::~InputDevice() = default;
 
-void InputDevice::keyboardKey(uint32_t key, bool state)
+void InputDevice::keyboardKey(KeyboardKey key, bool state)
 {
     m_virtualState.setKeyState(key, state);
 }
@@ -62,7 +62,7 @@ void InputDevice::onTouchscreenTapTimerTimeout()
 
 bool InputDevice::keyboardKey(const KeyboardKeyEvent &event)
 {
-    m_physicalState.setKeyState(event.nativeKey(), event.state());
+    m_physicalState.setKeyState(event.key(), event.state());
     return false;
 }
 
@@ -101,7 +101,7 @@ void InputDevice::handleNotBlockedEvent(const InputEvent &event)
     switch (event.type()) {
         case InputEventType::KeyboardKey:
             const auto &keyboardKeyEvent = dynamic_cast<const KeyboardKeyEvent &>(event);
-            m_virtualState.setKeyState(keyboardKeyEvent.nativeKey(), keyboardKeyEvent.state());
+            m_virtualState.setKeyState(keyboardKeyEvent.key(), keyboardKeyEvent.state());
             break;
     }
 }

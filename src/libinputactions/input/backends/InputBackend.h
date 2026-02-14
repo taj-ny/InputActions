@@ -19,6 +19,7 @@
 #pragma once
 
 #include <QTimer>
+#include <libinputactions/input/KeyboardKey.h>
 #include <linux/input-event-codes.h>
 #include <set>
 
@@ -101,8 +102,8 @@ public:
      * @return Nullptr if called before initialization or in a testing environment.
      */
     virtual VirtualKeyboard *virtualKeyboard() { return {}; }
-    void addVirtualKeyboardKey(uint32_t key);
-    const std::set<uint32_t> &virtualKeyboardKeys() const { return m_virtualKeyboardKeys; }
+    void addVirtualKeyboardKey(KeyboardKey key);
+    const std::set<KeyboardKey> &virtualKeyboardKeys() const { return m_virtualKeyboardKeys; }
 
     /**
      * Virtual device for generating anonymous mouse events. If the creation of the device fails, a valid object of which methods can be safely called must be
@@ -147,7 +148,7 @@ public:
     /**
      * A combination of keyboard keys, that when held for a specific amount of time, will cause InputActions to enter a suspended state.
      */
-    void setEmergencyCombination(std::set<uint32_t> value) { m_emergencyCombination = value; }
+    void setEmergencyCombination(std::set<KeyboardKey> value) { m_emergencyCombination = value; }
 
 protected:
     virtual void removeDevice(const InputDevice *device);
@@ -165,7 +166,7 @@ private:
     std::vector<InputDevice *> m_devices;
     InputDevice *m_currentTouchscreen{};
 
-    std::set<uint32_t> m_virtualKeyboardKeys;
+    std::set<KeyboardKey> m_virtualKeyboardKeys;
 
     QTimer m_emergencyCombinationTimer;
 
@@ -176,7 +177,7 @@ private:
     std::function<std::unique_ptr<TouchpadTriggerHandler>(InputDevice *device)> m_touchpadTriggerHandlerFactory;
     std::function<std::unique_ptr<TouchscreenTriggerHandler>(InputDevice *device)> m_touchscreenTriggerHandlerFactory;
 
-    std::set<uint32_t> m_emergencyCombination = {KEY_BACKSPACE, KEY_SPACE, KEY_ENTER};
+    std::set<KeyboardKey> m_emergencyCombination = {KEY_BACKSPACE, KEY_SPACE, KEY_ENTER};
 };
 
 inline std::unique_ptr<InputBackend> g_inputBackend;

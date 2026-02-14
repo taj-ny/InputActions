@@ -25,7 +25,7 @@
 namespace InputActions
 {
 
-bool LibinputInputBackend::keyboardKey(InputDevice *sender, uint32_t key, bool state)
+bool LibinputInputBackend::keyboardKey(InputDevice *sender, KeyboardKey key, bool state)
 {
     if (m_ignoreEvents || !sender) {
         return false;

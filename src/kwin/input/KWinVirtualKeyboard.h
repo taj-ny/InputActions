@@ -32,7 +32,7 @@ public:
 
     KWin::InputDevice *kwinDevice() { return &m_device; }
 
-    void keyboardKey(uint32_t key, bool state) override;
+    void keyboardKey(KeyboardKey key, bool state) override;
     void keyboardText(const QString &text) override;
 
 private:

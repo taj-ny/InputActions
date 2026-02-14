@@ -19,6 +19,7 @@
 #pragma once
 
 #include "InputTriggerHandler.h"
+#include <libinputactions/input/KeyboardKey.h>
 
 namespace InputActions
 {
@@ -38,8 +39,8 @@ protected:
 
 private:
     bool m_block{};
-    std::set<uint32_t> m_keys;
-    uint32_t m_firstKey{};
+    std::set<KeyboardKey> m_keys;
+    KeyboardKey m_firstKey;
 
     friend class TestKeyboardTriggerHandler;
 };

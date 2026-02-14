@@ -41,10 +41,10 @@ KWinVirtualKeyboard::~KWinVirtualKeyboard()
     }
 }
 
-void KWinVirtualKeyboard::keyboardKey(uint32_t key, bool state)
+void KWinVirtualKeyboard::keyboardKey(KeyboardKey key, bool state)
 {
     g_inputBackend->setIgnoreEvents(true);
-    Q_EMIT m_device.keyChanged(key, state ? KWin::KeyboardKeyState::Pressed : KWin::KeyboardKeyState::Released, timestamp(), &m_device);
+    Q_EMIT m_device.keyChanged(key.scanCode(), state ? KWin::KeyboardKeyState::Pressed : KWin::KeyboardKeyState::Released, timestamp(), &m_device);
     VirtualKeyboard::keyboardKey(key, state);
     g_inputBackend->setIgnoreEvents(false);
 }

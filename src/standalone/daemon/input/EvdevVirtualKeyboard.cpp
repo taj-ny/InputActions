@@ -23,12 +23,12 @@
 namespace InputActions
 {
 
-EvdevVirtualKeyboard::EvdevVirtualKeyboard(const std::set<uint32_t> &keys)
+EvdevVirtualKeyboard::EvdevVirtualKeyboard(const std::set<KeyboardKey> &keys)
 {
     libevdev::Device device;
     device.enableEventType(EV_KEY);
     for (const auto key : keys) {
-        device.enableEventCode(EV_KEY, key, nullptr);
+        device.enableEventCode(EV_KEY, key.scanCode(), nullptr);
     }
 
     try {
@@ -47,13 +47,13 @@ QString EvdevVirtualKeyboard::path() const
     return m_device ? m_device->devNode() : QString();
 }
 
-void EvdevVirtualKeyboard::keyboardKey(uint32_t key, bool state)
+void EvdevVirtualKeyboard::keyboardKey(KeyboardKey key, bool state)
 {
     if (!m_device) {
         return;
     }
 
-    m_device->writeEvent(EV_KEY, key, state);
+    m_device->writeEvent(EV_KEY, key.scanCode(), state);
     m_device->writeSynReportEvent();
     VirtualKeyboard::keyboardKey(key, state);
 }

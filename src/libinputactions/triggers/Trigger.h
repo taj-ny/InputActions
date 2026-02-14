@@ -25,6 +25,7 @@
 #include <libinputactions/conditions/Condition.h>
 #include <libinputactions/globals.h>
 #include <libinputactions/input/Delta.h>
+#include <libinputactions/input/KeyboardKey.h>
 #include <set>
 
 Q_DECLARE_LOGGING_CATEGORY(INPUTACTIONS_TRIGGER)
@@ -38,14 +39,14 @@ namespace InputActions
 class TriggerActivationEvent
 {
 public:
-    const std::set<uint32_t> &keyboardKeys() const { return m_keyboardKeys; }
-    void setKeyboardKeys(std::set<uint32_t> value) { m_keyboardKeys = std::move(value); }
+    const std::set<KeyboardKey> &keyboardKeys() const { return m_keyboardKeys; }
+    void setKeyboardKeys(std::set<KeyboardKey> value) { m_keyboardKeys = std::move(value); }
 
     const std::optional<std::vector<Qt::MouseButton>> &mouseButtons() const { return m_mouseButtons; }
     void setMouseButtons(std::optional<std::vector<Qt::MouseButton>> value) { m_mouseButtons = std::move(value); }
 
 private:
-    std::set<uint32_t> m_keyboardKeys;
+    std::set<KeyboardKey> m_keyboardKeys;
     std::optional<std::vector<Qt::MouseButton>> m_mouseButtons;
 };
 
