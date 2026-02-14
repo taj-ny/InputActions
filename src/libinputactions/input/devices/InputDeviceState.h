@@ -20,6 +20,7 @@
 
 #include <QPointF>
 #include <chrono>
+#include <libinputactions/input/KeyboardKey.h>
 #include <set>
 
 namespace InputActions
@@ -74,10 +75,10 @@ public:
      * Derived from pressed keyboard keys.
      */
     Qt::KeyboardModifiers activeKeyboardModifiers() const;
-    const std::set<uint32_t> &pressedKeys() const { return m_keys; }
-    bool isKeyPressed(uint32_t key) const;
+    const std::set<KeyboardKey> &pressedKeys() const { return m_keys; }
+    bool isKeyPressed(KeyboardKey key) const;
 
-    void setKeyState(uint32_t key, bool state);
+    void setKeyState(KeyboardKey key, bool state);
 
     const std::vector<TouchPoint> &touchPoints() const { return m_touchPoints; }
     std::vector<TouchPoint> &touchPoints() { return m_touchPoints; }
@@ -87,7 +88,7 @@ public:
     std::vector<const TouchPoint *> validTouchPoints() const;
 
 private:
-    std::set<uint32_t> m_keys;
+    std::set<KeyboardKey> m_keys;
     std::vector<TouchPoint> m_touchPoints;
 };
 

@@ -33,12 +33,12 @@ Qt::KeyboardModifiers InputDeviceState::activeKeyboardModifiers() const
     return modifiers;
 }
 
-bool InputDeviceState::isKeyPressed(uint32_t key) const
+bool InputDeviceState::isKeyPressed(KeyboardKey key) const
 {
     return m_keys.contains(key);
 }
 
-void InputDeviceState::setKeyState(uint32_t key, bool state)
+void InputDeviceState::setKeyState(KeyboardKey key, bool state)
 {
     if (state) {
         m_keys.insert(key);

@@ -32,11 +32,11 @@ bool KeyboardTriggerHandler::keyboardKey(const KeyboardKeyEvent &event)
 {
     InputTriggerHandler::keyboardKey(event);
 
-    const auto isModifier = KEYBOARD_MODIFIERS.contains(event.nativeKey());
+    const auto isModifier = KEYBOARD_MODIFIERS.contains(event.key());
     if (event.state()) {
-        m_keys.insert(event.nativeKey());
+        m_keys.insert(event.key());
         if (m_keys.size() == 1) {
-            m_firstKey = event.nativeKey();
+            m_firstKey = event.key();
         }
         if (!KEYBOARD_MODIFIERS.contains(m_firstKey)) {
             m_block = false;
@@ -47,7 +47,7 @@ bool KeyboardTriggerHandler::keyboardKey(const KeyboardKeyEvent &event)
         return m_block && !isModifier;
     }
 
-    m_keys.erase(event.nativeKey());
+    m_keys.erase(event.key());
     endTriggers(TriggerType::KeyboardShortcut);
     return m_block && !isModifier;
 }

@@ -16,30 +16,23 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#pragma once
-
-#include "Trigger.h"
+#include "KeyboardKey.h"
 
 namespace InputActions
 {
 
-struct KeyboardShortcut
+KeyboardKey::KeyboardKey(uint32_t scanCode)
+    : m_scanCode(scanCode)
 {
-    /**
-     * Keys that must be pressed, modifier keys are allowed. Only 1 non-modifier key is allowed.
-     */
-    std::set<KeyboardKey> keys;
-};
+}
 
-class KeyboardShortcutTrigger : public Trigger
+std::optional<KeyboardKey> KeyboardKey::fromString(QString s)
 {
-public:
-    KeyboardShortcutTrigger(KeyboardShortcut shortcut);
-
-    bool canActivate(const TriggerActivationEvent &event) const override;
-
-private:
-    KeyboardShortcut m_shortcut;
-};
+    s = s.toUpper();
+    if (!KEYBOARD_KEYS.contains(s)) {
+        return {};
+    }
+    return KEYBOARD_KEYS.at(s);
+}
 
 }

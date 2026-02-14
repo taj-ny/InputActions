@@ -55,10 +55,10 @@ std::unique_ptr<KWinInputDevice> KWinInputDevice::tryCreate(KWinInputBackend *ba
     return std::unique_ptr<KWinInputDevice>(new KWinInputDevice(backend, device, type));
 }
 
-void KWinInputDevice::keyboardKey(uint32_t key, bool state)
+void KWinInputDevice::keyboardKey(KeyboardKey key, bool state)
 {
     g_inputBackend->setIgnoreEvents(true);
-    Q_EMIT m_kwinDevice->keyChanged(key, state ? KWin::KeyboardKeyState::Pressed : KWin::KeyboardKeyState::Released, timestamp(), m_kwinDevice);
+    Q_EMIT m_kwinDevice->keyChanged(key.scanCode(), state ? KWin::KeyboardKeyState::Pressed : KWin::KeyboardKeyState::Released, timestamp(), m_kwinDevice);
     InputDevice::keyboardKey(key, state);
     g_inputBackend->setIgnoreEvents(false);
 }

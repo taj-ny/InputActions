@@ -45,17 +45,17 @@ HyprlandVirtualKeyboard::~HyprlandVirtualKeyboard()
     m_device->events.destroy.emit();
 }
 
-void HyprlandVirtualKeyboard::keyboardKey(uint32_t key, bool state)
+void HyprlandVirtualKeyboard::keyboardKey(KeyboardKey key, bool state)
 {
     g_inputBackend->setIgnoreEvents(true);
 
     m_device->events.key.emit(Aquamarine::IKeyboard::SKeyEvent{
-        .key = key,
+        .key = key.scanCode(),
         .pressed = state,
     });
     VirtualKeyboard::keyboardKey(key, state);
 
-    if (const auto modifier = g_pKeybindManager->keycodeToModifier(key + 8)) {
+    if (const auto modifier = g_pKeybindManager->keycodeToModifier(key.scanCode() + 8)) {
         if (state) {
             m_modifiers |= modifier;
         } else {

@@ -22,6 +22,7 @@
 #include <QKeyCombination>
 #include <QPointF>
 #include <libinputactions/globals.h>
+#include <libinputactions/input/KeyboardKey.h>
 
 namespace InputActions
 {
@@ -120,13 +121,13 @@ private:
 class KeyboardKeyEvent : public InputEvent
 {
 public:
-    KeyboardKeyEvent(InputDevice *sender, uint32_t nativeKey, bool state);
+    KeyboardKeyEvent(InputDevice *sender, KeyboardKey key, bool state);
 
-    uint32_t nativeKey() const { return m_nativeKey; }
+    KeyboardKey key() const { return m_key; }
     bool state() const { return m_state; }
 
 private:
-    uint32_t m_nativeKey;
+    KeyboardKey m_key;
     bool m_state;
 };
 

@@ -34,7 +34,7 @@ public:
 
     Aquamarine::IKeyboard *hyprlandDevice() { return m_device.get(); }
 
-    void keyboardKey(uint32_t key, bool state) override;
+    void keyboardKey(KeyboardKey key, bool state) override;
     void keyboardText(const QString &text) override;
 
 private:

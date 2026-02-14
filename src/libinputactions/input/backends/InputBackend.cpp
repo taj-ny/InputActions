@@ -113,7 +113,7 @@ void InputBackend::clearKeyboardModifiers()
     }
 }
 
-void InputBackend::addVirtualKeyboardKey(uint32_t key)
+void InputBackend::addVirtualKeyboardKey(KeyboardKey key)
 {
     m_virtualKeyboardKeys.insert(key);
 }

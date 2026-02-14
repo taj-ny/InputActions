@@ -26,6 +26,7 @@
 #include <QTimer>
 #include <libinputactions/globals.h>
 #include <libinputactions/input/InputEventHandler.h>
+#include <libinputactions/input/KeyboardKey.h>
 #include <linux/input-event-codes.h>
 
 namespace InputActions
@@ -34,7 +35,7 @@ namespace InputActions
 class TouchpadTriggerHandler;
 class TouchscreenTriggerHandler;
 
-static const std::map<uint32_t, Qt::KeyboardModifier> KEYBOARD_MODIFIERS{
+static const std::map<KeyboardKey, Qt::KeyboardModifier> KEYBOARD_MODIFIERS{
     {KEY_LEFTALT, Qt::KeyboardModifier::AltModifier},
     {KEY_LEFTCTRL, Qt::KeyboardModifier::ControlModifier},
     {KEY_LEFTMETA, Qt::KeyboardModifier::MetaModifier},
@@ -95,7 +96,7 @@ public:
     /**
      * Simulates a keyboard key press event and modifiers the virtual state. Must be called by the overriding method.
      */
-    virtual void keyboardKey(uint32_t key, bool state);
+    virtual void keyboardKey(KeyboardKey key, bool state);
     /**
      * Simulates a mouse button press event.
      */

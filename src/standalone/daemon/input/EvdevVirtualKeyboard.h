@@ -27,12 +27,12 @@ namespace InputActions
 class EvdevVirtualKeyboard : public VirtualKeyboard
 {
 public:
-    EvdevVirtualKeyboard(const std::set<uint32_t> &keys);
+    EvdevVirtualKeyboard(const std::set<KeyboardKey> &keys);
     ~EvdevVirtualKeyboard() override;
 
     QString path() const;
 
-    void keyboardKey(uint32_t key, bool state) override;
+    void keyboardKey(KeyboardKey key, bool state) override;
 
 private:
     std::optional<libevdev::UInputDevice> m_device;
