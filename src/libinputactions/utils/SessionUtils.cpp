@@ -19,10 +19,10 @@
 #include "SessionUtils.h"
 #include <QFile>
 
-namespace InputActions
+namespace InputActions::SessionUtils
 {
 
-QString SessionUtils::currentTty()
+QString currentTty()
 {
     QFile f("/sys/class/tty/tty0/active");
     if (f.open(QIODeviceBase::ReadOnly)) {
