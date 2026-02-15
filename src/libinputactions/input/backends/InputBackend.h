@@ -179,6 +179,10 @@ private:
     VariableManager m_deviceRulesVariableManager;
     VariableWrapper<QString> m_deviceNameVariable;
     VariableWrapper<InputDeviceTypes> m_deviceTypesVariable;
+    VariableWrapper<bool> m_deviceKeyboardVariable;
+    VariableWrapper<bool> m_deviceMouseVariable;
+    VariableWrapper<bool> m_deviceTouchpadVariable;
+    VariableWrapper<bool> m_deviceTouchscreenVariable;
 
     std::unique_ptr<KeyboardTriggerHandler> m_keyboardTriggerHandler;
     std::unique_ptr<MouseTriggerHandler> m_mouseTriggerHandler;
