@@ -85,8 +85,6 @@ std::unique_ptr<VariableOperationsBase> VariableOperationsBase::create(Variable 
         return std::make_unique<VariableOperations<Qt::KeyboardModifiers>>(variable);
     } else if (type == typeid(InputDeviceTypes)) {
         return std::make_unique<VariableOperations<InputDeviceTypes>>(variable);
-    } else if (type == typeid(Qt::MouseButtons)) {
-        return std::make_unique<VariableOperations<Qt::MouseButtons>>(variable);
     } else if (type == typeid(QPointF)) {
         return std::make_unique<VariableOperations<QPointF>>(variable);
     } else if (type == typeid(QString)) {

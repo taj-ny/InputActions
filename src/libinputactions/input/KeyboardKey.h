@@ -544,11 +544,10 @@ public:
 
     static std::optional<KeyboardKey> fromString(QString s);
 
+    bool isValid() const;
     uint32_t scanCode() const { return m_scanCode; }
 
     auto operator<=>(const KeyboardKey &) const = default;
-
-    operator bool() const { return m_scanCode; }
 
 private:
     uint32_t m_scanCode;

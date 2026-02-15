@@ -207,10 +207,7 @@ bool KWinInputBackend::pointerAxis(KWin::PointerAxisEvent *event)
 
 bool KWinInputBackend::pointerButton(KWin::PointerButtonEvent *event)
 {
-    return LibinputInputBackend::pointerButton(findDevice(event->device),
-                                               event->button,
-                                               event->nativeButton,
-                                               event->state == KWin::PointerButtonState::Pressed);
+    return LibinputInputBackend::pointerButton(findDevice(event->device), event->nativeButton, event->state == KWin::PointerButtonState::Pressed);
 }
 
 bool KWinInputBackend::pointerMotion(KWin::PointerMotionEvent *event)

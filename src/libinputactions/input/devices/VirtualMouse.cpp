@@ -21,7 +21,7 @@
 namespace InputActions
 {
 
-void VirtualMouse::mouseButton(uint32_t button, bool state)
+void VirtualMouse::mouseButton(MouseButton button, bool state)
 {
     if (state) {
         m_pressedButtons.insert(button);

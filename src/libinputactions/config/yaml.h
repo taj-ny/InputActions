@@ -37,6 +37,7 @@
 #include <libinputactions/handlers/TouchpadTriggerHandler.h>
 #include <libinputactions/handlers/TouchscreenTriggerHandler.h>
 #include <libinputactions/input/KeyboardKey.h>
+#include <libinputactions/input/MouseButton.h>
 #include <libinputactions/input/devices/InputDeviceRule.h>
 #include <libinputactions/interfaces/CursorShapeProvider.h>
 #include <libinputactions/triggers/HoverTrigger.h>
@@ -47,29 +48,6 @@
 #include <libinputactions/variables/Variable.h>
 #include <libinputactions/variables/VariableManager.h>
 #include <unordered_set>
-
-// https://invent.kde.org/plasma/kwin/-/blob/cc4d99ae/src/mousebuttons.cpp#L14
-static const std::unordered_map<QString, uint32_t> MOUSE = {
-    {"LEFT", BTN_LEFT},
-    {"MIDDLE", BTN_MIDDLE},
-    {"RIGHT", BTN_RIGHT},
-
-    // Those 5 buttons are supposed to be like this (I think)
-    {"BACK", BTN_SIDE},
-    {"FORWARD", BTN_EXTRA},
-    {"TASK", BTN_FORWARD},
-    {"SIDE", BTN_BACK},
-    {"EXTRA", BTN_TASK},
-
-    {"EXTRA6", 0x118},
-    {"EXTRA7", 0x119},
-    {"EXTRA8", 0x11a},
-    {"EXTRA9", 0x11b},
-    {"EXTRA10", 0x11c},
-    {"EXTRA11", 0x11d},
-    {"EXTRA12", 0x11e},
-    {"EXTRA13", 0x11f},
-};
 
 // Most of the code below is garbage
 
@@ -721,27 +699,6 @@ ENUM_DECODER(On, "action event (on)",
                  {"update", On::Update},
              }))
 ENUM_DECODER(CursorShape, "cursor shape", CURSOR_SHAPES)
-ENUM_DECODER(Qt::MouseButton, "mouse button",
-             (std::unordered_map<QString, Qt::MouseButton>{
-                 {"left", Qt::MouseButton::LeftButton},
-                 {"middle", Qt::MouseButton::MiddleButton},
-                 {"right", Qt::MouseButton::RightButton},
-                 {"back", Qt::MouseButton::ExtraButton1},
-                 {"forward", Qt::MouseButton::ExtraButton2},
-                 {"extra1", Qt::MouseButton::ExtraButton1},
-                 {"extra2", Qt::MouseButton::ExtraButton2},
-                 {"extra3", Qt::MouseButton::ExtraButton3},
-                 {"extra4", Qt::MouseButton::ExtraButton4},
-                 {"extra5", Qt::MouseButton::ExtraButton5},
-                 {"extra6", Qt::MouseButton::ExtraButton6},
-                 {"extra7", Qt::MouseButton::ExtraButton7},
-                 {"extra8", Qt::MouseButton::ExtraButton8},
-                 {"extra9", Qt::MouseButton::ExtraButton9},
-                 {"extra10", Qt::MouseButton::ExtraButton10},
-                 {"extra11", Qt::MouseButton::ExtraButton11},
-                 {"extra12", Qt::MouseButton::ExtraButton12},
-                 {"extra13", Qt::MouseButton::ExtraButton13},
-             }))
 ENUM_DECODER(PinchDirection, "pinch direction",
              (std::unordered_map<QString, PinchDirection>{
                  {"in", PinchDirection::In},
@@ -847,18 +804,19 @@ struct convert<std::vector<InputAction::Item>>
                     const auto arguments = split.mid(1);
 
                     if (action.startsWith("+") || action.startsWith("-")) {
-                        const auto button = action.mid(1);
-                        if (!MOUSE.contains(button)) {
-                            throw Exception(node.Mark(), ("Invalid mouse button ('" + button + "')").toStdString());
+                        const auto buttonRaw = action.mid(1);
+                        const auto button = MouseButton::fromString(buttonRaw);
+                        if (!button) {
+                            throw Exception(node.Mark(), ("Invalid mouse button ('" + buttonRaw + "')").toStdString());
                         }
 
                         if (action[0] == '+') {
                             value.push_back({
-                                .mousePress = MOUSE.at(button),
+                                .mousePress = button.value(),
                             });
                         } else {
                             value.push_back({
-                                .mouseRelease = MOUSE.at(button),
+                                .mouseRelease = button.value(),
                             });
                         }
                     } else if (action.startsWith("MOVE_BY_DELTA")) {
@@ -887,12 +845,13 @@ struct convert<std::vector<InputAction::Item>>
                             .mouseAxis = parseMouseInputActionPoint(node, arguments),
                         });
                     } else {
-                        std::vector<uint32_t> buttons;
+                        std::vector<MouseButton> buttons;
                         for (const auto &buttonRaw : action.split("+")) {
-                            if (!MOUSE.contains(buttonRaw)) {
+                            const auto button = MouseButton::fromString(buttonRaw);
+                            if (!button) {
                                 throw Exception(node.Mark(), ("Invalid mouse button ('" + buttonRaw + "')").toStdString());
                             }
-                            buttons.push_back(MOUSE.at(buttonRaw));
+                            buttons.push_back(button.value());
                         }
 
                         for (const auto button : buttons) {
@@ -927,6 +886,21 @@ struct convert<KeyboardKey>
         }
 
         throw Exception(node.Mark(), ("Invalid keyboard key ('" + raw + "')").toStdString());
+    }
+};
+
+template<>
+struct convert<MouseButton>
+{
+    static bool decode(const Node &node, MouseButton &value)
+    {
+        const auto raw = node.as<QString>();
+        if (const auto key = MouseButton::fromString(raw)) {
+            value = key.value();
+            return true;
+        }
+
+        throw Exception(node.Mark(), ("Invalid mouse button ('" + raw + "')").toStdString());
     }
 };
 

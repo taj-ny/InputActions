@@ -50,7 +50,7 @@ bool LibinputInputBackend::pointerAxis(InputDevice *sender, const QPointF &delta
     return handleEvent(MotionEvent(sender, InputEventType::PointerAxis, {delta}, oneAxisPerEvent));
 }
 
-bool LibinputInputBackend::pointerButton(InputDevice *sender, Qt::MouseButton button, uint32_t nativeButton, bool state)
+bool LibinputInputBackend::pointerButton(InputDevice *sender, MouseButton button, bool state)
 {
     if (m_ignoreEvents || !sender) {
         return false;
@@ -59,7 +59,7 @@ bool LibinputInputBackend::pointerButton(InputDevice *sender, Qt::MouseButton bu
     if (sender->type() == InputDeviceType::Touchpad) {
         poll(sender); // Update clicked state
     }
-    return handleEvent(PointerButtonEvent(sender, button, nativeButton, state));
+    return handleEvent(PointerButtonEvent(sender, button, state));
 }
 
 bool LibinputInputBackend::pointerMotion(InputDevice *sender, const PointDelta &delta)
@@ -220,30 +220,6 @@ bool LibinputInputBackend::touchscreenTouchUp(InputDevice *sender, int32_t id)
     }
 
     return handleEvent(TouchUpEvent(sender, id));
-}
-
-Qt::MouseButton LibinputInputBackend::scanCodeToMouseButton(uint32_t scanCode) const
-{
-    static const std::map<uint32_t, Qt::MouseButton> buttons = {
-        {BTN_LEFT, Qt::LeftButton},
-        {BTN_MIDDLE, Qt::MiddleButton},
-        {BTN_RIGHT, Qt::RightButton},
-        // in QtWayland mapped like that
-        {BTN_SIDE, Qt::ExtraButton1},
-        {BTN_EXTRA, Qt::ExtraButton2},
-        {BTN_FORWARD, Qt::ExtraButton3},
-        {BTN_BACK, Qt::ExtraButton4},
-        {BTN_TASK, Qt::ExtraButton5},
-        {0x118, Qt::ExtraButton6},
-        {0x119, Qt::ExtraButton7},
-        {0x11a, Qt::ExtraButton8},
-        {0x11b, Qt::ExtraButton9},
-        {0x11c, Qt::ExtraButton10},
-        {0x11d, Qt::ExtraButton11},
-        {0x11e, Qt::ExtraButton12},
-        {0x11f, Qt::ExtraButton13},
-    };
-    return buttons.at(scanCode);
 }
 
 }

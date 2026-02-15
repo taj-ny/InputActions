@@ -36,11 +36,11 @@ HyprlandVirtualMouse::~HyprlandVirtualMouse()
     g_pInputManager->destroyPointer(m_device);
 }
 
-void HyprlandVirtualMouse::mouseButton(uint32_t button, bool state)
+void HyprlandVirtualMouse::mouseButton(MouseButton button, bool state)
 {
     g_inputBackend->setIgnoreEvents(true);
     m_device->m_pointerEvents.button.emit(IPointer::SButtonEvent{
-        .button = button,
+        .button = button.scanCode(),
         .state = state ? WL_POINTER_BUTTON_STATE_PRESSED : WL_POINTER_BUTTON_STATE_RELEASED,
         .mouse = true,
     });

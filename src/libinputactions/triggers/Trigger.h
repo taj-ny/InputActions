@@ -26,6 +26,7 @@
 #include <libinputactions/globals.h>
 #include <libinputactions/input/Delta.h>
 #include <libinputactions/input/KeyboardKey.h>
+#include <libinputactions/input/MouseButton.h>
 #include <set>
 
 Q_DECLARE_LOGGING_CATEGORY(INPUTACTIONS_TRIGGER)
@@ -42,12 +43,12 @@ public:
     const std::set<KeyboardKey> &keyboardKeys() const { return m_keyboardKeys; }
     void setKeyboardKeys(std::set<KeyboardKey> value) { m_keyboardKeys = std::move(value); }
 
-    const std::optional<std::vector<Qt::MouseButton>> &mouseButtons() const { return m_mouseButtons; }
-    void setMouseButtons(std::optional<std::vector<Qt::MouseButton>> value) { m_mouseButtons = std::move(value); }
+    const std::optional<std::vector<MouseButton>> &mouseButtons() const { return m_mouseButtons; }
+    void setMouseButtons(std::optional<std::vector<MouseButton>> value) { m_mouseButtons = std::move(value); }
 
 private:
     std::set<KeyboardKey> m_keyboardKeys;
-    std::optional<std::vector<Qt::MouseButton>> m_mouseButtons;
+    std::optional<std::vector<MouseButton>> m_mouseButtons;
 };
 
 class TriggerUpdateEvent
@@ -183,8 +184,8 @@ public:
      *
      * Only applies to mouse triggers.
      */
-    const std::vector<Qt::MouseButton> &mouseButtons() const { return m_mouseButtons; }
-    void setMouseButtons(std::vector<Qt::MouseButton> value) { m_mouseButtons = std::move(value); }
+    const std::vector<MouseButton> &mouseButtons() const { return m_mouseButtons; }
+    void setMouseButtons(std::vector<MouseButton> value) { m_mouseButtons = std::move(value); }
 
     /**
      * Whether mouse buttons must be pressed in order as specified.
@@ -241,7 +242,7 @@ private:
     QString m_id;
     bool m_setLastTrigger = true;
     std::optional<Range<qreal>> m_threshold;
-    std::vector<Qt::MouseButton> m_mouseButtons;
+    std::vector<MouseButton> m_mouseButtons;
     bool m_mouseButtonsExactOrder{};
     std::chrono::milliseconds m_resumeTimeout{};
 

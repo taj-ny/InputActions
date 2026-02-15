@@ -105,11 +105,11 @@ bool TouchpadTriggerHandler::pointerButton(const PointerButtonEvent &event)
         case State::TouchIdle:
             if (event.state() && event.sender()->physicalState().validTouchPoints().size() <= 3) {
                 uint8_t fingers;
-                if (event.nativeButton() == BTN_LEFT) {
+                if (event.button().scanCode() == BTN_LEFT) {
                     fingers = 1;
-                } else if (event.nativeButton() == BTN_RIGHT) {
+                } else if (event.button().scanCode() == BTN_RIGHT) {
                     fingers = event.sender()->properties().touchpadLmrTapButtonMap() ? 3 : 2;
-                } else if (event.nativeButton() == BTN_MIDDLE) {
+                } else if (event.button().scanCode() == BTN_MIDDLE) {
                     fingers = event.sender()->properties().touchpadLmrTapButtonMap() ? 2 : 3;
                 } else {
                     break;
@@ -130,10 +130,10 @@ bool TouchpadTriggerHandler::pointerButton(const PointerButtonEvent &event)
     }
 
     if (block && event.state()) {
-        m_blockedButtons.insert(event.nativeButton());
+        m_blockedButtons.insert(event.button());
         return true;
     } else if (!event.state()) {
-        return m_blockedButtons.erase(event.nativeButton()) || block;
+        return m_blockedButtons.erase(event.button()) || block;
     }
     return false;
 }

@@ -145,7 +145,7 @@ void HyprlandInputDevice::keyboardKey(KeyboardKey key, bool state)
     g_inputBackend->setIgnoreEvents(false);
 }
 
-void HyprlandInputDevice::mouseButton(uint32_t button, bool state)
+void HyprlandInputDevice::mouseButton(MouseButton button, bool state)
 {
     auto *pointer = dynamic_cast<IPointer *>(m_device.get());
     if (!pointer) {
@@ -154,7 +154,7 @@ void HyprlandInputDevice::mouseButton(uint32_t button, bool state)
 
     g_inputBackend->setIgnoreEvents(true);
     pointer->m_pointerEvents.button.emit(IPointer::SButtonEvent{
-        .button = button,
+        .button = button.scanCode(),
         .state = state ? WL_POINTER_BUTTON_STATE_PRESSED : WL_POINTER_BUTTON_STATE_RELEASED,
         .mouse = true,
     });

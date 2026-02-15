@@ -267,7 +267,7 @@ bool StandaloneInputBackend::handleEvent(StandaloneInputDevice *sender, const li
                     return pointerAxis(sender, delta);
                 }
                 case LIBINPUT_EVENT_POINTER_BUTTON: {
-                    return pointerButton(sender, scanCodeToMouseButton(pointerEvent->button()), pointerEvent->button(), pointerEvent->state());
+                    return pointerButton(sender, pointerEvent->button(), pointerEvent->state());
                 }
                 case LIBINPUT_EVENT_POINTER_MOTION:
                     return pointerMotion(sender, {pointerEvent->delta(), pointerEvent->deltaUnaccelerated()});

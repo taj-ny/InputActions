@@ -33,7 +33,7 @@ public:
 
     IPointer *hyprlandDevice() { return m_device.get(); }
 
-    void mouseButton(uint32_t button, bool state) override;
+    void mouseButton(MouseButton button, bool state) override;
     void mouseMotion(const QPointF &pos) override;
     void mouseWheel(const QPointF &delta) override;
 

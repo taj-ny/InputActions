@@ -16,38 +16,28 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#pragma once
-
-#include <QPointF>
-#include <libinputactions/input/MouseButton.h>
-#include <set>
+#include "MouseButton.h"
 
 namespace InputActions
 {
 
-/**
- * Virtual device for emitting anonymous mouse events.
- */
-class VirtualMouse
+MouseButton::MouseButton(uint32_t scanCode)
+    : m_scanCode(scanCode)
 {
-public:
-    virtual ~VirtualMouse() = default;
+}
 
-    /**
-     * Must be called by the overriding method in order to track pressed buttons.
-     */
-    virtual void mouseButton(MouseButton button, bool state);
-    virtual void mouseMotion(const QPointF &pos) {}
-    virtual void mouseWheel(const QPointF &delta) {}
+std::optional<MouseButton> MouseButton::fromString(QString s)
+{
+    s = s.toUpper();
+    if (!MOUSE_BUTTONS.contains(s)) {
+        return {};
+    }
+    return MOUSE_BUTTONS.at(s);
+}
 
-protected:
-    /**
-     * Puts the device in a neutral state. Call in the deriving class' destructor.
-     */
-    void reset();
-
-private:
-    std::set<MouseButton> m_pressedButtons;
-};
+bool MouseButton::isValid() const
+{
+    return m_scanCode;
+}
 
 }

@@ -88,7 +88,7 @@ public:
      */
     bool isDeviceOwnedByThisDevice(const QString &path) const;
 
-    void mouseButton(uint32_t button, bool state) override;
+    void mouseButton(MouseButton button, bool state) override;
     void keyboardKey(KeyboardKey key, bool state) override;
 
     void resetVirtualDeviceState() override;

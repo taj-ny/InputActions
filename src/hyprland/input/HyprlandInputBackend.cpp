@@ -320,7 +320,7 @@ void HyprlandInputBackend::onPointerButtonSignal(InputDevice *sender, IPointer *
         return;
     }
 
-    if (!pointerButton(sender, scanCodeToMouseButton(event.button), event.button, event.state == WL_POINTER_BUTTON_STATE_PRESSED)) {
+    if (!pointerButton(sender, event.button, event.state == WL_POINTER_BUTTON_STATE_PRESSED)) {
         m_ignoreEvents = true;
         hyprlandDevice->m_pointerEvents.button.emit(event);
         m_ignoreEvents = false;

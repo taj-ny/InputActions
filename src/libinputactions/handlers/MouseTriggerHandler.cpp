@@ -93,10 +93,9 @@ bool MouseTriggerHandler::pointerAxis(const MotionEvent &event)
 
 bool MouseTriggerHandler::pointerButton(const PointerButtonEvent &event)
 {
-    const auto &button = event.button();
-    const auto &nativeButton = event.nativeButton();
+    const auto button = event.button();
     const auto &state = event.state();
-    qCDebug(INPUTACTIONS_HANDLER_MOUSE).nospace() << "Event (type: PointerMotion, button: " << button << ", state: " << state << ")";
+    qCDebug(INPUTACTIONS_HANDLER_MOUSE).nospace() << "Event (type: PointerMotion, button: " << button.scanCode() << ", state: " << state << ")";
 
     endTriggers(TriggerType::Wheel);
     if (state) {
@@ -157,7 +156,7 @@ bool MouseTriggerHandler::pointerButton(const PointerButtonEvent &event)
         qCDebug(INPUTACTIONS_HANDLER_MOUSE, "Waiting for all mouse buttons");
 
         if (shouldBlockMouseButton(button)) {
-            m_blockedMouseButtons.push_back(nativeButton);
+            m_blockedMouseButtons.push_back(button);
             return true;
         }
     } else {
@@ -176,11 +175,11 @@ bool MouseTriggerHandler::pointerButton(const PointerButtonEvent &event)
             }
         }
 
-        const auto block = m_blockedMouseButtons.contains(nativeButton);
-        if (m_blockedMouseButtons.removeAll(nativeButton) && !m_hadTriggerSincePress) {
-            qCDebug(INPUTACTIONS_HANDLER_MOUSE).nospace() << "Mouse button pressed and released (button: " << nativeButton << ")";
-            event.sender()->mouseButton(nativeButton, true);
-            event.sender()->mouseButton(nativeButton, false);
+        const auto block = m_blockedMouseButtons.contains(button);
+        if (m_blockedMouseButtons.removeAll(button) && !m_hadTriggerSincePress) {
+            qCDebug(INPUTACTIONS_HANDLER_MOUSE).nospace() << "Mouse button pressed and released (button: " << button.scanCode() << ")";
+            event.sender()->mouseButton(button, true);
+            event.sender()->mouseButton(button, false);
         }
         if (m_blockedMouseButtons.empty()) {
             m_hadTriggerSincePress = false;
@@ -246,7 +245,7 @@ std::unique_ptr<TriggerActivationEvent> MouseTriggerHandler::createActivationEve
     return event;
 }
 
-bool MouseTriggerHandler::shouldBlockMouseButton(Qt::MouseButton button)
+bool MouseTriggerHandler::shouldBlockMouseButton(MouseButton button)
 {
     const auto event = createActivationEvent();
     // A partial match is required, not an exact one
@@ -256,7 +255,7 @@ bool MouseTriggerHandler::shouldBlockMouseButton(Qt::MouseButton button)
         if (trigger->blockEvents()
             && ((trigger->mouseButtonsExactOrder() && std::ranges::equal(m_buttons, buttons | std::views::take(m_buttons.size())))
                 || (!trigger->mouseButtonsExactOrder() && std::ranges::contains(buttons, button)))) {
-            qCDebug(INPUTACTIONS_HANDLER_MOUSE).noquote().nospace() << "Mouse button blocked (button: " << button << ", trigger: " << trigger->id() << ")";
+            qCDebug(INPUTACTIONS_HANDLER_MOUSE).noquote().nospace() << "Mouse button blocked (button: " << button.scanCode() << ", trigger: " << trigger->id() << ")";
             return true;
         }
     }
@@ -267,7 +266,7 @@ void MouseTriggerHandler::pressBlockedMouseButtons(InputDevice *target)
 {
     for (const auto &button : m_blockedMouseButtons) {
         target->mouseButton(button, true);
-        qCDebug(INPUTACTIONS_HANDLER_MOUSE).nospace() << "Mouse button unblocked (button: " << button << ")";
+        qCDebug(INPUTACTIONS_HANDLER_MOUSE).nospace() << "Mouse button unblocked (button: " << button.scanCode() << ")";
     }
     m_blockedMouseButtons.clear();
 }

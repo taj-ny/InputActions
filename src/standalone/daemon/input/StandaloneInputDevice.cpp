@@ -164,13 +164,13 @@ bool StandaloneInputDevice::isDeviceOwnedByThisDevice(const QString &path) const
     return (m_libinputEventInjectionDevice && path == m_libinputEventInjectionDevice->devNode()) || (m_outputDevice && path == m_outputDevice->devNode());
 }
 
-void StandaloneInputDevice::mouseButton(uint32_t button, bool state)
+void StandaloneInputDevice::mouseButton(MouseButton button, bool state)
 {
     if (!m_outputDevice) {
         return;
     }
 
-    m_outputDevice->writeEvent(EV_KEY, button, state);
+    m_outputDevice->writeEvent(EV_KEY, button.scanCode(), state);
     m_outputDevice->writeSynReportEvent();
 }
 

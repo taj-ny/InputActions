@@ -53,13 +53,13 @@ QString EvdevVirtualMouse::path() const
     return m_device ? m_device->devNode() : QString();
 }
 
-void EvdevVirtualMouse::mouseButton(uint32_t button, bool state)
+void EvdevVirtualMouse::mouseButton(MouseButton button, bool state)
 {
     if (!m_device) {
         return;
     }
 
-    m_device->writeEvent(EV_KEY, button, state);
+    m_device->writeEvent(EV_KEY, button.scanCode(), state);
     m_device->writeSynReportEvent();
     VirtualMouse::mouseButton(button, state);
 }

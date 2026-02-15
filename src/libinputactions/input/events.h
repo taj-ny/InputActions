@@ -23,6 +23,7 @@
 #include <QPointF>
 #include <libinputactions/globals.h>
 #include <libinputactions/input/KeyboardKey.h>
+#include <libinputactions/input/MouseButton.h>
 
 namespace InputActions
 {
@@ -134,15 +135,13 @@ private:
 class PointerButtonEvent : public InputEvent
 {
 public:
-    PointerButtonEvent(InputDevice *sender, Qt::MouseButton button, uint32_t nativeButton, bool state);
+    PointerButtonEvent(InputDevice *sender, MouseButton button, bool state);
 
-    const Qt::MouseButton &button() const { return m_button; }
-    uint32_t nativeButton() const { return m_nativeButton; }
+    MouseButton button() const { return m_button; }
     bool state() const { return m_state; }
 
 private:
-    Qt::MouseButton m_button;
-    uint32_t m_nativeButton;
+    MouseButton m_button;
     bool m_state;
 };
 

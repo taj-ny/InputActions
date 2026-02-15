@@ -35,4 +35,9 @@ std::optional<KeyboardKey> KeyboardKey::fromString(QString s)
     return KEYBOARD_KEYS.at(s);
 }
 
+bool KeyboardKey::isValid() const
+{
+    return m_scanCode;
+}
+
 }
