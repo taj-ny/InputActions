@@ -78,4 +78,3 @@ void TestPointerTriggerHandler::hover_conditionNoLongerSatisfiedNoMotionEvent_tr
 }
 
 QTEST_MAIN(InputActions::TestPointerTriggerHandler)
-#include "TestPointerTriggerHandler.moc"

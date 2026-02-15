@@ -76,4 +76,3 @@ void TestDirectionalMotionTrigger::canUpdate()
 }
 
 QTEST_MAIN(InputActions::TestDirectionalMotionTrigger)
-#include "TestDirectionalMotionTrigger.moc"

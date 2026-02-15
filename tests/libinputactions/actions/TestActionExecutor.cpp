@@ -72,4 +72,3 @@ bool TestActionExecutor::isMainThread()
 }
 
 QTEST_MAIN(InputActions::TestActionExecutor)
-#include "TestActionExecutor.moc"

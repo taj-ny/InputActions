@@ -36,4 +36,3 @@ void TestActionInterval::matches()
 }
 
 QTEST_MAIN(InputActions::TestActionInterval)
-#include "TestActionInterval.moc"

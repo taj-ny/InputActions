@@ -76,4 +76,3 @@ void TestConditionGroup::evaluate()
 }
 
 QTEST_MAIN(InputActions::TestConditionGroup)
-#include "TestConditionGroup.moc"
