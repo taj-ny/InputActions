@@ -47,6 +47,7 @@ if (INPUTACTIONS_BUILD_HYPRLAND OR INPUTACTIONS_BUILD_KWIN OR INPUTACTIONS_BUILD
         libinputactions/input/Delta.cpp
         libinputactions/input/InputEventHandler.cpp
         libinputactions/input/KeyboardKey.cpp
+        libinputactions/input/MouseButton.cpp
         libinputactions/input/StrokeRecorder.cpp
         libinputactions/input/events.cpp
         libinputactions/interfaces/implementations/DBusNotificationManager.cpp

@@ -36,10 +36,13 @@ KWinVirtualMouse::~KWinVirtualMouse()
     }
 }
 
-void KWinVirtualMouse::mouseButton(uint32_t button, bool state)
+void KWinVirtualMouse::mouseButton(MouseButton button, bool state)
 {
     g_inputBackend->setIgnoreEvents(true);
-    Q_EMIT m_device.pointerButtonChanged(button, state ? KWin::PointerButtonState::Pressed : KWin::PointerButtonState::Released, timestamp(), &m_device);
+    Q_EMIT m_device.pointerButtonChanged(button.scanCode(),
+                                         state ? KWin::PointerButtonState::Pressed : KWin::PointerButtonState::Released,
+                                         timestamp(),
+                                         &m_device);
     Q_EMIT m_device.pointerFrame(&m_device);
     VirtualMouse::mouseButton(button, state);
     g_inputBackend->setIgnoreEvents(false);

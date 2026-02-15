@@ -27,6 +27,7 @@
 #include <libinputactions/globals.h>
 #include <libinputactions/input/InputEventHandler.h>
 #include <libinputactions/input/KeyboardKey.h>
+#include <libinputactions/input/MouseButton.h>
 #include <linux/input-event-codes.h>
 
 namespace InputActions
@@ -100,7 +101,7 @@ public:
     /**
      * Simulates a mouse button press event.
      */
-    virtual void mouseButton(uint32_t button, bool state) {}
+    virtual void mouseButton(MouseButton button, bool state) {}
 
     /**
      * @param points Raw positions.

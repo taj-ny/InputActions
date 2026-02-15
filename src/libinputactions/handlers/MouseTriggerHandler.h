@@ -63,7 +63,7 @@ private:
      * checking activatibility. If a trigger has multiple buttons, all of them will be blocked, even if only one was
      * pressed.
      */
-    bool shouldBlockMouseButton(Qt::MouseButton button);
+    bool shouldBlockMouseButton(MouseButton button);
     /**
      * Presses all currently blocked mouse buttons without releasing them.
      */
@@ -88,8 +88,8 @@ private:
      */
     bool m_hadTriggerSincePress = false;
 
-    QList<uint32_t> m_blockedMouseButtons;
-    std::vector<Qt::MouseButton> m_buttons;
+    QList<MouseButton> m_blockedMouseButtons;
+    std::vector<MouseButton> m_buttons;
 };
 
 }

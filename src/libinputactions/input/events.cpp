@@ -47,10 +47,9 @@ MotionEvent::MotionEvent(InputDevice *sender, InputEventType type, PointDelta de
 {
 }
 
-PointerButtonEvent::PointerButtonEvent(InputDevice *sender, Qt::MouseButton button, uint32_t nativeButton, bool state)
+PointerButtonEvent::PointerButtonEvent(InputDevice *sender, MouseButton button, bool state)
     : InputEvent(InputEventType::PointerButton, sender)
     , m_button(button)
-    , m_nativeButton(nativeButton)
     , m_state(state)
 {
 }

@@ -23,6 +23,7 @@
 #include <chrono>
 #include <libinputactions/Value.h>
 #include <libinputactions/input/KeyboardKey.h>
+#include <libinputactions/input/MouseButton.h>
 
 namespace InputActions
 {
@@ -39,8 +40,8 @@ public:
         KeyboardKey keyboardRelease;
         Value<QString> keyboardText;
 
-        uint32_t mousePress{};
-        uint32_t mouseRelease{};
+        MouseButton mousePress;
+        MouseButton mouseRelease;
 
         QPointF mouseAxis;
         QPointF mouseMoveAbsolute;

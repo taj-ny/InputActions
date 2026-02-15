@@ -63,10 +63,10 @@ void KWinInputDevice::keyboardKey(KeyboardKey key, bool state)
     g_inputBackend->setIgnoreEvents(false);
 }
 
-void KWinInputDevice::mouseButton(uint32_t button, bool state)
+void KWinInputDevice::mouseButton(MouseButton button, bool state)
 {
     g_inputBackend->setIgnoreEvents(true);
-    Q_EMIT m_kwinDevice->pointerButtonChanged(button,
+    Q_EMIT m_kwinDevice->pointerButtonChanged(button.scanCode(),
                                               state ? KWin::PointerButtonState::Pressed : KWin::PointerButtonState::Released,
                                               timestamp(),
                                               m_kwinDevice);

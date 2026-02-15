@@ -19,6 +19,7 @@
 #pragma once
 
 #include <libinputactions/input/Delta.h>
+#include <libinputactions/input/MouseButton.h>
 #include <libinputactions/input/backends/LibevdevComplementaryInputBackend.h>
 
 namespace InputActions
@@ -50,7 +51,7 @@ protected:
      * @param sender The event will be ignored if nullptr.
      * @returns Whether to block the event.
      */
-    bool pointerButton(InputDevice *sender, Qt::MouseButton button, uint32_t nativeButton, bool state);
+    bool pointerButton(InputDevice *sender, MouseButton button, bool state);
     /**
      * @param sender The event will be ignored if nullptr.
      * @returns Whether to block the event.
@@ -117,8 +118,6 @@ protected:
      */
     bool touchscreenTouchMotion(InputDevice *sender, int32_t id, const QPointF &position, const QPointF &rawPosition);
     bool touchscreenTouchUp(InputDevice *sender, int32_t id);
-
-    Qt::MouseButton scanCodeToMouseButton(uint32_t scanCode) const;
 
     /**
      * Called when a touchpad pinch update event was not blocked, but the previous one was.

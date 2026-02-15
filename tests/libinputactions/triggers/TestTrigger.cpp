@@ -12,17 +12,17 @@ void TestTrigger::init()
 
 void TestTrigger::canActivate_mouseButtons_data()
 {
-    QTest::addColumn<std::optional<std::vector<Qt::MouseButton>>>("triggerButtons");
-    QTest::addColumn<std::optional<std::vector<Qt::MouseButton>>>("eventButtons");
+    QTest::addColumn<std::optional<std::vector<MouseButton>>>("triggerButtons");
+    QTest::addColumn<std::optional<std::vector<MouseButton>>>("eventButtons");
     QTest::addColumn<bool>("orderMatters");
     QTest::addColumn<bool>("result");
 
-    const auto unset = std::optional<std::vector<Qt::MouseButton>>();
-    const auto none = std::optional<std::vector<Qt::MouseButton>>(std::vector<Qt::MouseButton>());
-    const auto left = std::optional<std::vector<Qt::MouseButton>>{{Qt::MouseButton::LeftButton}};
-    const auto right = std::optional<std::vector<Qt::MouseButton>>{{Qt::MouseButton::RightButton}};
-    const auto leftRight = std::optional<std::vector<Qt::MouseButton>>{{Qt::MouseButton::LeftButton, Qt::MouseButton::RightButton}};
-    const auto rightLeft = std::optional<std::vector<Qt::MouseButton>>{{Qt::MouseButton::RightButton, Qt::MouseButton::LeftButton}};
+    const auto unset = std::optional<std::vector<MouseButton>>();
+    const auto none = std::optional<std::vector<MouseButton>>(std::vector<MouseButton>());
+    const auto left = std::optional<std::vector<MouseButton>>{{BTN_LEFT}};
+    const auto right = std::optional<std::vector<MouseButton>>{{BTN_RIGHT}};
+    const auto leftRight = std::optional<std::vector<MouseButton>>{{BTN_LEFT, BTN_RIGHT}};
+    const auto rightLeft = std::optional<std::vector<MouseButton>>{{BTN_RIGHT, BTN_LEFT}};
 
     QTest::newRow("1") << left << unset << false << true;
     QTest::newRow("3") << left << left << false << true;
@@ -53,8 +53,8 @@ void TestTrigger::canActivate_mouseButtons_data()
 
 void TestTrigger::canActivate_mouseButtons()
 {
-    QFETCH(std::optional<std::vector<Qt::MouseButton>>, triggerButtons);
-    QFETCH(std::optional<std::vector<Qt::MouseButton>>, eventButtons);
+    QFETCH(std::optional<std::vector<MouseButton>>, triggerButtons);
+    QFETCH(std::optional<std::vector<MouseButton>>, eventButtons);
     QFETCH(bool, orderMatters);
     QFETCH(bool, result);
 

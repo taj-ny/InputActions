@@ -60,7 +60,7 @@ private slots:
 private:
     bool canTap();
 
-    std::set<uint32_t> m_blockedButtons;
+    std::set<MouseButton> m_blockedButtons;
     bool m_gestureBeginBlocked{};
 
     QTimer m_clickTimeoutTimer;
