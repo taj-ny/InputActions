@@ -22,7 +22,6 @@ if (INPUTACTIONS_BUILD_HYPRLAND OR INPUTACTIONS_BUILD_KWIN OR INPUTACTIONS_BUILD
         libinputactions/conditions/Condition.cpp
         libinputactions/conditions/ConditionGroup.cpp
         libinputactions/conditions/CustomCondition.cpp
-        libinputactions/conditions/LazyCondition.cpp
         libinputactions/conditions/VariableCondition.cpp
         libinputactions/dbus/DBusInterfaceBase.cpp
         libinputactions/dbus/IntegratedDBusInterface.cpp

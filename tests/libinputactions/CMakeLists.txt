@@ -23,7 +23,6 @@ libinputactions_add_test(ConditionGroup SOURCES conditions/TestConditionGroup.cp
 libinputactions_add_test(DirectionalMotionTrigger SOURCES triggers/TestDirectionalMotionTrigger.cpp)
 libinputactions_add_test(InputTriggerHandler SOURCES handlers/TestInputTriggerHandler.cpp)
 libinputactions_add_test(KeyboardTriggerHandler SOURCES handlers/TestKeyboardTriggerHandler.cpp)
-libinputactions_add_test(LazyCondition SOURCES conditions/TestLazyCondition.cpp)
 libinputactions_add_test(MotionTrigger SOURCES triggers/TestMotionTrigger.cpp)
 libinputactions_add_test(PointerTriggerHandler SOURCES handlers/TestPointerTriggerHandler.cpp)
 libinputactions_add_test(Range SOURCES TestRange.cpp)
