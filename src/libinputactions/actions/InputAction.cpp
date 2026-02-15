@@ -31,10 +31,10 @@ InputAction::InputAction(std::vector<Item> sequence)
     : m_sequence(std::move(sequence))
 {
     for (const auto &item : m_sequence) {
-        if (item.keyboardPress) {
+        if (item.keyboardPress.isValid()) {
             g_inputBackend->addVirtualKeyboardKey(item.keyboardPress);
         }
-        if (item.keyboardRelease) {
+        if (item.keyboardRelease.isValid()) {
             g_inputBackend->addVirtualKeyboardKey(item.keyboardRelease);
         }
     }
@@ -45,15 +45,15 @@ void InputAction::executeImpl(uint32_t executions)
     for (const auto &item : m_sequence) {
         const auto keyboardText = item.keyboardText.get();
         ThreadUtils::runOnThread(ThreadUtils::mainThread(), [this, executions, item, keyboardText]() {
-            if (item.keyboardPress) {
+            if (item.keyboardPress.isValid()) {
                 g_inputBackend->virtualKeyboard()->keyboardKey(item.keyboardPress, true);
-            } else if (item.keyboardRelease) {
+            } else if (item.keyboardRelease.isValid()) {
                 g_inputBackend->virtualKeyboard()->keyboardKey(item.keyboardRelease, false);
             } else if (keyboardText) {
                 g_inputBackend->virtualKeyboard()->keyboardText(keyboardText.value());
-            } else if (item.mousePress) {
+            } else if (item.mousePress.isValid()) {
                 g_inputBackend->virtualMouse()->mouseButton(item.mousePress, true);
-            } else if (item.mouseRelease) {
+            } else if (item.mouseRelease.isValid()) {
                 g_inputBackend->virtualMouse()->mouseButton(item.mouseRelease, false);
             } else if (!item.mouseAxis.isNull()) {
                 g_inputBackend->virtualMouse()->mouseWheel(item.mouseAxis * executions);

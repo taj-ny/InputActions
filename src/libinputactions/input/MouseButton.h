@@ -63,11 +63,10 @@ public:
 
     static std::optional<MouseButton> fromString(QString s);
 
+    bool isValid() const;
     uint32_t scanCode() const { return m_scanCode; }
 
     auto operator<=>(const MouseButton &) const = default;
-
-    operator bool() const { return m_scanCode; }
 
 private:
     uint32_t m_scanCode;

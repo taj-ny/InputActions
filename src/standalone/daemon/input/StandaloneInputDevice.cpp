@@ -170,7 +170,7 @@ void StandaloneInputDevice::mouseButton(MouseButton button, bool state)
         return;
     }
 
-    m_outputDevice->writeEvent(EV_KEY, button, state);
+    m_outputDevice->writeEvent(EV_KEY, button.scanCode(), state);
     m_outputDevice->writeSynReportEvent();
 }
 

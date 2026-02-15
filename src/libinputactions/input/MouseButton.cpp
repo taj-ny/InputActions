@@ -35,4 +35,9 @@ std::optional<MouseButton> MouseButton::fromString(QString s)
     return MOUSE_BUTTONS.at(s);
 }
 
+bool MouseButton::isValid() const
+{
+    return m_scanCode;
+}
+
 }
