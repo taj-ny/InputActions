@@ -29,7 +29,6 @@
 #include <libinputactions/actions/SleepAction.h>
 #include <libinputactions/actions/TriggerAction.h>
 #include <libinputactions/conditions/ConditionGroup.h>
-#include <libinputactions/conditions/LazyCondition.h>
 #include <libinputactions/conditions/VariableCondition.h>
 #include <libinputactions/handlers/KeyboardTriggerHandler.h>
 #include <libinputactions/handlers/MouseTriggerHandler.h>
@@ -38,6 +37,7 @@
 #include <libinputactions/handlers/TouchscreenTriggerHandler.h>
 #include <libinputactions/input/KeyboardKey.h>
 #include <libinputactions/input/MouseButton.h>
+#include <libinputactions/input/backends/InputBackend.h>
 #include <libinputactions/input/devices/InputDeviceRule.h>
 #include <libinputactions/interfaces/CursorShapeProvider.h>
 #include <libinputactions/triggers/HoverTrigger.h>
@@ -135,7 +135,7 @@ struct convert<Range<T>>
     }
 };
 
-static std::shared_ptr<Condition> asVariableCondition(const Node &node, std::optional<ConditionEvaluationArguments> constructionArguments = {})
+static std::shared_ptr<Condition> asVariableCondition(const Node &node, const VariableManager *variableManager)
 {
     auto raw = node.as<QString>();
     bool negate{};
@@ -149,17 +149,12 @@ static std::shared_ptr<Condition> asVariableCondition(const Node &node, std::opt
     const auto secondSpace = raw.indexOf(' ', firstSpace + 1);
 
     const auto variableName = raw.left(firstSpace);
-    if (!constructionArguments) {
+    const auto *variable = variableManager->getVariable(variableName);
+    if (!variable) {
         // Variable type must be known in order to parse the right side of the condition
-        return std::make_shared<LazyCondition>([variableName, node = node](const ConditionEvaluationArguments &arguments) {
-            if (!arguments.variableManager->getVariable(variableName)) {
-                throw Exception(node.Mark(), std::format("Variable {} does not exist.", variableName.toStdString()));
-            }
-            return asVariableCondition(node, arguments);
-        });
+        throw Exception(node.Mark(), std::format("Variable {} does not exist.", variableName.toStdString()));
     }
 
-    const auto variable = constructionArguments->variableManager->getVariable(variableName);
     ComparisonOperator comparisonOperator;
     std::vector<InputActions::Value<std::any>> right;
     if (firstSpace == -1 && variable->type() == typeid(bool)) { // bool variable condition without operator
@@ -205,89 +200,97 @@ static std::shared_ptr<Condition> asVariableCondition(const Node &node, std::opt
     return condition;
 }
 
+static std::shared_ptr<Condition> asCondition(const Node &node, const VariableManager *variableManager = {})
+{
+    if (!variableManager) {
+        variableManager = g_variableManager.get();
+    }
+
+    static const auto isLegacy = [](const auto &node) {
+        return node.IsMap() && (node["negate"] || node["window_class"] || node["window_state"]);
+    };
+
+    if (node.IsMap()) {
+        std::optional<ConditionGroupMode> groupMode;
+        Node groupChildren;
+        if (node["all"]) {
+            groupMode = ConditionGroupMode::All;
+            groupChildren = Clone(node["all"]);
+        } else if (node["any"]) {
+            groupMode = ConditionGroupMode::Any;
+            groupChildren = Clone(node["any"]);
+        } else if (node["none"]) {
+            groupMode = ConditionGroupMode::None;
+            groupChildren = Clone(node["none"]);
+        }
+        if (groupMode) {
+            auto group = std::make_shared<ConditionGroup>(*groupMode);
+            for (const auto &child : groupChildren) {
+                group->add(asCondition(child, variableManager));
+            }
+            return group;
+        }
+
+        if (isLegacy(node)) {
+            auto group = std::make_shared<ConditionGroup>();
+            const auto negate = node["negate"].as<QStringList>(QStringList());
+            if (const auto &windowClassNode = node["window_class"]) {
+                const auto value = InputActions::Value<QString>(windowClassNode.as<QString>());
+                auto classGroup = std::make_shared<ConditionGroup>(ConditionGroupMode::Any);
+                classGroup->add(std::make_shared<VariableCondition>("window_class", value, ComparisonOperator::Regex));
+                classGroup->add(std::make_shared<VariableCondition>("window_name", value, ComparisonOperator::Regex));
+                classGroup->setNegate(negate.contains("window_class"));
+                group->add(classGroup);
+            }
+            if (const auto &windowStateNode = node["window_state"]) {
+                const auto value = windowStateNode.as<QStringList>(QStringList());
+                const auto trueValue = InputActions::Value<bool>(true);
+                auto classGroup = std::make_shared<ConditionGroup>(ConditionGroupMode::Any);
+                if (value.contains("fullscreen")) {
+                    classGroup->add(std::make_shared<VariableCondition>("window_fullscreen", trueValue, ComparisonOperator::EqualTo));
+                }
+                if (value.contains("maximized")) {
+                    classGroup->add(std::make_shared<VariableCondition>("window_maximized", trueValue, ComparisonOperator::EqualTo));
+                }
+                classGroup->setNegate(negate.contains("window_state"));
+                group->add(classGroup);
+            }
+            return group;
+        }
+    }
+
+    // Not in any group
+    if (node.IsSequence()) {
+        auto group = std::make_shared<ConditionGroup>(isLegacy(node[0]) ? ConditionGroupMode::Any : ConditionGroupMode::All);
+        for (const auto &child : node) {
+            group->add(asCondition(child, variableManager));
+        }
+        return group;
+    }
+
+    if (node.IsScalar()) {
+        // Hack to load negated conditions without forcing users to quote the entire thing
+        auto conditionNode = node;
+        const auto tag = node.Tag();
+        if (tag != "!" && tag.starts_with('!') && !conditionNode.as<QString>().startsWith("!$")) {
+            conditionNode = QString("%1 %2").arg(QString::fromStdString(tag), node.as<QString>()).trimmed().toStdString();
+        }
+
+        const auto raw = conditionNode.as<QString>("");
+        if (raw.startsWith("$") || raw.startsWith("!$")) {
+            return asVariableCondition(conditionNode, variableManager);
+        }
+    }
+    return {};
+}
+
 template<>
 struct convert<std::shared_ptr<Condition>>
 {
-    static bool isLegacy(const Node &node) { return node.IsMap() && (node["negate"] || node["window_class"] || node["window_state"]); }
-
     static bool decode(const Node &node, std::shared_ptr<Condition> &condition)
     {
-        if (node.IsMap()) {
-            std::optional<ConditionGroupMode> groupMode;
-            Node groupChildren;
-            if (node["all"]) {
-                groupMode = ConditionGroupMode::All;
-                groupChildren = Clone(node["all"]);
-            } else if (node["any"]) {
-                groupMode = ConditionGroupMode::Any;
-                groupChildren = Clone(node["any"]);
-            } else if (node["none"]) {
-                groupMode = ConditionGroupMode::None;
-                groupChildren = Clone(node["none"]);
-            }
-            if (groupMode) {
-                auto group = std::make_shared<ConditionGroup>(*groupMode);
-                for (const auto &child : groupChildren) {
-                    group->add(child.as<std::shared_ptr<Condition>>());
-                }
-                condition = group;
-                return true;
-            }
-
-            if (isLegacy(node)) {
-                auto group = std::make_shared<ConditionGroup>();
-                const auto negate = node["negate"].as<QStringList>(QStringList());
-                if (const auto &windowClassNode = node["window_class"]) {
-                    const auto value = InputActions::Value<QString>(windowClassNode.as<QString>());
-                    auto classGroup = std::make_shared<ConditionGroup>(ConditionGroupMode::Any);
-                    classGroup->add(std::make_shared<VariableCondition>("window_class", value, ComparisonOperator::Regex));
-                    classGroup->add(std::make_shared<VariableCondition>("window_name", value, ComparisonOperator::Regex));
-                    classGroup->setNegate(negate.contains("window_class"));
-                    group->add(classGroup);
-                }
-                if (const auto &windowStateNode = node["window_state"]) {
-                    const auto value = windowStateNode.as<QStringList>(QStringList());
-                    const auto trueValue = InputActions::Value<bool>(true);
-                    auto classGroup = std::make_shared<ConditionGroup>(ConditionGroupMode::Any);
-                    if (value.contains("fullscreen")) {
-                        classGroup->add(std::make_shared<VariableCondition>("window_fullscreen", trueValue, ComparisonOperator::EqualTo));
-                    }
-                    if (value.contains("maximized")) {
-                        classGroup->add(std::make_shared<VariableCondition>("window_maximized", trueValue, ComparisonOperator::EqualTo));
-                    }
-                    classGroup->setNegate(negate.contains("window_state"));
-                    group->add(classGroup);
-                }
-                condition = group;
-                return true;
-            }
-        }
-
-        // Not in any group
-        if (node.IsSequence()) {
-            auto group = std::make_shared<ConditionGroup>(isLegacy(node[0]) ? ConditionGroupMode::Any : ConditionGroupMode::All);
-            for (const auto &child : node) {
-                group->add(child.as<std::shared_ptr<Condition>>());
-            }
-            condition = group;
-            return true;
-        }
-
-        if (node.IsScalar()) {
-            // Hack to load negated conditions without forcing users to quote the entire thing
-            auto conditionNode = node;
-            const auto tag = node.Tag();
-            if (tag != "!" && tag.starts_with('!') && !conditionNode.as<QString>().startsWith("!$")) {
-                conditionNode = QString("%1 %2").arg(QString::fromStdString(tag), node.as<QString>()).trimmed().toStdString();
-            }
-
-            const auto raw = conditionNode.as<QString>("");
-            if (raw.startsWith("$") || raw.startsWith("!$")) {
-                condition = asVariableCondition(conditionNode);
-                return true;
-            }
-        }
-        return false;
+        condition = asCondition(node);
+        return condition.get();
     }
 };
 
@@ -921,7 +924,9 @@ struct convert<std::vector<InputDeviceRule>>
     {
         for (const auto &ruleNode : node["device_rules"]) {
             InputDeviceRule rule;
-            loadSetter(rule, &InputDeviceRule::setCondition, ruleNode["conditions"]);
+            if (const auto conditionsNode = ruleNode["conditions"]) {
+                rule.setCondition(asCondition(conditionsNode, &g_inputBackend->deviceRulesVariableManager()));
+            }
             loadSetter(rule, &InputDeviceRule::setProperties, ruleNode);
             value.push_back(std::move(rule));
         }

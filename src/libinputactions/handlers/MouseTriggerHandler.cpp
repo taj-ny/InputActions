@@ -255,7 +255,8 @@ bool MouseTriggerHandler::shouldBlockMouseButton(MouseButton button)
         if (trigger->blockEvents()
             && ((trigger->mouseButtonsExactOrder() && std::ranges::equal(m_buttons, buttons | std::views::take(m_buttons.size())))
                 || (!trigger->mouseButtonsExactOrder() && std::ranges::contains(buttons, button)))) {
-            qCDebug(INPUTACTIONS_HANDLER_MOUSE).noquote().nospace() << "Mouse button blocked (button: " << button.scanCode() << ", trigger: " << trigger->id() << ")";
+            qCDebug(INPUTACTIONS_HANDLER_MOUSE).noquote().nospace()
+                << "Mouse button blocked (button: " << button.scanCode() << ", trigger: " << trigger->id() << ")";
             return true;
         }
     }
