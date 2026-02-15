@@ -39,4 +39,3 @@ void TestRange::contains_qreal()
 }
 
 QTEST_MAIN(InputActions::TestRange)
-#include "TestRange.moc"

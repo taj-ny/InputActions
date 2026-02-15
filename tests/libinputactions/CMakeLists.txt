@@ -1,18 +1,25 @@
 include_directories(.)
 
+add_library(inputactions-test STATIC
+    Test.cpp
+    utils.cpp
+)
+target_link_libraries(inputactions-test PUBLIC
+    libinputactions
+    Qt::Test
+)
+
 macro(libinputactions_add_test TARGET_NAME)
     set(options)
     set(oneValueArgs)
     set(multiValueArgs SOURCES)
     cmake_parse_arguments(TEST "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
-    qt_add_executable(${TARGET_NAME} ${TEST_SOURCES} Test.cpp utils.cpp)
+    qt_add_executable(${TARGET_NAME} ${TEST_SOURCES})
     add_test(NAME "${TARGET_NAME}" COMMAND ${TARGET_NAME})
     target_link_libraries(${TARGET_NAME} PRIVATE
-        libinputactions
+        inputactions-test
         GTest::gmock_main
-        Qt::Core
-        Qt::Test
     )
 endmacro()
 

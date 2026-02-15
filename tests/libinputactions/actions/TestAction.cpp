@@ -33,4 +33,3 @@ void TestAction::canExecute_withLimit()
 }
 
 QTEST_MAIN(InputActions::TestAction)
-#include "TestAction.moc"

@@ -60,4 +60,3 @@ void TestValue::get_nonExistentVariable_returnsNullopt()
 }
 
 QTEST_MAIN(InputActions::TestValue)
-#include "TestValue.moc"

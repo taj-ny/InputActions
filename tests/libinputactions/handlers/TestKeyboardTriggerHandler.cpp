@@ -39,4 +39,3 @@ void TestKeyboardTriggerHandler::handleEvent_keyboardKey()
 }
 
 QTEST_MAIN(InputActions::TestKeyboardTriggerHandler)
-#include "TestKeyboardTriggerHandler.moc"

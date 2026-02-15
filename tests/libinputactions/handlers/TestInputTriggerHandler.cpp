@@ -53,4 +53,3 @@ void TestInputTriggerHandler::keyboardKey__modifierReleased_pressedAfterTriggerA
 }
 
 QTEST_MAIN(InputActions::TestInputTriggerHandler)
-#include "TestInputTriggerHandler.moc"

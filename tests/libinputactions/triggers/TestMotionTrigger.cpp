@@ -38,4 +38,3 @@ void TestMotionTrigger::canUpdate_speed()
 }
 
 QTEST_MAIN(InputActions::TestMotionTrigger)
-#include "TestMotionTrigger.moc"

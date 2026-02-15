@@ -67,4 +67,3 @@ MockTrigger *TestTriggerHandler::makeTrigger(TriggerType type, bool activatable)
 }
 
 QTEST_MAIN(InputActions::TestTriggerHandler)
-#include "TestTriggerHandler.moc"

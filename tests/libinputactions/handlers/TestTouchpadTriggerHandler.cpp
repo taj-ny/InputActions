@@ -532,4 +532,3 @@ void TestTouchpadTriggerHandler::removePoints(int16_t count)
 };
 
 QTEST_MAIN(InputActions::TestTouchpadTriggerHandler)
-#include "TestTouchpadTriggerHandler.moc"

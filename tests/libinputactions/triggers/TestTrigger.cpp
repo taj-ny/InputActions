@@ -104,4 +104,3 @@ void TestTrigger::update_threshold()
 }
 
 QTEST_MAIN(InputActions::TestTrigger)
-#include "TestTrigger.moc"

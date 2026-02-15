@@ -68,4 +68,3 @@ void TestTriggerAction::triggerUpdated_mergeable()
 }
 
 QTEST_MAIN(InputActions::TestTriggerAction)
-#include "TestTriggerAction.moc"
