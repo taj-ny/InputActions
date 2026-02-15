@@ -46,6 +46,10 @@ static const std::chrono::milliseconds EMERGENCY_COMBINATION_HOLD_DURATION{2000L
 InputBackend::InputBackend()
     : m_deviceNameVariable(m_deviceRulesVariableManager.registerLocalVariable<QString>("name"))
     , m_deviceTypesVariable(m_deviceRulesVariableManager.registerLocalVariable<InputDeviceTypes>("types"))
+    , m_deviceKeyboardVariable(m_deviceRulesVariableManager.registerLocalVariable<bool>("keyboard"))
+    , m_deviceMouseVariable(m_deviceRulesVariableManager.registerLocalVariable<bool>("mouse"))
+    , m_deviceTouchpadVariable(m_deviceRulesVariableManager.registerLocalVariable<bool>("touchpad"))
+    , m_deviceTouchscreenVariable(m_deviceRulesVariableManager.registerLocalVariable<bool>("touchscreen"))
 {
     for (const auto &[key, _] : KEYBOARD_MODIFIERS) {
         addVirtualKeyboardKey(key);
@@ -130,6 +134,10 @@ void InputBackend::applyDeviceProperties(const InputDevice *device, InputDeviceP
 
         m_deviceNameVariable.set(device->name());
         m_deviceTypesVariable.set(device->type());
+        m_deviceKeyboardVariable.set(device->type() == InputDeviceType::Keyboard);
+        m_deviceMouseVariable.set(device->type() == InputDeviceType::Mouse);
+        m_deviceTouchpadVariable.set(device->type() == InputDeviceType::Touchpad);
+        m_deviceTouchscreenVariable.set(device->type() == InputDeviceType::Touchscreen);
 
         ConditionEvaluationArguments arguments;
         arguments.variableManager = &m_deviceRulesVariableManager;
