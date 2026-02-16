@@ -18,6 +18,7 @@
 
 #include "DBusInterfaceBase.h"
 #include <QRegularExpression>
+#include <libinputactions/config/ConfigIssueManager.h>
 #include <libinputactions/config/GlobalConfig.h>
 #include <libinputactions/input/backends/InputBackend.h>
 #include <libinputactions/input/devices/InputDevice.h>
@@ -35,6 +36,11 @@ QString DBusInterfaceBase::deviceList()
     }
     result.sort();
     return result.join("\n\n");
+}
+
+QString DBusInterfaceBase::issues()
+{
+    return g_configIssueManager->issuesToString();
 }
 
 QString DBusInterfaceBase::strokeToBase64(const Stroke &stroke)

@@ -19,6 +19,7 @@
 #include "IntegratedDBusInterface.h"
 #include <QRegularExpression>
 #include <libinputactions/InputActionsMain.h>
+#include <libinputactions/config/ConfigIssueManager.h>
 #include <libinputactions/config/ConfigLoader.h>
 #include <libinputactions/input/StrokeRecorder.h>
 #include <libinputactions/interfaces/OnScreenMessageManager.h>
@@ -46,6 +47,11 @@ QString IntegratedDBusInterface::deviceList()
     return DBusInterfaceBase::deviceList();
 }
 
+QString IntegratedDBusInterface::issues()
+{
+    return DBusInterfaceBase::issues();
+}
+
 void IntegratedDBusInterface::recordStroke(const QDBusMessage &message)
 {
     g_onScreenMessageManager->showMessage(PROJECT_NAME " is recording input. Perform a stroke gesture by moving the mouse or any amount of fingers in the one "
@@ -63,13 +69,10 @@ void IntegratedDBusInterface::recordStroke(const QDBusMessage &message)
 
 QString IntegratedDBusInterface::reloadConfig()
 {
-    const auto error = g_configLoader->load({
+    g_configLoader->load({
         .manual = true,
     });
-    if (error) {
-        return error.value();
-    }
-    return "success";
+    return g_configIssueManager->issuesToString();
 }
 
 QString IntegratedDBusInterface::suspend()

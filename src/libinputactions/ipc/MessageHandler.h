@@ -25,6 +25,7 @@ namespace InputActions
 
 class Message;
 class BeginSessionRequestMessage;
+class ConfigIssuesRequestMessage;
 class DeviceListRequestMessage;
 class EnvironmentStateMessage;
 class HandshakeRequestMessage;
@@ -46,6 +47,7 @@ public:
 
 protected:
     virtual void beginSessionRequestMessage(const std::shared_ptr<const BeginSessionRequestMessage> &message) {}
+    virtual void configIssuesRequestMessage(const std::shared_ptr<const ConfigIssuesRequestMessage> &message) {}
     virtual void deviceListRequestMessage(const std::shared_ptr<const DeviceListRequestMessage> &message) {}
     virtual void environmentStateMessage(const std::shared_ptr<const EnvironmentStateMessage> &message) {}
     virtual void handshakeRequestMessage(const std::shared_ptr<const HandshakeRequestMessage> &message) {}

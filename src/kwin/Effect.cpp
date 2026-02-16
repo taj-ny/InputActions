@@ -45,9 +45,7 @@ Effect::Effect()
 
     setMissingImplementations();
     initialize();
-    g_configLoader->load({
-        .preventCrashLoops = true,
-    });
+    g_configLoader->load();
 }
 
 void Effect::reconfigure(ReconfigureFlags flags)

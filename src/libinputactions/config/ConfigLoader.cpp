@@ -17,11 +17,13 @@
 */
 
 #include "ConfigLoader.h"
+#include "ConfigIssueManager.h"
 #include "GlobalConfig.h"
+#include "Node.h"
 #include "interfaces/ConfigProvider.h"
-#include "yaml.h"
-#include <QFile>
-#include <QStandardPaths>
+#include "parsers/containers.h"
+#include "parsers/core.h"
+#include "parsers/utils.h"
 #include <libinputactions/actions/ActionExecutor.h>
 #include <libinputactions/handlers/KeyboardTriggerHandler.h>
 #include <libinputactions/handlers/MouseTriggerHandler.h>
@@ -34,11 +36,6 @@
 
 namespace InputActions
 {
-
-/**
- * Used to detect and prevent infinite compositor crash loops when loading the configuration.
- */
-const static QString CRASH_PREVENTION_FILE = QStandardPaths::writableLocation(QStandardPaths::TempLocation) + "/inputactions_init";
 
 struct Config
 {
@@ -62,67 +59,72 @@ void ConfigLoader::loadEmpty()
     activateConfig({}, false);
 }
 
-std::optional<QString> ConfigLoader::load(const ConfigLoadSettings &settings)
+bool ConfigLoader::load(const ConfigLoadSettings &settings)
 {
-    std::optional<QString> error;
+    try {
+        qCDebug(INPUTACTIONS, "Reloading config");
+        const auto rawConfig = settings.config.value_or(g_configProvider->currentConfig());
 
-    if (!QFile::exists(CRASH_PREVENTION_FILE) || !settings.preventCrashLoops) {
-        std::ignore = QFile(CRASH_PREVENTION_FILE).open(QIODevice::WriteOnly);
-
-        try {
-            qCDebug(INPUTACTIONS, "Reloading config");
-            const auto rawConfig = settings.config.value_or(g_configProvider->currentConfig());
-
-            auto config = createConfig(rawConfig);
-            activateConfig(std::move(config), true);
-        } catch (const std::exception &e) {
-            error = QString("Failed to load configuration: %1").arg(QString::fromStdString(e.what()));
-        }
-    } else {
-        error = "Configuration was not loaded automatically due to a crash.";
+        g_configIssueManager = std::make_shared<ConfigIssueManager>(rawConfig);
+        auto config = createConfig(rawConfig);
+        activateConfig(std::move(config), true);
+    } catch (const ConfigException &e) {
+        g_configIssueManager->addIssue(e);
     }
 
-    if (error) {
-        qCCritical(INPUTACTIONS).noquote() << error.value();
+    const auto issues = g_configIssueManager->issues();
+    const auto error = std::ranges::find_if(issues, [](const auto *issue) {
+        return issue->severity() == ConfigIssueSeverity::Error;
+    });
+
+    if (error != issues.end()) {
         if (g_globalConfig->sendNotificationOnError() && !settings.manual) {
-            g_notificationManager->sendNotification("Failed to load configuration", error.value());
+            g_notificationManager->sendNotification("Failed to load configuration",
+                                                    (*error)->toString(false) + " Run 'inputactions config issues' for more information.");
         }
+
+        return false;
     }
-    QFile::remove(CRASH_PREVENTION_FILE);
-    return error;
+
+    return true;
 }
 
 Config ConfigLoader::createConfig(const QString &raw)
 {
-    const auto root = YAML::Load(raw.toStdString());
+    const auto root = Node::create(raw);
+    if (!root->isMap()) {
+        throw InvalidNodeTypeConfigException(root.get(), NodeType::Map);
+    }
 
     Config config;
-    YAML::loadMember(config.autoReload, root["autoreload"]);
-    YAML::loadMember(config.allowExternalVariableAccess, root["external_variable_access"]);
-    if (const auto &notificationsNode = root["notifications"]) {
-        YAML::loadMember(config.sendNotificationOnError, notificationsNode["config_error"]);
+    loadMember(config.autoReload, root->at("autoreload"));
+    loadMember(config.allowExternalVariableAccess, root->at("external_variable_access"));
+    if (const auto *notificationsNode = root->mapAt("notifications")) {
+        loadMember(config.sendNotificationOnError, notificationsNode->at("config_error"));
     }
-    YAML::loadMember(config.libevdevEnabled, root["__libevdev_enabled"]);
-    YAML::loadMember(config.deviceRules, root);
-    YAML::loadMember(config.emergencyCombination, root["emergency_combination"]);
+    loadMember(config.libevdevEnabled, root->at("__libevdev_enabled"));
+    loadMember(config.deviceRules, root.get());
+    loadMember(config.emergencyCombination, root->at("emergency_combination"));
 
-    YAML::loadMember(config.keyboardTriggerHandler, root["keyboard"]);
-    YAML::loadMember(config.mouseTriggerHandler, root["mouse"]);
-    YAML::loadMember(config.pointerTriggerHandler, root["pointer"]);
+    loadMember(config.keyboardTriggerHandler, root->mapAt("keyboard"));
+    loadMember(config.mouseTriggerHandler, root->mapAt("mouse"));
+    loadMember(config.pointerTriggerHandler, root->mapAt("pointer"));
 
-    if (const auto &touchpadNode = root["touchpad"]) {
-        config.touchpadTriggerHandlerFactory = [touchpadNode](auto *device) {
-            return YAML::asTouchpadTriggerHandler(touchpadNode, device);
+    if (const auto *touchpadNode = root->mapAt("touchpad")) {
+        config.touchpadTriggerHandlerFactory = [touchpadNode = touchpadNode->shared_from_this()](auto *device) {
+            return parseTouchpadTriggerHandler(touchpadNode.get(), device);
         };
         config.touchpadTriggerHandlerFactory(nullptr); // Make sure it doesn't throw
     }
-    if (const auto &touchscreenNode = root["touchscreen"]) {
-        config.touchscreenTriggerHandlerFactory = [touchscreenNode](auto *device) {
-            return YAML::asTouchscreenTriggerHandler(touchscreenNode, device);
+    if (const auto *touchscreenNode = root->mapAt("touchscreen")) {
+        config.touchscreenTriggerHandlerFactory = [touchscreenNode = touchscreenNode->shared_from_this()](auto *device) {
+            return parseTouchscreenTriggerHandler(touchscreenNode.get(), device);
         };
         config.touchscreenTriggerHandlerFactory(nullptr);
     }
 
+    root->at("anchors"); // Allow users to define anchors somewhere without unused property issues
+    root->addUnusedMapPropertyIssues();
     return config;
 }
 

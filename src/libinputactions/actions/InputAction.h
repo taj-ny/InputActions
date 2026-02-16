@@ -28,33 +28,33 @@
 namespace InputActions
 {
 
+/**
+ * Only one member may be set.
+ */
+struct InputActionItem
+{
+    KeyboardKey keyboardPress;
+    KeyboardKey keyboardRelease;
+    Value<QString> keyboardText;
+
+    MouseButton mousePress;
+    MouseButton mouseRelease;
+
+    QPointF mouseAxis;
+    QPointF mouseMoveAbsolute;
+    QPointF mouseMoveRelative;
+
+    /**
+     * 0 - unset
+     * Any other value - delta multiplier
+     */
+    qreal mouseMoveRelativeByDelta{};
+};
+
 class InputAction : public Action
 {
 public:
-    /**
-     * Only one member may be set.
-     */
-    struct Item
-    {
-        KeyboardKey keyboardPress;
-        KeyboardKey keyboardRelease;
-        Value<QString> keyboardText;
-
-        MouseButton mousePress;
-        MouseButton mouseRelease;
-
-        QPointF mouseAxis;
-        QPointF mouseMoveAbsolute;
-        QPointF mouseMoveRelative;
-
-        /**
-         * 0 - unset
-         * Any other value - delta multiplier
-         */
-        qreal mouseMoveRelativeByDelta{};
-    };
-
-    InputAction(std::vector<Item> sequence);
+    InputAction(std::vector<InputActionItem> sequence);
 
     bool async() const override;
     bool mergeable() const override;
@@ -74,7 +74,7 @@ protected:
     void executeImpl(uint32_t executions) override;
 
 private:
-    std::vector<Item> m_sequence;
+    std::vector<InputActionItem> m_sequence;
     std::chrono::milliseconds m_delay{};
 };
 

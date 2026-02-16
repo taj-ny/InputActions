@@ -26,4 +26,6 @@ namespace InputActions::StringUtils
 void indent(QString &s, int32_t spaces);
 QString indented(const QString &s, int32_t spaces);
 
+QString quoted(const QString &s);
+
 }

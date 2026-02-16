@@ -58,9 +58,7 @@ Plugin::Plugin(void *handle)
 
     setMissingImplementations();
     initialize();
-    g_configLoader->load({
-        .preventCrashLoops = true,
-    });
+    g_configLoader->load();
 }
 
 void Plugin::registerGlobalVariables(VariableManager *variableManager, std::shared_ptr<PointerPositionGetter> pointerPositionGetter,

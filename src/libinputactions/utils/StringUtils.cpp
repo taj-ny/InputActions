@@ -36,4 +36,9 @@ QString indented(const QString &s, int32_t spaces)
     return lines.join('\n');
 }
 
+QString quoted(const QString &s)
+{
+    return QString("\"%1\"").arg(s);
+}
+
 }

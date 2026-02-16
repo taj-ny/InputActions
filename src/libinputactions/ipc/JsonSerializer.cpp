@@ -64,6 +64,9 @@ std::shared_ptr<Message> JsonSerializer::deserializeMessage(const QString &json)
         case MessageType::BeginSessionRequest:
             message = std::make_shared<BeginSessionRequestMessage>();
             break;
+        case MessageType::ConfigIssuesRequest:
+            message = std::make_shared<ConfigIssuesRequestMessage>();
+            break;
         case MessageType::DeviceListRequest:
             message = std::make_shared<DeviceListRequestMessage>();
             break;

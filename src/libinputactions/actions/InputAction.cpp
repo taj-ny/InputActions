@@ -27,7 +27,7 @@
 namespace InputActions
 {
 
-InputAction::InputAction(std::vector<Item> sequence)
+InputAction::InputAction(std::vector<InputActionItem> sequence)
     : m_sequence(std::move(sequence))
 {
     for (const auto &item : m_sequence) {

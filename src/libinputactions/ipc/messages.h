@@ -25,7 +25,7 @@
 namespace InputActions
 {
 
-static const int INPUTACTIONS_IPC_PROTOCOL_VERSION = 4;
+static const int INPUTACTIONS_IPC_PROTOCOL_VERSION = 5;
 
 class MessageSocketConnection;
 
@@ -37,6 +37,7 @@ enum class MessageType : int
     SimpleStringResponse,
 
     BeginSessionRequest,
+    ConfigIssuesRequest,
     DeviceListRequest,
     EnvironmentState,
     InvokePlasmaGlobalShortcutRequest,
@@ -212,6 +213,20 @@ private:
     QString m_tty;
 };
 
+/**
+ * Response result string are the issues.
+ */
+class ConfigIssuesRequestMessage : public RequestMessage<SimpleStringResponseMessage>
+{
+    Q_OBJECT
+
+public:
+    ConfigIssuesRequestMessage()
+        : RequestMessage(MessageType::ConfigIssuesRequest)
+    {
+    }
+};
+
 class HandshakeRequestMessage : public RequestMessage<ResponseMessage>
 {
     Q_OBJECT
@@ -270,7 +285,10 @@ private:
     QString m_shortcut;
 };
 
-class LoadConfigRequestMessage : public RequestMessage<ResponseMessage>
+/**
+ * Response result string are the issues.
+ */
+class LoadConfigRequestMessage : public RequestMessage<SimpleStringResponseMessage>
 {
     Q_OBJECT
     Q_PROPERTY(QString config MEMBER m_config)
