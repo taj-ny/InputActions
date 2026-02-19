@@ -16,9 +16,22 @@ if (INPUTACTIONS_BUILD_HYPRLAND OR INPUTACTIONS_BUILD_KWIN OR INPUTACTIONS_BUILD
         libinputactions/actions/PlasmaGlobalShortcutAction.cpp
         libinputactions/actions/SleepAction.cpp
         libinputactions/actions/TriggerAction.cpp
+        libinputactions/config/parsers/base.cpp
+        libinputactions/config/parsers/containers.h
+        libinputactions/config/parsers/core.cpp
+        libinputactions/config/parsers/enums.cpp
+        libinputactions/config/parsers/flags.cpp
+        libinputactions/config/parsers/NodeParser.h
+        libinputactions/config/parsers/qt.cpp
+        libinputactions/config/parsers/separated-string.h
+        libinputactions/config/parsers/std.cpp
+        libinputactions/config/parsers/utils.h
+        libinputactions/config/ConfigIssue.cpp
+        libinputactions/config/ConfigIssueManager.cpp
         libinputactions/config/ConfigLoader.cpp
         libinputactions/config/GlobalConfig.cpp
-        libinputactions/config/yaml.h
+        libinputactions/config/Node.cpp
+        libinputactions/config/TextPosition.cpp
         libinputactions/conditions/Condition.cpp
         libinputactions/conditions/ConditionGroup.cpp
         libinputactions/conditions/CustomCondition.cpp

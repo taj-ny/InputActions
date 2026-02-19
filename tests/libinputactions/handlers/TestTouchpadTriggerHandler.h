@@ -1,7 +1,7 @@
 #include "Test.h"
 #include "mocks/MockTouchpadTriggerHandler.h"
-#include <libinputactions/input/devices/InputDevice.h>
 #include <QSignalSpy>
+#include <libinputactions/input/devices/InputDevice.h>
 
 namespace InputActions
 {

@@ -37,16 +37,15 @@ struct ConfigLoadSettings
      * Whether the reload was manually initiated using the control tool.
      */
     bool manual{};
-    bool preventCrashLoops{};
 };
 
 class ConfigLoader
 {
 public:
     /**
-     * @return Error message or std::nullopt on success.
+     * @return Whether the operation was successful. Errors may be obtained from ConfigIssueManager.
      */
-    std::optional<QString> load(const ConfigLoadSettings &settings = {});
+    bool load(const ConfigLoadSettings &settings = {});
 
     /**
      * Loads an empty config with default values without initializing any components.

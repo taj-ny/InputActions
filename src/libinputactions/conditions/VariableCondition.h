@@ -34,6 +34,10 @@ public:
     VariableCondition(const QString &variableName, const std::vector<Value<std::any>> &values, ComparisonOperator comparisonOperator);
     VariableCondition(const QString &variableName, const Value<std::any> &value, ComparisonOperator comparisonOperator);
 
+    const QString &variableName() const { return m_variableName; }
+    const std::vector<Value<std::any>> &values() const { return m_values; }
+    ComparisonOperator comparisonOperator() const { return m_comparisonOperator; }
+
 protected:
     bool evaluateImpl(const ConditionEvaluationArguments &arguments) override;
 

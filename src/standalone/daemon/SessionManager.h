@@ -67,6 +67,7 @@ public:
 
 protected:
     void beginSessionRequestMessage(const std::shared_ptr<const BeginSessionRequestMessage> &message) override;
+    void configIssuesRequestMessage(const std::shared_ptr<const ConfigIssuesRequestMessage> &message) override;
     void deviceListRequestMessage(const std::shared_ptr<const DeviceListRequestMessage> &message) override;
     void environmentStateMessage(const std::shared_ptr<const EnvironmentStateMessage> &message) override;
     void handshakeRequestMessage(const std::shared_ptr<const HandshakeRequestMessage> &message) override;

@@ -41,7 +41,11 @@ class ConditionGroup : public Condition
 public:
     ConditionGroup(ConditionGroupMode mode = ConditionGroupMode::All);
 
-    void add(const std::shared_ptr<Condition> &condition);
+    ConditionGroupMode mode() const { return m_mode; }
+    const std::vector<std::shared_ptr<Condition>> &conditions() const { return m_conditions; }
+
+    void append(const std::shared_ptr<Condition> &condition);
+    void prepend(const std::shared_ptr<Condition> &condition);
 
 protected:
     bool evaluateImpl(const ConditionEvaluationArguments &arguments) override;

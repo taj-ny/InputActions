@@ -54,7 +54,7 @@ public:
     void setSpeedThreshold(TriggerType type, qreal threshold, TriggerDirection directions = UINT32_MAX);
 
     /**
-     * Global move_by_delta delta multiplier. Deprecated, use InputAction::Item::mouseMoveRelativeByDelta instead.
+     * Global move_by_delta delta multiplier. Deprecated, use InputActionItem::mouseMoveRelativeByDelta instead.
      */
     void setSwipeDeltaMultiplier(qreal value) { m_swipeDeltaMultiplier = value; }
 

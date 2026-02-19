@@ -1,5 +1,6 @@
 #include "InputActionsMain.h"
 #include "actions/ActionExecutor.h"
+#include "config/ConfigIssueManager.h"
 #include "config/ConfigLoader.h"
 #include "config/GlobalConfig.h"
 #include "input/StrokeRecorder.h"
@@ -43,6 +44,7 @@ InputActionsMain::~InputActionsMain()
     g_windowProvider.reset();
 
     g_actionExecutor.reset();
+    g_configIssueManager.reset();
     g_configLoader.reset();
     g_globalConfig.reset();
     g_configProvider.reset();
@@ -87,6 +89,7 @@ void InputActionsMain::setMissingImplementations()
     setMissingImplementation(g_windowProvider);
 
     setMissingImplementation(g_actionExecutor);
+    setMissingImplementation(g_configIssueManager);
     setMissingImplementation(g_configLoader);
     setMissingImplementation(g_globalConfig);
     setMissingImplementation(g_inputBackend);

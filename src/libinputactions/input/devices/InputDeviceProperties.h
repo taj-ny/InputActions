@@ -163,6 +163,8 @@ private:
     std::optional<bool> m_touchpadButtonPad;
     std::optional<std::chrono::milliseconds> m_touchpadClickTimeout;
     std::optional<bool> m_touchpadLmrTapButtonMap;
+
+    friend class TestDeviceRuleNodeParser;
 };
 
 }

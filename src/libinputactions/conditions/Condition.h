@@ -48,6 +48,7 @@ public:
      */
     bool evaluate(const ConditionEvaluationArguments &arguments = {});
 
+    bool negate() const { return m_negate; }
     void setNegate(bool value) { m_negate = value; }
 
 protected:

@@ -58,6 +58,15 @@ QString ClientDBusInterface::deviceList()
     return ERROR_NO_REPLY;
 }
 
+QString ClientDBusInterface::issues()
+{
+    ConfigIssuesRequestMessage request;
+    if (const auto response = m_client->socketConnection()->sendMessageAndWaitForResponse(request)) {
+        return response->success() ? response->result() : response->error();
+    }
+    return ERROR_NO_REPLY;
+}
+
 QString ClientDBusInterface::recordStroke()
 {
     RecordStrokeRequestMessage request;
@@ -73,7 +82,7 @@ QString ClientDBusInterface::reloadConfig()
     request.setConfig(m_client->configProvider.currentConfig());
     request.setManual(true);
     if (const auto response = m_client->socketConnection()->sendMessageAndWaitForResponse(request)) {
-        return response->success() ? "success" : response->error();
+        return response->success() ? response->result() : response->error();
     }
     return ERROR_NO_REPLY;
 }

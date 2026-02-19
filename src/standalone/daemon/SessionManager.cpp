@@ -22,6 +22,7 @@
 #include <QDBusArgument>
 #include <libinputactions/InputActionsMain.h>
 #include <libinputactions/actions/ActionExecutor.h>
+#include <libinputactions/config/ConfigIssueManager.h>
 #include <libinputactions/config/ConfigLoader.h>
 #include <libinputactions/globals.h>
 #include <libinputactions/input/StrokeRecorder.h>
@@ -191,6 +192,19 @@ void SessionManager::beginSessionRequestMessage(const std::shared_ptr<const Begi
     });
 }
 
+void SessionManager::configIssuesRequestMessage(const std::shared_ptr<const ConfigIssuesRequestMessage> &message)
+{
+    if (auto *session = sessionForClient(message->sender())) {
+        auto response = message->makeResponse();
+        if (&currentSession() == session) {
+            response.setResult(g_configIssueManager->issuesToString());
+        } else {
+            response.setError("Session must be active in order to check issues.");
+        }
+        message->reply(response);
+    }
+}
+
 void SessionManager::deviceListRequestMessage(const std::shared_ptr<const DeviceListRequestMessage> &message)
 {
     if (const auto *session = sessionForClient(message->sender())) {
@@ -235,12 +249,13 @@ void SessionManager::loadConfigRequestMessage(const std::shared_ptr<const LoadCo
 
         session->m_config = config;
         if (&currentSession() == session) {
-            if (const auto error = g_configLoader->load({
+            if (!g_configLoader->load({
                     .config = config,
                     .manual = message->manual(),
                 })) {
-                response.setError(error.value());
+                response.setError(g_configIssueManager->issuesToString());
             }
+            response.setResult(g_configIssueManager->issuesToString());
         }
     }
 

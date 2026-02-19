@@ -63,7 +63,7 @@ void TestConditionGroup::evaluate()
 
     ConditionGroup conditionGroup(mode);
     for (const auto &condition : conditions) {
-        conditionGroup.add(condition);
+        conditionGroup.append(condition);
     }
 
     if (result == ConditionEvaluationResult::Error) {
