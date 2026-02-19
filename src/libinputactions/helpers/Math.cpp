@@ -31,6 +31,15 @@ qreal atan2deg(const QPointF &point)
     return radToDeg(atan2(point));
 }
 
+qreal atan2deg360(const QPointF &point)
+{
+    const auto angle = atan2deg(point);
+    if (angle < 0) {
+        return angle + 360;
+    }
+    return angle;
+}
+
 qreal radToDeg(qreal rad)
 {
     return 180.0 / M_PI * rad;
