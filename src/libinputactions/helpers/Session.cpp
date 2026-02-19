@@ -16,13 +16,19 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#pragma once
+#include "Session.h"
+#include <QFile>
 
-#include <QVariant>
-
-namespace InputActions::QVariantUtils
+namespace InputActions::SessionHelpers
 {
 
-QString toString(const QVariant &variant);
+QString currentTty()
+{
+    QFile f("/sys/class/tty/tty0/active");
+    if (f.open(QIODeviceBase::ReadOnly)) {
+        return QString::fromUtf8(f.readAll()).trimmed();
+    }
+    return "unknown";
+}
 
 }

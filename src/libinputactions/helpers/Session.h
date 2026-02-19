@@ -16,29 +16,13 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include "StringUtils.h"
-#include <QStringList>
+#pragma once
 
-namespace InputActions::StringUtils
+#include <QString>
+
+namespace InputActions::SessionHelpers
 {
 
-void indent(QString &s, int32_t spaces)
-{
-    s = indented(s, spaces);
-}
-
-QString indented(const QString &s, int32_t spaces)
-{
-    auto lines = s.split('\n');
-    for (auto &line : lines) {
-        line = QString(" ").repeated(spaces) + line;
-    }
-    return lines.join('\n');
-}
-
-QString quoted(const QString &s)
-{
-    return QString("\"%1\"").arg(s);
-}
+QString currentTty();
 
 }

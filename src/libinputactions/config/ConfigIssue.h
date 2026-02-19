@@ -20,7 +20,7 @@
 
 #include "TextPosition.h"
 #include <QString>
-#include <libinputactions/utils/Copyable.h>
+#include <libinputactions/helpers/Copyable.h>
 
 namespace InputActions
 {

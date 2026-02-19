@@ -25,10 +25,10 @@
 #include <libinputactions/config/ConfigIssueManager.h>
 #include <libinputactions/config/ConfigLoader.h>
 #include <libinputactions/globals.h>
+#include <libinputactions/helpers/Session.h>
 #include <libinputactions/input/StrokeRecorder.h>
 #include <libinputactions/interfaces/implementations/FileConfigProvider.h>
 #include <libinputactions/ipc/MessageSocketConnection.h>
-#include <libinputactions/utils/SessionUtils.h>
 #include <libinputactions/variables/VariableManager.h>
 #include <pwd.h>
 #include <sys/socket.h>
@@ -41,7 +41,7 @@ static const QString ERROR_SESSION_INACTIVE = "This client's session is inactive
 
 SessionManager::SessionManager(Server *server)
     : m_freedesktopLoginDbusInterface("org.freedesktop.login1", "/org/freedesktop/login1", "org.freedesktop.login1.Manager", QDBusConnection::systemBus())
-    , m_currentTty(SessionUtils::currentTty())
+    , m_currentTty(SessionHelpers::currentTty())
 {
     m_currentSession = &m_sessions[m_currentTty];
 
@@ -173,7 +173,7 @@ void SessionManager::beginSessionRequestMessage(const std::shared_ptr<const Begi
         session.m_variableManager = std::make_shared<VariableManager>();
         g_inputActions->registerGlobalVariables(session.m_variableManager.get(), session.m_ipcEnvironmentInterfaces, session.m_ipcEnvironmentInterfaces);
 
-        if (SessionUtils::currentTty() == message->tty()) {
+        if (SessionHelpers::currentTty() == message->tty()) {
             activateSession(session, false);
         }
     }
@@ -330,7 +330,7 @@ void SessionManager::activateSession(Session &session, bool loadConfig)
 
 void SessionManager::onSessionChangeDetectionTimerTick()
 {
-    const auto tty = SessionUtils::currentTty();
+    const auto tty = SessionHelpers::currentTty();
     if (m_currentTty != tty) {
         qCDebug(INPUTACTIONS).noquote().nospace() << "TTY changed to " << tty;
         m_currentTty = tty;

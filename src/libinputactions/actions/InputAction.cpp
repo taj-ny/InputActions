@@ -18,11 +18,11 @@
 
 #include "InputAction.h"
 #include <QThread>
+#include <libinputactions/helpers/QThread.h>
 #include <libinputactions/input/backends/InputBackend.h>
 #include <libinputactions/input/devices/VirtualKeyboard.h>
 #include <libinputactions/input/devices/VirtualMouse.h>
 #include <libinputactions/interfaces/PointerPositionSetter.h>
-#include <libinputactions/utils/ThreadUtils.h>
 
 namespace InputActions
 {
@@ -44,7 +44,7 @@ void InputAction::executeImpl(uint32_t executions)
 {
     for (const auto &item : m_sequence) {
         const auto keyboardText = item.keyboardText.get();
-        ThreadUtils::runOnThread(ThreadUtils::mainThread(), [this, executions, item, keyboardText]() {
+        QThreadHelpers::runOnThread(QThreadHelpers::mainThread(), [this, executions, item, keyboardText]() {
             if (item.keyboardPress.isValid()) {
                 g_inputBackend->virtualKeyboard()->keyboardKey(item.keyboardPress, true);
             } else if (item.keyboardRelease.isValid()) {

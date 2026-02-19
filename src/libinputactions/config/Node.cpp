@@ -21,7 +21,7 @@
 #include "ConfigIssueManager.h"
 #include "TextPosition.h"
 #include <QLoggingCategory>
-#include <libinputactions/utils/StringUtils.h>
+#include <libinputactions/helpers/QString.h>
 
 namespace InputActions
 {
@@ -137,7 +137,7 @@ std::shared_ptr<Node> Node::substringNode(const QString &substring) const
         }
         // TODO: This will sometimes be inaccurate, make substringNode accept a start index and length instead
         const auto index = std::max(static_cast<qsizetype>(0), as<QString>().indexOf(substring, 0, Qt::CaseInsensitive));
-        raw += StringUtils::indented(substring, m_position.column() + index);
+        raw += QStringHelpers::indented(substring, m_position.column() + index);
 
         auto node = Node::create(raw);
         node->m_substringValue = substring;
@@ -166,7 +166,7 @@ std::shared_ptr<Node> Node::substringNodeQuoted(const QString &substring) const
     try {
         const auto index = std::max(static_cast<qsizetype>(0), as<QString>().indexOf(substring, 0, Qt::CaseInsensitive));
 
-        auto node = Node::create(StringUtils::quoted(substring));
+        auto node = Node::create(QStringHelpers::quoted(substring));
         node->setPosition({m_position.line(), m_position.column() + static_cast<int32_t>(index)});
         node->m_substringValue = substring;
 

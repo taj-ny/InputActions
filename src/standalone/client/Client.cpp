@@ -20,17 +20,17 @@
 #include "ClientDBusInterface.h"
 #include <QCoreApplication>
 #include <libinputactions/globals.h>
+#include <libinputactions/helpers/QThread.h>
+#include <libinputactions/helpers/Session.h>
 #include <libinputactions/ipc/MessageSocketConnection.h>
 #include <libinputactions/ipc/messages.h>
-#include <libinputactions/utils/SessionUtils.h>
-#include <libinputactions/utils/ThreadUtils.h>
 
 namespace InputActions
 {
 
 Client::Client()
     : m_dbusInterface(this)
-    , m_currentTty(SessionUtils::currentTty())
+    , m_currentTty(SessionHelpers::currentTty())
 {
 }
 
@@ -61,7 +61,7 @@ void Client::onConnected()
 {
     m_connectionRetryTimer->stop();
     Q_EMIT connected();
-    ThreadUtils::runOnThread(ThreadUtils::mainThread(), [this]() {
+    QThreadHelpers::runOnThread(QThreadHelpers::mainThread(), [this]() {
         HandshakeRequestMessage handshakeRequest;
         if (const auto response = m_connection->sendMessageAndWaitForResponse(handshakeRequest); !response->success()) {
             qCritical().noquote().nospace() << "Handshake failed: " << response->error();

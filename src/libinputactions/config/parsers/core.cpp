@@ -42,6 +42,7 @@
 #include <libinputactions/handlers/PointerTriggerHandler.h>
 #include <libinputactions/handlers/TouchpadTriggerHandler.h>
 #include <libinputactions/handlers/TouchscreenTriggerHandler.h>
+#include <libinputactions/helpers/QString.h>
 #include <libinputactions/input/KeyboardKey.h>
 #include <libinputactions/input/MouseButton.h>
 #include <libinputactions/input/backends/InputBackend.h>
@@ -52,7 +53,6 @@
 #include <libinputactions/triggers/PressTrigger.h>
 #include <libinputactions/triggers/StrokeTrigger.h>
 #include <libinputactions/triggers/WheelTrigger.h>
-#include <libinputactions/utils/StringUtils.h>
 #include <libinputactions/variables/Variable.h>
 #include <libinputactions/variables/VariableManager.h>
 

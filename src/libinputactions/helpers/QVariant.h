@@ -18,11 +18,11 @@
 
 #pragma once
 
-#include <QString>
+#include <QVariant>
 
-namespace InputActions::SessionUtils
+namespace InputActions::QVariantHelpers
 {
 
-QString currentTty();
+QString toString(const QVariant &variant);
 
 }

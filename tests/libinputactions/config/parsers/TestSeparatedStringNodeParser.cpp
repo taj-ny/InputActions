@@ -1,7 +1,7 @@
 #include "TestSeparatedStringNodeParser.h"
 #include <libinputactions/config/Node.h>
 #include <libinputactions/config/parsers/separated-string.h>
-#include <libinputactions/utils/StringUtils.h>
+#include <libinputactions/helpers/QString.h>
 
 namespace InputActions
 {
@@ -47,7 +47,7 @@ void TestSeparatedStringNodeParser::invalid__throwsInvalidValueConfigException()
 {
     QFETCH(QString, raw);
 
-    const auto node = Node::create(StringUtils::quoted(raw));
+    const auto node = Node::create(QStringHelpers::quoted(raw));
     INPUTACTIONS_VERIFY_THROWS_CONFIG_EXCEPTION(parseSeparatedString2<QString>(node.get(), ','), InvalidValueConfigException, 0, 0);
 }
 

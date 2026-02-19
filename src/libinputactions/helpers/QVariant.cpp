@@ -16,19 +16,30 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include "SessionUtils.h"
-#include <QFile>
+#include "QVariant.h"
+#include <QSizeF>
+#include <QStringList>
 
-namespace InputActions::SessionUtils
+namespace InputActions::QVariantHelpers
 {
 
-QString currentTty()
+QString toString(const QVariant &variant)
 {
-    QFile f("/sys/class/tty/tty0/active");
-    if (f.open(QIODeviceBase::ReadOnly)) {
-        return QString::fromUtf8(f.readAll()).trimmed();
+    const auto userType = variant.userType();
+    switch (userType) {
+        case QMetaType::QSizeF: {
+            const auto value = variant.toSizeF();
+            return QString("%1,%2").arg(QString::number(value.width()), QString::number(value.height()));
+        }
+        default:
+            if (userType == qMetaTypeId<std::chrono::milliseconds>()) {
+                const auto value = variant.value<std::chrono::milliseconds>();
+                return QString("%1 ms").arg(QString::number(value.count()));
+            }
+            break;
     }
-    return "unknown";
+
+    return variant.toString();
 }
 
 }

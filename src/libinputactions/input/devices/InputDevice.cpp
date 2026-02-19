@@ -19,8 +19,8 @@
 #include "InputDevice.h"
 #include <libinputactions/handlers/TouchpadTriggerHandler.h>
 #include <libinputactions/handlers/TouchscreenTriggerHandler.h>
+#include <libinputactions/helpers/QString.h>
 #include <libinputactions/input/events.h>
-#include <libinputactions/utils/StringUtils.h>
 
 namespace InputActions
 {
@@ -89,9 +89,9 @@ QString InputDevice::toString() const
         path = QString("/dev/input/%1").arg(m_sysName);
     }
 
-    const auto propertiesStr = StringUtils::indented(m_properties.toString(), 2);
+    const auto propertiesStr = QStringHelpers::indented(m_properties.toString(), 2);
     auto info = QString("Path: %1\nProperties:\n%2").arg(path, propertiesStr);
-    StringUtils::indent(info, 2);
+    QStringHelpers::indent(info, 2);
 
     return QString("[%1] %2\n%3").arg(type, m_name, info);
 }

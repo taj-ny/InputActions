@@ -17,8 +17,8 @@
 */
 
 #include "MessageSocketConnection.h"
-#include "utils/ThreadUtils.h"
 #include <QThread>
+#include <libinputactions/helpers/QThread.h>
 #include <qloggingcategory.h>
 
 Q_LOGGING_CATEGORY(INPUTACTIONS_IPC, "inputactions.ipc", QtWarningMsg)
@@ -95,7 +95,7 @@ void MessageSocketConnection::onFutureTimeoutTimerTick()
     const auto now = std::chrono::steady_clock::now();
     std::lock_guard lock(m_futuresMutex);
 
-    ThreadUtils::runOnThread(
+    QThreadHelpers::runOnThread(
         m_socket->thread(),
         [this, &now]() {
             for (auto &[_, future] : m_futures) {
@@ -118,7 +118,7 @@ void MessageSocketConnection::write(QString data)
         data += '\n';
     }
 
-    ThreadUtils::runOnThread(m_socket->thread(), [this, data]() {
+    QThreadHelpers::runOnThread(m_socket->thread(), [this, data]() {
         QTextStream stream(m_socket);
         stream.setEncoding(QStringConverter::Utf8);
         stream << data;

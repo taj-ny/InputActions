@@ -16,25 +16,16 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include "ThreadUtils.h"
-#include <QAbstractEventDispatcher>
-#include <QCoreApplication>
+#pragma once
 
-namespace InputActions::ThreadUtils
+#include <QString>
+
+namespace InputActions::QStringHelpers
 {
 
-QThread *mainThread()
-{
-    return QCoreApplication::instance()->thread();
-}
+void indent(QString &s, int32_t spaces);
+QString indented(const QString &s, int32_t spaces);
 
-void runOnThread(QThread *thread, std::function<void()> &&function, bool block)
-{
-    if (QThread::currentThread() == thread) {
-        function();
-    } else {
-        QMetaObject::invokeMethod(QAbstractEventDispatcher::instance(thread), function, block ? Qt::BlockingQueuedConnection : Qt::QueuedConnection);
-    }
-}
+QString quoted(const QString &s);
 
 }
