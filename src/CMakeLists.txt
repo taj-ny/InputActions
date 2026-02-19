@@ -47,6 +47,7 @@ if (INPUTACTIONS_BUILD_HYPRLAND OR INPUTACTIONS_BUILD_KWIN OR INPUTACTIONS_BUILD
         libinputactions/handlers/TouchpadTriggerHandler.cpp
         libinputactions/handlers/TouchscreenTriggerHandler.cpp
         libinputactions/handlers/TriggerHandler.cpp
+        libinputactions/helpers/Math.cpp
         libinputactions/helpers/QString.cpp
         libinputactions/helpers/QThread.cpp
         libinputactions/helpers/QVariant.cpp

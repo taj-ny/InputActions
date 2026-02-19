@@ -24,6 +24,7 @@
 */
 
 #include "MotionTriggerHandler.h"
+#include <libinputactions/helpers/Math.h>
 #include <libinputactions/input/Delta.h>
 #include <libinputactions/input/devices/InputDevice.h>
 #include <libinputactions/triggers/StrokeTrigger.h>
@@ -113,7 +114,7 @@ bool MotionTriggerHandler::handleMotion(const InputDevice *device, const PointDe
         }
 
         const auto absAngleDelta = std::abs(angleDelta);
-        const auto distance = std::hypot(d.x(), d.y());
+        const auto distance = Math::hypot(d);
 
         // Clamp spikes
         if (absAngleDelta > 0.5) {

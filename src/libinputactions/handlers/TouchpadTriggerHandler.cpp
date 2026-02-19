@@ -17,6 +17,7 @@
 */
 
 #include "TouchpadTriggerHandler.h"
+#include <libinputactions/helpers/Math.h>
 #include <libinputactions/input/devices/InputDevice.h>
 #include <libinputactions/input/devices/InputDeviceProperties.h>
 #include <libinputactions/input/events.h>
@@ -179,7 +180,7 @@ bool TouchpadTriggerHandler::touchMotion(const TouchMotionEvent &event)
         case State::TouchIdle:
             const auto *point = event.sender()->physicalState().findTouchPoint(event.id());
             const auto diff = point->position - point->initialPosition;
-            if (std::hypot(diff.x(), diff.y()) >= 4) {
+            if (Math::hypot(diff) >= 4) {
                 setState(State::Motion);
             }
             break;

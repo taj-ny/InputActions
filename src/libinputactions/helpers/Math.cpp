@@ -16,25 +16,29 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include "Delta.h"
-#include <libinputactions/helpers/Math.h>
+#include "Math.h"
 
-namespace InputActions
+namespace InputActions::Math
 {
 
-qreal PointDelta::acceleratedHypot() const
+qreal atan2(const QPointF &point)
 {
-    return Math::hypot(accelerated());
+    return std::atan2(point.y(), point.x());
 }
 
-qreal PointDelta::unacceleratedHypot() const
+qreal atan2deg(const QPointF &point)
 {
-    return Math::hypot(unaccelerated());
+    return radToDeg(atan2(point));
 }
 
-PointDelta PointDelta::operator+(const PointDelta &other) const
+qreal radToDeg(qreal rad)
 {
-    return {accelerated() + other.accelerated(), unaccelerated() + other.unaccelerated()};
+    return 180.0 / M_PI * rad;
+}
+
+qreal hypot(const QPointF &point)
+{
+    return std::hypot(point.x(), point.y());
 }
 
 }

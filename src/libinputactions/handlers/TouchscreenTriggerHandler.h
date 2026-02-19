@@ -105,12 +105,6 @@ private:
 
     static uint32_t directionFromPoint(const QPointF &point);
     static bool sameDirections(uint32_t a, uint32_t b);
-    static double hypot(const QPointF &point);
-    static double atan2(const QPointF &point);
-    /**
-     * @returns [0°, 360°]
-     */
-    static double radiansToDegrees(double radians);
 
     friend class MockTouchscreenTriggerHandler;
     friend class TestTouchscreenTriggerHandler;
