@@ -34,6 +34,7 @@
 */
 
 #include "StrokeTrigger.h"
+#include <libinputactions/helpers/Math.h>
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
@@ -233,7 +234,7 @@ qreal Stroke::angle(const QPointF &a, const QPointF &b, const QPointF &c)
     const auto bc = c - b;
 
     const auto dot = ba.x() * bc.x() + ba.y() * bc.y();
-    const auto mag = std::hypot(ba.x(), ba.y()) * std::hypot(bc.x(), bc.y());
+    const auto mag = Math::hypot(ba) * Math::hypot(bc);
 
     if (mag == 0) {
         return 0;

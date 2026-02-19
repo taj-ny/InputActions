@@ -48,6 +48,7 @@
  */
 
 #include "TouchscreenTriggerHandler.h"
+#include <libinputactions/helpers/Math.h>
 #include <libinputactions/input/devices/InputDevice.h>
 #include <libinputactions/input/devices/InputDeviceState.h>
 #include <libinputactions/input/events.h>
@@ -182,7 +183,7 @@ bool TouchscreenTriggerHandler::touchFrame(const TouchFrameEvent &event)
         case State::Hold:
         case State::Touch: {
             const auto fingerPassedThreshold = [this](const auto *point) {
-                return hypot(point->position - m_pointInitialPositions[point->id]) >= MOTION_THRESHOLD_MM;
+                return Math::hypot(point->position - m_pointInitialPositions[point->id]) >= MOTION_THRESHOLD_MM;
             };
             if (std::ranges::any_of(points, fingerPassedThreshold)) {
                 setState(State::MotionOnePointReachedThreshold);
@@ -193,7 +194,7 @@ bool TouchscreenTriggerHandler::touchFrame(const TouchFrameEvent &event)
         }
         case State::MotionOnePointReachedThreshold: {
             const auto fingerPassedThreshold = [this](const auto *point) {
-                return hypot(point->position - m_pointInitialPositions[point->id]) >= MOTION_THRESHOLD_MM;
+                return Math::hypot(point->position - m_pointInitialPositions[point->id]) >= MOTION_THRESHOLD_MM;
             };
             if (std::ranges::all_of(points, fingerPassedThreshold)) {
                 setState(State::Motion);
@@ -294,7 +295,7 @@ void TouchscreenTriggerHandler::handleTouchUp()
             const auto now = std::chrono::steady_clock::now();
             if (std::ranges::all_of(m_preTouchUpPoints, [this, &now](const auto &point) {
                     return std::chrono::duration_cast<std::chrono::milliseconds>(now - point.downTimestamp) <= TAP_TIMEOUT
-                        && hypot(point.position - point.initialPosition) < MOTION_THRESHOLD_MM;
+                        && Math::hypot(point.position - point.initialPosition) < MOTION_THRESHOLD_MM;
                 })) {
                 handleTap();
             }
@@ -422,8 +423,8 @@ PinchInfo TouchscreenTriggerHandler::pinchInfo() const
     const auto delta = first->position - second->position;
 
     return {
-        .angle = radiansToDegrees(atan2(delta)),
-        .distance = hypot(delta),
+        .angle = Math::atan2deg(delta),
+        .distance = Math::hypot(delta),
     };
 }
 
@@ -508,21 +509,6 @@ bool TouchscreenTriggerHandler::sameDirections(uint32_t a, uint32_t b)
      * and 7 being set as they also represent neighboring directions.
      */
     return ((a | (a >> 1)) & b) || ((b | (b >> 1)) & a) || ((a & 0x80) && (b & 0x01)) || ((b & 0x80) && (a & 0x01));
-}
-
-double TouchscreenTriggerHandler::hypot(const QPointF &point)
-{
-    return std::hypot(point.x(), point.y());
-}
-
-double TouchscreenTriggerHandler::atan2(const QPointF &point)
-{
-    return std::atan2(point.y(), point.x());
-}
-
-double TouchscreenTriggerHandler::radiansToDegrees(double radians)
-{
-    return 180.0 / M_PI * radians;
 }
 
 }
