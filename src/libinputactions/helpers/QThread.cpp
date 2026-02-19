@@ -16,30 +16,25 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include "QVariantUtils.h"
-#include <QSizeF>
-#include <QStringList>
+#include "QThread.h"
+#include <QAbstractEventDispatcher>
+#include <QCoreApplication>
 
-namespace InputActions::QVariantUtils
+namespace InputActions::QThreadHelpers
 {
 
-QString toString(const QVariant &variant)
+QThread *mainThread()
 {
-    const auto userType = variant.userType();
-    switch (userType) {
-        case QMetaType::QSizeF: {
-            const auto value = variant.toSizeF();
-            return QString("%1,%2").arg(QString::number(value.width()), QString::number(value.height()));
-        }
-        default:
-            if (userType == qMetaTypeId<std::chrono::milliseconds>()) {
-                const auto value = variant.value<std::chrono::milliseconds>();
-                return QString("%1 ms").arg(QString::number(value.count()));
-            }
-            break;
+    return QCoreApplication::instance()->thread();
+}
+
+void runOnThread(QThread *thread, std::function<void()> &&function, bool block)
+{
+    if (QThread::currentThread() == thread) {
+        function();
+    } else {
+        QMetaObject::invokeMethod(QAbstractEventDispatcher::instance(thread), function, block ? Qt::BlockingQueuedConnection : Qt::QueuedConnection);
     }
-
-    return variant.toString();
 }
 
 }

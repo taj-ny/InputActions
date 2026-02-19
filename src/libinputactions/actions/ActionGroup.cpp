@@ -20,7 +20,7 @@
 #include "ActionExecutor.h"
 #include "InputActionsMain.h"
 #include <libinputactions/conditions/Condition.h>
-#include <libinputactions/utils/ThreadUtils.h>
+#include <libinputactions/helpers/QThread.h>
 
 namespace InputActions
 {
@@ -36,8 +36,8 @@ void ActionGroup::executeImpl(uint32_t executions)
     // TODO Each action introduces latency
     const auto checkCanExecute = [](const auto &action) {
         auto result = true;
-        ThreadUtils::runOnThread(
-            ThreadUtils::mainThread(),
+        QThreadHelpers::runOnThread(
+            QThreadHelpers::mainThread(),
             [&action, &result]() {
                 if (!action->canExecute()) {
                     result = false;

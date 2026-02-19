@@ -20,9 +20,9 @@
 #include "InputActionsMain.h"
 #include <QProcess>
 #include <libinputactions/globals.h>
+#include <libinputactions/helpers/QThread.h>
 #include <libinputactions/interfaces/CursorShapeProvider.h>
 #include <libinputactions/interfaces/ProcessRunner.h>
-#include <libinputactions/utils/ThreadUtils.h>
 #include <libinputactions/variables/VariableManager.h>
 
 namespace InputActions
@@ -117,7 +117,7 @@ std::optional<T> Value<T>::get() const
         [this](const std::function<std::optional<T>()> &getter) {
             std::optional<T> value;
             if (m_mainThreadOnly) {
-                ThreadUtils::runOnThread(ThreadUtils::mainThread(), [&value, getter]() {
+                QThreadHelpers::runOnThread(QThreadHelpers::mainThread(), [&value, getter]() {
                     value = getter();
                 }, true);
             } else {

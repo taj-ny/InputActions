@@ -20,7 +20,7 @@
 
 #include <QThread>
 
-namespace InputActions::ThreadUtils
+namespace InputActions::QThreadHelpers
 {
 
 QThread *mainThread();

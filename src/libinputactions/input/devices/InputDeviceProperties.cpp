@@ -19,7 +19,7 @@
 #include "InputDeviceProperties.h"
 #include <QMetaProperty>
 #include <QStringList>
-#include <libinputactions/utils/QVariantUtils.h>
+#include <libinputactions/helpers/QVariant.h>
 
 namespace InputActions
 {
@@ -54,7 +54,7 @@ QString InputDeviceProperties::toString() const
 
     for (auto i = 0; i < staticMetaObject.propertyCount(); ++i) {
         const auto property = staticMetaObject.property(i);
-        result += QString("%1: %2").arg(property.name(), QVariantUtils::toString(property.readOnGadget(this)));
+        result += QString("%1: %2").arg(property.name(), QVariantHelpers::toString(property.readOnGadget(this)));
     }
 
     return result.join('\n');

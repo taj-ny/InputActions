@@ -47,6 +47,10 @@ if (INPUTACTIONS_BUILD_HYPRLAND OR INPUTACTIONS_BUILD_KWIN OR INPUTACTIONS_BUILD
         libinputactions/handlers/TouchpadTriggerHandler.cpp
         libinputactions/handlers/TouchscreenTriggerHandler.cpp
         libinputactions/handlers/TriggerHandler.cpp
+        libinputactions/helpers/QString.cpp
+        libinputactions/helpers/QThread.cpp
+        libinputactions/helpers/QVariant.cpp
+        libinputactions/helpers/Session.cpp
         libinputactions/input/backends/InputBackend.cpp
         libinputactions/input/backends/LibevdevComplementaryInputBackend.cpp
         libinputactions/input/backends/LibinputInputBackend.cpp
@@ -85,10 +89,6 @@ if (INPUTACTIONS_BUILD_HYPRLAND OR INPUTACTIONS_BUILD_KWIN OR INPUTACTIONS_BUILD
         libinputactions/triggers/StrokeTrigger.cpp
         libinputactions/triggers/Trigger.cpp
         libinputactions/triggers/WheelTrigger.cpp
-        libinputactions/utils/QVariantUtils.cpp
-        libinputactions/utils/ThreadUtils.cpp
-        libinputactions/utils/SessionUtils.cpp
-        libinputactions/utils/StringUtils.cpp
         libinputactions/variables/LocalVariable.cpp
         libinputactions/variables/RemoteVariable.cpp
         libinputactions/variables/VariableManager.cpp
