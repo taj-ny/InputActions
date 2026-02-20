@@ -98,7 +98,9 @@ void LibevdevComplementaryInputBackend::addDevice(InputDevice *device, std::shar
     }
 
     auto &properties = device->properties();
-    properties.setSize({data->virtualSize.width() / static_cast<qreal>(x->resolution), data->virtualSize.height() / static_cast<qreal>(y->resolution)});
+    if (!properties.hasSize()) {
+        properties.setSize({data->virtualSize.width() / static_cast<qreal>(x->resolution), data->virtualSize.height() / static_cast<qreal>(y->resolution)});
+    }
     properties.setMultiTouch(multiTouch);
     properties.setTouchpadButtonPad(buttonPad);
 
