@@ -22,6 +22,7 @@
 #include <hyprland/src/devices/IKeyboard.hpp>
 #include <hyprland/src/devices/IPointer.hpp>
 #undef HANDLE
+#include <libinput.h>
 #include <libinputactions/input/backends/InputBackend.h>
 
 namespace InputActions
@@ -40,6 +41,16 @@ HyprlandInputDevice::HyprlandInputDevice(SP<IHID> device, InputDeviceType type, 
 HyprlandInputDevice::HyprlandInputDevice(SP<IPointer> device, InputDeviceType type, const std::string &name, HyprlandInputBackend *backend)
     : HyprlandInputDevice(dynamicPointerCast<IHID>(device), type, name, backend)
 {
+    if (type == InputDeviceType::Touchpad) {
+        if (auto *libinputDevice = device->aq()->getLibinputHandle()) {
+            double width{};
+            double height{};
+            if (libinput_device_get_size(libinputDevice, &width, &height) == 0) {
+                properties().setSize({width, height});
+            }
+        }
+    }
+
     m_listeners.push_back(device->m_pointerEvents.button.listen([this, backend, device = device.get()](const IPointer::SButtonEvent &event) {
         backend->onPointerButtonSignal(this, device, event);
     }));
