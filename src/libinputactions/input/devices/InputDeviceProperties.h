@@ -80,6 +80,7 @@ public:
      */
     void setMultiTouch(bool value) { m_multiTouch = value; }
 
+    bool hasSize() const;
     QSizeF size() const;
     /**
      * Only for testing.

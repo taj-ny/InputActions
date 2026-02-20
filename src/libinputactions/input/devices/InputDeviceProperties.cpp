@@ -80,6 +80,11 @@ bool InputDeviceProperties::multiTouch() const
     return m_multiTouch.value_or(false);
 }
 
+bool InputDeviceProperties::hasSize() const
+{
+    return m_size.has_value();
+}
+
 QSizeF InputDeviceProperties::size() const
 {
     return m_size.value_or(QSizeF());
