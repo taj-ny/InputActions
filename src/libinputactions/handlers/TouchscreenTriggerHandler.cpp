@@ -210,8 +210,9 @@ bool TouchscreenTriggerHandler::touchFrame(const TouchFrameEvent &event)
             for (size_t i = 0; i < points.size(); i++) {
                 const auto &point = points[i];
 
-                totalDelta += m_pointInitialPositions[point->id] - point->position;
-                const auto direction = directionFromPoint(m_pointInitialPositions[point->id] - point->position);
+                const auto delta = point->position - m_pointInitialPositions[point->id];
+                totalDelta += delta;
+                const auto direction = directionFromPoint(delta);
                 if (i == 0) {
                     firstDirection = direction;
                     continue;
