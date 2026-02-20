@@ -79,8 +79,10 @@ std::unique_ptr<StandaloneInputDevice> StandaloneInputDevice::tryCreate(const QS
 
 bool StandaloneInputDevice::finalize(const QString &name, const InputDeviceProperties &properties, bool &retry)
 {
-    if (type() == InputDeviceType::Touchscreen) {
-        this->properties().setSize(libinputDevice()->size());
+    if (type() == InputDeviceType::Touchpad || type() == InputDeviceType::Touchscreen) {
+        if (const auto size = libinputDevice()->size(); !size.isNull()) {
+            this->properties().setSize(size);
+        }
     }
 
     if (properties.grab()) {
