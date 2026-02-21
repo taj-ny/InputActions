@@ -91,8 +91,8 @@ private slots:
     void onEndingTriggers(TriggerTypes types);
 
 private:
-    Axis m_currentSwipeAxis = Axis::None;
-    QPointF m_totalSwipeDelta;
+    std::vector<QPointF> m_swipeDeltas;
+    bool m_swipeMotionThresholdReached{};
 
     bool m_isDeterminingSpeed = false;
     uint8_t m_sampledInputEvents = 0;

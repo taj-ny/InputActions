@@ -28,16 +28,12 @@
 #include <libinputactions/input/Delta.h>
 #include <libinputactions/input/devices/InputDevice.h>
 #include <libinputactions/triggers/StrokeTrigger.h>
+#include <libinputactions/triggers/SwipeTrigger.h>
 
 Q_LOGGING_CATEGORY(INPUTACTIONS_HANDLER_MOTION, "inputactions.handler.motion", QtWarningMsg)
 
 namespace InputActions
 {
-
-/**
- * Minimum amount of deltas required to accurately detect axis changes.
- */
-static const size_t AXIS_CHANGE_MIN_DELTA_COUNT = 10;
 
 static const qreal CIRCLE_COASTING_FRICTION = 0.02;
 static const std::chrono::milliseconds CIRCLE_COASTING_TIMER_INTERVAL{30L};
@@ -82,7 +78,6 @@ bool MotionTriggerHandler::handleMotion(const InputDevice *device, const PointDe
     qCDebug(INPUTACTIONS_HANDLER_MOTION).nospace() << "Event (type: Motion, delta: " << delta.unaccelerated() << ")";
 
     m_deltas.push_back(delta.unaccelerated());
-    m_totalSwipeDelta += delta.unaccelerated();
 
     TriggerSpeed speed{};
     if (!determineSpeed(TriggerType::Swipe, delta.unacceleratedHypot(), speed)) {
@@ -91,9 +86,8 @@ bool MotionTriggerHandler::handleMotion(const InputDevice *device, const PointDe
 
     std::map<TriggerType, const TriggerUpdateEvent *> events;
     DirectionalMotionTriggerUpdateEvent circleEvent;
-    DirectionalMotionTriggerUpdateEvent swipeEvent;
+    SwipeTriggerUpdateEvent swipeEvent;
     MotionTriggerUpdateEvent strokeEvent;
-    bool axisChanged{};
 
     // Block the event even if the result says not to do so.
     bool block{};
@@ -161,44 +155,34 @@ bool MotionTriggerHandler::handleMotion(const InputDevice *device, const PointDe
         // TODO: Cancel if motion is a straight line
     }
 
-    if (hasActiveTriggers(TriggerType::Swipe)) {
-        if (m_deltas.size() < 2) {
-            // One delta may not be enough to determine the direction
+    const auto swipe = hasActiveTriggers(TriggerType::Swipe);
+    if (swipe) {
+        static const qreal motionThreshold = 50; // TODO
+
+        m_swipeDeltas.insert(m_swipeDeltas.begin(), delta.unaccelerated());
+
+        QPointF totalDelta;
+        auto it = m_swipeDeltas.begin();
+        for (; it != m_swipeDeltas.end(); ++it) {
+            totalDelta += *it;
+
+            if (Math::hypot(totalDelta) >= motionThreshold) {
+                m_swipeMotionThresholdReached = true;
+                ++it;
+                break;
+            }
+        }
+
+        if (!m_swipeMotionThresholdReached) {
             return true;
         }
+        m_swipeDeltas.erase(it, m_swipeDeltas.end());
 
-        if (m_currentSwipeAxis == Axis::None) {
-            m_currentSwipeAxis = std::abs(m_totalSwipeDelta.x()) >= std::abs(m_totalSwipeDelta.y()) ? Axis::Horizontal : Axis::Vertical;
-        } else if (m_deltas.size() >= AXIS_CHANGE_MIN_DELTA_COUNT) { // Make sure we have enough data to detect axis change
-            const std::vector<QPointF> lastDeltas(m_deltas.end() - AXIS_CHANGE_MIN_DELTA_COUNT, m_deltas.end());
-            QPointF sum;
-            for (const auto &delta : lastDeltas) {
-                sum += {std::abs(delta.x()), std::abs(delta.y())};
-            }
+        totalDelta.setY(-totalDelta.y());
 
-            if (std::min(sum.x(), sum.y()) / std::max(sum.x(), sum.y()) <= 0.2 // Must be a sharp turn
-                && ((m_currentSwipeAxis == Axis::Horizontal && sum.y() > sum.x()) || (m_currentSwipeAxis == Axis::Vertical && sum.x() > sum.y()))) {
-                m_currentSwipeAxis = m_currentSwipeAxis == Axis::Horizontal ? Axis::Vertical : Axis::Horizontal;
-                axisChanged = true;
-                qCDebug(INPUTACTIONS_HANDLER_MOTION, "Swipe axis changed");
-            }
-        }
-
-        SwipeDirection direction{};
-        switch (m_currentSwipeAxis) {
-            case Axis::Vertical:
-                direction = m_totalSwipeDelta.y() < 0 ? SwipeDirection::Up : SwipeDirection::Down;
-                break;
-            case Axis::Horizontal:
-                direction = m_totalSwipeDelta.x() < 0 ? SwipeDirection::Left : SwipeDirection::Right;
-                break;
-            default:
-                Q_UNREACHABLE();
-        }
-
-        swipeEvent.setDelta(m_currentSwipeAxis == Axis::Vertical ? Delta(delta.accelerated().y(), delta.unaccelerated().y())
-                                                                 : Delta(delta.accelerated().x(), delta.unaccelerated().x()));
-        swipeEvent.setDirection(static_cast<TriggerDirection>(direction));
+        swipeEvent.setAngle(Math::atan2deg360(totalDelta));
+        swipeEvent.setAverageAngle(Math::atan2deg360(totalDelta / m_swipeDeltas.size()));
+        swipeEvent.setDelta(Delta(delta.acceleratedHypot(), delta.unacceleratedHypot()));
         swipeEvent.setDeltaMultiplied({delta.accelerated() * m_swipeDeltaMultiplier, delta.unaccelerated() * m_swipeDeltaMultiplier});
         swipeEvent.setSpeed(speed);
         events[TriggerType::Swipe] = &swipeEvent;
@@ -211,7 +195,7 @@ bool MotionTriggerHandler::handleMotion(const InputDevice *device, const PointDe
     }
 
     const auto result = updateTriggers(events);
-    if (axisChanged && !result.success) {
+    if (swipe && !result.success) {
         activateTriggers(TriggerType::Swipe);
         return handleMotion(device, delta);
     }
@@ -259,8 +243,6 @@ bool MotionTriggerHandler::determineSpeed(TriggerType type, qreal delta, Trigger
 void MotionTriggerHandler::reset()
 {
     TriggerHandler::reset();
-    m_currentSwipeAxis = Axis::None;
-    m_totalSwipeDelta = {};
     m_speed = {};
     m_isDeterminingSpeed = false;
     m_circleIsFirstEvent = true;
@@ -268,6 +250,8 @@ void MotionTriggerHandler::reset()
     m_sampledInputEvents = m_accumulatedAbsoluteSampledDelta = m_circlePreviousAngle = m_circlePreviousDistance = m_circleFilterDelta = m_circleAdaptiveDelta
         = m_circleTotalDelta = 0;
     m_circleCoastingTimer.stop();
+    m_swipeDeltas.clear();
+    m_swipeMotionThresholdReached = {};
 }
 
 void MotionTriggerHandler::onCircleCoastingTimerTick()

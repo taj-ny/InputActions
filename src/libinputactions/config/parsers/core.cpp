@@ -52,6 +52,7 @@
 #include <libinputactions/triggers/KeyboardShortcutTrigger.h>
 #include <libinputactions/triggers/PressTrigger.h>
 #include <libinputactions/triggers/StrokeTrigger.h>
+#include <libinputactions/triggers/SwipeTrigger.h>
 #include <libinputactions/triggers/WheelTrigger.h>
 #include <libinputactions/variables/Variable.h>
 #include <libinputactions/variables/VariableManager.h>
@@ -585,8 +586,15 @@ void NodeParser<std::unique_ptr<Trigger>>::parse(const Node *node, std::unique_p
     } else if (type == "stroke") {
         result = std::make_unique<StrokeTrigger>(node->at("strokes", true)->as<std::vector<Stroke>>(true));
     } else if (type == "swipe") {
-        result = std::make_unique<DirectionalMotionTrigger>(TriggerType::Swipe,
-                                                            static_cast<TriggerDirection>(node->at("direction", true)->as<SwipeDirection>()));
+        if (const auto *directionNode = node->at("direction")) {
+            result = std::make_unique<SwipeTrigger>(directionNode->as<SwipeDirection>());
+        } else {
+            const auto angles = parseSeparatedString2<qreal>(node->at("angle", true), '-');
+            auto swipeTrigger = std::make_unique<SwipeTrigger>(angles.first, angles.second);
+            loadSetter(swipeTrigger.get(), &SwipeTrigger::setBidirectional, node->at("bidirectional"));
+            result = std::move(swipeTrigger);
+        }
+
     } else if (type == "tap") {
         result = std::make_unique<Trigger>(TriggerType::Tap);
     } else if (type == "wheel") {
