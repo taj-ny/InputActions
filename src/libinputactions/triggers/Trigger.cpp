@@ -188,6 +188,11 @@ void Trigger::actionAdded(TriggerAction *action)
 
 void Trigger::updateActions(const TriggerUpdateEvent &event)
 {
+    doUpdateActions(event);
+}
+
+void Trigger::doUpdateActions(const TriggerUpdateEvent &event)
+{
     for (const auto &action : m_actions) {
         action->triggerUpdated(event);
     }

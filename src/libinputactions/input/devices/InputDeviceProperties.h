@@ -26,6 +26,8 @@
 namespace InputActions
 {
 
+class InputDevice;
+
 class InputDeviceProperties
 {
     Q_GADGET
@@ -35,6 +37,7 @@ class InputDeviceProperties
     Q_PROPERTY(bool handleLibevdevEvents READ handleLibevdevEvents)
     Q_PROPERTY(bool ignore READ ignore)
     Q_PROPERTY(bool multiTouch READ multiTouch)
+    Q_PROPERTY(qreal motionThreshold READ motionThreshold)
     Q_PROPERTY(uint32_t palmPressure READ palmPressure)
     Q_PROPERTY(QSizeF size READ size)
     Q_PROPERTY(uint32_t thumbPressure READ thumbPressure)
@@ -46,9 +49,12 @@ class InputDeviceProperties
     Q_PROPERTY(bool touchpadButtonPad READ touchpadButtonPad)
     Q_PROPERTY(std::chrono::milliseconds touchpadClickTimeout READ touchpadClickTimeout)
     Q_PROPERTY(bool touchpadLmrTapButtonMap READ touchpadLmrTapButtonMap)
+    Q_PROPERTY(qreal touchpadMotionThreshold2 READ touchpadMotionThreshold2)
+    Q_PROPERTY(qreal touchpadMotionThreshold3 READ touchpadMotionThreshold3)
 
 public:
     InputDeviceProperties() = default;
+    InputDeviceProperties(const InputDevice *device);
 
     /**
      * Applies set properties from the other specified properties onto this one.
@@ -72,6 +78,16 @@ public:
      */
     bool handleLibevdevEvents() const;
     void setHandleLibevdevEvents(bool value) { m_handleLibevdevEvents = value; }
+
+    /**
+     * Amount of motion that cannot be performed accidentally.
+     *
+     * Mouse - motion threshold in libinput units
+     * Touchpad - motion threshold for 1-finger motion in libinput units
+     * Touchscreen - motion threshold in millimiters
+     */
+    qreal motionThreshold() const;
+    void setMotionThreshold(qreal value) { m_motionThreshold = value; }
 
     bool multiTouch() const;
     /**
@@ -141,12 +157,28 @@ public:
     bool touchpadLmrTapButtonMap() const;
     void setTouchpadLmrTapButtonMap(bool value) { m_touchpadLmrTapButtonMap = value; }
 
+    /**
+     * Motion threshold for 2-finger motion.
+     */
+    qreal touchpadMotionThreshold2() const;
+    void setTouchpadMotionThreshold2(qreal value) { m_touchpadMotionThreshold2 = value; }
+
+    /**
+     * Motion threshold for 3- and 4-finger motion.
+     */
+    qreal touchpadMotionThreshold3() const;
+    void setTouchpadMotionThreshold3(qreal value) { m_touchpadMotionThreshold3 = value; }
+
     QString toString() const;
 
 private:
+    const InputDevice *m_device{};
+
     std::optional<bool> m_grab;
     std::optional<bool> m_ignore;
     std::optional<bool> m_handleLibevdevEvents;
+
+    std::optional<qreal> m_motionThreshold;
 
     std::optional<bool> m_multiTouch;
     std::optional<QSizeF> m_size;
@@ -162,6 +194,8 @@ private:
     std::optional<bool> m_touchpadButtonPad;
     std::optional<std::chrono::milliseconds> m_touchpadClickTimeout;
     std::optional<bool> m_touchpadLmrTapButtonMap;
+    std::optional<qreal> m_touchpadMotionThreshold2;
+    std::optional<qreal> m_touchpadMotionThreshold3;
 
     friend class TestDeviceRuleNodeParser;
 };

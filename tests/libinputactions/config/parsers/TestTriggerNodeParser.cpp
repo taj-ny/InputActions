@@ -4,6 +4,7 @@
 #include <libinputactions/config/ConfigIssue.h>
 #include <libinputactions/config/ConfigIssueManager.h>
 #include <libinputactions/config/Node.h>
+#include <libinputactions/triggers/SwipeTrigger.h>
 #include <libinputactions/triggers/Trigger.h>
 
 namespace InputActions
@@ -64,6 +65,40 @@ void TestTriggerNodeParser::stroke_invalidStroke__throwsInvalidValueConfigExcept
     )");
 
     INPUTACTIONS_VERIFY_THROWS_CONFIG_EXCEPTION(node->as<std::unique_ptr<Trigger>>(), InvalidValueConfigException, 2, 19);
+}
+
+void TestTriggerNodeParser::swipe_angle__parsesNodeCorrectly()
+{
+    const auto node = Node::create(R"(
+        type: swipe
+        angle: 30-60
+    )");
+    const auto trigger = node->as<std::unique_ptr<Trigger>>();
+
+    const auto *swipeTrigger = dynamic_cast<const SwipeTrigger *>(trigger.get());
+    QVERIFY(swipeTrigger);
+    QCOMPARE(swipeTrigger->minAngle(), 30);
+    QCOMPARE(swipeTrigger->maxAngle(), 60);
+}
+
+void TestTriggerNodeParser::swipe_direction__doesNotThrow()
+{
+    const auto node = Node::create(R"(
+        type: swipe
+        direction: right
+    )");
+
+    QVERIFY_THROWS_NO_EXCEPTION(node->as<std::unique_ptr<Trigger>>());
+}
+
+void TestTriggerNodeParser::swipe_invalidAngle__throwsInvalidValueConfigException()
+{
+    const auto node = Node::create(R"(
+        type: swipe
+        angle: 1-361
+    )");
+
+    INPUTACTIONS_VERIFY_THROWS_CONFIG_EXCEPTION(node->as<std::unique_ptr<Trigger>>(), InvalidValueConfigException, 2, 15);
 }
 
 void TestTriggerNodeParser::fingers__parsesNodeCorrectly()
