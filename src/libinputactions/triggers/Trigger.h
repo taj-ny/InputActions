@@ -80,40 +80,32 @@ public:
     void addAction(std::unique_ptr<TriggerAction> action);
     /**
      * @return Whether conditions, fingers, keyboard modifiers, mouse buttons and begin positions are satisfied.
-     * @internal
      */
     virtual bool canActivate(const TriggerActivationEvent &event) const;
 
     /**
      * Called by the trigger handler before updating a trigger. If true is returned, that trigger will be cancelled.
-     * @internal
      */
     virtual bool canUpdate(const TriggerUpdateEvent &event) const;
     /**
      * Whether the trigger should be ended and not cancelled if canUpdate returns false.
      */
     virtual bool endIfCannotUpdate() const;
-    /**
-     * @internal
-     */
     TEST_VIRTUAL void update(const TriggerUpdateEvent &event);
 
     /**
      * Called by the trigger handler before ending a trigger. If true is returned, that trigger will be cancelled
      * instead of ended.
      * @return Whether the trigger can be ended.
-     * @internal
      */
     bool canEnd() const;
     /**
      * Resets the trigger and notifies all actions that it has ended.
-     * @internal
      */
     void end(bool allowResuming = true);
 
     /**
      * Resets the trigger and notifies all actions that it has been cancelled.
-     * @internal
      */
     void cancel();
 
@@ -121,14 +113,12 @@ public:
      * The trigger handler calls this method before ending a trigger. If true is returned, that trigger is ended and
      * all others are cancelled.
      * @return Whether the trigger has an action that executes on trigger and can be executed.
-     * @internal
      */
     bool overridesOtherTriggersOnEnd();
     /**
      * The trigger handler calls this method after updating a trigger. If true is returned for one, all other triggers
      * are cancelled.
      * @return Whether the trigger has any action that has been executed or is an update action and can be executed.
-     * @internal
      */
     bool overridesOtherTriggersOnUpdate();
 

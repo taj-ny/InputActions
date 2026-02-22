@@ -48,7 +48,6 @@ struct TouchPoint
 
     /**
      * Whether this touch point is active.
-     * @internal
      */
     bool active{};
 

@@ -76,7 +76,6 @@ public:
     bool multiTouch() const;
     /**
      * Only for testing.
-     * @internal
      */
     void setMultiTouch(bool value) { m_multiTouch = value; }
 
@@ -84,7 +83,6 @@ public:
     QSizeF size() const;
     /**
      * Only for testing.
-     * @internal
      */
     void setSize(const QSizeF &value) { m_size = value; }
     /**

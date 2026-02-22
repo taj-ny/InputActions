@@ -104,27 +104,22 @@ public:
 
     /**
      * Called by the trigger.
-     * @internal
      */
     void triggerStarted();
     /**
      * Called by the trigger.
-     * @internal
      */
     void triggerUpdated(const Delta &delta, const PointDelta &deltaPointMultiplied);
     /**
      * Called by the trigger.
-     * @internal
      */
     void triggerTick(qreal delta);
     /**
      * Called by the trigger.
-     * @internal
      */
     void triggerEnded();
     /**
      * Called by the trigger.
-     * @internal
      */
     void triggerCancelled();
 
