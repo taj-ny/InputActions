@@ -52,7 +52,6 @@ public:
     /**
      * @return Whether the speed matches.
      * @see Trigger::canUpdate
-     * @internal
      */
     bool canUpdate(const TriggerUpdateEvent &event) const override;
 
