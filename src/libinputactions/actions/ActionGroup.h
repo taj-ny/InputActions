@@ -24,25 +24,31 @@
 namespace InputActions
 {
 
+enum class ActionGroupExecutionMode
+{
+    /**
+     * Executes all conditions that satisfy their condition.
+     */
+    All,
+    /**
+     * Executes the first action that satisfied its condition.
+     */
+    First,
+};
+
 /**
- * Executes actions from the specified list in a specific way.
+ * Executes a set of actions in a specific way.
  */
 class ActionGroup : public Action
 {
 public:
-    enum class ExecutionMode
-    {
-        /**
-         * Executes all conditions that satisfy their condition.
-         */
-        All,
-        /**
-         * Executes the first action that satisfied its condition.
-         */
-        First,
-    };
+    ActionGroup(ActionGroupExecutionMode mode = ActionGroupExecutionMode::All);
 
-    ActionGroup(std::vector<std::unique_ptr<Action>> actions, ExecutionMode mode = ExecutionMode::All);
+    std::vector<const Action *> actions() const;
+    void append(std::unique_ptr<Action> action);
+    void setActions(std::vector<std::unique_ptr<Action>> actions) { m_actions = std::move(actions); }
+
+    ActionGroupExecutionMode mode() const { return m_mode; }
 
     bool async() const override;
 
@@ -53,7 +59,7 @@ protected:
 
 private:
     std::vector<std::unique_ptr<Action>> m_actions;
-    ExecutionMode m_mode;
+    ActionGroupExecutionMode m_mode;
 };
 
 }

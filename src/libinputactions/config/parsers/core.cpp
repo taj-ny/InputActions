@@ -155,7 +155,9 @@ void NodeParser<std::unique_ptr<Action>>::parse(const Node *node, std::unique_pt
     } else if (const auto *sleepActionNode = node->at("sleep")) {
         result = std::make_unique<SleepAction>(sleepActionNode->as<std::chrono::milliseconds>());
     } else if (const auto *oneNode = node->at("one")) {
-        result = std::make_unique<ActionGroup>(oneNode->as<std::vector<std::unique_ptr<Action>>>(), ActionGroup::ExecutionMode::First);
+        auto action = std::make_unique<ActionGroup>(ActionGroupExecutionMode::First);
+        loadSetter(action.get(), &ActionGroup::setActions, oneNode);
+        result = std::move(action);
     } else {
         throw InvalidValueConfigException(node, "Action is missing a required property that determines its type.");
     }
