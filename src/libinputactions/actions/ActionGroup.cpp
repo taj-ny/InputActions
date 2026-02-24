@@ -25,7 +25,7 @@
 namespace InputActions
 {
 
-ActionGroup::ActionGroup(std::vector<std::shared_ptr<Action>> actions, ExecutionMode mode)
+ActionGroup::ActionGroup(std::vector<std::unique_ptr<Action>> actions, ExecutionMode mode)
     : m_actions(std::move(actions))
     , m_mode(mode)
 {

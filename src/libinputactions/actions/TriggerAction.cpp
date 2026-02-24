@@ -26,13 +26,14 @@ Q_LOGGING_CATEGORY(INPUTACTIONS_ACTION, "inputactions.action", QtWarningMsg)
 namespace InputActions
 {
 
-TriggerAction::TriggerAction(std::shared_ptr<Action> action)
+TriggerAction::TriggerAction()
+    : m_action(std::make_unique<Action>())
 {
-    if (action) {
-        m_action = std::move(action);
-    } else {
-        m_action = std::make_shared<Action>();
-    }
+}
+
+TriggerAction::TriggerAction(std::unique_ptr<Action> action)
+    : m_action(std::move(action))
+{
 }
 
 TriggerAction::~TriggerAction() = default;
