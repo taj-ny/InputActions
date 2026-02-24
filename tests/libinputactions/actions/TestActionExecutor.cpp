@@ -12,55 +12,82 @@ void TestActionExecutor::init()
 
 void TestActionExecutor::execute_syncAction_executedOnMainThread()
 {
-    m_executor->execute(std::make_shared<CustomAction>([](auto) {
-        QVERIFY(isMainThread());
-    }));
+    CustomAction assertAction([](auto) {
+        QCOMPARE(isMainThread(), true);
+    });
+
+    m_executor->execute(assertAction);
+
+    QCOMPARE(assertAction.executions(), 1);
 }
 
 void TestActionExecutor::execute_asyncAction_executedOnActionThread()
 {
-    m_executor->execute(std::make_shared<CustomAction>(
+    CustomAction assertAction(
         [](auto) {
-            QVERIFY(!isMainThread());
+            QCOMPARE(isMainThread(), false);
         },
-        true));
-    QTest::qWait(100);
+        true);
+
+    m_executor->execute(assertAction);
+    m_executor->waitForDone();
+
+    QCOMPARE(assertAction.executions(), 1);
 }
 
 void TestActionExecutor::execute_syncActionWhileActionThreadIsBusy_executedOnActionThread()
 {
-    m_executor->execute(std::make_shared<SleepAction>(std::chrono::milliseconds(100U)));
-    m_executor->execute(std::make_shared<CustomAction>([](auto) {
-        QVERIFY(!isMainThread());
-    }));
-    QTest::qWait(500);
+    SleepAction sleepAction(std::chrono::milliseconds(100U));
+    CustomAction assertAction([](auto) {
+        QCOMPARE(isMainThread(), false);
+    });
+
+    m_executor->execute(sleepAction);
+    m_executor->execute(assertAction);
+    m_executor->waitForDone();
+
+    QCOMPARE(sleepAction.executions(), 1);
+    QCOMPARE(assertAction.executions(), 1);
 }
 
 void TestActionExecutor::execute_syncAndAsyncActions_orderPreserved()
 {
     std::vector<uint8_t> results;
-    m_executor->execute(std::make_shared<CustomAction>([&results](auto) {
+
+    CustomAction action1([&results](auto) {
         results.push_back(1);
-    }));
-    m_executor->execute(std::make_shared<CustomAction>(
+    });
+    CustomAction action2(
         [&results](auto) {
             QTest::qWait(20);
             results.push_back(2);
         },
-        true));
-    m_executor->execute(std::make_shared<CustomAction>([&results](auto) {
+        true);
+    CustomAction action3([&results](auto) {
         results.push_back(3);
-    }));
-    m_executor->execute(std::make_shared<CustomAction>(
+    });
+    CustomAction action4(
         [&results](auto) {
             QTest::qWait(10);
             results.push_back(4);
         },
-        true));
-    m_executor->execute(std::make_shared<CustomAction>([&results](auto) {
+        true);
+    CustomAction action5([&results](auto) {
         results.push_back(5);
-    }));
-    QTest::qWait(50);
+    });
+
+    m_executor->execute(action1);
+    m_executor->execute(action2);
+    m_executor->execute(action3);
+    m_executor->execute(action4);
+    m_executor->execute(action5);
+    m_executor->waitForDone();
+
+    QCOMPARE(action1.executions(), 1);
+    QCOMPARE(action2.executions(), 1);
+    QCOMPARE(action3.executions(), 1);
+    QCOMPARE(action4.executions(), 1);
+    QCOMPARE(action5.executions(), 1);
     QVERIFY((results == std::vector<uint8_t>{1, 2, 3, 4, 5}));
 }
 
