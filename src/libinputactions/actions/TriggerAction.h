@@ -32,7 +32,7 @@ namespace InputActions
 
 class Action;
 class Delta;
-class PointDelta;
+class TriggerUpdateEvent;
 
 /**
  * The point of the trigger's lifecycle at which the action should be executed.
@@ -107,7 +107,7 @@ public:
     /**
      * Called by the trigger.
      */
-    void triggerUpdated(const Delta &delta, const PointDelta &deltaPointMultiplied);
+    void triggerUpdated(const TriggerUpdateEvent &event);
     /**
      * Called by the trigger.
      */

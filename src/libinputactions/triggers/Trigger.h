@@ -203,8 +203,9 @@ protected:
      */
     virtual void actionAdded(TriggerAction *action);
 
-    const std::vector<TriggerAction *> actions();
-
+    /**
+     * Override to modify the event before passing it to actions. Must be called by the overriding method.
+     */
     virtual void updateActions(const TriggerUpdateEvent &event);
 
 private slots:

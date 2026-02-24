@@ -39,7 +39,7 @@ bool DirectionalMotionTrigger::canUpdate(const TriggerUpdateEvent &event) const
 
 void DirectionalMotionTrigger::updateActions(const TriggerUpdateEvent &event)
 {
-    const auto &castedEvent = dynamic_cast<const DirectionalMotionTriggerUpdateEvent &>(event);
+    auto newEvent = dynamic_cast<const DirectionalMotionTriggerUpdateEvent &>(event);
 
     // Ensure delta is always positive for single-directional gestures, it makes intervals easier to use.
     static std::vector<TriggerDirection> negativeDirections = {
@@ -48,14 +48,13 @@ void DirectionalMotionTrigger::updateActions(const TriggerUpdateEvent &event)
         static_cast<TriggerDirection>(SwipeDirection::Left),
         static_cast<TriggerDirection>(SwipeDirection::Up),
     };
-    auto delta = castedEvent.delta();
     if ((m_direction & (m_direction - 1)) == 0 && std::find(negativeDirections.begin(), negativeDirections.end(), m_direction) != negativeDirections.end()) {
+        auto delta = event.delta();
         delta = {delta.accelerated() * -1, delta.unaccelerated() * -1};
+        newEvent.setDelta(delta);
     }
 
-    for (auto &action : actions()) {
-        action->triggerUpdated(delta, castedEvent.deltaMultiplied());
-    }
+    MotionTrigger::updateActions(newEvent);
 }
 
 }

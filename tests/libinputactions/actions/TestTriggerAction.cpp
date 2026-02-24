@@ -3,6 +3,7 @@
 #include <libinputactions/actions/CustomAction.h>
 #include <libinputactions/actions/TriggerAction.h>
 #include <libinputactions/input/Delta.h>
+#include <libinputactions/triggers/Trigger.h>
 
 namespace InputActions
 {
@@ -39,7 +40,9 @@ void TestTriggerAction::triggerUpdated_intervals()
     action->setOn(On::Update);
     action->setInterval(interval);
     for (const auto &delta : deltas) {
-        action->triggerUpdated(delta, {});
+        TriggerUpdateEvent event;
+        event.setDelta(delta);
+        action->triggerUpdated(event);
     }
 
     QCOMPARE(action->action()->executions(), executions);
@@ -60,7 +63,9 @@ void TestTriggerAction::triggerUpdated_mergeable()
     action->setOn(On::Update);
     action->setInterval(interval);
 
-    action->triggerUpdated(10, {});
+    TriggerUpdateEvent event;
+    event.setDelta(10);
+    action->triggerUpdated(event);
 
     QCOMPARE(actualExecutions, 10);
 }

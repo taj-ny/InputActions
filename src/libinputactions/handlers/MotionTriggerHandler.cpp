@@ -199,7 +199,7 @@ bool MotionTriggerHandler::handleMotion(const InputDevice *device, const PointDe
         swipeEvent.setDelta(m_currentSwipeAxis == Axis::Vertical ? Delta(delta.accelerated().y(), delta.unaccelerated().y())
                                                                  : Delta(delta.accelerated().x(), delta.unaccelerated().x()));
         swipeEvent.setDirection(static_cast<TriggerDirection>(direction));
-        swipeEvent.setDeltaMultiplied({delta.accelerated() * m_swipeDeltaMultiplier, delta.unaccelerated() * m_swipeDeltaMultiplier});
+        swipeEvent.setPointDelta({delta.accelerated() * m_swipeDeltaMultiplier, delta.unaccelerated() * m_swipeDeltaMultiplier});
         swipeEvent.setSpeed(speed);
         events[TriggerType::Swipe] = &swipeEvent;
     }

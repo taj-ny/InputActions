@@ -37,12 +37,4 @@ bool MotionTrigger::hasSpeed() const
     return m_speed != TriggerSpeed::Any;
 }
 
-void MotionTrigger::updateActions(const TriggerUpdateEvent &event)
-{
-    const auto &castedEvent = dynamic_cast<const MotionTriggerUpdateEvent &>(event);
-    for (auto &action : actions()) {
-        action->triggerUpdated(event.delta(), castedEvent.deltaMultiplied());
-    }
-}
-
 }
