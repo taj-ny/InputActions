@@ -62,7 +62,7 @@ public:
     /**
      * Executes an action without checking its condition.
      */
-    void execute(const std::shared_ptr<Action> &action, ActionExecutionArguments &&arguments = {});
+    void execute(Action &action, const ActionExecutionArguments &arguments = {});
 
     /**
      * Clears the action queue.

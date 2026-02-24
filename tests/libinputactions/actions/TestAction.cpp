@@ -5,29 +5,28 @@
 namespace InputActions
 {
 
-void TestAction::init()
-{
-    m_action = std::make_shared<Action>();
-}
-
 void TestAction::canExecute_noLimit()
 {
-    QVERIFY(m_action->canExecute());
-    g_actionExecutor->execute(m_action);
-    QVERIFY(m_action->canExecute());
+    Action action;
+
+    QVERIFY(action.canExecute());
+    g_actionExecutor->execute(action);
+    QVERIFY(action.canExecute());
 }
 
 void TestAction::canExecute_withLimit()
 {
-    m_action->setExecutionLimit(1);
-    QVERIFY(m_action->canExecute());
-    g_actionExecutor->execute(m_action);
-    QVERIFY(!m_action->canExecute());
+    Action action;
+    action.setExecutionLimit(1);
 
-    m_action->reset();
-    QVERIFY(m_action->canExecute());
-    g_actionExecutor->execute(m_action);
-    QVERIFY(!m_action->canExecute());
+    QVERIFY(action.canExecute());
+    g_actionExecutor->execute(action);
+    QVERIFY(!action.canExecute());
+
+    action.reset();
+    QVERIFY(action.canExecute());
+    g_actionExecutor->execute(action);
+    QVERIFY(!action.canExecute());
 }
 
 }

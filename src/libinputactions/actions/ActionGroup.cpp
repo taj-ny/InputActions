@@ -53,7 +53,7 @@ void ActionGroup::executeImpl(uint32_t executions)
                 if (!checkCanExecute(action)) {
                     continue;
                 }
-                g_actionExecutor->execute(action,
+                g_actionExecutor->execute(*action,
                                           {
                                               .thread = ActionThread::Current,
                                           });
@@ -62,7 +62,7 @@ void ActionGroup::executeImpl(uint32_t executions)
         case ExecutionMode::First:
             for (const auto &action : m_actions) {
                 if (checkCanExecute(action)) {
-                    g_actionExecutor->execute(action,
+                    g_actionExecutor->execute(*action,
                                               {
                                                   .thread = ActionThread::Current,
                                               });

@@ -83,7 +83,7 @@ void TriggerAction::triggerCancelled()
 void TriggerAction::tryExecute(uint32_t executions)
 {
     if (canExecute()) {
-        g_actionExecutor->execute(m_action,
+        g_actionExecutor->execute(*m_action,
                                   {
                                       .executions = executions,
                                   });
