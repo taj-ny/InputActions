@@ -42,9 +42,11 @@ public:
 
 protected:
     void bind(wl_registry *registry, uint32_t name, uint32_t version) override;
+    void destroy() final;
 
 private:
     static void handleToplevel(void *data, zwlr_foreign_toplevel_manager_v1 *manager, zwlr_foreign_toplevel_handle_v1 *toplevel);
+    static void handleFinished(void *data, zwlr_foreign_toplevel_manager_v1 *manager);
 
     static void handleTitle(void *data, zwlr_foreign_toplevel_handle_v1 *handle, const char *title);
     static void handleAppId(void *data, zwlr_foreign_toplevel_handle_v1 *handle, const char *appId);

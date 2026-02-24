@@ -37,6 +37,7 @@ public:
 
 private:
     static void handleGlobal(void *data, wl_registry *registry, uint32_t name, const char *interface, uint32_t version);
+    static void handleGlobalRemove(void *data, wl_registry *registry, uint32_t name);
 
     std::vector<std::unique_ptr<WaylandProtocol>> m_protocols;
 };

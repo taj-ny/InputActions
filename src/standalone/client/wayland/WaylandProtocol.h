@@ -33,15 +33,21 @@ public:
     virtual ~WaylandProtocol() = default;
 
     virtual void bind(wl_registry *registry, uint32_t name, uint32_t version);
+    /**
+     * The protocol may be bound again after being destroyed.
+     */
+    virtual void destroy();
 
-    const QString &name() const;
-    bool supported() const;
+    uint32_t name() const { return m_name; }
+    const QString &interface() const { return m_interface; }
+    bool supported() const { return m_supported; }
 
 protected:
-    WaylandProtocol(QString name);
+    WaylandProtocol(QString interface);
 
 private:
-    QString m_name;
+    uint32_t m_name{};
+    QString m_interface;
     bool m_supported{};
 };
 

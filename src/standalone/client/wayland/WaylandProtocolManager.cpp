@@ -24,7 +24,10 @@ namespace InputActions
 
 WaylandProtocolManager::WaylandProtocolManager(wl_registry *registry)
 {
-    static const wl_registry_listener listener(&WaylandProtocolManager::handleGlobal);
+    static const wl_registry_listener listener{
+        .global = &WaylandProtocolManager::handleGlobal,
+        .global_remove = &WaylandProtocolManager::handleGlobalRemove,
+    };
     wl_registry_add_listener(registry, &listener, this);
 }
 
@@ -38,10 +41,21 @@ void WaylandProtocolManager::addProtocol(std::unique_ptr<WaylandProtocol> protoc
 void WaylandProtocolManager::handleGlobal(void *data, wl_registry *registry, uint32_t name, const char *interface, uint32_t version)
 {
     auto *self = static_cast<WaylandProtocolManager *>(data);
-    for (auto &protocol : self->m_protocols) {
-        if (strcmp(interface, protocol->name().toStdString().c_str()) == 0) {
+    for (const auto &protocol : self->m_protocols) {
+        if (strcmp(interface, protocol->interface().toStdString().c_str()) == 0) {
             protocol->bind(registry, name, version);
-            return;
+            break;
+        }
+    }
+}
+
+void WaylandProtocolManager::handleGlobalRemove(void *data, wl_registry *registry, uint32_t name)
+{
+    auto *self = static_cast<WaylandProtocolManager *>(data);
+    for (const auto &protocol : self->m_protocols) {
+        if (protocol->name() == name) {
+            protocol->destroy();
+            break;
         }
     }
 }
