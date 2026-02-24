@@ -23,9 +23,11 @@ void TestActionExecutor::execute_syncAction_executedOnMainThread()
 
 void TestActionExecutor::execute_asyncAction_executedOnActionThread()
 {
-    CustomAction assertAction([](auto) {
-        QCOMPARE(isMainThread(), false);
-    }, true);
+    CustomAction assertAction(
+        [](auto) {
+            QCOMPARE(isMainThread(), false);
+        },
+        true);
 
     m_executor->execute(assertAction);
     m_executor->waitForDone();
