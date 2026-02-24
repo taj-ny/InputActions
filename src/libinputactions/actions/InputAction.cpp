@@ -40,11 +40,11 @@ InputAction::InputAction(std::vector<InputActionItem> sequence)
     }
 }
 
-void InputAction::executeImpl(uint32_t executions)
+void InputAction::executeImpl(const ActionExecutionArguments &args)
 {
     for (const auto &item : m_sequence) {
         const auto keyboardText = item.keyboardText.get();
-        QThreadHelpers::runOnThread(QThreadHelpers::mainThread(), [this, executions, item, keyboardText]() {
+        QThreadHelpers::runOnThread(QThreadHelpers::mainThread(), [this, args, item, keyboardText]() {
             if (item.keyboardPress.isValid()) {
                 g_inputBackend->virtualKeyboard()->keyboardKey(item.keyboardPress, true);
             } else if (item.keyboardRelease.isValid()) {
@@ -56,13 +56,13 @@ void InputAction::executeImpl(uint32_t executions)
             } else if (item.mouseRelease.isValid()) {
                 g_inputBackend->virtualMouse()->mouseButton(item.mouseRelease, false);
             } else if (!item.mouseAxis.isNull()) {
-                g_inputBackend->virtualMouse()->mouseWheel(item.mouseAxis * executions);
+                g_inputBackend->virtualMouse()->mouseWheel(item.mouseAxis * args.executions);
             } else if (!item.mouseMoveAbsolute.isNull()) {
                 g_pointerPositionSetter->setGlobalPointerPosition(item.mouseMoveAbsolute);
             } else if (!item.mouseMoveRelative.isNull()) {
                 g_inputBackend->virtualMouse()->mouseMotion(item.mouseMoveRelative);
             } else if (item.mouseMoveRelativeByDelta) {
-                g_inputBackend->virtualMouse()->mouseMotion(m_deltaMultiplied * item.mouseMoveRelativeByDelta);
+                g_inputBackend->virtualMouse()->mouseMotion(args.inputActionArgs.motionPointDelta * item.mouseMoveRelativeByDelta);
             }
         });
 

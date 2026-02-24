@@ -32,7 +32,7 @@ bool SleepAction::async() const
     return true;
 }
 
-void SleepAction::executeImpl(uint32_t executions)
+void SleepAction::executeImpl(const ActionExecutionArguments &args)
 {
     QThread::msleep(m_time.count());
 }

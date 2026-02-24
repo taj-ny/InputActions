@@ -30,16 +30,16 @@ public:
     /**
      * @param async See ActionExecutor::async()
      */
-    CustomAction(std::function<void(uint32_t executions)> function, bool async = false, bool mergeable = false);
+    CustomAction(std::function<void(const ActionExecutionArguments &args)> function, bool async = false, bool mergeable = false);
 
     bool async() const override;
     bool mergeable() const override;
 
 protected:
-    void executeImpl(uint32_t executions) override;
+    void executeImpl(const ActionExecutionArguments &args) override;
 
 private:
-    std::function<void(uint32_t executions)> m_function;
+    std::function<void(const ActionExecutionArguments &args)> m_function;
     bool m_async;
     bool m_mergeable;
 };

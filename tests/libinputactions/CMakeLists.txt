@@ -25,6 +25,7 @@ endmacro()
 
 libinputactions_add_test(TestAction SOURCES actions/TestAction.cpp)
 libinputactions_add_test(TestActionExecutor SOURCES actions/TestActionExecutor.cpp)
+libinputactions_add_test(TestActionGroup SOURCES actions/TestActionGroup.cpp)
 libinputactions_add_test(TestActionGroupNodeParser SOURCES config/parsers/actions/TestActionGroupNodeParser.cpp)
 libinputactions_add_test(TestActionInterval SOURCES actions/TestActionInterval.cpp)
 libinputactions_add_test(TestBaseNodeParser SOURCES config/parsers/TestBaseNodeParser.cpp)

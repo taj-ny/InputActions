@@ -29,7 +29,7 @@ ActionGroup::ActionGroup(ActionGroupExecutionMode mode)
 {
 }
 
-void ActionGroup::executeImpl(uint32_t executions)
+void ActionGroup::executeImpl(const ActionExecutionArguments &args)
 {
     // TODO Each action introduces latency
     const auto checkCanExecute = [](const auto &action) {
@@ -54,6 +54,7 @@ void ActionGroup::executeImpl(uint32_t executions)
                 g_actionExecutor->execute(*action,
                                           {
                                               .thread = ActionThread::Current,
+                                              .actionArgs = args,
                                           });
             }
             break;
@@ -63,6 +64,7 @@ void ActionGroup::executeImpl(uint32_t executions)
                     g_actionExecutor->execute(*action,
                                               {
                                                   .thread = ActionThread::Current,
+                                                  .actionArgs = args,
                                               });
                     break;
                 }

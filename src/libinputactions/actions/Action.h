@@ -18,6 +18,7 @@
 
 #pragma once
 
+#include <QPointF>
 #include <QString>
 #include <memory>
 
@@ -25,6 +26,22 @@ namespace InputActions
 {
 
 class Condition;
+
+struct ActionExecutionArguments
+{
+    /**
+     * If the action is mergeable, this is set to the intended execution count, otherwise 1. Must not be 0.
+     */
+    uint32_t executions = 1;
+
+    struct InputActionExecutionArguments
+    {
+        /**
+         * For the move_by_delta mouse action.
+         */
+        QPointF motionPointDelta;
+    } inputActionArgs;
+};
 
 /**
  * Actions must be executed using an ActionExecutor.
@@ -45,7 +62,7 @@ public:
      * Do not call directly, use ActionExecutor instead.
      * @see executeImpl
      */
-    void execute(uint32_t executions);
+    void execute(const ActionExecutionArguments &args);
     /**
      * Whether the action should be executed asynchronously. A value of false does not guarantee that the action will be executed synchronously.
      * @see ActionExecutor::execute
@@ -83,9 +100,8 @@ public:
 protected:
     /**
      * This method is not guaranteed to be called from the main thread.
-     * @param executions If the action is mergeable, this is set to the intended execution count, otherwise 1. Must not be 0.
      */
-    virtual void executeImpl(uint32_t executions) {}
+    virtual void executeImpl(const ActionExecutionArguments &args) {}
 
 private:
     std::shared_ptr<Condition> m_condition;

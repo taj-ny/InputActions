@@ -14,6 +14,9 @@ private slots:
     void triggerUpdated_intervals();
 
     void triggerUpdated_mergeable();
+
+    void tryExecute_motion_accelerated__passesMotionPointDeltaToAction();
+    void tryExecute_motion_unaccelerated__passesMotionPointDeltaToAction();
 };
 
 }

@@ -18,12 +18,12 @@
 
 #pragma once
 
+#include "Action.h"
+#include <QPointF>
 #include <QThreadPool>
 
 namespace InputActions
 {
-
-class Action;
 
 enum class ActionThread
 {
@@ -42,16 +42,14 @@ enum class ActionThread
     Own,
 };
 
-struct ActionExecutionArguments
+struct ActionExecutionRequestArguments
 {
-    /**
-     * Must be 1 if the action is not mergeable.
-     */
-    uint32_t executions = 1;
     /**
      * Which thread to execute the action on.
      */
     ActionThread thread = ActionThread::Auto;
+
+    ActionExecutionArguments actionArgs;
 };
 
 class ActionExecutor
@@ -62,7 +60,7 @@ public:
     /**
      * Executes an action without checking its condition.
      */
-    void execute(Action &action, const ActionExecutionArguments &arguments = {});
+    void execute(Action &action, const ActionExecutionRequestArguments &args = {});
 
     /**
      * Clears the action queue.
