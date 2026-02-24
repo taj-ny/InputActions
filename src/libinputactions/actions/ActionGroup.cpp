@@ -18,16 +18,14 @@
 
 #include "ActionGroup.h"
 #include "ActionExecutor.h"
-#include "InputActionsMain.h"
 #include <libinputactions/conditions/Condition.h>
 #include <libinputactions/helpers/QThread.h>
 
 namespace InputActions
 {
 
-ActionGroup::ActionGroup(std::vector<std::unique_ptr<Action>> actions, ExecutionMode mode)
-    : m_actions(std::move(actions))
-    , m_mode(mode)
+ActionGroup::ActionGroup(ActionGroupExecutionMode mode)
+    : m_mode(mode)
 {
 }
 
@@ -48,7 +46,7 @@ void ActionGroup::executeImpl(uint32_t executions)
     };
 
     switch (m_mode) {
-        case ExecutionMode::All:
+        case ActionGroupExecutionMode::All:
             for (const auto &action : m_actions) {
                 if (!checkCanExecute(action)) {
                     continue;
@@ -59,7 +57,7 @@ void ActionGroup::executeImpl(uint32_t executions)
                                           });
             }
             break;
-        case ExecutionMode::First:
+        case ActionGroupExecutionMode::First:
             for (const auto &action : m_actions) {
                 if (checkCanExecute(action)) {
                     g_actionExecutor->execute(*action,
@@ -71,6 +69,20 @@ void ActionGroup::executeImpl(uint32_t executions)
             }
             break;
     }
+}
+
+std::vector<const Action *> ActionGroup::actions() const
+{
+    std::vector<const Action *> result;
+    for (const auto &action : m_actions) {
+        result.push_back(action.get());
+    }
+    return result;
+}
+
+void ActionGroup::append(std::unique_ptr<Action> action)
+{
+    m_actions.push_back(std::move(action));
 }
 
 bool ActionGroup::async() const

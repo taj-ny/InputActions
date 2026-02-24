@@ -29,6 +29,8 @@ class SleepAction : public Action
 public:
     SleepAction(std::chrono::milliseconds time);
 
+    std::chrono::milliseconds time() const { return m_time; }
+
     bool async() const override;
 
 protected:
