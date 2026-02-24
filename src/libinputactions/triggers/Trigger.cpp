@@ -186,19 +186,10 @@ void Trigger::actionAdded(TriggerAction *action)
     }
 }
 
-const std::vector<TriggerAction *> Trigger::actions()
-{
-    std::vector<TriggerAction *> result;
-    for (auto &action : m_actions) {
-        result.push_back(action.get());
-    }
-    return result;
-}
-
 void Trigger::updateActions(const TriggerUpdateEvent &event)
 {
     for (const auto &action : m_actions) {
-        action->triggerUpdated(event.delta(), {});
+        action->triggerUpdated(event);
     }
 }
 

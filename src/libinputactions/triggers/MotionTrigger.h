@@ -31,14 +31,17 @@ public:
     TriggerSpeed speed() const { return m_speed; }
     void setSpeed(TriggerSpeed value) { m_speed = value; }
 
-    PointDelta deltaMultiplied() const { return m_deltaMultiplied; }
-    void setDeltaMultiplied(PointDelta value) { m_deltaMultiplied = std::move(value); }
+    /**
+     * Multiplied by the delta multiplier specified in MotionTriggerHandler.
+     */
+    PointDelta pointDelta() const { return m_pointDelta; }
+    void setPointDelta(PointDelta value) { m_pointDelta = std::move(value); }
 
 private:
     // Speed should be in a TriggerBeginEvent, but that's not a thing, and adding it would complicate everything.
     // Not worth it for a single property.
     TriggerSpeed m_speed = TriggerSpeed::Any;
-    PointDelta m_deltaMultiplied{};
+    PointDelta m_pointDelta{};
 };
 
 /**
@@ -64,9 +67,6 @@ public:
      */
     bool lockPointer() const { return m_lockPointer; }
     void setLockPointer(bool value) { m_lockPointer = value; }
-
-protected:
-    void updateActions(const TriggerUpdateEvent &event) override;
 
 private:
     bool m_lockPointer{};

@@ -20,6 +20,7 @@
 #include "ActionExecutor.h"
 #include "InputAction.h"
 #include <libinputactions/input/Delta.h>
+#include <libinputactions/triggers/MotionTrigger.h>
 
 Q_LOGGING_CATEGORY(INPUTACTIONS_ACTION, "inputactions.action", QtWarningMsg)
 
@@ -46,16 +47,19 @@ void TriggerAction::triggerStarted()
     }
 }
 
-void TriggerAction::triggerUpdated(const Delta &delta, const PointDelta &deltaPointMultiplied)
+void TriggerAction::triggerUpdated(const TriggerUpdateEvent &event)
 {
     if (m_on == On::Tick) {
         return;
     }
 
     if (auto *inputAction = dynamic_cast<InputAction *>(m_action.get())) {
-        inputAction->m_deltaMultiplied = m_accelerated ? deltaPointMultiplied.accelerated() : deltaPointMultiplied.unaccelerated();
+        if (const auto *motionEvent = dynamic_cast<const MotionTriggerUpdateEvent *>(&event)) {
+            const auto &pointDelta = motionEvent->pointDelta();
+            inputAction->m_deltaMultiplied = m_accelerated ? pointDelta.accelerated() : pointDelta.unaccelerated();
+        }
     }
-    update(delta);
+    update(event.delta());
 }
 
 void TriggerAction::triggerTick(qreal delta)
