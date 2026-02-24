@@ -35,19 +35,31 @@ WlrForeignToplevelManagementV1::WlrForeignToplevelManagementV1(Client *client)
 
 WlrForeignToplevelManagementV1::~WlrForeignToplevelManagementV1()
 {
-    if (m_manager) {
-        zwlr_foreign_toplevel_manager_v1_destroy(m_manager);
-    }
+    destroy();
 }
 
 void WlrForeignToplevelManagementV1::bind(wl_registry *registry, uint32_t name, uint32_t version)
 {
     WaylandProtocol::bind(registry, name, version);
 
-    static const zwlr_foreign_toplevel_manager_v1_listener listener(&WlrForeignToplevelManagementV1::handleToplevel);
-
+    static const zwlr_foreign_toplevel_manager_v1_listener listener{
+        .toplevel = &WlrForeignToplevelManagementV1::handleToplevel,
+        .finished = &WlrForeignToplevelManagementV1::handleFinished,
+    };
     m_manager = static_cast<zwlr_foreign_toplevel_manager_v1 *>(wl_registry_bind(registry, name, &zwlr_foreign_toplevel_manager_v1_interface, version));
     zwlr_foreign_toplevel_manager_v1_add_listener(m_manager, &listener, this);
+}
+
+void WlrForeignToplevelManagementV1::destroy()
+{
+    if (m_manager) {
+        zwlr_foreign_toplevel_manager_v1_destroy(m_manager);
+        m_manager = {};
+        m_windows.clear();
+        m_activeWindow = {};
+    }
+
+    WaylandProtocol::destroy();
 }
 
 void WlrForeignToplevelManagementV1::handleToplevel(void *data, zwlr_foreign_toplevel_manager_v1 *manager, zwlr_foreign_toplevel_handle_v1 *toplevel)
@@ -66,6 +78,11 @@ void WlrForeignToplevelManagementV1::handleToplevel(void *data, zwlr_foreign_top
     auto window = std::make_unique<WlrForeignToplevelManagementV1Window>();
     zwlr_foreign_toplevel_handle_v1_add_listener(toplevel, &listener, window.get());
     static_cast<WlrForeignToplevelManagementV1 *>(data)->m_windows.push_back(std::move(window));
+}
+
+void WlrForeignToplevelManagementV1::handleFinished(void *data, zwlr_foreign_toplevel_manager_v1 *manager)
+{
+    static_cast<WlrForeignToplevelManagementV1 *>(data)->destroy();
 }
 
 void WlrForeignToplevelManagementV1::handleTitle(void *data, struct zwlr_foreign_toplevel_handle_v1 *handle, const char *title)

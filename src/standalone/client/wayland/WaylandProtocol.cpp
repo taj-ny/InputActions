@@ -19,27 +19,27 @@
 #include "WaylandProtocol.h"
 #include <QLoggingCategory>
 
+Q_LOGGING_CATEGORY(INPUTACTIONS_WAYLAND, "inputactions.wayland", QtWarningMsg);
+
 namespace InputActions
 {
 
-WaylandProtocol::WaylandProtocol(QString name)
-    : m_name(std::move(name))
+WaylandProtocol::WaylandProtocol(QString interface)
+    : m_interface(std::move(interface))
 {
 }
 
 void WaylandProtocol::bind(wl_registry *registry, uint32_t name, uint32_t version)
 {
+    qCDebug(INPUTACTIONS_WAYLAND).noquote() << QString("Bound protocol %1").arg(m_interface);
+
+    m_name = name;
     m_supported = true;
 }
 
-const QString &WaylandProtocol::name() const
+void WaylandProtocol::destroy()
 {
-    return m_name;
-}
-
-bool WaylandProtocol::supported() const
-{
-    return m_supported;
+    qCDebug(INPUTACTIONS_WAYLAND).noquote() << QString("Destroyed protocol %1").arg(m_interface);
 }
 
 }
