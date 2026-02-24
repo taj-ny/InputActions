@@ -24,7 +24,10 @@ namespace InputActions
 
 WaylandProtocolManager::WaylandProtocolManager(wl_registry *registry)
 {
-    static const wl_registry_listener listener(&WaylandProtocolManager::handleGlobal);
+    static const wl_registry_listener listener{
+        .global = &WaylandProtocolManager::handleGlobal,
+        .global_remove = INPUTACTIONS_NOOP_3,
+    };
     wl_registry_add_listener(registry, &listener, this);
 }
 

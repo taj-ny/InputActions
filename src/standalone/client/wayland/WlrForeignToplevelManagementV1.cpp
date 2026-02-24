@@ -44,7 +44,10 @@ void WlrForeignToplevelManagementV1::bind(wl_registry *registry, uint32_t name, 
 {
     WaylandProtocol::bind(registry, name, version);
 
-    static const zwlr_foreign_toplevel_manager_v1_listener listener(&WlrForeignToplevelManagementV1::handleToplevel);
+    static const zwlr_foreign_toplevel_manager_v1_listener listener{
+        .toplevel = &WlrForeignToplevelManagementV1::handleToplevel,
+        .finished = INPUTACTIONS_NOOP_2,
+    };
 
     m_manager = static_cast<zwlr_foreign_toplevel_manager_v1 *>(wl_registry_bind(registry, name, &zwlr_foreign_toplevel_manager_v1_interface, version));
     zwlr_foreign_toplevel_manager_v1_add_listener(m_manager, &listener, this);
