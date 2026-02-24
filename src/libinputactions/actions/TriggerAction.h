@@ -96,10 +96,8 @@ private:
 class TriggerAction
 {
 public:
-    /**
-     * @param action If nullptr, will be constructed.
-     */
-    TriggerAction(std::shared_ptr<Action> action = {});
+    TriggerAction();
+    TriggerAction(std::unique_ptr<Action> action);
     virtual ~TriggerAction();
 
     /**
@@ -176,7 +174,7 @@ private:
     void reset();
 
     bool m_accelerated{};
-    std::shared_ptr<Action> m_action;
+    std::unique_ptr<Action> m_action;
     ActionInterval m_interval;
     On m_on = On::End;
     std::optional<Range<qreal>> m_threshold;

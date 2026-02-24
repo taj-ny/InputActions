@@ -42,7 +42,7 @@ public:
         First,
     };
 
-    ActionGroup(std::vector<std::shared_ptr<Action>> actions, ExecutionMode mode = ExecutionMode::All);
+    ActionGroup(std::vector<std::unique_ptr<Action>> actions, ExecutionMode mode = ExecutionMode::All);
 
     bool async() const override;
 
@@ -52,7 +52,7 @@ protected:
     void executeImpl(uint32_t executions) override;
 
 private:
-    std::vector<std::shared_ptr<Action>> m_actions;
+    std::vector<std::unique_ptr<Action>> m_actions;
     ExecutionMode m_mode;
 };
 

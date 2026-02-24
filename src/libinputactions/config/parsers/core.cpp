@@ -139,23 +139,23 @@ static std::shared_ptr<Condition> parseVariableCondition(const Node *node, const
 }
 
 template<>
-void NodeParser<std::shared_ptr<Action>>::parse(const Node *node, std::shared_ptr<Action> &result)
+void NodeParser<std::unique_ptr<Action>>::parse(const Node *node, std::unique_ptr<Action> &result)
 {
     if (const auto *commandNode = node->at("command")) {
-        auto action = std::make_shared<CommandAction>(commandNode->as<Value<QString>>());
+        auto action = std::make_unique<CommandAction>(commandNode->as<Value<QString>>());
         loadSetter(action, &CommandAction::setWait, node->at("wait"));
-        result = action;
+        result = std::move(action);
     } else if (const auto *inputNode = node->at("input")) {
-        auto action = std::make_shared<InputAction>(inputNode->as<std::vector<InputActionItem>>());
+        auto action = std::make_unique<InputAction>(inputNode->as<std::vector<InputActionItem>>());
         loadSetter(action, &InputAction::setDelay, node->at("delay"));
-        result = action;
+        result = std::move(action);
     } else if (const auto *plasmaShortcutNode = node->at("plasma_shortcut")) {
         const auto shortcut = parseSeparatedString2<QString>(plasmaShortcutNode, ',');
-        result = std::make_shared<PlasmaGlobalShortcutAction>(shortcut.first, shortcut.second);
+        result = std::make_unique<PlasmaGlobalShortcutAction>(shortcut.first, shortcut.second);
     } else if (const auto *sleepActionNode = node->at("sleep")) {
-        result = std::make_shared<SleepAction>(sleepActionNode->as<std::chrono::milliseconds>());
+        result = std::make_unique<SleepAction>(sleepActionNode->as<std::chrono::milliseconds>());
     } else if (const auto *oneNode = node->at("one")) {
-        result = std::make_shared<ActionGroup>(oneNode->as<std::vector<std::shared_ptr<Action>>>(), ActionGroup::ExecutionMode::First);
+        result = std::make_unique<ActionGroup>(oneNode->as<std::vector<std::unique_ptr<Action>>>(), ActionGroup::ExecutionMode::First);
     } else {
         throw InvalidValueConfigException(node, "Action is missing a required property that determines its type.");
     }
@@ -722,7 +722,7 @@ void NodeParser<std::vector<std::unique_ptr<Trigger>>>::parse(const Node *node, 
 template<>
 void NodeParser<std::unique_ptr<TriggerAction>>::parse(const Node *node, std::unique_ptr<TriggerAction> &result)
 {
-    result = std::make_unique<TriggerAction>(node->as<std::shared_ptr<Action>>());
+    result = std::make_unique<TriggerAction>(node->as<std::unique_ptr<Action>>());
 
     loadSetter(result, &TriggerAction::setConflicting, node->at("conflicting"));
     loadSetter(result, &TriggerAction::setOn, node->at("on"));
