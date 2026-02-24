@@ -28,7 +28,7 @@ PlasmaGlobalShortcutAction::PlasmaGlobalShortcutAction(QString component, QStrin
 {
 }
 
-void PlasmaGlobalShortcutAction::executeImpl(uint32_t executions)
+void PlasmaGlobalShortcutAction::executeImpl(const ActionExecutionArguments &args)
 {
     g_plasmaGlobalShortcutInvoker->invoke(m_component, m_shortcut);
 }

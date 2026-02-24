@@ -18,7 +18,6 @@
 
 #include "TriggerAction.h"
 #include "ActionExecutor.h"
-#include "InputAction.h"
 #include <libinputactions/input/Delta.h>
 #include <libinputactions/triggers/MotionTrigger.h>
 
@@ -53,11 +52,9 @@ void TriggerAction::triggerUpdated(const TriggerUpdateEvent &event)
         return;
     }
 
-    if (auto *inputAction = dynamic_cast<InputAction *>(m_action.get())) {
-        if (const auto *motionEvent = dynamic_cast<const MotionTriggerUpdateEvent *>(&event)) {
-            const auto &pointDelta = motionEvent->pointDelta();
-            inputAction->m_deltaMultiplied = m_accelerated ? pointDelta.accelerated() : pointDelta.unaccelerated();
-        }
+    if (const auto *motionEvent = dynamic_cast<const MotionTriggerUpdateEvent *>(&event)) {
+        const auto &pointDelta = motionEvent->pointDelta();
+        m_currentMotionPointDelta = m_accelerated ? pointDelta.accelerated() : pointDelta.unaccelerated();
     }
     update(event.delta());
 }
@@ -88,10 +85,13 @@ void TriggerAction::triggerCancelled()
 void TriggerAction::tryExecute(uint32_t executions)
 {
     if (canExecute()) {
-        g_actionExecutor->execute(*m_action,
-                                  {
-                                      .executions = executions,
-                                  });
+        g_actionExecutor->execute(*m_action, {
+            .actionArgs = {
+                .executions = executions,
+                .inputActionArgs = {
+                    .motionPointDelta = m_currentMotionPointDelta,
+                },
+            }});
     }
 }
 

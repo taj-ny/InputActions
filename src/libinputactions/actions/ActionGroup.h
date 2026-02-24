@@ -55,7 +55,7 @@ public:
     void reset() override;
 
 protected:
-    void executeImpl(uint32_t executions) override;
+    void executeImpl(const ActionExecutionArguments &args) override;
 
 private:
     std::vector<std::unique_ptr<Action>> m_actions;

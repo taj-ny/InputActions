@@ -19,7 +19,6 @@
 #pragma once
 
 #include "Action.h"
-#include <QPointF>
 #include <chrono>
 #include <libinputactions/Value.h>
 #include <libinputactions/input/KeyboardKey.h>
@@ -65,13 +64,8 @@ public:
     const std::chrono::milliseconds &delay() const { return m_delay; }
     void setDelay(std::chrono::milliseconds value) { m_delay = std::move(value); }
 
-    /**
-     * Temporary hack, do not set outside of TriggerAction.
-     */
-    QPointF m_deltaMultiplied;
-
 protected:
-    void executeImpl(uint32_t executions) override;
+    void executeImpl(const ActionExecutionArguments &args) override;
 
 private:
     std::vector<InputActionItem> m_sequence;

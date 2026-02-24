@@ -36,13 +36,10 @@ void Action::aboutToExecute()
     m_executions++;
 }
 
-void Action::execute(uint32_t executions)
+void Action::execute(const ActionExecutionArguments &args)
 {
-    Q_ASSERT(executions != 0);
-    Q_ASSERT(executions == 1 || mergeable());
-
     qCDebug(INPUTACTIONS) << QString("Executing action \"%1\"").arg(m_id);
-    executeImpl(executions);
+    executeImpl(args);
 }
 
 bool Action::async() const

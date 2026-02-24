@@ -27,13 +27,13 @@ ActionExecutor::ActionExecutor()
     m_sharedActionThreadPool.setMaxThreadCount(1);
 }
 
-void ActionExecutor::execute(Action &action, const ActionExecutionArguments &arguments)
+void ActionExecutor::execute(Action &action, const ActionExecutionRequestArguments &args)
 {
-    const auto execute = [&action, executions = arguments.executions]() {
-        action.execute(executions);
+    const auto execute = [&action, actionArgs = args.actionArgs]() {
+        action.execute(actionArgs);
     };
     action.aboutToExecute();
-    switch (arguments.thread) {
+    switch (args.thread) {
         case ActionThread::Auto:
             if (action.async() || m_sharedActionThreadPool.activeThreadCount()) {
                 m_sharedActionThreadPool.start(execute);

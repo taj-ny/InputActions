@@ -21,7 +21,7 @@
 namespace InputActions
 {
 
-CustomAction::CustomAction(std::function<void(uint32_t executions)> function, bool async, bool mergeable)
+CustomAction::CustomAction(std::function<void(const ActionExecutionArguments &args)> function, bool async, bool mergeable)
     : m_function(std::move(function))
     , m_async(async)
     , m_mergeable(mergeable)
@@ -38,9 +38,9 @@ bool CustomAction::mergeable() const
     return m_mergeable;
 }
 
-void CustomAction::executeImpl(uint32_t executions)
+void CustomAction::executeImpl(const ActionExecutionArguments &args)
 {
-    m_function(executions);
+    m_function(args);
 }
 
 }

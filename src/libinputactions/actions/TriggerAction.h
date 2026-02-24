@@ -189,6 +189,8 @@ private:
      */
     qreal m_absoluteAccumulatedDelta{};
 
+    QPointF m_currentMotionPointDelta;
+
     friend class TestTrigger;
 };
 
