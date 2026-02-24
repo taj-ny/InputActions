@@ -53,7 +53,7 @@ int main()
 
     ClientMessageHandler messageHandler(client);
 
-    GNOMEClient gnomeClient(client);
+    GNOMEClient gnomeClient;
     PlasmaClient plasmaClient;
     WaylandClient waylandClient(client);
     gnomeClient.initialize() || plasmaClient.initialize() || waylandClient.initialize();

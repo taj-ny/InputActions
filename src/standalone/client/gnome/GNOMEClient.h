@@ -18,16 +18,12 @@
 
 #pragma once
 
-#include "client/wayland/WaylandClient.h"
-
 namespace InputActions
 {
 
-class GNOMEClient : public WaylandClient
+class GNOMEClient
 {
 public:
-    GNOMEClient(Client *client);
-
     /**
      * @returns Whether the GNOME client was successfully initialized.
      */

@@ -25,11 +25,6 @@ namespace InputActions
 static const QDir GNOME_EXTENSIONS_DIR = QDir::homePath() + "/.local/share/gnome-shell/extensions";
 static const QDir GNOME_EXTENSION_DIR = GNOME_EXTENSIONS_DIR.path() + "/inputactions@inputactions.org";
 
-GNOMEClient::GNOMEClient(Client *client)
-    : WaylandClient(client)
-{
-}
-
 bool GNOMEClient::initialize()
 {
     if (!qEnvironmentVariable("XDG_CURRENT_DESKTOP").toLower().contains("gnome")) {
@@ -37,7 +32,7 @@ bool GNOMEClient::initialize()
     }
 
     installFiles();
-    return WaylandClient::initialize();
+    return true;
 }
 
 void GNOMEClient::installFiles()
