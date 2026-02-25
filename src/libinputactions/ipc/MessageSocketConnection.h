@@ -30,7 +30,12 @@ Q_DECLARE_LOGGING_CATEGORY(INPUTACTIONS_IPC)
 namespace InputActions
 {
 
-static const QString INPUTACTIONS_IPC_SOCKET_PATH = "/var/run/inputactions/socket";
+static const QString INPUTACTIONS_IPC_SOCKET_PATH =
+#ifdef DEBUG
+    "/var/run/inputactions/socket-debug";
+#else
+    "/var/run/inputactions/socket";
+#endif
 
 class Message;
 
