@@ -54,6 +54,8 @@ protected:
     bool touchpadPinch(const TouchpadPinchEvent &event) override;
     bool touchpadSwipe(const MotionEvent &event) override;
 
+    qreal currentMotionThreshold(const InputDevice *device) const override;
+
 private slots:
     void onLibinputTapTimeout();
 
@@ -70,6 +72,10 @@ private:
     PointDelta m_pointerAxisDelta;
 
     TouchPoint m_firstTouchPoint;
+    /**
+     * Finger count derived from libinput events, not evdev.
+     */
+    uint8_t m_libinputFingers{};
 
     enum State
     {

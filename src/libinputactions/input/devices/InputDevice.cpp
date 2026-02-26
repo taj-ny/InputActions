@@ -31,6 +31,7 @@ InputDevice::InputDevice(InputDeviceType type, QString name, QString sysName)
     : m_type(type)
     , m_name(std::move(name))
     , m_sysName(std::move(sysName))
+    , m_properties(this)
 {
     m_touchscreenTapTimer.setSingleShot(true);
     m_touchscreenTapTimer.setTimerType(Qt::PreciseTimer);

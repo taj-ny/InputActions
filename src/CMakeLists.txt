@@ -88,6 +88,7 @@ if (INPUTACTIONS_BUILD_HYPRLAND OR INPUTACTIONS_BUILD_KWIN OR INPUTACTIONS_BUILD
         libinputactions/triggers/MotionTrigger.cpp
         libinputactions/triggers/PressTrigger.cpp
         libinputactions/triggers/StrokeTrigger.cpp
+        libinputactions/triggers/SwipeTrigger.cpp
         libinputactions/triggers/Trigger.cpp
         libinputactions/triggers/WheelTrigger.cpp
         libinputactions/variables/LocalVariable.cpp

@@ -24,6 +24,7 @@
 #include <libinputactions/globals.h>
 #include <libinputactions/interfaces/CursorShapeProvider.h>
 #include <libinputactions/triggers/DirectionalMotionTrigger.h>
+#include <libinputactions/triggers/SwipeTrigger.h>
 #include <unordered_map>
 
 namespace InputActions
@@ -80,6 +81,22 @@ NODEPARSER_ENUM(SwipeDirection, "swipe direction",
                     {"up_down", SwipeDirection::UpDown},
                     {"left_right", SwipeDirection::LeftRight},
                     {"any", SwipeDirection::Any},
+                }))
+NODEPARSER_ENUM(SwipeTriggerDirection, "swipe direction",
+                (std::unordered_map<QString, SwipeTriggerDirection>{
+                    {"left", SwipeTriggerDirection::Left},
+                    {"right", SwipeTriggerDirection::Right},
+                    {"up", SwipeTriggerDirection::Up},
+                    {"down", SwipeTriggerDirection::Down},
+                    {"left_up", SwipeTriggerDirection::LeftUp},
+                    {"left_down", SwipeTriggerDirection::LeftDown},
+                    {"right_up", SwipeTriggerDirection::RightUp},
+                    {"right_down", SwipeTriggerDirection::RightDown},
+                    {"up_down", SwipeTriggerDirection::UpDown},
+                    {"left_right", SwipeTriggerDirection::LeftRight},
+                    {"left_up_right_down", SwipeTriggerDirection::LeftUpRightDown},
+                    {"left_down_right_up", SwipeTriggerDirection::LeftDownRightUp},
+                    {"any", SwipeTriggerDirection::Any},
                 }))
 NODEPARSER_ENUM(TriggerSpeed, "trigger speed",
                 (std::unordered_map<QString, TriggerSpeed>{

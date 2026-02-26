@@ -82,6 +82,8 @@ protected:
      */
     bool determineSpeed(TriggerType type, qreal delta, TriggerSpeed &speed, TriggerDirection direction = UINT32_MAX);
 
+    virtual qreal currentMotionThreshold(const InputDevice *device) const;
+
     void reset() override;
 
 private slots:
@@ -91,8 +93,11 @@ private slots:
     void onEndingTriggers(TriggerTypes types);
 
 private:
-    Axis m_currentSwipeAxis = Axis::None;
-    QPointF m_totalSwipeDelta;
+    /**
+     * Contains latest events whose sum is roughly equal to (but never less than) the motion threshold, any events over the threshold are discarded.
+     */
+    std::vector<QPointF> m_swipeDeltas;
+    uint32_t m_swipeUpdates{};
 
     bool m_isDeterminingSpeed = false;
     uint8_t m_sampledInputEvents = 0;
@@ -114,6 +119,7 @@ private:
     uint8_t m_inputEventsToSample = 3;
 
     friend class MockTouchpadTriggerHandler;
+    friend class TestMotionTriggerHandler;
 };
 
 }

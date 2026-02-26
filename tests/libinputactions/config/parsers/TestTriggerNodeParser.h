@@ -15,6 +15,10 @@ private slots:
     void stroke_withEndAction__doesNotThrow();
     void stroke_invalidStroke__throwsInvalidValueConfigException();
 
+    void swipe_angle__parsesNodeCorrectly();
+    void swipe_direction__doesNotThrow();
+    void swipe_invalidAngle__throwsInvalidValueConfigException();
+
     void fingers__parsesNodeCorrectly();
     void fingers_range__parsesNodeCorrectly();
 

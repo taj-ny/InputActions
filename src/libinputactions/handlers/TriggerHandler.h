@@ -59,7 +59,7 @@ protected:
     /**
      * Cancels all active triggers and activates triggers of the specified types eligible for activation.
      */
-    TriggerManagementOperationResult activateTriggers(TriggerTypes types, const TriggerActivationEvent &event);
+    TEST_VIRTUAL TriggerManagementOperationResult activateTriggers(TriggerTypes types, const TriggerActivationEvent &event);
     /**
      * @see activateTriggers(const TriggerTypes &, const TriggerActivationEvent *)
      */
@@ -68,7 +68,7 @@ protected:
     /**
      * Updates triggers of multiple types in order as added to the handler.
      */
-    TriggerManagementOperationResult updateTriggers(const std::map<TriggerType, const TriggerUpdateEvent *> &events);
+    TEST_VIRTUAL TriggerManagementOperationResult updateTriggers(const std::map<TriggerType, const TriggerUpdateEvent *> &events);
     /**
      * Updates triggers of a single type.
      * @warning Do not use this to update multiple trigger types, as it will prevent conflict resolution from working
@@ -106,11 +106,11 @@ protected:
     /**
      * @return Whether there are any triggers of the specified types.
      */
-    bool hasActiveTriggers(TriggerTypes types = TriggerType::All);
+    TEST_VIRTUAL bool hasActiveTriggers(TriggerTypes types = TriggerType::All);
     /**
      * @return Whether there are any blocking triggers of the specified types.
      */
-    bool hasActiveBlockingTriggers(TriggerTypes types = TriggerType::All);
+    TEST_VIRTUAL bool hasActiveBlockingTriggers(TriggerTypes types = TriggerType::All);
 
     /**
      * Creates a trigger activation event with information that can be provided by the input device(s).

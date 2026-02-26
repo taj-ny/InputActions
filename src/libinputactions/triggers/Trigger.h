@@ -213,6 +213,7 @@ private slots:
     void onResumeTimeoutTimerTimeout();
 
 private:
+    TEST_VIRTUAL void doUpdateActions(const TriggerUpdateEvent &event);
     void setLastTrigger();
     void reset();
 
@@ -237,6 +238,7 @@ private:
     bool m_mouseButtonsExactOrder{};
     std::chrono::milliseconds m_resumeTimeout{};
 
+    friend class MockSwipeTrigger;
     friend class TestTrigger;
 };
 

@@ -20,9 +20,15 @@
 #include <QMetaProperty>
 #include <QStringList>
 #include <libinputactions/helpers/QVariant.h>
+#include <libinputactions/input/devices/InputDevice.h>
 
 namespace InputActions
 {
+
+InputDeviceProperties::InputDeviceProperties(const InputDevice *device)
+    : m_device(device)
+{
+}
 
 void InputDeviceProperties::apply(const InputDeviceProperties &other)
 {
@@ -34,6 +40,7 @@ void InputDeviceProperties::apply(const InputDeviceProperties &other)
 
     apply(m_grab, other.m_grab);
     apply(m_ignore, other.m_ignore);
+    apply(m_motionThreshold, other.m_motionThreshold);
     apply(m_handleLibevdevEvents, other.m_handleLibevdevEvents);
     apply(m_multiTouch, other.m_multiTouch);
     apply(m_size, other.m_size);
@@ -46,6 +53,8 @@ void InputDeviceProperties::apply(const InputDeviceProperties &other)
     apply(m_touchpadButtonPad, other.m_touchpadButtonPad);
     apply(m_touchpadClickTimeout, other.m_touchpadClickTimeout);
     apply(m_touchpadLmrTapButtonMap, other.m_touchpadLmrTapButtonMap);
+    apply(m_touchpadMotionThreshold2, other.m_touchpadMotionThreshold2);
+    apply(m_touchpadMotionThreshold3, other.m_touchpadMotionThreshold3);
 }
 
 QString InputDeviceProperties::toString() const
@@ -68,6 +77,24 @@ bool InputDeviceProperties::grab() const
 bool InputDeviceProperties::ignore() const
 {
     return m_ignore.value_or(false);
+}
+
+qreal InputDeviceProperties::motionThreshold() const
+{
+    qreal defaultValue = 10;
+    if (m_device) {
+        switch (m_device->type()) {
+            case InputDeviceType::Mouse:
+            case InputDeviceType::Touchpad:
+                defaultValue = 10;
+                break;
+            case InputDeviceType::Touchscreen:
+                defaultValue = 4;
+                break;
+        }
+    }
+
+    return m_motionThreshold.value_or(defaultValue);
 }
 
 bool InputDeviceProperties::handleLibevdevEvents() const
@@ -133,6 +160,16 @@ std::chrono::milliseconds InputDeviceProperties::touchpadClickTimeout() const
 bool InputDeviceProperties::touchpadLmrTapButtonMap() const
 {
     return m_touchpadLmrTapButtonMap.value_or(false);
+}
+
+qreal InputDeviceProperties::touchpadMotionThreshold2() const
+{
+    return m_touchpadMotionThreshold2.value_or(10);
+}
+
+qreal InputDeviceProperties::touchpadMotionThreshold3() const
+{
+    return m_touchpadMotionThreshold3.value_or(10);
 }
 
 }

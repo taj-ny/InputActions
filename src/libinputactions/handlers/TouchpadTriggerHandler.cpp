@@ -44,6 +44,7 @@ TouchpadTriggerHandler::TouchpadTriggerHandler(InputDevice *device)
 
 bool TouchpadTriggerHandler::pointerAxis(const MotionEvent &event)
 {
+    m_libinputFingers = 2;
     bool isFirstEvent{};
     switch (m_state) {
         case State::Motion:
@@ -141,6 +142,7 @@ bool TouchpadTriggerHandler::pointerButton(const PointerButtonEvent &event)
 
 bool TouchpadTriggerHandler::pointerMotion(const MotionEvent &event)
 {
+    m_libinputFingers = 1;
     switch (m_state) {
         case State::Motion:
         case State::None:
@@ -253,6 +255,7 @@ bool TouchpadTriggerHandler::touchpadGestureLifecyclePhase(const TouchpadGesture
     switch (event.phase()) {
         case TouchpadGestureLifecyclePhase::Begin: {
             g_variableManager->getVariable(BuiltinVariables::Fingers)->set(event.fingers());
+            m_libinputFingers = event.fingers();
 
             // 1- and 2-finger hold gestures have almost no delay and are used to stop kinetic scrolling, there's no reason to block them
             m_gestureBeginBlocked = !(event.triggers() & TriggerType::Press && event.fingers() <= 2);
@@ -297,6 +300,17 @@ bool TouchpadTriggerHandler::touchpadPinch(const TouchpadPinchEvent &event)
 bool TouchpadTriggerHandler::touchpadSwipe(const MotionEvent &event)
 {
     return handleMotion(event.sender(), event.delta());
+}
+
+qreal TouchpadTriggerHandler::currentMotionThreshold(const InputDevice *device) const
+{
+    const auto &properties = device->properties();
+    if (m_libinputFingers == 1) {
+        return properties.motionThreshold();
+    } else if (m_libinputFingers == 2) {
+        return properties.touchpadMotionThreshold2();
+    }
+    return properties.touchpadMotionThreshold3();
 }
 
 bool TouchpadTriggerHandler::canTap()

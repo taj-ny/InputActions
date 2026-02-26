@@ -52,6 +52,7 @@
 #include <libinputactions/triggers/KeyboardShortcutTrigger.h>
 #include <libinputactions/triggers/PressTrigger.h>
 #include <libinputactions/triggers/StrokeTrigger.h>
+#include <libinputactions/triggers/SwipeTrigger.h>
 #include <libinputactions/triggers/WheelTrigger.h>
 #include <libinputactions/variables/Variable.h>
 #include <libinputactions/variables/VariableManager.h>
@@ -436,11 +437,14 @@ void NodeParser<InputDeviceProperties>::parse(const Node *node, InputDevicePrope
     loadSetter(result, &InputDeviceProperties::setGrab, node->at("grab"));
     loadSetter(result, &InputDeviceProperties::setHandleLibevdevEvents, node->at("handle_libevdev_events"));
     loadSetter(result, &InputDeviceProperties::setIgnore, node->at("ignore"));
+    loadSetter(result, &InputDeviceProperties::setMotionThreshold, node->at("motion_threshold"));
     loadSetter(result, &InputDeviceProperties::setMouseMotionTimeout, node->at("motion_timeout"));
     loadSetter(result, &InputDeviceProperties::setMousePressTimeout, node->at("press_timeout"));
     loadSetter(result, &InputDeviceProperties::setMouseUnblockButtonsOnTimeout, node->at("unblock_buttons_on_timeout"));
     loadSetter(result, &InputDeviceProperties::setTouchpadButtonPad, node->at("buttonpad"));
     loadSetter(result, &InputDeviceProperties::setTouchpadClickTimeout, node->at("click_timeout"));
+    loadSetter(result, &InputDeviceProperties::setTouchpadMotionThreshold2, node->at("motion_threshold_2"));
+    loadSetter(result, &InputDeviceProperties::setTouchpadMotionThreshold2, node->at("motion_threshold_3"));
 
     if (const auto *pressureRangesNode = node->mapAt("pressure_ranges")) {
         loadSetter(result, &InputDeviceProperties::setFingerPressure, pressureRangesNode->at("finger"));
@@ -587,8 +591,20 @@ void NodeParser<std::unique_ptr<Trigger>>::parse(const Node *node, std::unique_p
     } else if (type == "stroke") {
         result = std::make_unique<StrokeTrigger>(node->at("strokes", true)->as<std::vector<Stroke>>(true));
     } else if (type == "swipe") {
-        result = std::make_unique<DirectionalMotionTrigger>(TriggerType::Swipe,
-                                                            static_cast<TriggerDirection>(node->at("direction", true)->as<SwipeDirection>()));
+        if (const auto *directionNode = node->at("direction")) {
+            result = std::make_unique<SwipeTrigger>(directionNode->as<SwipeTriggerDirection>());
+        } else {
+            const auto *angleNode = node->at("angle", true);
+            const auto angles = parseSeparatedString2<qreal>(angleNode, '-');
+            if (angles.first > 360 || angles.second > 360) {
+                throw InvalidValueConfigException(angleNode, "The angle may not be greater than 360.");
+            }
+
+            auto swipeTrigger = std::make_unique<SwipeTrigger>(angles.first, angles.second);
+            loadSetter(swipeTrigger.get(), &SwipeTrigger::setBidirectional, node->at("bidirectional"));
+            result = std::move(swipeTrigger);
+        }
+
     } else if (type == "tap") {
         result = std::make_unique<Trigger>(TriggerType::Tap);
     } else if (type == "wheel") {
