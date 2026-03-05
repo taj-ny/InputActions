@@ -1,61 +1,26 @@
 cmake_minimum_required(VERSION 3.16.0)
 
 project(inputactions)
-set(PROJECT_VERSION "0.9.0")
-
-set(QT_MIN_VERSION "6.6.0")
-set(QT_MAJOR_VERSION 6)
+set(PROJECT_VERSION "1.0.0")
 
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS ON)
 
-# TODO Find a way to split this into multiple packages
-set(CPACK_PACKAGE_NAME "inputactions")
-set(CPACK_PACKAGING_INSTALL_PREFIX "/usr")
-set(CPACK_PACKAGE_FILE_NAME "inputactions")
-set(CPACK_PACKAGE_VERSION "${PROJECT_VERSION}")
-set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Mouse and touchpad gestures for Hyprland, Plasma 6 Wayland")
-include(CPack)
-
 option(INPUTACTIONS_BUILD_CTL "Build the control tool" OFF)
 option(INPUTACTIONS_BUILD_HYPRLAND "Build the Hyprland plugin" OFF)
-option(INPUTACTIONS_BUILD_IPC "Build the IPC components of libinputactions" OFF)
 option(INPUTACTIONS_BUILD_KWIN "Build the KWin plugin" OFF)
 option(INPUTACTIONS_BUILD_STANDALONE "Build the standalone version" OFF)
-option(INPUTACTIONS_SYSTEMD "Enable systemd support" ON)
-option(BUILD_TESTS "Build tests" OFF)
 
+if (INPUTACTIONS_BUILD_CTL)
+    add_subdirectory(ctl)
+endif()
+if (INPUTACTIONS_BUILD_HYPRLAND)
+    add_subdirectory(hyprland)
+endif()
+if (INPUTACTIONS_BUILD_KWIN)
+    add_subdirectory(kwin)
+endif()
 if (INPUTACTIONS_BUILD_STANDALONE)
-    set(INPUTACTIONS_BUILD_IPC ON)
-endif()
-
-if(NOT CMAKE_BUILD_TYPE)
-    set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Choose Release or Debug" FORCE)
-endif()
-set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O2 -DQT_NO_DEBUG_OUTPUT")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Bsymbolic-functions -Wall -Wextra -Wpedantic -Wno-unused-parameter -Wno-missing-field-initializers -Wno-switch")
-
-find_package(ECM REQUIRED NO_MODULE)
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${ECM_MODULE_PATH} ${ECM_KDE_MODULE_DIR})
-
-include(KDEInstallDirs)
-include(KDECMakeSettings)
-
-find_package(Qt6 ${QT_MIN_VERSION} CONFIG REQUIRED COMPONENTS
-    Core
-    DBus
-)
-if (INPUTACTIONS_BUILD_IPC)
-    find_package(Qt6 ${QT_MIN_VERSION} CONFIG REQUIRED COMPONENTS
-        Network
-    )
-endif()
-
-add_compile_definitions(PROJECT_NAME="InputActions")
-add_compile_definitions(PROJECT_VERSION="${PROJECT_VERSION}")
-
-add_subdirectory(src)
-if (BUILD_TESTS)
-    add_subdirectory(tests)
+    add_subdirectory(standalone)
 endif()
