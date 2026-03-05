@@ -1,6 +1,12 @@
-[submodule "lib/libevdev-cpp"]
-	path = lib/libevdev-cpp
-	url = https://github.com/InputActions/libevdev-cpp
-[submodule "lib/libinput-cpp"]
-	path = lib/libinput-cpp
-	url = https://github.com/InputActions/libinput-cpp
+[submodule "kwin"]
+	path = kwin
+	url = https://github.com/InputActions/kwin.git
+[submodule "hyprland"]
+	path = hyprland
+	url = https://github.com/InputActions/hyprland.git
+[submodule "standalone"]
+	path = standalone
+	url = https://github.com/InputActions/standalone.git
+[submodule "ctl"]
+	path = ctl
+	url = https://github.com/InputActions/ctl.git

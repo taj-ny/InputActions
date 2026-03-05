@@ -1,29 +1,37 @@
 {
-  description = "Custom mouse and touchpad gestures for Hyprland, Plasma 6 Wayland";
+  description = "Linux utility for binding keyboard. mouse, touchpad and touchscreen actions to system actions (KWin compositor plugin implementation)";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
-    utils.url = "github:numtide/flake-utils";
   };
 
-  outputs = { self, nixpkgs, ... }@inputs: inputs.utils.lib.eachSystem [
-    "x86_64-linux" "aarch64-linux"
-  ] (system: let
-    pkgs = import nixpkgs {
-      inherit system;
+  outputs = { nixpkgs, ... }:
+    let
+      inherit (nixpkgs) lib;
+      systems = [
+        "aarch64-linux"
+        "x86_64-linux"
+      ];
+      perSystem =
+        f:
+        lib.genAttrs systems (
+          system:
+          f {
+            pkgs = import nixpkgs { inherit system; };
+          }
+        );
+    in
+    {
+      packages = perSystem (
+        { pkgs }:
+        rec {
+          inputactions = pkgs.kdePackages.callPackage ./standalone/nix/package.nix { };
+          inputactions-ctl = pkgs.kdePackages.callPackage ./ctl/nix/package.nix { };
+          inputactions-hyprland = pkgs.callPackage ./hyprland/nix/package.nix { };
+          inputactions-kwin = pkgs.kdePackages.callPackage ./kwin/nix/package.nix { };
+          inputactions-standalone = inputactions;
+          default = inputactions-kwin;
+        }
+      );
     };
-  in rec {
-    packages = rec {
-      default = pkgs.kdePackages.callPackage ./nix/package-kwin.nix { };
-      inputactions = pkgs.kdePackages.callPackage ./nix/package.nix { };
-      inputactions-ctl = pkgs.kdePackages.callPackage ./nix/package-ctl.nix { };
-      inputactions-kwin = default;
-      inputactions-hyprland = pkgs.callPackage ./nix/package-hyprland.nix { };
-    };
-
-    devShells.default = pkgs.mkShell {
-      inputsFrom = [ packages.inputactions packages.inputactions-ctl packages.inputactions-kwin packages.inputactions-hyprland ];
-      packages = [ pkgs.gtest ];
-    };
-  });
 }
