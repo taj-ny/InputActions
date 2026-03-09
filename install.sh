@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 set -e
 
 installer_dir="${XDG_DATA_HOME:-$HOME/.local/share}/inputactions-installer"
