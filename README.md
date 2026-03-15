@@ -36,17 +36,17 @@ Supported environments: Plasma 6, Hyprland, GNOME, other Wayland compositors (av
       - type: shortcut
         shortcut: [ leftctrl, space ]
 
-        conditions:
-          - can_replace_text: &text_substitution_rules
+        actions:
+          - on: begin
+            replace_text:
+              # :calc{2+2} -> 4
               - regex: :calc{(.*)}
                 replace:
                   command: printf "$(qalc -t "$match_1")"
-
+            
+               # :email -> example@example.com
               - regex: :email
                 replace: example@example.com
-
-        actions:
-          - replace_text: *text_substitution_rules
 
   mouse:
     gestures:
