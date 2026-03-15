@@ -32,6 +32,22 @@ Supported environments: Plasma 6, Hyprland, GNOME, other Wayland compositors (av
           - on: begin
             command: kill -9 $window_under_pointer_pid
 
+      # text expansion (compositor plugins only)
+      - type: shortcut
+        shortcut: [ leftctrl, space ]
+
+        conditions:
+          - can_replace_text: &text_substitution_rules
+              - regex: :calc{(.*)}
+                replace:
+                  command: printf "$(qalc -t "$match_1")"
+
+              - regex: :email
+                replace: example@example.com
+
+        actions:
+          - replace_text: *text_substitution_rules
+
   mouse:
     gestures:
       # right + draw circle clockwise -> open dolphin
