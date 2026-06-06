@@ -85,17 +85,13 @@ Supported environments: Plasma 6, Hyprland, GNOME, other Wayland compositors (av
 
         conditions: $window_class == firefox
 
-        actions:
-          - on: end
-            # ...
+        actions: []
 
       - type: press
         mouse_buttons: [ middle ]
         instant: true
 
-        actions:
-          - on: end
-            # ...
+        actions: []
 
   touchpad:
     gestures:
